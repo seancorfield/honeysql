@@ -22,14 +22,14 @@ Everything is built on top of maps representing SQL queries:
              :where [:= :f.a "baz"]})
 ```
 
-`format-sql` turns maps into `clojure.java.jdbc`-compatible, parameterized SQL:
+`format` turns maps into `clojure.java.jdbc`-compatible, parameterized SQL:
 
 ```clj
 (sql/format sqlmap)
 => ["SELECT a, b, c FROM foo WHERE (f.a = ?)" ["baz"]]
 ```
 
-There are helper functions to build SQL maps. They compose together nicely.
+There are helper functions to build SQL maps. They compose together nicely:
 
 ```clj
 (-> (select :a :b :c)
@@ -37,7 +37,7 @@ There are helper functions to build SQL maps. They compose together nicely.
     (where [:= :f.a "baz"]))
 ```
 
-Order doesn't matter.
+Order doesn't matter:
 
 ```clj
 (= (-> (select :*) (from :foo))
@@ -45,14 +45,14 @@ Order doesn't matter.
 => true
 ```
 
-When using the vanilla helper functions, new clauses will replace old clauses.
+When using the vanilla helper functions, new clauses will replace old clauses:
 
 ```clj
 (-> sqlmap (select :*))
 => {:from [:foo], :where [:= :f.a "baz"], :select (:*)}
 ```
 
-To add to clauses instead of replacing them, use `merge-select`, `merge-where`, etc.
+To add to clauses instead of replacing them, use `merge-select`, `merge-where`, etc.:
 
 ```clj
 (sql/format
@@ -106,7 +106,7 @@ Here's a big, complicated query. (Note that Honey SQL makes no attempt to verify
 => ["SELECT DISTINCT f.*, b.baz, c.quux, NOW(), @x := 10 FROM foo AS f, baz AS b LEFT JOIN clod AS c ON (f.a = c.d) JOIN draq ON (f.b = draq.x) WHERE (((f.a = ?) AND (b.baz != ?)) OR (f.e IN (1, 2, 3)) OR f.e BETWEEN 10 AND 20) ORDER BY b.baz DESC, c.quux LIMIT 50 OFFSET 10"
     ["bort" "gabba"]]
 
-;; Fully readable
+;; Printable and readable
 (= *2 (read-string (pr-str *2)))
 => true
 ```
