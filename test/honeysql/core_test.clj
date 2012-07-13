@@ -23,6 +23,6 @@
     (testing "sqlmap formats correctly"
       (is (= (format sqlmap)
              ["SELECT DISTINCT f.*, b.baz, c.quux, NOW(), @x := 10 FROM foo AS f, baz AS b LEFT JOIN clod AS c ON (f.a = c.d) JOIN draq ON (f.b = draq.x) WHERE (((f.a = ?) AND (b.baz != ?)) OR (f.e IN (1, 2, 3)) OR f.e BETWEEN 10 AND 20) GROUP BY f.a HAVING (0 < f.e) ORDER BY b.baz DESC, c.quux LIMIT 50 OFFSET 10"
-              ["bort" "gabba"]])))
+              "bort" "gabba"])))
     (testing "sqlmap prints and reads correctly"
       (is (= sqlmap (read-string (pr-str sqlmap)))))))

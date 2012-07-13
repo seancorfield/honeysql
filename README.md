@@ -26,7 +26,7 @@ Everything is built on top of maps representing SQL queries:
 
 ```clj
 (sql/format sqlmap)
-=> ["SELECT a, b, c FROM foo WHERE (f.a = ?)" ["baz"]]
+=> ["SELECT a, b, c FROM foo WHERE (f.a = ?)" "baz"]
 ```
 
 There are helper functions to build SQL maps. They compose together nicely:
@@ -59,7 +59,7 @@ To add to clauses instead of replacing them, use `merge-select`, `merge-where`, 
   (-> sqlmap
       (merge-select :d :e)
       (merge-where [:> :b 10])))
-=> ["SELECT a, b, c, d, e FROM foo WHERE ((f.a = ?) AND (b > 10))" ["baz"]]
+=> ["SELECT a, b, c, d, e FROM foo WHERE ((f.a = ?) AND (b > 10))" "baz"]
 ```
 
 Queries can be nested:
@@ -104,7 +104,7 @@ Here's a big, complicated query. (Note that Honey SQL makes no attempt to verify
 
 (sql/format *1)
 => ["SELECT DISTINCT f.*, b.baz, c.quux, NOW(), @x := 10 FROM foo AS f, baz AS b LEFT JOIN clod AS c ON (f.a = c.d) JOIN draq ON (f.b = draq.x) WHERE (((f.a = ?) AND (b.baz != ?)) OR (f.e IN (1, 2, 3)) OR f.e BETWEEN 10 AND 20) GROUP BY f.a HAVING (0 < f.e) ORDER BY b.baz DESC, c.quux LIMIT 50 OFFSET 10"
-    ["bort" "gabba"]]
+    "bort" "gabba"]
 
 ;; Printable and readable
 (= *2 (read-string (pr-str *2)))

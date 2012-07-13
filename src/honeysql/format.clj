@@ -50,7 +50,7 @@
   (binding [*params* (atom [])]
     (let [sql-str (to-sql sql-map)]
       (if (seq @*params*)
-        [sql-str @*params*]
+        (into [sql-str] @*params*)
         [sql-str]))))
 
 (defprotocol ToSql
