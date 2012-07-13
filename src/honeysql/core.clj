@@ -48,17 +48,11 @@
 (defn join [& clauses]
   (let [[m clauses] (if (map? (first clauses))
                       [(first clauses) (rest clauses)]
-                      [{} clauses])
-        clauses (if (not (coll? (first clauses)))
-                  [clauses]
-                  clauses)]
+                      [{} clauses])]
     (assoc m :join clauses)))
 
 (defn merge-join [sql-map & clauses]
-  (let [clauses (if (not (coll? (first clauses)))
-                  [clauses]
-                  clauses)]
-    (update-in sql-map [:join] concat clauses)))
+  (update-in sql-map [:join] concat clauses))
 
 (defn group-by [& fields]
   (let [[m fields] (if (map? (first fields))
