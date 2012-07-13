@@ -2,6 +2,8 @@
   (:refer-clojure :exclude [group-by])
   (:require [honeysql.format :as format]))
 
+(def sql-fn format/sql-fn)
+(def sql-raw format/sql-raw)
 (def format-sql format/format-sql)
 
 (defn select [& fields]
