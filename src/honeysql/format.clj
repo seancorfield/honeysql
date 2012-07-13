@@ -154,9 +154,10 @@
 
 (defmethod format-clause :select [[_ fields] sql-map]
   (str "SELECT "
-       (space-join (map (comp string/upper-case name)
-                        (:modifiers sql-map)))
-       " "
+       (when (:modifiers sql-map)
+         (str (space-join (map (comp string/upper-case name)
+                               (:modifiers sql-map)))
+              " "))
        (comma-join (map to-sql fields))))
 
 (defmethod format-clause :from [[_ tables] _]
