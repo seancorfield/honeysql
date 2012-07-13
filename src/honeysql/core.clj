@@ -104,6 +104,15 @@
   ([sql-map o]
      (assoc sql-map :offset o)))
 
+(defn modifiers [& ms]
+  (let [[m ms] (if (map? (first ms))
+                 [(first ms) (rest ms)]
+                 [{} ms])]
+    (assoc m :modifiers ms)))
+
+(defn merge-modifiers [sql-map & ms]
+  (update-in sql-map [:modifiers] concat ms))
+
 (def ^:private handlers
   {:select select
    :from from
@@ -113,7 +122,8 @@
    :having having
    :order-by order-by
    :limit limit
-   :offset offset})
+   :offset offset
+   :modifiers modifiers})
 
 (def ^:private merge-handlers
   {:select merge-select
@@ -124,7 +134,8 @@
    :having merge-having
    :order-by merge-order-by
    :limit limit
-   :offset offset})
+   :offset offset
+   :modifiers merge-modifiers})
 
 (defn- build-sql [handlers clauses]
   (let [[base clauses] (if (map? (first clauses))
