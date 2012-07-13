@@ -118,7 +118,7 @@
   clojure.lang.IPersistentMap
   (-to-sql [x] (let [clause-ops (filter #(contains? x %) clause-order)]
                  (paren-wrap
-                  (space-join (map (comp format-clause #(find x %))
+                  (space-join (map (comp #(format-clause % x) #(find x %))
                                    clause-ops)))))
   nil
   (-to-sql [x] "NULL"))
@@ -150,37 +150,37 @@
 
 (defmulti format-clause
   "Takes a map entry representing a clause and returns an SQL string"
-  key)
+  (fn [clause _] (key clause)))
 
-(defmethod format-clause :select [[_ fields]]
-  (str "SELECT " (comma-join (map to-sql fields))))
+(defmethod format-clause :select [[_ fields] sql-map]
+  (str "SELECT "
+       (space-join (map (comp string/upper-case name)
+                        (:modifiers sql-map)))
+       " "
+       (comma-join (map to-sql fields))))
 
-(defmethod format-clause :from [[_ tables]]
+(defmethod format-clause :from [[_ tables] _]
   (str "FROM " (comma-join (map to-sql tables))))
 
-(defmethod format-clause :where [[_ pred]]
+(defmethod format-clause :where [[_ pred] _]
   (str "WHERE " (format-predicate pred)))
 
-(defn format-join
-  [table pred & [type]]
+(defn format-join [table pred & [type]]
   (str (when type
          (str (string/upper-case (name type)) " "))
        "JOIN " (to-sql table)
        " ON " (format-predicate pred)))
 
-(defmethod format-clause :join [[_ [table pred type]]]
-  (format-join table pred type))
+(defmethod format-clause :join [[_ join-groups] _]
+  (space-join (map #(apply format-join %) join-groups)))
 
-(defmethod format-clause :joins [[_ join-groups]]
-  (space-join (map format-clause join-groups)))
-
-(defmethod format-clause :group-by [[_ fields]]
+(defmethod format-clause :group-by [[_ fields] _]
   (str "GROUP BY " (comma-join (map to-sql fields))))
 
-(defmethod format-clause :having [[_ pred]]
+(defmethod format-clause :having [[_ pred] _]
   (str "HAVING " (format-predicate pred)))
 
-(defmethod format-clause :order-by [[_ fields]]
+(defmethod format-clause :order-by [[_ fields] _]
   (str "ORDER BY "
        (comma-join (for [field fields]
                      (if (sequential? field)
@@ -189,9 +189,8 @@
                                                    "DESC" "ASC")))
                        (to-sql field))))))
 
-(defmethod format-clause :limit [[_ limit]]
+(defmethod format-clause :limit [[_ limit] _]
   (str "LIMIT " (to-sql limit)))
 
-(defmethod format-clause :offset [[_ offset]]
+(defmethod format-clause :offset [[_ offset] _]
   (str "OFFSET " (to-sql offset)))
-
