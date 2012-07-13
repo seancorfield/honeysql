@@ -1,33 +1,34 @@
 (ns honeysql.format
+  (:refer-clojure :exclude [format])
   (:require [clojure.string :as string]))
 
 ;;(set! *warn-on-reflection* true)
 
 ;;;;
 
-(deftype SqlFn [name args])
+(deftype SqlCall [name args])
 
-(defn sql-fn [name & args]
-  (SqlFn. name args))
+(defn call [name & args]
+  (SqlCall. name args))
 
-(defn read-sql-fn [form]
-  (apply sql-fn form))
+(defn read-sql-call [form]
+  (apply call form))
 
-(defmethod print-method SqlFn [^SqlFn o ^java.io.Writer w]
-  (.write w (str "#sql/fn " (pr-str (into [(.name o)] (.args o))))))
+(defmethod print-method SqlCall [^SqlCall o ^java.io.Writer w]
+  (.write w (str "#sql/call " (pr-str (into [(.name o)] (.args o))))))
 
-(defmethod print-dup SqlFn [o w]
+(defmethod print-dup SqlCall [o w]
   (print-method o w))
 
 ;;;;
 
 (deftype SqlRaw [s])
 
-(defn sql-raw [s]
+(defn raw [s]
   (SqlRaw. (str s)))
 
 (defn read-sql-raw [form]
-  (sql-raw form))
+  (raw form))
 
 (defmethod print-method SqlRaw [^SqlRaw o ^java.io.Writer w]
   (.write w (str "#sql/raw " (pr-str (.s o)))))
@@ -75,7 +76,7 @@
 
 (declare to-sql)
 
-(defn format-sql [sql-map]
+(defn format [sql-map]
   (binding [*params* (atom [])]
     (let [sql-str (to-sql sql-map)]
       (if (seq @*params*)
@@ -104,7 +105,7 @@
                  (str (to-sql (first x))
                       " AS "
                       (to-sql (second x)))))
-  SqlFn
+  SqlCall
   (-to-sql [x] (binding [*fn-context?* true]
                  (let [fn-name (name (.name x))
                        fn-name (fn-aliases fn-name fn-name)
@@ -152,7 +153,7 @@
           (paren-wrap
            (string/join (str " " (string/upper-case op-name) " ")
                         (map format-predicate args)))
-          (to-sql (apply sql-fn pred)))))))
+          (to-sql (apply call pred)))))))
 
 (defmulti format-clause
   "Takes a map entry representing a clause and returns an SQL string"

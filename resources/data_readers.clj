@@ -1,2 +1,2 @@
-{sql/fn honeysql.format/read-sql-fn
+{sql/call honeysql.format/read-sql-call
  sql/raw honeysql.format/read-sql-raw}

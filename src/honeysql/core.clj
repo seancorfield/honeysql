@@ -1,10 +1,11 @@
 (ns honeysql.core
-  (:refer-clojure :exclude [group-by])
-  (:require [honeysql.format :as format]))
+  (:refer-clojure :exclude [group-by format])
+  (:require [honeysql.format :as format]
+            [honeysql.util :refer [defalias]]))
 
-(def sql-fn format/sql-fn)
-(def sql-raw format/sql-raw)
-(def format-sql format/format-sql)
+(defalias call format/call)
+(defalias raw format/raw)
+(defalias format format/format)
 
 (defn select [& fields]
   (let [[m fields] (if (map? (first fields))
