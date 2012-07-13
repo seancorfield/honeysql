@@ -6,10 +6,20 @@
 
 ;;;;
 
-(deftype SqlCall [name args])
+(deftype SqlCall [name args _meta]
+  Object
+  (hashCode [this] (hash-combine (hash name) (hash args)))
+  (equals [this x]
+    (cond (identical? this x) true
+          (instance? SqlCall x) (and (= (.name this) (.name x))
+                                     (= (.args this) (.args x)))
+          :else false))
+  clojure.lang.IObj
+  (meta [this] _meta)
+  (withMeta [this m] (SqlCall. (.name this) (.args this) m)))
 
 (defn call [name & args]
-  (SqlCall. name args))
+  (SqlCall. name args nil))
 
 (defn read-sql-call [form]
   (apply call form))
@@ -22,10 +32,16 @@
 
 ;;;;
 
-(deftype SqlRaw [s])
+(deftype SqlRaw [s _meta]
+  Object
+  (hashCode [this] (hash-combine (hash (class this)) (hash s)))
+  (equals [this x] (and (instance? SqlRaw x) (= (.s this) (.s x))))
+  clojure.lang.IObj
+  (meta [this] _meta)
+  (withMeta [this m] (SqlRaw. (.s this) m)))
 
 (defn raw [s]
-  (SqlRaw. (str s)))
+  (SqlRaw. (str s) nil))
 
 (defn read-sql-raw [form]
   (raw form))

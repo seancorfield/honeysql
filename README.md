@@ -81,6 +81,10 @@ calls and raw SQL fragments:
 
 (sql/format *1)
 => ["SELECT COUNT(*), @var := foo.bar FROM foo"]
+
+;; Fully readable
+(= *2 (read-string (pr-str *2)))
+=> true
 ```
 
 Here's a complicated query:
