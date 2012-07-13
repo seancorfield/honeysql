@@ -7,10 +7,11 @@ SQL as Clojure data structures.
 ## Usage
 
 ```clj
+(refer-clojure :exclude '[group-by])
 (require '[honeysql.core
            :as sql
-           :refer [select from where join order-by offset limit
-                   modifiers merge-select merge-where]])
+           :refer [select from where join group-by having order-by
+                   offset limit modifiers merge-select merge-where]])
 ```
 
 Everything is built on top of maps representing SQL queries:
@@ -81,16 +82,12 @@ calls and raw SQL fragments:
 
 (sql/format *1)
 => ["SELECT COUNT(*), @var := foo.bar FROM foo"]
-
-;; Fully readable
-(= *2 (read-string (pr-str *2)))
-=> true
 ```
 
-Here's a complicated query:
+Here's a big, complicated query. (Note that Honey SQL makes no attempt to verify that your queries are valid):
 
 ```clj
-(-> (select :f.* :b.baz :c.quux)
+(-> (select :f.* :b.baz :c.quux (sql/call :now) (sql/raw "@x := 10"))
     (modifiers :distinct)
     (from [:foo :f] [:baz :b])
     (join [[:clod :c] [:= :f.a :c.d] :left]
@@ -99,13 +96,19 @@ Here's a complicated query:
             [:and [:= :f.a "bort"] [:not= :b.baz "gabba"]]
             [:in :f.e [1 2 3]]
             [:between :f.e 10 20]])
+    (group-by :f.a)
+    (having [:< 0 :f.e])
     (order-by [:b.baz :desc] :c.quux)
     (limit 50)
     (offset 10))
 
 (sql/format *1)
-=> ["SELECT DISTINCT f.*, b.baz, c.quux FROM foo AS f, baz AS b LEFT JOIN clod AS c ON (f.a = c.d) JOIN draq ON (f.b = draq.x) WHERE (((f.a = ?) AND (b.baz != ?)) OR (f.e IN (1, 2, 3)) OR f.e BETWEEN 10 AND 20) ORDER BY b.baz DESC, c.quux LIMIT 50 OFFSET 10"
+=> ["SELECT DISTINCT f.*, b.baz, c.quux, NOW(), @x := 10 FROM foo AS f, baz AS b LEFT JOIN clod AS c ON (f.a = c.d) JOIN draq ON (f.b = draq.x) WHERE (((f.a = ?) AND (b.baz != ?)) OR (f.e IN (1, 2, 3)) OR f.e BETWEEN 10 AND 20) ORDER BY b.baz DESC, c.quux LIMIT 50 OFFSET 10"
     ["bort" "gabba"]]
+
+;; Fully readable
+(= *2 (read-string (pr-str *2)))
+=> true
 ```
 
 ## License
