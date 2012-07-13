@@ -7,6 +7,7 @@
 (defalias call types/call)
 (defalias raw types/raw)
 (defalias format format/format)
+(defalias format-predicate format/format-predicate)
 
 (defn select [& fields]
   (let [[m fields] (if (map? (first fields))

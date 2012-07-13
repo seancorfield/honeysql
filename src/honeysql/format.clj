@@ -44,11 +44,18 @@
   "Determines the order that clauses will be placed within generated SQL"
   [:select :from :join :where :group-by :having :order-by :limit :offset])
 
-(declare to-sql)
+(declare to-sql format-predicate*)
 
 (defn format [sql-map]
   (binding [*params* (atom [])]
     (let [sql-str (to-sql sql-map)]
+      (if (seq @*params*)
+        (into [sql-str] @*params*)
+        [sql-str]))))
+
+(defn format-predicate [pred]
+  (binding [*params* (atom [])]
+    (let [sql-str (format-predicate* pred)]
       (if (seq @*params*)
         (into [sql-str] @*params*)
         [sql-str]))))
@@ -112,17 +119,17 @@
 
 ;;;;
 
-(defn format-predicate [pred]
+(defn format-predicate* [pred]
   (if-not (sequential? pred)
     (to-sql pred)
     (let [[op & args] pred
           op-name (name op)]
       (if (= "not" op-name)
-        (str "NOT " (format-predicate (first args)))
+        (str "NOT " (format-predicate* (first args)))
         (if (#{"and" "or" "xor"} op-name)
           (paren-wrap
            (string/join (str " " (string/upper-case op-name) " ")
-                        (map format-predicate args)))
+                        (map format-predicate* args)))
           (to-sql (apply call pred)))))))
 
 (defmulti format-clause
@@ -141,13 +148,13 @@
   (str "FROM " (comma-join (map to-sql tables))))
 
 (defmethod format-clause :where [[_ pred] _]
-  (str "WHERE " (format-predicate pred)))
+  (str "WHERE " (format-predicate* pred)))
 
 (defn format-join [table pred & [type]]
   (str (when type
          (str (string/upper-case (name type)) " "))
        "JOIN " (to-sql table)
-       " ON " (format-predicate pred)))
+       " ON " (format-predicate* pred)))
 
 (defmethod format-clause :join [[_ join-groups] _]
   (space-join (map #(apply format-join %) join-groups)))
@@ -156,7 +163,7 @@
   (str "GROUP BY " (comma-join (map to-sql fields))))
 
 (defmethod format-clause :having [[_ pred] _]
-  (str "HAVING " (format-predicate pred)))
+  (str "HAVING " (format-predicate* pred)))
 
 (defmethod format-clause :order-by [[_ fields] _]
   (str "ORDER BY "
