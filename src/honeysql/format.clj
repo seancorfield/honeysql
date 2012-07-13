@@ -57,7 +57,11 @@
   #{"+" "-" "*" "/" "%" "mod" "|" "&" "^"
     "is" "=" ">" ">=" "<" "<=" "<>" "!="
     "and" "or" "xor"
-    "in" "like" "regexp"})
+    "in" "not in" "like" "regexp"})
+
+(def fn-aliases
+  {"not=" "!="
+   "not-in" "not in"})
 
 (def fn-handlers
   {"between" (fn [field upper lower]
@@ -101,6 +105,7 @@
   SqlFn
   (-to-sql [x] (binding [*fn-context?* true]
                  (let [fn-name (name (.name x))
+                       fn-name (fn-aliases fn-name fn-name)
                        fn-name-upper (string/upper-case fn-name)
                        args (map to-sql (.args x))]
                    (if-let [handler (fn-handlers fn-name)]
