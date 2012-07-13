@@ -65,10 +65,6 @@ Queries can be nested:
 
 ```clj
 (sql/format
-  (sql/sql :select :*
-           :from :foo
-           :where [:in :foo.a (sql/sql :select :a :from :bar)]))
-(sql/format
   (-> (select :*)
       (from :foo)
       (where [:in :foo.a (-> (select :a) (from :bar))])))
