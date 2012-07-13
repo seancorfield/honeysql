@@ -111,6 +111,12 @@ Here's a big, complicated query. (Note that Honey SQL makes no attempt to verify
 => true
 ```
 
+## TODO
+
+* Date/time helpers
+* Insert, update, delete
+* Create table, etc.
+
 ## License
 
 Copyright © 2012 Justin Kramer
