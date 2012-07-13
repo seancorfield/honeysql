@@ -53,6 +53,8 @@
 
 (def ^:dynamic *fn-context?* false)
 
+(def ^:dynamic *subquery?* false)
+
 (def infix-fns
   #{"+" "-" "*" "/" "%" "mod" "|" "&" "^"
     "is" "=" ">" ">=" "<" "<=" "<>" "!="
@@ -116,10 +118,14 @@
   SqlRaw
   (-to-sql [x] (.s x))
   clojure.lang.IPersistentMap
-  (-to-sql [x] (let [clause-ops (filter #(contains? x %) clause-order)]
-                 (paren-wrap
-                  (space-join (map (comp #(format-clause % x) #(find x %))
-                                   clause-ops)))))
+  (-to-sql [x] (let [clause-ops (filter #(contains? x %) clause-order)
+                     sql-str (binding [*subquery?* true]
+                               (space-join
+                                (map (comp #(format-clause % x) #(find x %))
+                                     clause-ops)))]
+                 (if *subquery?*
+                   (paren-wrap sql-str)
+                   sql-str)))
   nil
   (-to-sql [x] "NULL"))
 
