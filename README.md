@@ -7,64 +7,105 @@ SQL as Clojure data structures.
 ## Usage
 
 ```clj
-(require '[honeysql.core :as sql :refer [select from where limit merge-select
-                                         merge-where]])
+(require '[honeysql.core
+           :as sql
+           :refer [select from where join order-by offset limit
+                   modifiers merge-select merge-where]])
+```
 
-;; Everything is centered around maps representing SQL queries
+Everything is built on top of maps representing SQL queries:
+
+```clj
 (def sqlmap {:select [:a :b :c]
              :from [:foo]
              :where [:= :f.a "baz"]})
+```
 
-;; format-sql turns maps into clojure.java.jdbc-compatible, parameterized SQL
+`format-sql` turns maps into `clojure.java.jdbc`-compatible, parameterized SQL:
+
+```clj
 (sql/format sqlmap)
 => ["SELECT a, b, c FROM foo WHERE (f.a = ?)" ["baz"]]
+```
 
-;; The sql function is a helper for building query maps
-(= sqlmap
-   (sql/sql :select [:a :b :c]
-            :from :foo
-            :where [:= :f.a "baz"]))
+There are helper functions to build SQL maps. They compose together nicely.
+
+```clj
+(-> (select :a :b :c)
+    (from :foo)
+    (where [:= :f.a "baz"]))
+```
+
+Order doesn't matter.
+
+```clj
+(= (-> (select :*) (from :foo))
+   (-> (from :foo) (select :*)))
 => true
+```
 
-;; You can also use clause-specific helper functions, if you prefer. They
-;; compose together nicely.
-(= sqlmap
-   (-> (select :a :b :c)
-       (from :foo)
-       (where [:= :f.a "baz"])))
-=> true
+When using the vanilla helper functions, new clauses will replace old clauses.
 
-;; Providing a map as the first argument to sql or clause helper functions will
-;; use that map as a base, with the new clauses replacing old ones
-(sql/format (sql/sql sqlmap :select :* :limit 10))
-=> ["SELECT * FROM foo WHERE (f.a = ?) LIMIT 10" ["baz"]]
-(sql/format (-> sqlmap (select :*) (limit 10)))
-=> ["SELECT * FROM foo WHERE (f.a = ?) LIMIT 10" ["baz"]]
+```clj
+(-> sqlmap (select :*))
+=> {:from [:foo], :where [:= :f.a "baz"], :select (:*)}
+```
 
-;; To add to clauses instead of replacing them, use merge-sql, or merge-select,
-;; merge-from, etc.
+To add to clauses instead of replacing them, use `merge-select`, `merge-where`, etc.
+
+```clj
 (sql/format
-  (sql/merge-sql sqlmap :select [:d :e] :where [:> :b 10]))
+  (-> sqlmap
+      (merge-select :d :e)
+      (merge-where [:> :b 10])))
 => ["SELECT a, b, c, d, e FROM foo WHERE ((f.a = ?) AND (b > 10))" ["baz"]]
-(sql/format
-  (-> sqlmap (merge-select :d :e) (merge-where [:> :b 10])))
-=> ["SELECT a, b, c, d, e FROM foo WHERE ((f.a = ?) AND (b > 10))" ["baz"]]
+```
 
-;; Queries can be nested
+Queries can be nested:
+
+```clj
 (sql/format
   (sql/sql :select :*
            :from :foo
            :where [:in :foo.a (sql/sql :select :a :from :bar)]))
+(sql/format
+  (-> (select :*)
+      (from :foo)
+      (where [:in :foo.a (-> (select :a) (from :bar))])))
 => ["SELECT * FROM foo WHERE (foo.a IN (SELECT a FROM bar))"]
+```
 
-;; There are helper functions and data literals for handling SQL function
-;; calls and raw SQL fragments
-(sql/sql :select [(sql/call :count :*) (sql/raw "@var := foo.bar")]
-         :from :foo)
+There are helper functions and data literals for handling SQL function
+calls and raw SQL fragments:
+
+```clj
+(-> (select (sql/call :count :*) (sql/raw "@var := foo.bar"))
+    (from :foo))
 => {:from (:foo), :select (#sql/call [:count :*] #sql/raw "@var := foo.bar")}
 
 (sql/format *1)
 => ["SELECT COUNT(*), @var := foo.bar FROM foo"]
+```
+
+Here's a complicated query:
+
+```clj
+(-> (select :f.* :b.baz :c.quux)
+    (modifiers :distinct)
+    (from [:foo :f] [:baz :b])
+    (join [[:clod :c] [:= :f.a :c.d] :left]
+          [:draq [:= :f.b :draq.x]])
+    (where [:or
+            [:and [:= :f.a "bort"] [:not= :b.baz "gabba"]]
+            [:in :f.e [1 2 3]]
+            [:between :f.e 10 20]])
+    (order-by [:b.baz :desc] :c.quux)
+    (limit 50)
+    (offset 10))
+
+(sql/format *1)
+=> ["SELECT DISTINCT f.*, b.baz, c.quux FROM foo AS f, baz AS b LEFT JOIN clod AS c ON (f.a = c.d) JOIN draq ON (f.b = draq.x) WHERE (((f.a = ?) AND (b.baz != ?)) OR (f.e IN (1, 2, 3)) OR f.e BETWEEN 10 AND 20) ORDER BY b.baz DESC, c.quux LIMIT 50 OFFSET 10"
+    ["bort" "gabba"]]
 ```
 
 ## License
