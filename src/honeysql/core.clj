@@ -148,10 +148,13 @@
                          [{} clauses])]
     (reduce
      (fn [sql-map [op args]]
-       (let [handler (handlers op)]
+       (if-let [handler (handlers op)]
          (if (or (#{:where :having} op) (not (coll? args)))
-           (handler sql-map args)
-           (apply handler sql-map args))))
+           (if (nil? args)
+             sql-map
+             (handler sql-map args))
+           (apply handler sql-map args))
+         sql-map))
      base
      (partition 2 clauses))))
 
