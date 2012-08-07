@@ -18,6 +18,9 @@
 (defn merge-select [sql-map & fields]
   (update-in sql-map [:select] concat fields))
 
+(defn un-select [sql-map & fields]
+  (update-in sql-map [:select] #(remove (set fields) %)))
+
 (defn from [& tables]
   (let [[m tables] (if (map? (first tables))
                      [(first tables) (rest tables)]
