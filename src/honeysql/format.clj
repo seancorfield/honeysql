@@ -67,9 +67,9 @@
 
 (extend-protocol ToSql
   clojure.lang.Keyword
-  (-to-sql [x] (name x))
+  (-to-sql [x] (-> x name (string/replace "-" "_")))
   clojure.lang.Symbol
-  (-to-sql [x] (str x))
+  (-to-sql [x] (-> x name (string/replace "-" "_")))
   java.lang.Number
   (-to-sql [x] (str x))
   java.lang.Boolean
