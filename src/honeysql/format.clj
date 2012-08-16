@@ -28,7 +28,6 @@
 
 (def infix-fns
   #{"+" "-" "*" "/" "%" "mod" "|" "&" "^"
-    ">" ">=" "<" "<="
     "and" "or" "xor"
     "in" "not in" "like" "regexp"})
 
@@ -39,34 +38,66 @@
    "!=" "<>"
    "not-in" "not in"})
 
+(declare to-sql format-predicate*)
+
 (defmulti fn-handler (fn [op & args] op))
 
+(defn expand-binary-ops [op & args]
+  (str "("
+       (string/join " AND "
+                    (for [[a b] (partition 2 1 args)]
+                      (fn-handler op a b)))
+       ")"))
+
 (defmethod fn-handler :default [op & args]
-  (let [op-upper (string/upper-case op)]
+  (let [op-upper (string/upper-case op)
+        args (map to-sql args)]
     (if (infix-fns op)
       (paren-wrap (string/join (str " " op-upper " ") args))
       (str op-upper (paren-wrap (comma-join args))))))
 
-(defmethod fn-handler "=" [_ f1 f2]
-  (cond
-   (= "NULL" f1) (str f2 " IS NULL")
-   (= "NULL" f2) (str f1 " IS NULL")
-   :else (str f1 " = " f2)))
+(defmethod fn-handler "=" [_ a b & more]
+  (if (seq more)
+    (apply expand-binary-ops "=" a b more)
+    (cond
+     (nil? a) (str (to-sql b) " IS NULL")
+     (nil? b) (str (to-sql a) " IS NULL")
+     :else (str (to-sql a) " = " (to-sql b)))))
 
-(defmethod fn-handler "<>" [_ f1 f2]
-  (cond
-   (= "NULL" f1) (str f2 " IS NOT NULL")
-   (= "NULL" f2) (str f1 " IS NOT NULL")
-   :else (str f1 " <> " f2)))
+(defmethod fn-handler "<>" [_ a b & more]
+  (if (seq more)
+    (apply expand-binary-ops "<>" a b more)
+    (cond
+     (nil? a) (str (to-sql b) " IS NOT NULL")
+     (nil? b) (str (to-sql a) " IS NOT NULL")
+     :else (str (to-sql a) " <> " (to-sql b)))))
+
+(defmethod fn-handler "<" [_ a b & more]
+  (if (seq more)
+    (apply expand-binary-ops "<" a b more)
+    (str (to-sql a) " < " (to-sql b))))
+
+(defmethod fn-handler "<=" [_ a b & more]
+  (if (seq more)
+    (apply expand-binary-ops "<=" a b more)
+    (str (to-sql a) " <= " (to-sql b))))
+
+(defmethod fn-handler ">" [_ a b & more]
+  (if (seq more)
+    (apply expand-binary-ops ">" a b more)
+    (str (to-sql a) " > " (to-sql b))))
+
+(defmethod fn-handler ">=" [_ a b & more]
+  (if (seq more)
+    (apply expand-binary-ops ">=" a b more)
+    (str (to-sql a) " >= " (to-sql b))))
 
 (defmethod fn-handler "between" [_ field lower upper]
-  (str field " BETWEEN " lower " AND " upper))
+  (str (to-sql field) " BETWEEN " (to-sql lower) " AND " (to-sql upper)))
 
 (def clause-order
   "Determines the order that clauses will be placed within generated SQL"
   [:select :from :join :where :group-by :having :order-by :limit :offset])
-
-(declare to-sql format-predicate*)
 
 (defn format [sql-map]
   (binding [*params* (atom [])]
@@ -107,9 +138,8 @@
   SqlCall
   (-to-sql [x] (binding [*fn-context?* true]
                  (let [fn-name (name (.name x))
-                       fn-name (fn-aliases fn-name fn-name)
-                       args (map to-sql (.args x))]
-                   (apply fn-handler fn-name args))))
+                       fn-name (fn-aliases fn-name fn-name)]
+                   (apply fn-handler fn-name (.args x)))))
   SqlRaw
   (-to-sql [x] (.s x))
   clojure.lang.IPersistentMap
