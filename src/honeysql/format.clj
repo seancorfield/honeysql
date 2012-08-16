@@ -39,19 +39,28 @@
    "!=" "<>"
    "not-in" "not in"})
 
-(def fn-handlers
-  {"=" (fn [f1 f2]
-         (cond
-          (= "NULL" f1) (str f2 " IS NULL")
-          (= "NULL" f2) (str f1 " IS NULL")
-          :else (str f1 " = " f2)))
-   "<>" (fn [f1 f2]
-          (cond
-           (= "NULL" f1) (str f2 " IS NOT NULL")
-           (= "NULL" f2) (str f1 " IS NOT NULL")
-           :else (str f1 " <> " f2)))
-   "between" (fn [field upper lower]
-               (str field " BETWEEN " upper " AND " lower))})
+(defmulti fn-handler (fn [op & args] op))
+
+(defmethod fn-handler :default [op & args]
+  (let [op-upper (string/upper-case op)]
+    (if (infix-fns op)
+      (paren-wrap (string/join (str " " op-upper " ") args))
+      (str op-upper (paren-wrap (comma-join args))))))
+
+(defmethod fn-handler "=" [_ f1 f2]
+  (cond
+   (= "NULL" f1) (str f2 " IS NULL")
+   (= "NULL" f2) (str f1 " IS NULL")
+   :else (str f1 " = " f2)))
+
+(defmethod fn-handler "<>" [_ f1 f2]
+  (cond
+   (= "NULL" f1) (str f2 " IS NOT NULL")
+   (= "NULL" f2) (str f1 " IS NOT NULL")
+   :else (str f1 " <> " f2)))
+
+(defmethod fn-handler "between" [_ field lower upper]
+  (str field " BETWEEN " lower " AND " upper))
 
 (def clause-order
   "Determines the order that clauses will be placed within generated SQL"
@@ -99,13 +108,8 @@
   (-to-sql [x] (binding [*fn-context?* true]
                  (let [fn-name (name (.name x))
                        fn-name (fn-aliases fn-name fn-name)
-                       fn-name-upper (string/upper-case fn-name)
                        args (map to-sql (.args x))]
-                   (if-let [handler (fn-handlers fn-name)]
-                     (apply handler args)
-                     (if (infix-fns fn-name)
-                       (paren-wrap (string/join (str " " fn-name-upper " ") args))
-                       (str fn-name-upper (paren-wrap (comma-join args))))))))
+                   (apply fn-handler fn-name args))))
   SqlRaw
   (-to-sql [x] (.s x))
   clojure.lang.IPersistentMap
