@@ -28,16 +28,29 @@
 
 (def infix-fns
   #{"+" "-" "*" "/" "%" "mod" "|" "&" "^"
-    "is" "=" ">" ">=" "<" "<=" "<>" "!="
+    ">" ">=" "<" "<="
     "and" "or" "xor"
     "in" "not in" "like" "regexp"})
 
 (def fn-aliases
-  {"not=" "!="
+  {"is" "="
+   "is-not" "<>"
+   "not=" "<>"
+   "!=" "<>"
    "not-in" "not in"})
 
 (def fn-handlers
-  {"between" (fn [field upper lower]
+  {"=" (fn [f1 f2]
+         (cond
+          (= "NULL" f1) (str f2 " IS NULL")
+          (= "NULL" f2) (str f1 " IS NULL")
+          :else (str f1 " = " f2)))
+   "<>" (fn [f1 f2]
+          (cond
+           (= "NULL" f1) (str f2 " IS NOT NULL")
+           (= "NULL" f2) (str f1 " IS NOT NULL")
+           :else (str f1 " <> " f2)))
+   "between" (fn [field upper lower]
                (str field " BETWEEN " upper " AND " lower))})
 
 (def clause-order
