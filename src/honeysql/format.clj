@@ -95,6 +95,22 @@
 (defmethod fn-handler "between" [_ field lower upper]
   (str (to-sql field) " BETWEEN " (to-sql lower) " AND " (to-sql upper)))
 
+;; Handles MySql's MATCH (field) AGAINST (pattern). The third argument
+;; can be a set containing one or more of :boolean, :natural, or :expand.
+(defmethod fn-handler "match" [_ fields pattern & [opts]]
+  (str "MATCH ("
+       (comma-join
+        (map to-sql (if (coll? fields) fields [fields])))
+       ") AGAINST ("
+       (to-sql pattern)
+       (when (seq opts)
+         (str " " (space-join (for [opt opts]
+                                (condp = opt
+                                  :boolean "IN BOOLEAN MODE"
+                                  :natural "IN NATURAL LANGUAGE MODE"
+                                  :expand "WITH QUERY EXPANSION")))))
+       ")"))
+
 (def clause-order
   "Determines the order that clauses will be placed within generated SQL"
   [:select :from :join :where :group-by :having :order-by :limit :offset])
