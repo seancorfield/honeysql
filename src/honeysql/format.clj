@@ -29,14 +29,15 @@
 (def infix-fns
   #{"+" "-" "*" "/" "%" "mod" "|" "&" "^"
     "and" "or" "xor"
-    "in" "not in" "like" "regexp"})
+    "in" "not in" "like" "not like" "regexp"})
 
 (def fn-aliases
   {"is" "="
    "is-not" "<>"
    "not=" "<>"
    "!=" "<>"
-   "not-in" "not in"})
+   "not-in" "not in"
+   "not-like" "not like"})
 
 (declare to-sql format-predicate*)
 
