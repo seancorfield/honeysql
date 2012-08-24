@@ -123,10 +123,14 @@
   (update-in m [:order-by] concat (collify fields)))
 
 (defhelper limit [m l]
-  (assoc m :limit (if (coll? l) (first l) l)))
+  (if (nil? l)
+    m
+    (assoc m :limit (if (coll? l) (first l) l))))
 
 (defhelper offset [m o]
-  (assoc m :offset (if (coll? o) (first o) o)))
+  (if (nil? o)
+    m
+    (assoc m :offset (if (coll? o) (first o) o))))
 
 (defhelper modifiers [m ms]
   (assoc m :modifiers (collify ms)))
