@@ -116,6 +116,8 @@
   "Determines the order that clauses will be placed within generated SQL"
   [:select :from :join :where :group-by :having :order-by :limit :offset])
 
+(def known-clauses (set clause-order))
+
 (defn format [sql-map]
   (binding [*params* (atom [])]
     (let [sql-str (to-sql sql-map)]
@@ -162,7 +164,9 @@
   SqlRaw
   (-to-sql [x] (.s x))
   clojure.lang.IPersistentMap
-  (-to-sql [x] (let [clause-ops (filter #(contains? x %) clause-order)
+  (-to-sql [x] (let [clause-ops (concat
+                                 (filter #(contains? x %) clause-order)
+                                 (remove known-clauses (keys x)))
                      sql-str (binding [*subquery?* true]
                                (space-join
                                 (map (comp #(format-clause % x) #(find x %))
@@ -201,6 +205,9 @@
 (defmulti format-clause
   "Takes a map entry representing a clause and returns an SQL string"
   (fn [clause _] (key clause)))
+
+(defmethod format-clause :default [& _]
+  "")
 
 (defmethod format-clause :select [[_ fields] sql-map]
   (str "SELECT "
