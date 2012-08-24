@@ -1,17 +1,14 @@
 # Honey SQL
 
-SQL as Clojure data structures.
+Turn Clojure data structures into SQL.
 
 **Work in progress**
 
 ## Usage
 
 ```clj
-(refer-clojure :exclude '[group-by])
-(require '[honeysql.core
-           :as sql
-           :refer [select from where join group-by having order-by
-                   offset limit modifiers merge-select merge-where]])
+(require '[honeysql.core :as sql]
+         '[honeysql.helpers :refer :all])
 ```
 
 Everything is built on top of maps representing SQL queries:
@@ -29,7 +26,25 @@ Everything is built on top of maps representing SQL queries:
 => ["SELECT a, b, c FROM foo WHERE (f.a = ?)" "baz"]
 ```
 
-There are helper functions to build SQL maps. They compose together nicely:
+You can build up a SQL map yourself or use helper functions.
+
+`build` is the Swiss Army Knife helper. It lets you leave out brackets here and there:
+
+```clj
+(sql/build :select :*
+           :from :foo
+           :where [:= :f.a "baz"])
+=> {:where [:= :f.a "baz"], :from [:foo], :select [:*]}
+```
+
+You can provide a "base" map as the first argument to build:
+
+```clj
+(sql/build sqlmap :offset 10 :limit 10)
+=> {:limit 10, :offset 10, :select [:a :b :c], :where [:= :f.a "baz"], :from [:foo]}
+```
+
+There are also functions for each clause type in the `honeysql.helpers` namespace:
 
 ```clj
 (-> (select :a :b :c)
@@ -55,20 +70,20 @@ When using the vanilla helper functions, new clauses will replace old clauses:
 To add to clauses instead of replacing them, use `merge-select`, `merge-where`, etc.:
 
 ```clj
-(sql/format
-  (-> sqlmap
-      (merge-select :d :e)
-      (merge-where [:> :b 10])))
-=> ["SELECT a, b, c, d, e FROM foo WHERE ((f.a = ?) AND (b > 10))" "baz"]
+(-> sqlmap
+    (merge-select :d :e)
+    (merge-where [:> :b 10])
+    sql/format)
+=> ["SELECT a, b, c, d, e FROM foo WHERE (f.a = ? AND b > 10)" "baz"]
 ```
 
 Queries can be nested:
 
 ```clj
-(sql/format
-  (-> (select :*)
-      (from :foo)
-      (where [:in :foo.a (-> (select :a) (from :bar))])))
+(-> (select :*)
+    (from :foo)
+    (where [:in :foo.a (-> (select :a) (from :bar))])
+    sql/format)
 => ["SELECT * FROM foo WHERE (foo.a IN (SELECT a FROM bar))"]
 ```
 
@@ -96,24 +111,56 @@ Here's a big, complicated query. (Note that Honey SQL makes no attempt to verify
             [:and [:= :f.a "bort"] [:not= :b.baz "gabba"]]
             [:in :f.e [1 2 3]]
             [:between :f.e 10 20]])
-    (group-by :f.a)
+    (group :f.a) ;note the name change
     (having [:< 0 :f.e])
     (order-by [:b.baz :desc] :c.quux)
     (limit 50)
-    (offset 10))
-
-(sql/format *1)
-=> ["SELECT DISTINCT f.*, b.baz, c.quux, NOW(), @x := 10 FROM foo AS f, baz AS b LEFT JOIN clod AS c ON (f.a = c.d) JOIN draq ON (f.b = draq.x) WHERE (((f.a = ?) AND (b.baz != ?)) OR (f.e IN (1, 2, 3)) OR f.e BETWEEN 10 AND 20) GROUP BY f.a HAVING (0 < f.e) ORDER BY b.baz DESC, c.quux LIMIT 50 OFFSET 10"
-    "bort" "gabba"]
+    (offset 10)
+    sql/format)
+=> ["SELECT DISTINCT f.*, b.baz, c.quux, NOW(), @x := 10 FROM foo AS f, baz AS b LEFT JOIN clod AS c ON f.a = c.d JOIN draq ON f.b = draq.x WHERE ((f.a = ? AND b.baz <> ?) OR (f.e IN (1, 2, 3)) OR f.e BETWEEN 10 AND 20) GROUP BY f.a HAVING 0 < f.e ORDER BY b.baz DESC, c.quux LIMIT 50 OFFSET 10"
+   "bort" "gabba"]
 
 ;; Printable and readable
-(= *2 (read-string (pr-str *2)))
+(= *1 (read-string (pr-str *1)))
 => true
+```
+
+## Extensibility
+
+You can define your own function handlers for use in `where`:
+
+```clj
+(require '[honeysql.format :as fmt])
+
+;; Note: already built-in. Usage: (where [:between :field 1 10])
+(defmethod fmt/fn-handler "between" [_ field lower upper]
+  (str (fmt/to-sql field) " BETWEEN "
+       (fmt/to-sql lower) " AND " (fmt/to-sql upper)))
+
+```
+
+You can also define your own clauses:
+
+```clj
+
+;; Takes a MapEntry of the operator & clause data, plus the entire SQL map
+(defmethod fmt/format-clause :foobar [[op v] sqlmap]
+  (str "FOOBAR " (fmt/to-sql v)))
+
+(sql/format {:select [:a :b] :foobar :baz})
+=> ["SELECT a, b FOOBAR baz"]
+
+(require '[honeysql.helpers :refer [defhelper]])
+(defhelper foobar [m args]
+  (assoc m :foobar (first args)))
+
+(-> (select :a :b) (foobar :baz) sql/format)
+=> ["SELECT a, b FOOBAR baz"]
+
 ```
 
 ## TODO
 
-* Date/time helpers
 * Insert, update, delete
 * Create table, etc.
 
