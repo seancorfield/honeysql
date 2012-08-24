@@ -26,9 +26,7 @@ Everything is built on top of maps representing SQL queries:
 => ["SELECT a, b, c FROM foo WHERE (f.a = ?)" "baz"]
 ```
 
-You can build up a SQL map yourself or use helper functions.
-
-`build` is the Swiss Army Knife helper. It lets you leave out brackets here and there:
+You can build up SQL maps yourself or use helper functions. `build` is the Swiss Army Knife helper. It lets you leave out brackets here and there:
 
 ```clj
 (sql/build :select :*
@@ -99,7 +97,7 @@ calls and raw SQL fragments:
 => ["SELECT COUNT(*), @var := foo.bar FROM foo"]
 ```
 
-Here's a big, complicated query. (Note that Honey SQL makes no attempt to verify that your queries are valid):
+Here's a big, complicated query. Note that Honey SQL makes no attempt to verify that your queries are valid.
 
 ```clj
 (-> (select :f.* :b.baz :c.quux (sql/call :now) (sql/raw "@x := 10"))
@@ -132,10 +130,12 @@ You can define your own function handlers for use in `where`:
 ```clj
 (require '[honeysql.format :as fmt])
 
-;; Note: already built-in. Usage: (where [:between :field 1 10])
-(defmethod fmt/fn-handler "between" [_ field lower upper]
-  (str (fmt/to-sql field) " BETWEEN "
+(defmethod fmt/fn-handler "betwixt" [_ field lower upper]
+  (str (fmt/to-sql field) " BETWIXT "
        (fmt/to-sql lower) " AND " (fmt/to-sql upper)))
+
+(-> (select :a) (where [:betwixt :a 1 10]) sql/format)
+=> ["SELECT a WHERE a BETWIXT 1 AND 10"]
 
 ```
 
