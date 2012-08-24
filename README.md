@@ -151,6 +151,8 @@ You can also define your own clauses:
 => ["SELECT a, b FOOBAR baz"]
 
 (require '[honeysql.helpers :refer [defhelper]])
+
+;; Defines a helper function, and allows 'build' to recognize your clause
 (defhelper foobar [m args]
   (assoc m :foobar (first args)))
 
