@@ -17,5 +17,7 @@
     (reduce
      (fn [sql-map [op args]]
        (build-clause op sql-map args))
-     base
+     (if (empty? base)
+       base
+       (apply build (apply concat base)))
      (partition 2 clauses))))
