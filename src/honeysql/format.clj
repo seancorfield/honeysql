@@ -1,8 +1,8 @@
 (ns honeysql.format
   (:refer-clojure :exclude [format])
-  (:require [honeysql.types :refer [call raw]]
+  (:require [honeysql.types :refer [call raw param-name]]
             [clojure.string :as string])
-  (:import [honeysql.types SqlCall SqlRaw]))
+  (:import [honeysql.types SqlCall SqlRaw SqlParam]))
 
 ;;(set! *warn-on-reflection* true)
 
@@ -21,6 +21,8 @@
   "Will be bound to an atom-vector that accumulates SQL parameters across
   possibly-recursive function calls"
   nil)
+
+(def ^:dynamic *input-params* nil)
 
 (def ^:dynamic *fn-context?* false)
 
@@ -118,14 +120,23 @@
 
 (def known-clauses (set clause-order))
 
-(defn format [sql-map]
-  (binding [*params* (atom [])]
+(defn format
+  "Takes a SQL map and optional input parameters and returns a vector
+  of a SQL string and parameters, as expected by clojure.java.jdbc.
+
+  Input parameters will be filled into designated spots according to
+  name (if a map is provided) or by position (if a sequence is provided)."
+  [sql-map & [params]]
+  (binding [*params* (atom [])
+            *input-params* (atom params)]
     (let [sql-str (to-sql sql-map)]
       (if (seq @*params*)
         (into [sql-str] @*params*)
         [sql-str]))))
 
-(defn format-predicate [pred]
+(defn format-predicate
+  "Formats a predicate (e.g., for WHERE, JOIN, or HAVING) as a string."
+  [pred]
   (binding [*params* (atom [])]
     (let [sql-str (format-predicate* pred)]
       (if (seq @*params*)
@@ -183,7 +194,13 @@
 (defn to-sql [x]
   (if (satisfies? ToSql x)
     (-to-sql x)
-    (do
+    (let [x (if (instance? SqlParam x)
+              (if (map? @*input-params*)
+                (get @*input-params* (param-name x))
+                (let [x (first @*input-params*)]
+                  (swap! *input-params* rest)
+                  x))
+              x)]
       (swap! *params* conj x)
       "?")))
 

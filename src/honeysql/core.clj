@@ -8,6 +8,7 @@
 
 (defalias call types/call)
 (defalias raw types/raw)
+(defalias param types/param)
 (defalias format format/format)
 (defalias format-predicate format/format-predicate)
 
