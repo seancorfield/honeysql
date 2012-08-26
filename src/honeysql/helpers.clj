@@ -133,8 +133,12 @@
     (assoc m :offset (if (coll? o) (first o) o))))
 
 (defhelper modifiers [m ms]
-  (assoc m :modifiers (collify ms)))
+  (if (nil? ms)
+    m
+    (assoc m :modifiers (collify ms))))
 
 (defhelper merge-modifiers [m ms]
-  (update-in m [:modifiers] concat (collify ms)))
+  (if (nil? ms)
+    m
+    (update-in m [:modifiers] concat (collify ms))))
 
