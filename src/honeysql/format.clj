@@ -39,7 +39,8 @@
    "not=" "<>"
    "!=" "<>"
    "not-in" "not in"
-   "not-like" "not like"})
+   "not-like" "not like"
+   "regex" "regexp"})
 
 (declare to-sql format-predicate*)
 
