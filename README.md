@@ -2,8 +2,6 @@
 
 Turn Clojure data structures into SQL.
 
-**Work in progress**
-
 ## Leiningen Coordinate
 
 ```clj
@@ -107,26 +105,60 @@ calls, raw SQL fragments, and named input parameters:
 Here's a big, complicated query. Note that Honey SQL makes no attempt to verify that your queries make any sense. It merely renders surface syntax.
 
 ```clj
-(-> (select :f.* :b.baz :c.quux (sql/call :now) (sql/raw "@x := 10"))
+(-> (select :f.* :b.baz :c.quux [:b.bla "bla-bla"]
+            (sql/call :now) (sql/raw "@x := 10"))
     (modifiers :distinct)
     (from [:foo :f] [:baz :b])
-    (join [[:clod :c] [:= :f.a :c.d] :left]
-          [:draq [:= :f.b :draq.x]])
+    (join :draq [:= :f.b :draq.x])
+    (left-join [:clod :c] [:= :f.a :c.d])
+    (right-join :bock [:= :bock.z :c.e])
     (where [:or
-            [:and [:= :f.a "bort"] [:not= :b.baz "gabba"]]
-            [:in :f.e [1 2 3]]
-            [:between :f.e 10 20]])
-    (group :f.a) ;note the name change
+             [:and [:= :f.a "bort"] [:not= :b.baz (sql/param :param1)]]
+             [:< 1 2 3]
+             [:in :f.e [1 (sql/param :param2) 3]]
+             [:between :f.e 10 20]])
+    (group :f.a)
     (having [:< 0 :f.e])
     (order-by [:b.baz :desc] :c.quux)
     (limit 50)
-    (offset 10)
-    sql/format)
-=> ["SELECT DISTINCT f.*, b.baz, c.quux, NOW(), @x := 10 FROM foo AS f, baz AS b LEFT JOIN clod AS c ON f.a = c.d JOIN draq ON f.b = draq.x WHERE ((f.a = ? AND b.baz <> ?) OR (f.e IN (1, 2, 3)) OR f.e BETWEEN 10 AND 20) GROUP BY f.a HAVING 0 < f.e ORDER BY b.baz DESC, c.quux LIMIT 50 OFFSET 10"
-   "bort" "gabba"]
+    (offset 10))
+=> {:select [:f.* :b.baz :c.quux [:b.bla "bla-bla"]
+             (sql/call :now) (sql/raw "@x := 10")]
+    :modifiers [:distinct]
+    :from [[:foo :f] [:baz :b]]
+    :join [:draq [:= :f.b :draq.x]]
+    :left-join [[:clod :c] [:= :f.a :c.d]]
+    :right-join [:bock [:= :bock.z :c.e]]
+    :where [:or
+             [:and [:= :f.a "bort"] [:not= :b.baz (sql/param :param1)]]
+             [:< 1 2 3]
+             [:in :f.e [1 (sql/param :param2) 3]]
+             [:between :f.e 10 20]]
+    :group-by [:f.a]
+    :having [:< 0 :f.e]
+    :order-by [[:b.baz :desc] :c.quux]
+    :limit 50
+    :offset 10}
+
+(sql/format *1 {:param1 "gabba" :param2 2})
+=> ["SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS \"bla-bla\", NOW(), @x := 10
+     FROM foo AS f, baz AS b
+     INNER JOIN draq ON f.b = draq.x
+     LEFT JOIN clod AS c ON f.a = c.d
+     RIGHT JOIN bock ON bock.z = c.e
+     WHERE ((f.a = ? AND b.baz <> ?)
+           OR (1 < 2 AND 2 < 3)
+           OR (f.e IN (1, ?, 3))
+           OR f.e BETWEEN 10 AND 20)
+     GROUP BY f.a
+     HAVING 0 < f.e
+     ORDER BY b.baz DESC, c.quux
+     LIMIT 50
+     OFFSET 10 "
+     "bort" "gabba" 2]
 
 ;; Printable and readable
-(= *1 (read-string (pr-str *1)))
+(= *2 (read-string (pr-str *2)))
 => true
 ```
 

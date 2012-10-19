@@ -34,6 +34,8 @@
       :select, :merge-select, :un-select
       :from, :merge-from
       :join, :merge-join
+      :left-join, :merge-left-join
+      :right-join, :merge-right-join
       :where, :merge-where
       :group-by, :merge-group-by
       :having, :merge-having

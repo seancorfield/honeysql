@@ -78,6 +78,18 @@
 (defhelper merge-join [m clauses]
   (update-in m [:join] concat clauses))
 
+(defhelper left-join [m clauses]
+  (assoc m :left-join clauses))
+
+(defhelper merge-left-join [m clauses]
+  (update-in m [:left-join] concat clauses))
+
+(defhelper right-join [m clauses]
+  (assoc m :right-join clauses))
+
+(defhelper merge-right-join [m clauses]
+  (update-in m [:right-join] concat clauses))
+
 (defmethod build-clause :group-by [_ m fields]
   (assoc m :group-by (collify fields)))
 

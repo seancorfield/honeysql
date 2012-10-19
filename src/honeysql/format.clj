@@ -117,7 +117,8 @@
 
 (def clause-order
   "Determines the order that clauses will be placed within generated SQL"
-  [:select :from :join :where :group-by :having :order-by :limit :offset])
+  [:select :from :join :left-join :right-join :where :group-by :having
+   :order-by :limit :offset])
 
 (def known-clauses (set clause-order))
 
@@ -242,14 +243,23 @@
 (defmethod format-clause :where [[_ pred] _]
   (str "WHERE " (format-predicate* pred)))
 
-(defn format-join [table pred & [type]]
+(defn format-join [type table pred]
   (str (when type
          (str (string/upper-case (name type)) " "))
        "JOIN " (to-sql table)
        " ON " (format-predicate* pred)))
 
 (defmethod format-clause :join [[_ join-groups] _]
-  (space-join (map #(apply format-join %) join-groups)))
+  (space-join (map #(apply format-join :inner %)
+                   (partition 2 join-groups))))
+
+(defmethod format-clause :left-join [[_ join-groups] _]
+  (space-join (map #(apply format-join :left %)
+                   (partition 2 join-groups))))
+
+(defmethod format-clause :right-join [[_ join-groups] _]
+  (space-join (map #(apply format-join :right %)
+                   (partition 2 join-groups))))
 
 (defmethod format-clause :group-by [[_ fields] _]
   (str "GROUP BY " (comma-join (map to-sql fields))))

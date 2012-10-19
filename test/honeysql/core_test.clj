@@ -12,8 +12,9 @@
                ;;(un-select :c.quux)
                (modifiers :distinct)
                (from [:foo :f] [:baz :b])
-               (join [[:clod :c] [:= :f.a :c.d] :left]
-                     [:draq [:= :f.b :draq.x]])
+               (join :draq [:= :f.b :draq.x])
+               (left-join [:clod :c] [:= :f.a :c.d])
+               (right-join :bock [:= :bock.z :c.e])
                (where [:or
                        [:and [:= :f.a "bort"] [:not= :b.baz (sql/param :param1)]]
                        [:< 1 2 3]
@@ -30,8 +31,9 @@
             ;;:un-select :c.quux
             :modifiers :distinct
             :from [[:foo :f] [:baz :b]]
-            :join [[[:clod :c] [:= :f.a :c.d] :left]
-                   [:draq [:= :f.b :draq.x]]]
+            :join [:draq [:= :f.b :draq.x]]
+            :left-join [[:clod :c] [:= :f.a :c.d]]
+            :right-join [:bock [:= :bock.z :c.e]]
             :where [:or
                     [:and [:= :f.a "bort"] [:not= :b.baz (sql/param :param1)]]
                     [:< 1 2 3]
@@ -49,7 +51,7 @@
       (is (= m1 m3)))
     (testing "SQL data formats correctly"
       (is (= (sql/format m1 {:param1 "gabba" :param2 2})
-             ["SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS \"bla-bla\", NOW(), @x := 10 FROM foo AS f, baz AS b LEFT JOIN clod AS c ON f.a = c.d JOIN draq ON f.b = draq.x WHERE ((f.a = ? AND b.baz <> ?) OR (1 < 2 AND 2 < 3) OR (f.e IN (1, ?, 3)) OR f.e BETWEEN 10 AND 20) GROUP BY f.a HAVING 0 < f.e ORDER BY b.baz DESC, c.quux LIMIT 50 OFFSET 10 "
+             ["SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS \"bla-bla\", NOW(), @x := 10 FROM foo AS f, baz AS b INNER JOIN draq ON f.b = draq.x LEFT JOIN clod AS c ON f.a = c.d RIGHT JOIN bock ON bock.z = c.e WHERE ((f.a = ? AND b.baz <> ?) OR (1 < 2 AND 2 < 3) OR (f.e IN (1, ?, 3)) OR f.e BETWEEN 10 AND 20) GROUP BY f.a HAVING 0 < f.e ORDER BY b.baz DESC, c.quux LIMIT 50 OFFSET 10 "
               "bort" "gabba" 2])))
     (testing "SQL data prints and reads correctly"
       (is (= m1 (read-string (pr-str m1)))))))
