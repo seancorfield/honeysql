@@ -179,7 +179,8 @@
   (-to-sql [x] (let [clause-ops (concat
                                  (filter #(contains? x %) clause-order)
                                  (remove known-clauses (keys x)))
-                     sql-str (binding [*subquery?* true]
+                     sql-str (binding [*subquery?* true
+                                       *fn-context?* false]
                                (space-join
                                 (map (comp #(format-clause % x) #(find x %))
                                      clause-ops)))]
