@@ -200,6 +200,8 @@ You can also define your own clauses:
 
 ```
 
+If you do implement a clause or function handler, consider submitting a pull request so others can use it, too. 
+
 ## TODO
 
 * Insert, update, delete
