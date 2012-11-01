@@ -5,7 +5,7 @@ Turn Clojure data structures into SQL.
 ## Leiningen Coordinate
 
 ```clj
-[honeysql "0.1.1"]
+[honeysql "0.2.0"]
 ```
 
 ## Usage
