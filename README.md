@@ -2,6 +2,8 @@
 
 Turn Clojure data structures into SQL.
 
+Why? So that the data can be easily built, examined, and transformed. 
+
 ## Leiningen Coordinate
 
 ```clj
