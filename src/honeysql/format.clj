@@ -60,6 +60,9 @@
       (paren-wrap (string/join (str " " op-upper " ") args))
       (str op-upper (paren-wrap (comma-join args))))))
 
+(defmethod fn-handler "count-distinct" [_ & args]
+  (str "COUNT(DISTINCT " (comma-join (map to-sql args)) ")"))
+
 (defmethod fn-handler "=" [_ a b & more]
   (if (seq more)
     (apply expand-binary-ops "=" a b more)
