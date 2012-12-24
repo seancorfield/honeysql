@@ -7,7 +7,7 @@ Why? So that the data can be easily built, examined, and transformed.
 ## Leiningen Coordinate
 
 ```clj
-[honeysql "0.2.0"]
+[honeysql "0.3.0"]
 ```
 
 ## Usage
