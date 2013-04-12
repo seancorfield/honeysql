@@ -54,11 +54,10 @@
        ")"))
 
 (defmethod fn-handler :default [op & args]
-  (let [op-upper (string/upper-case op)
-        args (map to-sql args)]
+  (let [args (map to-sql args)]
     (if (infix-fns op)
-      (paren-wrap (string/join (str " " op-upper " ") args))
-      (str op-upper (paren-wrap (comma-join args))))))
+      (paren-wrap (string/join (str " " op " ") args))
+      (str op (paren-wrap (comma-join args))))))
 
 (defmethod fn-handler "count-distinct" [_ & args]
   (str "COUNT(DISTINCT " (comma-join (map to-sql args)) ")"))
