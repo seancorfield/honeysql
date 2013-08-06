@@ -147,8 +147,8 @@
 
   Instead of passing parameters, you can use keyword arguments:
     :params - input parameters
-    :quoting - quoting styling to use for identifiers; one of :ansi,
-               :mysql, or :sqlserver"
+    :quoting - quote style to use for identifiers; one of :ansi (PostgreSQL),
+               :mysql, or :sqlserver. Defaults to no quoting."
   [sql-map & params-or-opts]
   (let [opts (when (keyword? (first params-or-opts))
                    (apply hash-map params-or-opts))

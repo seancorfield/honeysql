@@ -120,7 +120,7 @@ There are helper functions and data literals for SQL function calls, field quali
 => ["SELECT FOO(bar), foo.a, @var := foo.bar FROM foo WHERE a = ?" "BAZ"]
 ```
 
-To quote identifiers, pass the `:quoting` keyword option to `format`. Valid options are `:ansi`, `:mysql`, or `:sqlserver`:
+To quote identifiers, pass the `:quoting` keyword option to `format`. Valid options are `:ansi` (PostgreSQL), `:mysql`, or `:sqlserver`:
 
 ```clj
 (-> (select :foo.a)
