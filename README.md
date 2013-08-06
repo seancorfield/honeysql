@@ -1,8 +1,6 @@
 # Honey SQL
 
-Turn Clojure data structures into SQL.
-
-Why? So that the data can be easily built, examined, and transformed. 
+SQL as Clojure data structures. Build queries programmatically -- even at runtime -- without having to bash strings together.
 
 ## Leiningen Coordinate
 
