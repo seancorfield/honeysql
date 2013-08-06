@@ -16,7 +16,7 @@
                (left-join [:clod :c] [:= :f.a :c.d])
                (right-join :bock [:= :bock.z :c.e])
                (where [:or
-                       [:and [:= :f.a "bort"] [:not= :b.baz (sql/param :param1)]]
+                       [:and [:= :f.a "bort"] [:not= :b.baz :?param1]]
                        [:< 1 2 3]
                        [:in :f.e [1 (sql/param :param2) 3]]
                        [:between :f.e 10 20]])
@@ -35,7 +35,7 @@
             :left-join [[:clod :c] [:= :f.a :c.d]]
             :right-join [:bock [:= :bock.z :c.e]]
             :where [:or
-                    [:and [:= :f.a "bort"] [:not= :b.baz (sql/param :param1)]]
+                    [:and [:= :f.a "bort"] [:not= :b.baz :?param1]]
                     [:< 1 2 3]
                     [:in :f.e [1 (sql/param :param2) 3]]
                     [:between :f.e 10 20]]

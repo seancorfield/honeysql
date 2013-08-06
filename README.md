@@ -98,6 +98,16 @@ Keywords that begin with `%` are interpreted as SQL function calls:
 => ["SELECT COUNT(*) FROM foo"]
 ```
 
+Keywords that begin with `?` are interpreted as bindable parameters:
+
+``clj
+(-> (select :id)
+    (from :foo)
+    (where [:= :a :?baz])
+    (sql/format {:baz "BAZ"}))
+=> ["SELECT id FROM foo WHERE a = ?" "BAZ"]
+```
+
 There are helper functions and data literals for SQL function calls, field qualifiers, raw SQL fragments, and named input parameters:
 
 ```clj

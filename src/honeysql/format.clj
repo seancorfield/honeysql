@@ -1,6 +1,6 @@
 (ns honeysql.format
   (:refer-clojure :exclude [format])
-  (:require [honeysql.types :refer [call raw param-name]]
+  (:require [honeysql.types :refer [call raw param param-name]]
             [clojure.string :as string])
   (:import [honeysql.types SqlCall SqlRaw SqlParam]))
 
@@ -155,9 +155,10 @@
 (extend-protocol ToSql
   clojure.lang.Keyword
   (-to-sql [x] (let [s ^String (name x)]
-                 (if (= \% (.charAt s 0))
-                   (let [call-args (string/split (subs s 1) #"\." 2)]
-                     (to-sql (apply call (map keyword call-args))))
+                 (condp = (.charAt s 0)
+                   \% (let [call-args (string/split (subs s 1) #"\." 2)]
+                        (to-sql (apply call (map keyword call-args))))
+                   \? (to-sql (param (keyword (subs s 1))))
                    (-> s (string/replace "-" "_")))))
   clojure.lang.Symbol
   (-to-sql [x] (-> x name (string/replace "-" "_")))
