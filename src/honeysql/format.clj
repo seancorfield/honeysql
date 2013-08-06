@@ -28,6 +28,20 @@
 
 (def ^:dynamic *subquery?* false)
 
+(def ^:private quote-fns
+  {:none identity
+   :ansi #(str \" % \")
+   :mysql #(str \` % \`)
+   :sqlserver #(str \[ % \])})
+
+(def ^:dynamic *quote-identifier-fn* nil)
+
+(defn quote-identifier [x]
+  (if-not *quote-identifier-fn*
+    x
+    (let [parts (string/split (name x) #"\.")]
+      (string/join "." (map #(*quote-identifier-fn* %) parts)))))
+
 (def infix-fns
   #{"+" "-" "*" "/" "%" "mod" "|" "&" "^"
     "and" "or" "xor"
@@ -129,19 +143,32 @@
   of a SQL string and parameters, as expected by clojure.java.jdbc.
 
   Input parameters will be filled into designated spots according to
-  name (if a map is provided) or by position (if a sequence is provided)."
-  [sql-map & [params]]
-  (binding [*params* (atom [])
-            *input-params* (atom params)]
-    (let [sql-str (to-sql sql-map)]
-      (if (seq @*params*)
-        (into [sql-str] @*params*)
-        [sql-str]))))
+  name (if a map is provided) or by position (if a sequence is provided).
+
+  Instead of passing parameters, you can use keyword arguments:
+    :params - input parameters
+    :quoting - quoting styling to use for identifiers; one of :ansi,
+               :mysql, or :sqlserver"
+  [sql-map & params-or-opts]
+  (let [opts (when (keyword? (first params-or-opts))
+                   (apply hash-map params-or-opts))
+        params (if (coll? (first params-or-opts))
+                 (first params-or-opts)
+                 (:params opts))]
+    (binding [*params* (atom [])
+              *input-params* (atom params)
+              *quote-identifier-fn* (quote-fns (:quoting opts))]
+      (let [sql-str (to-sql sql-map)]
+        (if (seq @*params*)
+          (into [sql-str] @*params*)
+          [sql-str])))))
 
 (defn format-predicate
   "Formats a predicate (e.g., for WHERE, JOIN, or HAVING) as a string."
-  [pred]
-  (binding [*params* (atom [])]
+  [pred & {:keys [quoting]}]
+  (binding [*params* (atom [])
+            *quote-identifier-fn* (or (quote-fns quoting)
+                                      *quote-identifier-fn*)]
     (let [sql-str (format-predicate* pred)]
       (if (seq @*params*)
         (into [sql-str] @*params*)
@@ -159,7 +186,7 @@
                    \% (let [call-args (string/split (subs s 1) #"\." 2)]
                         (to-sql (apply call (map keyword call-args))))
                    \? (to-sql (param (keyword (subs s 1))))
-                   (-> s (string/replace "-" "_")))))
+                   (-> s (string/replace "-" "_") quote-identifier))))
   clojure.lang.Symbol
   (-to-sql [x] (-> x name (string/replace "-" "_")))
   java.lang.Number
@@ -173,9 +200,7 @@
                  ;; alias
                  (str (to-sql (first x))
                       " AS "
-                      (if (string? (second x))
-                        (str "\"" (second x) "\"")
-                        (to-sql (second x))))))
+                      (str "\"" (name (second x)) "\""))))
   SqlCall
   (-to-sql [x] (binding [*fn-context?* true]
                  (let [fn-name (name (.name x))

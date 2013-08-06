@@ -104,7 +104,7 @@ Keywords that begin with `?` are interpreted as bindable parameters:
 (-> (select :id)
     (from :foo)
     (where [:= :a :?baz])
-    (sql/format {:baz "BAZ"}))
+    (sql/format :params {:baz "BAZ"}))
 => ["SELECT id FROM foo WHERE a = ?" "BAZ"]
 ```
 
@@ -116,8 +116,18 @@ There are helper functions and data literals for SQL function calls, field quali
     (where [:= :a (sql/param :baz)]))
 => {:where [:= :a #sql/param :baz], :from (:foo), :select (#sql/call [:foo :bar] :foo.a #sql/raw "@var := foo.bar")}
 
-(sql/format *1 {:baz "BAZ"})
+(sql/format *1 :params {:baz "BAZ"})
 => ["SELECT FOO(bar), foo.a, @var := foo.bar FROM foo WHERE a = ?" "BAZ"]
+```
+
+To quote identifiers, pass the `:quoting` keyword option to `format`. Valid options are `:ansi`, `:mysql`, or `:sqlserver`:
+
+```clj
+(-> (select :foo.a)
+    (from :foo)
+    (where [:= :foo.a "baz"])
+    (sql/format :quoting :mysql))
+=> ["SELECT `foo`.`a` FROM `foo` WHERE `foo`.`a` = ?" "baz"]
 ```
 
 Here's a big, complicated query. Note that Honey SQL makes no attempt to verify that your queries make any sense. It merely renders surface syntax.
