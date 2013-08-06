@@ -76,6 +76,9 @@
 (defmethod fn-handler "count-distinct" [_ & args]
   (str "COUNT(DISTINCT " (comma-join (map to-sql args)) ")"))
 
+(defmethod fn-handler "distinct-on" [_ & args]
+  (str "DISTINCT ON (" (comma-join (map to-sql args)) ")"))
+
 (defmethod fn-handler "=" [_ a b & more]
   (if (seq more)
     (apply expand-binary-ops "=" a b more)
