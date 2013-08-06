@@ -100,7 +100,7 @@ Keywords that begin with `%` are interpreted as SQL function calls:
 
 Keywords that begin with `?` are interpreted as bindable parameters:
 
-``clj
+```clj
 (-> (select :id)
     (from :foo)
     (where [:= :a :?baz])
