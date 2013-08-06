@@ -8,7 +8,7 @@
 
 (deftest test-select
   (let [m1 (-> (select :f.* :b.baz :c.quux [:b.bla "bla-bla"]
-                       (sql/call :now) (sql/raw "@x := 10"))
+                       :%now (sql/raw "@x := 10"))
                ;;(un-select :c.quux)
                (modifiers :distinct)
                (from [:foo :f] [:baz :b])
@@ -27,7 +27,7 @@
                (limit 50)
                (offset 10))
         m2 {:select [:f.* :b.baz :c.quux [:b.bla "bla-bla"]
-                     (sql/call :now) (sql/raw "@x := 10")]
+                     :%now (sql/raw "@x := 10")]
             ;;:un-select :c.quux
             :modifiers :distinct
             :from [[:foo :f] [:baz :b]]

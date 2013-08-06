@@ -91,17 +91,23 @@ Queries can be nested:
 => ["SELECT * FROM foo WHERE (foo.a IN (SELECT a FROM bar))"]
 ```
 
-There are helper functions and data literals for field qualifiers, SQL function
-calls, raw SQL fragments, and named input parameters:
+Keywords that begin with `%` are interpreted as SQL function calls:
 
 ```clj
-(-> (select (sql/qualify :foo :a) (sql/call :count :*) (sql/raw "@var := foo.bar"))
+(-> (select :%count.*) (from :foo) sql/format)
+=> ["SELECT COUNT(*) FROM foo"]
+```
+
+There are helper functions and data literals for SQL function calls, field qualifiers, raw SQL fragments, and named input parameters:
+
+```clj
+(-> (select (sql/call :foo :bar) (sql/qualify :foo :a) (sql/raw "@var := foo.bar"))
     (from :foo)
     (where [:= :a (sql/param :baz)]))
-=> {:where [:= :a #sql/param :baz], :from (:foo), :select (#sql/call [:count :*] #sql/raw "@var := foo.bar")}
+=> {:where [:= :a #sql/param :baz], :from (:foo), :select (#sql/call [:foo :bar] :foo.a #sql/raw "@var := foo.bar")}
 
 (sql/format *1 {:baz "BAZ"})
-=> ["SELECT COUNT(*), @var := foo.bar FROM foo WHERE a = ?" "BAZ"]
+=> ["SELECT FOO(bar), foo.a, @var := foo.bar FROM foo WHERE a = ?" "BAZ"]
 ```
 
 Here's a big, complicated query. Note that Honey SQL makes no attempt to verify that your queries make any sense. It merely renders surface syntax.

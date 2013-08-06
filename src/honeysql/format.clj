@@ -154,7 +154,11 @@
 
 (extend-protocol ToSql
   clojure.lang.Keyword
-  (-to-sql [x] (-> x name (string/replace "-" "_")))
+  (-to-sql [x] (let [s ^String (name x)]
+                 (if (= \% (.charAt s 0))
+                   (let [call-args (string/split (subs s 1) #"\." 2)]
+                     (to-sql (apply call (map keyword call-args))))
+                   (-> s (string/replace "-" "_")))))
   clojure.lang.Symbol
   (-to-sql [x] (-> x name (string/replace "-" "_")))
   java.lang.Number
