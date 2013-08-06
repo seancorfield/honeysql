@@ -200,7 +200,9 @@
                  ;; alias
                  (str (to-sql (first x))
                       " AS "
-                      (str "\"" (name (second x)) "\""))))
+                      (if (string? (second x))
+                        (quote-identifier (second x))
+                        (to-sql (second x))))))
   SqlCall
   (-to-sql [x] (binding [*fn-context?* true]
                  (let [fn-name (name (.name x))
