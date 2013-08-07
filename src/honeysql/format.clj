@@ -42,10 +42,11 @@
              *quote-identifier-fn*)]
     (if-not qf
       x
-      (if-not split
-        (qf (name x))
-        (let [parts (string/split (name x) #"\.")]
-          (string/join "." (map qf parts)))))))
+      (let [qf* #(if (= "*" %) % (qf %))]
+        (if-not split
+         (qf* (name x))
+         (let [parts (string/split (name x) #"\.")]
+           (string/join "." (map qf* parts))))))))
 
 (def infix-fns
   #{"+" "-" "*" "/" "%" "mod" "|" "&" "^"
