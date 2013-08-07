@@ -36,11 +36,16 @@
 
 (def ^:dynamic *quote-identifier-fn* nil)
 
-(defn quote-identifier [x]
-  (if-not *quote-identifier-fn*
-    x
-    (let [parts (string/split (name x) #"\.")]
-      (string/join "." (map #(*quote-identifier-fn* %) parts)))))
+(defn quote-identifier [x & {:keys [style split] :or {split true}}]
+  (let [qf (if style
+             (quote-fns style)
+             *quote-identifier-fn*)]
+    (if-not qf
+      x
+      (if-not split
+        (qf (name x))
+        (let [parts (string/split (name x) #"\.")]
+          (string/join "." (map qf parts)))))))
 
 (def infix-fns
   #{"+" "-" "*" "/" "%" "mod" "|" "&" "^"

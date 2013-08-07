@@ -11,6 +11,7 @@
 (defalias param types/param)
 (defalias format format/format)
 (defalias format-predicate format/format-predicate)
+(defalias quote-identifier format/quote-identifier)
 
 (defn qualify
   "Takes one or more keyword or string qualifers and name. Returns
