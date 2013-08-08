@@ -29,23 +29,28 @@
 (def ^:dynamic *subquery?* false)
 
 (def ^:private quote-fns
-  {:none identity
-   :ansi #(str \" % \")
+  {:ansi #(str \" % \")
    :mysql #(str \` % \`)
    :sqlserver #(str \[ % \])})
 
 (def ^:dynamic *quote-identifier-fn* nil)
 
+(defn- undasherize [s]
+  (string/replace s "-" "_"))
 (defn quote-identifier [x & {:keys [style split] :or {split true}}]
   (let [qf (if style
              (quote-fns style)
-             *quote-identifier-fn*)]
+             *quote-identifier-fn*)
+        s (cond
+            (or (keyword? x) (symbol? x)) (undasherize (name x))
+            (string? x) (if qf x (undasherize x))
+            :else (str x))]
     (if-not qf
-      x
+      s
       (let [qf* #(if (= "*" %) % (qf %))]
         (if-not split
-         (qf* (name x))
-         (let [parts (string/split (name x) #"\.")]
+         (qf* s)
+         (let [parts (string/split s #"\.")]
            (string/join "." (map qf* parts))))))))
 
 (def infix-fns
@@ -195,9 +200,9 @@
                    \% (let [call-args (string/split (subs s 1) #"\." 2)]
                         (to-sql (apply call (map keyword call-args))))
                    \? (to-sql (param (keyword (subs s 1))))
-                   (-> s (string/replace "-" "_") quote-identifier))))
+                   (quote-identifier x))))
   clojure.lang.Symbol
-  (-to-sql [x] (-> x name (string/replace "-" "_")))
+  (-to-sql [x] (quote-identifier x))
   java.lang.Number
   (-to-sql [x] (str x))
   java.lang.Boolean
