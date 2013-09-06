@@ -17,6 +17,10 @@
 (defn paren-wrap [x]
   (str "(" x ")"))
 
+(def ^:dynamic *clause*
+  "During formatting, *clause* is bound to :select, :from, :where, etc."
+  nil)
+
 (def ^:dynamic *params*
   "Will be bound to an atom-vector that accumulates SQL parameters across
   possibly-recursive function calls"
@@ -31,7 +35,8 @@
 (def ^:private quote-fns
   {:ansi #(str \" % \")
    :mysql #(str \` % \`)
-   :sqlserver #(str \[ % \])})
+   :sqlserver #(str \[ % \])
+   :oracle #(str \" % \")})
 
 (def ^:dynamic *quote-identifier-fn* nil)
 
@@ -162,7 +167,7 @@
   Instead of passing parameters, you can use keyword arguments:
     :params - input parameters
     :quoting - quote style to use for identifiers; one of :ansi (PostgreSQL),
-               :mysql, or :sqlserver. Defaults to no quoting."
+               :mysql, :sqlserver, or :oracle. Defaults to no quoting."
   [sql-map & params-or-opts]
   (let [opts (when (keyword? (first params-or-opts))
                    (apply hash-map params-or-opts))
@@ -191,7 +196,7 @@
 (defprotocol ToSql
   (-to-sql [x]))
 
-(declare format-clause)
+(declare -format-clause)
 
 (extend-protocol ToSql
   clojure.lang.Keyword
@@ -213,7 +218,10 @@
                  (paren-wrap (comma-join (map to-sql x)))
                  ;; alias
                  (str (to-sql (first x))
-                      " AS "
+                      ; Omit AS in FROM, JOIN, etc. - Oracle doesn't allow it
+                      (if (= :select *clause*)
+                        " AS "
+                        " ")
                       (if (string? (second x))
                         (quote-identifier (second x))
                         (to-sql (second x))))))
@@ -231,7 +239,7 @@
                      sql-str (binding [*subquery?* true
                                        *fn-context?* false]
                                (space-join
-                                (map (comp #(format-clause % x) #(find x %))
+                                (map (comp #(-format-clause % x) #(find x %))
                                      clause-ops)))]
                  (if *subquery?*
                    (paren-wrap sql-str)
@@ -273,6 +281,11 @@
 (defmulti format-clause
   "Takes a map entry representing a clause and returns an SQL string"
   (fn [clause _] (key clause)))
+
+(defn- -format-clause
+  [clause _]
+  (binding [*clause* (key clause)]
+    (format-clause clause _)))
 
 (defmethod format-clause :default [& _]
   "")
