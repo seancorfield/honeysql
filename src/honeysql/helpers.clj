@@ -154,3 +154,38 @@
     m
     (update-in m [:modifiers] concat (collify ms))))
 
+(defmethod build-clause :insert-into [_ m table]
+  (assoc m :insert-into table))
+
+(defn insert-into
+  ([table] (insert-into nil table))
+  ([m table] (build-clause :insert-into m table)))
+
+(defmethod build-clause :values [_ m values]
+  (assoc m :values values))
+
+(defn values
+  ([vs] (values nil vs))
+  ([m vs] (build-clause :values m vs)))
+
+(defmethod build-clause :update [_ m table]
+  (assoc m :update table))
+
+(defn update
+  ([table] (update nil table))
+  ([m table] (build-clause :update m table)))
+
+(defmethod build-clause :set [_ m values]
+  (assoc m :set values))
+
+;; short for sql set, to avoid name collision with clojure.core/set
+(defn sset
+  ([vs] (values nil vs))
+  ([m vs] (build-clause :set m vs)))
+
+(defmethod build-clause :delete-from [_ m table]
+  (assoc m :delete-from table))
+
+(defn delete-from
+  ([table] (delete-from nil table))
+  ([m table] (build-clause :delete-from m table)))
