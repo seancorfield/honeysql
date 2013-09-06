@@ -44,7 +44,7 @@
       :offset
       :modifiers, :merge-modifiers
       :insert-into
-      :values
+      :values, :merge-values
       :update
       :set
       :delete-from"

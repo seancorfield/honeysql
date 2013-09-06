@@ -168,6 +168,13 @@
   ([vs] (values nil vs))
   ([m vs] (build-clause :values m vs)))
 
+(defmethod build-clause :merge-values [_ m values]
+  (update-in m [:values] concat values))
+
+(defn merge-values
+  ([vs] (merge-values nil vs))
+  ([m vs] (build-clause :merge-values m vs)))
+
 (defmethod build-clause :update [_ m table]
   (assoc m :update table))
 

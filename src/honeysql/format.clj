@@ -334,11 +334,13 @@
   (str "INSERT INTO " (to-sql table)))
 
 (defmethod format-clause :values [[_ values] _]
-  (if (sequential? values)
-    (str "VALUES (" (comma-join (map to-sql values)) ")")
+  (if (sequential? (first values))
+    (str "VALUES " (comma-join (for [x values]
+                                 (str "(" (comma-join (map to-sql x)) ")"))))
     (str
-      "(" (comma-join (map to-sql (keys values))) ") VALUES ("
-      (comma-join (map to-sql (vals values))) ")")))
+      "(" (comma-join (map to-sql (keys (first values)))) ") VALUES "
+      (comma-join (for [x values]
+                    (str "(" (comma-join (map to-sql (vals x))) ")"))))))
 
 (defmethod format-clause :update [[_ table] _]
   (str "UPDATE " (to-sql table)))
