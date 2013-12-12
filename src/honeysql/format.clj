@@ -147,8 +147,9 @@
 
 (def clause-order
   "Determines the order that clauses will be placed within generated SQL"
-  [:select :insert-into :update :delete-from :set :from :join :left-join :right-join :where :group-by :having
-   :order-by :limit :offset :values])
+  [:select :insert-into :update :delete-from :columns :set :from :join
+   :left-join :right-join :where :group-by :having :order-by :limit :offset
+   :values :query-values])
 
 (def known-clauses (set clause-order))
 
@@ -333,6 +334,9 @@
 (defmethod format-clause :insert-into [[_ table] _]
   (str "INSERT INTO " (to-sql table)))
 
+(defmethod format-clause :columns [[_ fields] _]
+  (str "(" (comma-join (map to-sql fields)) ")"))
+
 (defmethod format-clause :values [[_ values] _]
   (if (sequential? (first values))
     (str "VALUES " (comma-join (for [x values]
@@ -341,6 +345,9 @@
       "(" (comma-join (map to-sql (keys (first values)))) ") VALUES "
       (comma-join (for [x values]
                     (str "(" (comma-join (map to-sql (vals x))) ")"))))))
+
+(defmethod format-clause :query-values [[_ query-values] _]
+  (to-sql query-values))
 
 (defmethod format-clause :update [[_ table] _]
   (str "UPDATE " (to-sql table)))

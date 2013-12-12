@@ -161,19 +161,32 @@
   ([table] (insert-into nil table))
   ([m table] (build-clause :insert-into m table)))
 
-(defmethod build-clause :values [_ m values]
-  (assoc m :values values))
+(defhelper columns [m fields]
+  (assoc m :columns (collify fields)))
+
+(defhelper merge-columns [m fields]
+  (update-in m [:columns] concat (collify fields)))
+
+(defmethod build-clause :values [_ m vs]
+  (assoc m :values vs))
 
 (defn values
   ([vs] (values nil vs))
   ([m vs] (build-clause :values m vs)))
 
-(defmethod build-clause :merge-values [_ m values]
-  (update-in m [:values] concat values))
+(defmethod build-clause :merge-values [_ m vs]
+  (update-in m [:values] concat vs))
 
 (defn merge-values
   ([vs] (merge-values nil vs))
   ([m vs] (build-clause :merge-values m vs)))
+
+(defmethod build-clause :query-values [_ m vs]
+  (assoc m :query-values vs))
+
+(defn query-values
+  ([vs] (values nil vs))
+  ([m vs] (build-clause :query-values m vs)))
 
 (defmethod build-clause :update [_ m table]
   (assoc m :update table))
