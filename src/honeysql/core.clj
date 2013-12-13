@@ -42,7 +42,14 @@
       :having, :merge-having
       :limit
       :offset
-      :modifiers, :merge-modifiers"
+      :modifiers, :merge-modifiers
+      :insert-into
+      :columns, :merge-columns
+      :values, :merge-values
+      :query-values
+      :update
+      :set
+      :delete-from"
   [& clauses]
   (let [[base clauses] (if (map? (first clauses))
                          [(first clauses) (rest clauses)]

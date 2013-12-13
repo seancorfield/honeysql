@@ -154,3 +154,58 @@
     m
     (update-in m [:modifiers] concat (collify ms))))
 
+(defmethod build-clause :insert-into [_ m table]
+  (assoc m :insert-into table))
+
+(defn insert-into
+  ([table] (insert-into nil table))
+  ([m table] (build-clause :insert-into m table)))
+
+(defhelper columns [m fields]
+  (assoc m :columns (collify fields)))
+
+(defhelper merge-columns [m fields]
+  (update-in m [:columns] concat (collify fields)))
+
+(defmethod build-clause :values [_ m vs]
+  (assoc m :values vs))
+
+(defn values
+  ([vs] (values nil vs))
+  ([m vs] (build-clause :values m vs)))
+
+(defmethod build-clause :merge-values [_ m vs]
+  (update-in m [:values] concat vs))
+
+(defn merge-values
+  ([vs] (merge-values nil vs))
+  ([m vs] (build-clause :merge-values m vs)))
+
+(defmethod build-clause :query-values [_ m vs]
+  (assoc m :query-values vs))
+
+(defn query-values
+  ([vs] (values nil vs))
+  ([m vs] (build-clause :query-values m vs)))
+
+(defmethod build-clause :update [_ m table]
+  (assoc m :update table))
+
+(defn update
+  ([table] (update nil table))
+  ([m table] (build-clause :update m table)))
+
+(defmethod build-clause :set [_ m values]
+  (assoc m :set values))
+
+;; short for sql set, to avoid name collision with clojure.core/set
+(defn sset
+  ([vs] (values nil vs))
+  ([m vs] (build-clause :set m vs)))
+
+(defmethod build-clause :delete-from [_ m table]
+  (assoc m :delete-from table))
+
+(defn delete-from
+  ([table] (delete-from nil table))
+  ([m table] (build-clause :delete-from m table)))
