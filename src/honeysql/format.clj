@@ -26,6 +26,10 @@
   possibly-recursive function calls"
   nil)
 
+(def ^:dynamic *param-names* nil)
+
+(def ^:dynamic *param-counter* nil)
+
 (def ^:dynamic *input-params* nil)
 
 (def ^:dynamic *fn-context?* false)
@@ -168,7 +172,9 @@
   Instead of passing parameters, you can use keyword arguments:
     :params - input parameters
     :quoting - quote style to use for identifiers; one of :ansi (PostgreSQL),
-               :mysql, :sqlserver, or :oracle. Defaults to no quoting."
+               :mysql, :sqlserver, or :oracle. Defaults to no quoting.
+    :return-param-names - when true, returns a vector of
+                          [sql-str param-values param-names]"
   [sql-map & params-or-opts]
   (let [opts (when (keyword? (first params-or-opts))
                    (apply hash-map params-or-opts))
@@ -176,17 +182,23 @@
                  (first params-or-opts)
                  (:params opts))]
     (binding [*params* (atom [])
+              *param-counter* (atom 0)
+              *param-names* (atom [])
               *input-params* (atom params)
               *quote-identifier-fn* (quote-fns (:quoting opts))]
       (let [sql-str (to-sql sql-map)]
         (if (seq @*params*)
-          (into [sql-str] @*params*)
+          (if (:return-param-names opts)
+            [sql-str @*params* @*param-names*]
+            (into [sql-str] @*params*))
           [sql-str])))))
 
 (defn format-predicate
   "Formats a predicate (e.g., for WHERE, JOIN, or HAVING) as a string."
   [pred & {:keys [quoting]}]
   (binding [*params* (atom [])
+            *param-counter* (atom 0)
+            *param-names* (atom [])
             *quote-identifier-fn* (or (quote-fns quoting)
                                       *quote-identifier-fn*)]
     (let [sql-str (format-predicate* pred)]
@@ -254,13 +266,16 @@
 (defn to-sql [x]
   (if (satisfies? ToSql x)
     (-to-sql x)
-    (let [x (if (instance? SqlParam x)
-              (if (map? @*input-params*)
-                (get @*input-params* (param-name x))
-                (let [x (first @*input-params*)]
-                  (swap! *input-params* rest)
-                  x))
-              x)]
+    (let [[x pname] (if (instance? SqlParam x)
+                      (let [pname (param-name x)]
+                        (if (map? @*input-params*)
+                          [(get @*input-params* pname) pname]
+                          (let [x (first @*input-params*)]
+                            (swap! *input-params* rest)
+                            [x pname])))
+                      ;; Anonymous param name -- :_1, :_2, etc.
+                      [x (keyword (str "_" (swap! *param-counter* inc)))])]
+      (swap! *param-names* conj pname)
       (swap! *params* conj x)
       "?")))
 
