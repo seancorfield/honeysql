@@ -156,7 +156,7 @@
 
 (def clause-order
   "Determines the order that clauses will be placed within generated SQL"
-  [:select :insert-into :update :delete-from :columns :set :from :join
+  [:select :select-top :insert-into :update :delete-from :columns :set :from :join
    :left-join :right-join :where :group-by :having :order-by :limit :offset
    :values :query-values])
 
@@ -306,13 +306,20 @@
 (defmethod format-clause :default [& _]
   "")
 
+(defn- -handle-select [fields sql-map]
+  (str
+   (when (:modifiers sql-map)
+     (str (space-join (map (comp string/upper-case name)
+                           (:modifiers sql-map)))
+          " "))
+   (comma-join (map to-sql fields))))
+
 (defmethod format-clause :select [[_ fields] sql-map]
-  (str "SELECT "
-       (when (:modifiers sql-map)
-         (str (space-join (map (comp string/upper-case name)
-                               (:modifiers sql-map)))
-              " "))
-       (comma-join (map to-sql fields))))
+  (str "SELECT " (-handle-select fields sql-map)))
+
+(defmethod format-clause :select-top [[_ [limit-count fields]] sql-map]
+  (println "limit-count = " limit-count "; fields = " fields "; sql-map = " sql-map)
+  (str "SELECT TOP " limit-count " " (-handle-select fields sql-map)))
 
 (defmethod format-clause :from [[_ tables] _]
   (str "FROM " (comma-join (map to-sql tables))))
