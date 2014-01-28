@@ -318,7 +318,6 @@
   (str "SELECT " (-handle-select fields sql-map)))
 
 (defmethod format-clause :select-top [[_ [limit-count fields]] sql-map]
-  (println "limit-count = " limit-count "; fields = " fields "; sql-map = " sql-map)
   (str "SELECT TOP " limit-count " " (-handle-select fields sql-map)))
 
 (defmethod format-clause :from [[_ tables] _]
