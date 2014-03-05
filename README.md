@@ -188,9 +188,9 @@ Here's a big, complicated query. Note that Honey SQL makes no attempt to verify 
 => true
 ```
 
-## Insert, Update, Delete
+### Insert, Update, Delete
 
-Since version 4.3 HoneySQL supports insert, update, and delete.
+Since version 0.4.3 HoneySQL supports insert, update, and delete.
 
 ```clj
 ;; Insert
