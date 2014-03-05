@@ -188,6 +188,41 @@ Here's a big, complicated query. Note that Honey SQL makes no attempt to verify 
 => true
 ```
 
+## Insert, Update, Delete
+
+Since version 4.3 HoneySQL supports insert, update, and delete.
+
+```clj
+;; Insert
+(-> (insert-into :foo)
+    (values {:foo "foo"
+             :bar "bar"})
+    sql/format)
+
+=> ["INSERT INTO foo (foo, bar) VALUES (?, ?)" "foo" "bar"]
+
+;; Alternatively, you can enter multiple rows at a time:
+(-> (insert-into :foo)
+    (columns :foo :bar)
+    (values [["foo1" "bar1"] ["foo2" "bar2"]])
+    sql/format)
+
+=> ["INSERT INTO foo (foo, bar) VALUES (?, ?), (?, ?)" "foo1" "bar1" "foo2" "bar2"]
+
+(-> (update :foo)
+    (sset {:foo "foo"}) ;; (not a typo!)
+    (where [:= :id 1])
+    sql/format)
+
+=> ["UPDATE foo SET foo = ? WHERE id = 1" "foo"]
+
+(-> (delete-from :foo)
+    (where [:= :id 1])
+    sql/format)
+
+=> ["DELETE FROM foo WHERE id = 1"]
+```
+
 ## Extensibility
 
 You can define your own function handlers for use in `where`:
@@ -230,11 +265,10 @@ If you do implement a clause or function handler, consider submitting a pull req
 
 ## TODO
 
-* Insert, update, delete
 * Create table, etc.
 
 ## License
 
-Copyright © 2012 Justin Kramer
+Copyright © 2014 Justin Kramer
 
 Distributed under the Eclipse Public License, the same as Clojure.
