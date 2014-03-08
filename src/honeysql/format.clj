@@ -366,15 +366,13 @@
   (str "(" (comma-join (map to-sql fields)) ")"))
 
 (defmethod format-clause :values [[_ values] _]
-  (if (map? values)
+  (if (sequential? (first values))
+    (str "VALUES " (comma-join (for [x values]
+                                 (str "(" (comma-join (map to-sql x)) ")"))))
     (str
-     "(" (comma-join (map to-sql (keys values))) ") "
-     "VALUES "
-     (str "(" (comma-join (map to-sql (vals values))) ")"))
-    (->> values
-         (reduce #(conj %1 (str "(" (comma-join (map to-sql %2)) ")")) [])
-         comma-join
-         (str "VALUES "))))
+      "(" (comma-join (map to-sql (keys (first values)))) ") VALUES "
+      (comma-join (for [x values]
+                    (str "(" (comma-join (map to-sql (vals x))) ")"))))))
 
 (defmethod format-clause :query-values [[_ query-values] _]
   (to-sql query-values))
