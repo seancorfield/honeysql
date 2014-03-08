@@ -64,4 +64,7 @@
          (sql/format (values [{:foo 1 :bar "bar"}]))))
 
   (is (= ["(foo, bar) VALUES (?, ?)" "foo" "bar"]
-         (sql/format (values [{:foo "foo" :bar "bar"}])))))
+         (sql/format (values [{:foo "foo" :bar "bar"}]))))
+
+  (is (= ["(foo, bar) VALUES (?, ?), (?, ?)" "foo1" "bar1" "foo2" "bar2"]
+         (sql/format (values [{:foo "foo1" :bar "bar1"} {:foo "foo2" :bar "bar2"}])))))
