@@ -83,33 +83,35 @@ Inserts are supported:
 
 ```clj
 (-> (insert-into :properties)
-    (columns :a :b :c :d)
+    (columns :name :surname :age)
     (values
-     [[1 2 3 4 5]
-      [6 7 8 9 10]
-      [11 12 13 14]])
+     [["Jon" "Smith" 34]
+      ["Andrew" "Cooper" 12]
+      ["Jane" "Daniels" 56]])
     sql/format)
-=> ["INSERT INTO properties (a, b, c, d) VALUES (1, 2, 3, 4, 5), (6, 7, 8, 9, 10), (11, 12, 13, 14)"]
+=> ["INSERT INTO properties (name, surname, age)
+     VALUES (?, ?, 34), (?, ?, 12), (?, ?, 56)"
+     "Jon" "Smith" "Andrew" "Cooper" "Jane" "Daniels"]
 ```
 
 Updates are possible too (note the double S in `sset` to avoid clashing
 with `clojure.core/set`):
 
 ```clj
-(sql/format
- (-> (update :films)
-     (sset {:kind "dramatic"
-            :watched true})
-     (where [:= :kind "drama"])))
+(-> (update :films)
+    (sset {:kind "dramatic"
+           :watched true})
+    (where [:= :kind "drama"])
+    sql/format)
 => ["UPDATE films SET watched = TRUE, kind = ? WHERE kind = ?" "dramatic" "drama"]
 ```
 
 Deletes look as you would expect:
 
 ```clj
-(sql/format
- (-> (delete-from :films)
-     (where [:<> :kind "musical"])))
+(-> (delete-from :films)
+    (where [:<> :kind "musical"])
+    sql/format)
 => ["DELETE FROM films WHERE kind <> ?" "musical"]
 ```
 
