@@ -79,6 +79,40 @@ To add to clauses instead of replacing them, use `merge-select`, `merge-where`, 
 => ["SELECT a, b, c, d, e FROM foo WHERE (f.a = ? AND b > 10)" "baz"]
 ```
 
+Inserts are supported:
+
+```clj
+(-> (insert-into :properties)
+    (columns :a :b :c :d)
+    (values
+     [[1 2 3 4 5]
+      [6 7 8 9 10]
+      [11 12 13 14]])
+    sql/format)
+=> ["INSERT INTO properties (a, b, c, d) VALUES (1, 2, 3, 4, 5), (6, 7, 8, 9, 10), (11, 12, 13, 14)"]
+```
+
+Updates are possible too (note the double S in `sset` to avoid clashing
+with `clojure.core/set`):
+
+```clj
+(sql/format
+ (-> (update :films)
+     (sset {:kind "dramatic"
+            :watched true})
+     (where [:= :kind "drama"])))
+=> ["UPDATE films SET watched = TRUE, kind = ? WHERE kind = ?" "dramatic" "drama"]
+```
+
+Deletes look as you would expect:
+
+```clj
+(sql/format
+ (-> (delete-from :films)
+     (where [:<> :kind "musical"])))
+=> ["DELETE FROM films WHERE kind <> ?" "musical"]
+```
+
 Queries can be nested:
 
 ```clj
@@ -230,7 +264,6 @@ If you do implement a clause or function handler, consider submitting a pull req
 
 ## TODO
 
-* Insert, update, delete
 * Create table, etc.
 
 ## License
