@@ -247,7 +247,7 @@
   (-to-sql [x] (.s x))
   clojure.lang.IPersistentMap
   (-to-sql [x] (let [clause-ops (concat
-                                 (filter #(contains? x %) clause-order)
+                                 (filter #(and (contains? x %) (get x %)) clause-order)
                                  (remove known-clauses (keys x)))
                      sql-str (binding [*subquery?* true
                                        *fn-context?* false]
