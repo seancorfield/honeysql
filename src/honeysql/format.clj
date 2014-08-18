@@ -393,7 +393,7 @@
 (defmethod format-clause :over [[_ part-clause] _]
   (str "OVER " (to-sql part-clause)))
 
-(defmethod format-clause :aggregate [[_ [aggregate-fn _]] _]
+(defmethod format-clause :aggregate [[_ aggregate-fn] _]
   (str (to-sql aggregate-fn)))
 
 (defmethod format-clause :partition-by [[_ fields] _]

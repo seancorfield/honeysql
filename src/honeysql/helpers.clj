@@ -228,7 +228,7 @@
            (update-in m [:over] (partial apply merge) (collify fields)))
 
 (defhelper aggregate [m aggregate-fn]
-           (assoc m :aggregate aggregate-fn))
+           (assoc m :aggregate (first aggregate-fn)))
 
 (defhelper spartition-by [m fields]
            (assoc m :partition-by (collify fields)))
