@@ -174,6 +174,7 @@
    :select 50
    :insert-into 60
    :update 70
+   :delete 75
    :delete-from 80
    :columns 90
    :set 100
@@ -455,7 +456,10 @@
 
 (defmethod format-clause :delete-from [[_ table] _]
   (str "DELETE FROM " (to-sql table)))
-  
+
+(defmethod format-clause :delete [[_ table] _]
+  (str "DELETE " (to-sql table)))
+
 (defn cte->sql
   [[cte-name query]]
   (str (to-sql cte-name) " AS " (to-sql query)))
