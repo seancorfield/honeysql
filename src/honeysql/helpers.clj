@@ -209,3 +209,26 @@
 (defn delete-from
   ([table] (delete-from nil table))
   ([m table] (build-clause :delete-from m table)))
+
+(defmethod build-clause :over [_ m table]
+  (assoc m :over table))
+
+(defn over
+  ([part-clause] (over nil part-clause))
+  ([m part-clause] (build-clause :over m part-clause)))
+
+(defhelper merge-over [m fields]
+  (update-in m [:over] (partial apply merge) (collify fields)))
+
+(defhelper aggregate [m aggregate-fn]
+  (assoc m :aggregate aggregate-fn))
+
+(defn aggregate
+  ([table] (aggregate nil table))
+  ([m table] (build-clause :aggregate m table)))
+
+(defhelper spartition-by [m fields]
+  (assoc m :partition-by (collify fields)))
+
+(defhelper merge-partition-by [m fields]
+  (update-in m [:partition-by] concat (collify fields)))
