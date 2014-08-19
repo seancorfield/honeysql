@@ -183,6 +183,9 @@
    :right-join 140
    :full-join 150
    :where 160
+   :aggregate 162
+   :over 165
+   :partition 167
    :group-by 170
    :having 180
    :order-by 190
@@ -455,7 +458,17 @@
 
 (defmethod format-clause :delete-from [[_ table] _]
   (str "DELETE FROM " (to-sql table)))
-  
+
+(defmethod format-clause :over [[_ part-clause] _]
+  (str "OVER " (to-sql part-clause)))
+
+(defmethod format-clause :aggregate [[_ aggregate-fn] _]
+  (str (to-sql aggregate-fn)))
+
+(defmethod format-clause :partition-by [[_ fields] _]
+  (str "PARTITION BY "
+       (comma-join (map to-sql fields))))
+
 (defn cte->sql
   [[cte-name query]]
   (str (to-sql cte-name) " AS " (to-sql query)))
