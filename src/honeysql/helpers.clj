@@ -20,19 +20,19 @@
   (if (coll? x) x [x]))
 
 (defhelper select [m fields]
-  (assoc m :select (collify fields)))
+           (assoc m :select (collify fields)))
 
 (defhelper merge-select [m fields]
-  (update-in m [:select] concat (collify fields)))
+           (update-in m [:select] concat (collify fields)))
 
 (defhelper un-select [m fields]
-  (update-in m [:select] #(remove (set (collify fields)) %)))
+           (update-in m [:select] #(remove (set (collify fields)) %)))
 
 (defhelper from [m tables]
-  (assoc m :from (collify tables)))
+           (assoc m :from (collify tables)))
 
 (defhelper merge-from [m tables]
-  (update-in m [:from] concat (collify tables)))
+           (update-in m [:from] concat (collify tables)))
 
 (defmethod build-clause :where [_ m pred]
   (if (nil? pred)
@@ -73,22 +73,22 @@
                         pred)))))
 
 (defhelper join [m clauses]
-  (assoc m :join clauses))
+           (assoc m :join clauses))
 
 (defhelper merge-join [m clauses]
-  (update-in m [:join] concat clauses))
+           (update-in m [:join] concat clauses))
 
 (defhelper left-join [m clauses]
-  (assoc m :left-join clauses))
+           (assoc m :left-join clauses))
 
 (defhelper merge-left-join [m clauses]
-  (update-in m [:left-join] concat clauses))
+           (update-in m [:left-join] concat clauses))
 
 (defhelper right-join [m clauses]
-  (assoc m :right-join clauses))
+           (assoc m :right-join clauses))
 
 (defhelper merge-right-join [m clauses]
-  (update-in m [:right-join] concat clauses))
+           (update-in m [:right-join] concat clauses))
 
 (defmethod build-clause :group-by [_ m fields]
   (assoc m :group-by (collify fields)))
@@ -100,7 +100,7 @@
     (build-clause :group-by m fields)))
 
 (defhelper merge-group-by [m fields]
-  (update-in m [:group-by] concat (collify fields)))
+           (update-in m [:group-by] concat (collify fields)))
 
 (defmethod build-clause :having [_ m pred]
   (if (nil? pred)
@@ -129,30 +129,30 @@
                          pred)))))
 
 (defhelper order-by [m fields]
-  (assoc m :order-by (collify fields)))
+           (assoc m :order-by (collify fields)))
 
 (defhelper merge-order-by [m fields]
-  (update-in m [:order-by] concat (collify fields)))
+           (update-in m [:order-by] concat (collify fields)))
 
 (defhelper limit [m l]
-  (if (nil? l)
-    m
-    (assoc m :limit (if (coll? l) (first l) l))))
+           (if (nil? l)
+             m
+             (assoc m :limit (if (coll? l) (first l) l))))
 
 (defhelper offset [m o]
-  (if (nil? o)
-    m
-    (assoc m :offset (if (coll? o) (first o) o))))
+           (if (nil? o)
+             m
+             (assoc m :offset (if (coll? o) (first o) o))))
 
 (defhelper modifiers [m ms]
-  (if (nil? ms)
-    m
-    (assoc m :modifiers (collify ms))))
+           (if (nil? ms)
+             m
+             (assoc m :modifiers (collify ms))))
 
 (defhelper merge-modifiers [m ms]
-  (if (nil? ms)
-    m
-    (update-in m [:modifiers] concat (collify ms))))
+           (if (nil? ms)
+             m
+             (update-in m [:modifiers] concat (collify ms))))
 
 (defmethod build-clause :insert-into [_ m table]
   (assoc m :insert-into table))
@@ -162,10 +162,10 @@
   ([m table] (build-clause :insert-into m table)))
 
 (defhelper columns [m fields]
-  (assoc m :columns (collify fields)))
+           (assoc m :columns (collify fields)))
 
 (defhelper merge-columns [m fields]
-  (update-in m [:columns] concat (collify fields)))
+           (update-in m [:columns] concat (collify fields)))
 
 (defmethod build-clause :values [_ m vs]
   (assoc m :values vs))
@@ -229,6 +229,10 @@
 
 (defhelper aggregate [m aggregate-fn]
            (assoc m :aggregate (first aggregate-fn)))
+
+(defn aggregate
+  ([table] (aggregate nil table))
+  ([m table] (build-clause :aggregate m table)))
 
 (defhelper spartition-by [m fields]
            (assoc m :partition-by (collify fields)))
