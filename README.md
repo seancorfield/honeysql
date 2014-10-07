@@ -79,7 +79,9 @@ To add to clauses instead of replacing them, use `merge-select`, `merge-where`, 
 => ["SELECT a, b, c, d, e FROM foo WHERE (f.a = ? AND b > 10)" "baz"]
 ```
 
-Inserts are supported:
+Inserts are supported in two patterns. 
+In the first pattern, you must explicitly specify the columns to insert,
+then provide a collection of rows, each a collection of column values:
 
 ```clj
 (-> (insert-into :properties)
@@ -92,6 +94,39 @@ Inserts are supported:
 => ["INSERT INTO properties (name, surname, age)
      VALUES (?, ?, 34), (?, ?, 12), (?, ?, 56)"
      "Jon" "Smith" "Andrew" "Cooper" "Jane" "Daniels"]
+```
+
+
+Alternately, you can simply specify the values as maps; the first map defines the columns to insert,
+and the remaining maps *must* have the same set of keys and values:
+
+```clj
+(-> (insert-into :properties)
+    (values [{:name "John" :surname "Smith" :age 34}
+             {:name "Andrew" :surname "Cooper" :age 12}
+             {:name "Jane" :surname "Daniels" :age 56})
+    sql/format)
+=> ["INSERT INTO properties (age, name, surname) 
+     VALUES (34, ?, ?), (12, ?, ?), (56, ?, ?)" 
+    "John" "Smith" 
+    "Andrew" "Cooper" 
+    "Jane" "Daniels"]
+```
+
+The column values do not have to be literals, they can be nested queries:
+
+```clj
+(let [user-id 12345
+      role-names ["user" "editor"]]
+  (-> (insert-into :user_profile_to_role)
+      (values [{:user_profile_id user-id
+                :role_id         (-> (select :id)
+                                     (from :role)
+                                     (where [:in :name role-names]))}])
+      (sql/format)))
+=> ["INSERT INTO user_profile_to_role (user_profile_id, role_id) 
+     VALUES (12345, (SELECT id FROM role WHERE (name in (?, ?))))" 
+    "user" "editor"]
 ```
 
 Updates are possible too (note the double S in `sset` to avoid clashing
