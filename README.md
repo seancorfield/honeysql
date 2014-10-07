@@ -123,7 +123,7 @@ The column values do not have to be literals, they can be nested queries:
                 :role_id         (-> (select :id)
                                      (from :role)
                                      (where [:in :name role-names]))}])
-      (sql/format)))
+      sql/format))
 => ["INSERT INTO user_profile_to_role (user_profile_id, role_id) 
      VALUES (12345, (SELECT id FROM role WHERE (name in (?, ?))))" 
     "user" "editor"]
