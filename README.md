@@ -93,7 +93,9 @@ Keywords that begin with `%` are interpreted as SQL function calls:
 
 ```clj
 (-> (select :%count.*) (from :foo) sql/format)
-=> ["SELECT COUNT(*) FROM foo"]
+=> ["SELECT count(*) FROM foo"]
+(-> (select :%max.id) (from :foo) sql/format)
+=> ["SELECT max(id) FROM foo"]
 ```
 
 Keywords that begin with `?` are interpreted as bindable parameters:
