@@ -55,3 +55,11 @@
               "bort" "gabba" 2])))
     (testing "SQL data prints and reads correctly"
       (is (= m1 (read-string (pr-str m1)))))))
+
+(deftest test-select-top
+  (let [m1 {:select-top [10 [:fieldx :fieldy]]
+            :modifiers [:distinct]
+            :from [:foo]}]
+    (testing "select-top formats correctly"
+      (is (= (sql/format m1)
+             ["SELECT TOP 10 DISTINCT fieldx, fieldy FROM foo "])))))
