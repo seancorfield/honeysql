@@ -55,3 +55,16 @@
               "bort" "gabba" 2])))
     (testing "SQL data prints and reads correctly"
       (is (= m1 (read-string (pr-str m1)))))))
+
+(deftest can-format-values-properly
+  (is (= ["VALUES (?, ?), (?, ?)" "foo1" "bar1" "foo2" "bar2"]
+         (sql/format (values [["foo1" "bar1"] ["foo2" "bar2"]]))))
+
+  (is (= ["(foo, bar) VALUES (1, ?)" "bar"]
+         (sql/format (values [{:foo 1 :bar "bar"}]))))
+
+  (is (= ["(foo, bar) VALUES (?, ?)" "foo" "bar"]
+         (sql/format (values [{:foo "foo" :bar "bar"}]))))
+
+  (is (= ["(foo, bar) VALUES (?, ?), (?, ?)" "foo1" "bar1" "foo2" "bar2"]
+         (sql/format (values [{:foo "foo1" :bar "bar1"} {:foo "foo2" :bar "bar2"}])))))
