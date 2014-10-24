@@ -23,24 +23,19 @@
   (if (coll? x) x [x]))
 
 (defhelper select [m fields]
-  (assoc m :select (collify fields)))
-
-(defhelper merge-select [m fields]
   (update-in m [:select] concat (collify fields)))
+
+(defhelper replace-select [m fields]
+  (assoc m :select (collify fields)))
 
 (defhelper un-select [m fields]
   (update-in m [:select] #(remove (set (collify fields)) %)))
 
 (defhelper from [m tables]
-  (assoc m :from (collify tables)))
-
-(defhelper merge-from [m tables]
   (update-in m [:from] concat (collify tables)))
 
-(defmethod build-clause :where [_ m pred]
-  (if (nil? pred)
-    m
-    (assoc m :where pred)))
+(defhelper replace-from [m tables]
+  (assoc m :from (collify tables)))
 
 (defn- prep-where [args]
   (let [[m preds] (if (map? (first args))
@@ -54,20 +49,14 @@
                (into [logic-op] preds))]
     [m pred logic-op]))
 
-(defn where [& args]
-  (let [[m pred] (prep-where args)]
-    (if (nil? pred)
-      m
-      (assoc m :where pred))))
-
-(defmethod build-clause :merge-where [_ m pred]
+(defmethod build-clause :where [_ m pred]
   (if (nil? pred)
     m
     (assoc m :where (if (not (nil? (:where m)))
                       [:and (:where m) pred]
                       pred))))
 
-(defn merge-where [& args]
+(defn where [& args]
   (let [[m pred logic-op] (prep-where args)]
     (if (nil? pred)
       m
@@ -75,26 +64,37 @@
                         [logic-op (:where m) pred]
                         pred)))))
 
-(defhelper join [m clauses]
-  (assoc m :join clauses))
+(defmethod build-clause :replace-where [_ m pred]
+  (if (nil? pred)
+    m
+    (assoc m :where pred)))
 
-(defhelper merge-join [m clauses]
+(defn replace-where [& args]
+  (let [[m pred] (prep-where args)]
+    (if (nil? pred)
+      m
+      (assoc m :where pred))))
+
+(defhelper join [m clauses]
   (update-in m [:join] concat clauses))
 
-(defhelper left-join [m clauses]
-  (assoc m :left-join clauses))
+(defhelper replace-join [m clauses]
+  (assoc m :join clauses))
 
-(defhelper merge-left-join [m clauses]
+(defhelper left-join [m clauses]
   (update-in m [:left-join] concat clauses))
 
-(defhelper right-join [m clauses]
-  (assoc m :right-join clauses))
+(defhelper replace-left-join [m clauses]
+  (assoc m :left-join clauses))
 
-(defhelper merge-right-join [m clauses]
+(defhelper right-join [m clauses]
   (update-in m [:right-join] concat clauses))
 
+(defhelper replace-right-join [m clauses]
+  (assoc m :right-join clauses))
+
 (defmethod build-clause :group-by [_ m fields]
-  (assoc m :group-by (collify fields)))
+  (update-in m [:group-by] concat (collify fields)))
 
 (defn group [& args]
   (let [[m fields] (if (map? (first args))
@@ -102,28 +102,23 @@
                      [{} args])]
     (build-clause :group-by m fields)))
 
-(defhelper merge-group-by [m fields]
-  (update-in m [:group-by] concat (collify fields)))
+(defmethod build-clause :replace-group-by [_ m fields]
+  (assoc m :group-by (collify fields)))
+
+(defn replace-group [& args]
+  (let [[m fields] (if (map? (first args))
+                     [(first args) (rest args)]
+                     [{} args])]
+    (build-clause :replace-group-by m fields)))
 
 (defmethod build-clause :having [_ m pred]
-  (if (nil? pred)
-    m
-    (assoc m :having pred)))
-
-(defn having [& args]
-  (let [[m pred] (prep-where args)]
-    (if (nil? pred)
-      m
-      (assoc m :having pred))))
-
-(defmethod build-clause :merge-having [_ m pred]
   (if (nil? pred)
     m
     (assoc m :having (if (not (nil? (:having m)))
                        [:and (:having m) pred]
                        pred))))
 
-(defn merge-having [& args]
+(defn having [& args]
   (let [[m pred logic-op] (prep-where args)]
     (if (nil? pred)
       m
@@ -131,11 +126,22 @@
                          [logic-op (:having m) pred]
                          pred)))))
 
-(defhelper order-by [m fields]
-  (assoc m :order-by (collify fields)))
+(defmethod build-clause :replace-having [_ m pred]
+  (if (nil? pred)
+    m
+    (assoc m :having pred)))
 
-(defhelper merge-order-by [m fields]
+(defn replace-having [& args]
+  (let [[m pred] (prep-where args)]
+    (if (nil? pred)
+      m
+      (assoc m :having pred))))
+
+(defhelper order-by [m fields]
   (update-in m [:order-by] concat (collify fields)))
+
+(defhelper replace-order-by [m fields]
+  (assoc m :order-by (collify fields)))
 
 (defhelper limit [m l]
   (if (nil? l)
@@ -150,12 +156,12 @@
 (defhelper modifiers [m ms]
   (if (nil? ms)
     m
-    (assoc m :modifiers (collify ms))))
+    (update-in m [:modifiers] concat (collify ms))))
 
-(defhelper merge-modifiers [m ms]
+(defhelper replace-modifiers [m ms]
   (if (nil? ms)
     m
-    (update-in m [:modifiers] concat (collify ms))))
+    (assoc m :modifiers (collify ms))))
 
 (defmethod build-clause :insert-into [_ m table]
   (assoc m :insert-into table))
@@ -165,10 +171,10 @@
   ([m table] (build-clause :insert-into m table)))
 
 (defhelper columns [m fields]
-  (assoc m :columns (collify fields)))
-
-(defhelper merge-columns [m fields]
   (update-in m [:columns] concat (collify fields)))
+
+(defhelper replace-columns [m fields]
+  (assoc m :columns (collify fields)))
 
 (defmethod build-clause :values [_ m vs]
   (assoc m :values vs))
