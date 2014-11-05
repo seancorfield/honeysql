@@ -37,6 +37,7 @@
       :join, :merge-join
       :left-join, :merge-left-join
       :right-join, :merge-right-join
+      :full-join, :merge-full-join
       :where, :merge-where
       :group-by, :merge-group-by
       :having, :merge-having

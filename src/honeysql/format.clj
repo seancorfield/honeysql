@@ -157,7 +157,7 @@
 (def clause-order
   "Determines the order that clauses will be placed within generated SQL"
   [:select :insert-into :update :delete-from :columns :set :from :join
-   :left-join :right-join :where :group-by :having :order-by :limit :offset
+   :left-join :right-join :full-join :where :group-by :having :order-by :limit :offset
    :values :query-values])
 
 (def known-clauses (set clause-order))
@@ -336,6 +336,10 @@
 
 (defmethod format-clause :right-join [[_ join-groups] _]
   (space-join (map #(apply format-join :right %)
+                   (partition 2 join-groups))))
+
+(defmethod format-clause :full-join [[_ join-groups] _]
+  (space-join (map #(apply format-join :full %)
                    (partition 2 join-groups))))
 
 (defmethod format-clause :group-by [[_ fields] _]

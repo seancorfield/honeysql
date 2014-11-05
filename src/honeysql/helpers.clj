@@ -93,6 +93,12 @@
 (defhelper merge-right-join [m clauses]
   (update-in m [:right-join] concat clauses))
 
+(defhelper full-join [m clauses]
+  (assoc m :full-join clauses))
+
+(defhelper merge-full-join [m clauses]
+  (assoc m :merge-full-join clauses))
+
 (defmethod build-clause :group-by [_ m fields]
   (assoc m :group-by (collify fields)))
 
