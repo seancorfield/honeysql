@@ -212,3 +212,6 @@
 (defn delete-from
   ([table] (delete-from nil table))
   ([m table] (build-clause :delete-from m table)))
+  
+(defmethod build-clause :with [_ m ctes]
+  (assoc m :with ctes))
