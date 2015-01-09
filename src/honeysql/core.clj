@@ -49,7 +49,8 @@
       :query-values
       :update
       :set
-      :delete-from"
+      :delete-from
+      :returning"
   [& clauses]
   (let [[base clauses] (if (map? (first clauses))
                          [(first clauses) (rest clauses)]

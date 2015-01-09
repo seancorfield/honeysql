@@ -158,7 +158,7 @@
   "Determines the order that clauses will be placed within generated SQL"
   [:select :insert-into :update :delete-from :columns :set :from :join
    :left-join :right-join :where :group-by :having :order-by :limit :offset
-   :values :query-values])
+   :values :query-values :returning])
 
 (def known-clauses (set clause-order))
 
@@ -358,6 +358,9 @@
 
 (defmethod format-clause :offset [[_ offset] _]
   (str "OFFSET " (to-sql offset)))
+
+(defmethod format-clause :returning [[_ returning] _]
+  (str "RETURNING " (comma-join (map to-sql returning))))
 
 (defmethod format-clause :insert-into [[_ table] _]
   (str "INSERT INTO " (to-sql table)))
