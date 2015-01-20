@@ -397,8 +397,8 @@
 (defmethod format-clause :with-recursive [[_ ctes] _]
   (str "WITH RECURSIVE " (comma-join (map cte->sql ctes))))
 
-(defmethod fmt/format-clause :union [[_ maps] _]
-  (string/join " UNION " (map fmt/to-sql maps)))
+(defmethod format-clause :union [[_ maps] _]
+  (string/join " UNION " (map to-sql maps)))
 
-(defmethod fmt/format-clause :union-all [[_ maps] _]
-  (string/join " UNION ALL " (map fmt/to-sql maps)))
+(defmethod format-clause :union-all [[_ maps] _]
+  (string/join " UNION ALL " (map to-sql maps)))
