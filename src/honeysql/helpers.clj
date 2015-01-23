@@ -1,4 +1,5 @@
-(ns honeysql.helpers)
+(ns honeysql.helpers
+  (:refer-clojure :exclude [update]))
 
 (defmulti build-clause (fn [name & args]
                          name))
