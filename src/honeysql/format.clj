@@ -76,7 +76,10 @@
    "not-like" "not like"
    "regex" "regexp"})
 
-(declare to-sql format-predicate*)
+(declare format-predicate*)
+
+(defprotocol ToSql
+  (to-sql [x]))
 
 (defmulti fn-handler (fn [op & args] op))
 
@@ -206,27 +209,24 @@
         (into [sql-str] @*params*)
         [sql-str]))))
 
-(defprotocol ToSql
-  (-to-sql [x]))
-
 (declare -format-clause)
 
 (extend-protocol ToSql
   clojure.lang.Keyword
-  (-to-sql [x] (let [s ^String (name x)]
+  (to-sql [x] (let [s ^String (name x)]
                  (condp = (.charAt s 0)
                    \% (let [call-args (string/split (subs s 1) #"\." 2)]
                         (to-sql (apply call (map keyword call-args))))
                    \? (to-sql (param (keyword (subs s 1))))
                    (quote-identifier x))))
   clojure.lang.Symbol
-  (-to-sql [x] (quote-identifier x))
+  (to-sql [x] (quote-identifier x))
   java.lang.Number
-  (-to-sql [x] (str x))
+  (to-sql [x] (str x))
   java.lang.Boolean
-  (-to-sql [x] (if x "TRUE" "FALSE"))
+  (to-sql [x] (if x "TRUE" "FALSE"))
   clojure.lang.Sequential
-  (-to-sql [x] (if *fn-context?*
+  (to-sql [x] (if *fn-context?*
                  ;; list argument in fn call
                  (paren-wrap (comma-join (map to-sql x)))
                  ;; alias
@@ -239,14 +239,14 @@
                         (quote-identifier (second x))
                         (to-sql (second x))))))
   SqlCall
-  (-to-sql [x] (binding [*fn-context?* true]
+  (to-sql [x] (binding [*fn-context?* true]
                  (let [fn-name (name (.name x))
                        fn-name (fn-aliases fn-name fn-name)]
                    (apply fn-handler fn-name (.args x)))))
   SqlRaw
-  (-to-sql [x] (.s x))
+  (to-sql [x] (.s x))
   clojure.lang.IPersistentMap
-  (-to-sql [x] (let [clause-ops (concat
+  (to-sql [x] (let [clause-ops (concat
                                  (filter #(contains? x %) clause-order)
                                  (remove known-clauses (keys x)))
                      sql-str (binding [*subquery?* true
@@ -258,26 +258,23 @@
                    (paren-wrap sql-str)
                    sql-str)))
   nil
-  (-to-sql [x] "NULL"))
+  (to-sql [x] "NULL")
+  Object
+  (to-sql [x] (let [[x pname] (if (instance? SqlParam x)
+                                (let [pname (param-name x)]
+                                  (if (map? @*input-params*)
+                                    [(get @*input-params* pname) pname]
+                                    (let [x (first @*input-params*)]
+                                      (swap! *input-params* rest)
+                                      [x pname])))
+                                ;; Anonymous param name -- :_1, :_2, etc.
+                                [x (keyword (str "_" (swap! *param-counter* inc)))])]
+                (swap! *param-names* conj pname)
+                (swap! *params* conj x)
+                "?")))
 
 (defn sqlable? [x]
   (satisfies? ToSql x))
-
-(defn to-sql [x]
-  (if (satisfies? ToSql x)
-    (-to-sql x)
-    (let [[x pname] (if (instance? SqlParam x)
-                      (let [pname (param-name x)]
-                        (if (map? @*input-params*)
-                          [(get @*input-params* pname) pname]
-                          (let [x (first @*input-params*)]
-                            (swap! *input-params* rest)
-                            [x pname])))
-                      ;; Anonymous param name -- :_1, :_2, etc.
-                      [x (keyword (str "_" (swap! *param-counter* inc)))])]
-      (swap! *param-names* conj pname)
-      (swap! *params* conj x)
-      "?")))
 
 ;;;;
 
