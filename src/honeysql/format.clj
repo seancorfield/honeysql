@@ -260,11 +260,19 @@
   nil
   (-to-sql [x] "NULL"))
 
+(def class-cache (atom nil))
+
 (defn sqlable? [x]
-  (satisfies? ToSql x))
+  (let [c (class x)
+        cache @class-cache]
+    (if (contains? cache c)
+      (cache c)
+      (let [result (satisfies? ToSql x)]
+        (swap! class-cache assoc c result)
+        result))))
 
 (defn to-sql [x]
-  (if (satisfies? ToSql x)
+  (if (sqlable? x)
     (-to-sql x)
     (let [[x pname] (if (instance? SqlParam x)
                       (let [pname (param-name x)]
