@@ -20,8 +20,12 @@
   (qualify :foo \"bar\" :baz) => :foo.bar.baz"
   [& qualifiers+name]
   (keyword
-   (string/join "." (map #(if (keyword? %) (name %) (str %))
-                         (remove nil? qualifiers+name)))))
+   (string/join "."
+     (for [s qualifiers+name
+           :when (not (nil? s))]
+       (if (keyword? s)
+         (name s)
+         (str s))))))
 
 (defn build
   "Takes a series of clause+data pairs and returns a SQL map. Example:
