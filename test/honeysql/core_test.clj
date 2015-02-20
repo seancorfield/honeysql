@@ -55,3 +55,9 @@
               "bort" "gabba" 2])))
     (testing "SQL data prints and reads correctly"
       (is (= m1 (read-string (pr-str m1)))))))
+
+(deftest test-cast
+  (is (= ["SELECT foo, CAST(bar AS integer)"]
+         (sql/format {:select [:foo (sql/call :cast :bar :integer)]})))
+  (is (= ["SELECT foo, CAST(bar AS integer)"]
+         (sql/format {:select [:foo (sql/call :cast :bar 'integer)]}))))

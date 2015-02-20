@@ -99,6 +99,11 @@
 (defmethod fn-handler "distinct-on" [_ & args]
   (str "DISTINCT ON (" (comma-join (map to-sql args)) ")"))
 
+(defmethod fn-handler "cast" [_ field cast-to-type]
+  (str "CAST" (paren-wrap (str (to-sql field)
+                               " AS "
+                               (to-sql cast-to-type)))))
+
 (defmethod fn-handler "=" [_ a b & more]
   (if (seq more)
     (apply expand-binary-ops "=" a b more)
