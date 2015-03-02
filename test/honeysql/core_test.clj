@@ -1,5 +1,5 @@
 (ns honeysql.core-test
-  (:refer-clojure :exclude [format])
+  (:refer-clojure :exclude [format update])
   (:require [clojure.test :refer [deftest testing is]]
             [honeysql.core :as sql]
             [honeysql.helpers :refer :all]))
