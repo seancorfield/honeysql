@@ -2,11 +2,9 @@
 
 SQL as Clojure data structures. Build queries programmatically -- even at runtime -- without having to bash strings together.
 
-## Leiningen Coordinate
+## Leiningen Coordinates
 
-```clj
-[honeysql "0.4.3"]
-```
+[![Clojars Project](http://clojars.org/honeysql/latest-version.svg)](http://clojars.org/honeysql)
 
 ## Usage
 
