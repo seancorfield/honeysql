@@ -157,8 +157,8 @@
 (def clause-order
   "Determines the order that clauses will be placed within generated SQL"
   [:select :insert-into :update :delete-from :columns :set :from :join
-   :left-join :right-join :where :group-by :having :order-by :limit :offset
-   :values :query-values])
+   :left-join :right-join :where :aggregate :over :partition-by :group-by
+   :having :order-by :limit :offset :values :query-values])
 
 (def known-clauses (set clause-order))
 
@@ -386,3 +386,13 @@
 
 (defmethod format-clause :delete-from [[_ table] _]
   (str "DELETE FROM " (to-sql table)))
+
+(defmethod format-clause :over [[_ part-clause] _]
+  (str "OVER " (to-sql part-clause)))
+
+(defmethod format-clause :aggregate [[_ aggregate-fn] _]
+  (str (to-sql aggregate-fn)))
+
+(defmethod format-clause :partition-by [[_ fields] _]
+  (str "PARTITION BY "
+       (comma-join (map to-sql fields))))
