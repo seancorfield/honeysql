@@ -258,26 +258,26 @@
                    (paren-wrap sql-str)
                    sql-str)))
   nil
-  (-to-sql [x] "NULL"))
+  (-to-sql [x] "NULL")
+  Object
+  (-to-sql [x] (let [[x pname] (if (instance? SqlParam x)
+                                 (let [pname (param-name x)]
+                                   (if (map? @*input-params*)
+                                     [(get @*input-params* pname) pname]
+                                     (let [x (first @*input-params*)]
+                                       (swap! *input-params* rest)
+                                       [x pname])))
+                                 ;; Anonymous param name -- :_1, :_2, etc.
+                                 [x (keyword (str "_" (swap! *param-counter* inc)))])]
+                 (swap! *param-names* conj pname)
+                 (swap! *params* conj x)
+                 "?")))
 
 (defn sqlable? [x]
   (satisfies? ToSql x))
 
 (defn to-sql [x]
-  (if (satisfies? ToSql x)
-    (-to-sql x)
-    (let [[x pname] (if (instance? SqlParam x)
-                      (let [pname (param-name x)]
-                        (if (map? @*input-params*)
-                          [(get @*input-params* pname) pname]
-                          (let [x (first @*input-params*)]
-                            (swap! *input-params* rest)
-                            [x pname])))
-                      ;; Anonymous param name -- :_1, :_2, etc.
-                      [x (keyword (str "_" (swap! *param-counter* inc)))])]
-      (swap! *param-names* conj pname)
-      (swap! *params* conj x)
-      "?")))
+  (-to-sql x))
 
 ;;;;
 
