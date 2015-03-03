@@ -156,7 +156,7 @@
 
 (def clause-order
   "Determines the order that clauses will be placed within generated SQL"
-  [:select :insert-into :update :delete-from :columns :set :from :join
+  [:select :insert-into :update :delete :delete-from :columns :set :from :join
    :left-join :right-join :where :group-by :having :order-by :limit :offset
    :values :query-values])
 
@@ -386,3 +386,6 @@
 
 (defmethod format-clause :delete-from [[_ table] _]
   (str "DELETE FROM " (to-sql table)))
+
+(defmethod format-clause :delete [[_ table] _]
+  (str "DELETE " (to-sql table)))
