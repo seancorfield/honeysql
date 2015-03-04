@@ -97,7 +97,7 @@
   (assoc m :full-join clauses))
 
 (defhelper merge-full-join [m clauses]
-  (assoc m :merge-full-join clauses))
+  (update-in m [:full-join] concat clauses))
 
 (defmethod build-clause :group-by [_ m fields]
   (assoc m :group-by (collify fields)))
