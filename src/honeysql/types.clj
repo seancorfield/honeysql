@@ -7,15 +7,6 @@
   [name & args]
   (SqlCall. name args))
 
-(defn read-sql-call [form]
-  (apply call form))
-
-(defmethod print-method SqlCall [^SqlCall o ^java.io.Writer w]
-  (.write w (str "#sql/call " (pr-str (into [(.name o)] (.args o))))))
-
-(defmethod print-dup SqlCall [o w]
-  (print-method o w))
-
 ;;;;
 
 (defrecord SqlRaw [s])
@@ -24,15 +15,6 @@
   "Represents a raw SQL string"
   [s]
   (SqlRaw. (str s)))
-
-(defn read-sql-raw [form]
-  (raw form))
-
-(defmethod print-method SqlRaw [^SqlRaw o ^java.io.Writer w]
-  (.write w (str "#sql/raw " (pr-str (.s o)))))
-
-(defmethod print-dup SqlRaw [o w]
-  (print-method o w))
 
 ;;;;
 
@@ -46,11 +28,15 @@
 (defn param-name [^SqlParam param]
   (.name param))
 
+;;;;
+
+;; retain readers for backwards compatibility
+
+(defn read-sql-call [form]
+  (apply call form))
+
+(defn read-sql-raw [form]
+  (raw form))
+
 (defn read-sql-param [form]
   (param form))
-
-(defmethod print-method SqlParam [^SqlParam o ^java.io.Writer w]
-  (.write w (str "#sql/param " (pr-str (.name o)))))
-
-(defmethod print-dup SqlParam [o w]
-  (print-method o w))
