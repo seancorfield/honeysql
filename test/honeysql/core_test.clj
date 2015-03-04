@@ -6,6 +6,22 @@
 
 ;; TODO: more tests
 
+(deftest test-insert
+  (let [m1 (-> (insert-into :t)
+               (columns     :column_one :column_two)
+               (values [["one"] ["two"]])
+               (returning   :column_one :column_two))
+        m2 {:insert-into :t
+            :columns     [:column_one :column_two]
+            :values      [["one"] ["two"]]
+            :returning   [:column_one :column_two]}
+        m3 (sql/build m2)]
+    (testing "Various construction methods are consistent"
+      (is (= m1 m3)))
+    (testing "SQL data formats correctly"
+      (is (= (sql/format m1)
+             ["INSERT INTO t (column_one, column_two) VALUES (?), (?) RETURNING column_one, column_two" "one" "two"])))))
+
 (deftest test-select
   (let [m1 (-> (select :f.* :b.baz :c.quux [:b.bla :bla-bla]
                        :%now (sql/raw "@x := 10"))
