@@ -48,7 +48,7 @@
         m3 (sql/build m2)
         m4 (apply sql/build (apply concat m2))]
     (testing "Various construction methods are consistent"
-      (is (= m1 m3)))
+      (is (= m1 m3 m4)))
     (testing "SQL data formats correctly"
       (is (= ["SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10 FROM foo f, baz b INNER JOIN draq ON f.b = draq.x LEFT JOIN clod c ON f.a = c.d RIGHT JOIN bock ON bock.z = c.e WHERE ((f.a = ? AND b.baz <> ?) OR (1 < 2 AND 2 < 3) OR (f.e in (1, ?, 3)) OR f.e BETWEEN 10 AND 20) GROUP BY f.a HAVING 0 < f.e ORDER BY b.baz DESC, c.quux LIMIT 50 OFFSET 10 "
               "bort" "gabba" 2]
