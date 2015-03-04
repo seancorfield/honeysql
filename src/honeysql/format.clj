@@ -46,6 +46,7 @@
 
 (defn- undasherize [s]
   (string/replace s "-" "_"))
+
 (defn quote-identifier [x & {:keys [style split] :or {split true}}]
   (let [qf (if style
              (quote-fns style)
@@ -369,7 +370,12 @@
   (str "OFFSET " (to-sql offset)))
 
 (defmethod format-clause :insert-into [[_ table] _]
-  (str "INSERT INTO " (to-sql table)))
+  (if (and (sequential? table) (sequential? (first table)))
+    (str "INSERT INTO "
+         (to-sql (ffirst table))
+         " (" (comma-join (map to-sql (second (first table)))) ") "
+         (to-sql (second table)))
+    (str "INSERT INTO " (to-sql table))))
 
 (defmethod format-clause :columns [[_ fields] _]
   (str "(" (comma-join (map to-sql fields)) ")"))
