@@ -156,7 +156,7 @@
 
 (def clause-order
   "Determines the order that clauses will be placed within generated SQL"
-  [:select :insert-into :update :delete-from :columns :set :from :join
+  [:with :with-recursive :select :insert-into :update :delete-from :columns :set :from :join
    :left-join :right-join :where :group-by :having :order-by :limit :offset
    :values :query-values])
 
@@ -386,3 +386,19 @@
 
 (defmethod format-clause :delete-from [[_ table] _]
   (str "DELETE FROM " (to-sql table)))
+  
+(defn cte->sql
+  [[cte-name query]]
+  (str (to-sql cte-name) " AS " (to-sql query)))
+
+(defmethod format-clause :with [[_ ctes] _]
+  (str "WITH " (comma-join (map cte->sql ctes))))
+
+(defmethod format-clause :with-recursive [[_ ctes] _]
+  (str "WITH RECURSIVE " (comma-join (map cte->sql ctes))))
+
+(defmethod format-clause :union [[_ maps] _]
+  (string/join " UNION " (map to-sql maps)))
+
+(defmethod format-clause :union-all [[_ maps] _]
+  (string/join " UNION ALL " (map to-sql maps)))

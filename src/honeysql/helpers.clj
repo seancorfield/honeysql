@@ -213,3 +213,15 @@
 (defn delete-from
   ([table] (delete-from nil table))
   ([m table] (build-clause :delete-from m table)))
+  
+(defmethod build-clause :with [_ m ctes]
+  (assoc m :with ctes))
+
+(defmethod build-clause :with-recursive [_ m ctes]
+  (assoc m :with-recursive ctes))
+
+(defmethod build-clause :union [_ m maps]
+  (assoc m :union maps))
+
+(defmethod build-clause :union-all [_ m maps]
+  (assoc m :union-all maps))
