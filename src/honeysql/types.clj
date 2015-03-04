@@ -1,21 +1,11 @@
 (ns honeysql.types)
 
-(deftype SqlCall [name args _meta]
-  Object
-  (hashCode [this] (hash-combine (hash name) (hash args)))
-  (equals [this x]
-    (cond (identical? this x) true
-          (instance? SqlCall x) (and (= (.name this) (.name x))
-                                     (= (.args this) (.args x)))
-          :else false))
-  clojure.lang.IObj
-  (meta [this] _meta)
-  (withMeta [this m] (SqlCall. (.name this) (.args this) m)))
+(defrecord SqlCall [name args])
 
 (defn call
   "Represents a SQL function call. Name should be a keyword."
   [name & args]
-  (SqlCall. name args nil))
+  (SqlCall. name args))
 
 (defn read-sql-call [form]
   (apply call form))
@@ -28,18 +18,12 @@
 
 ;;;;
 
-(deftype SqlRaw [s _meta]
-  Object
-  (hashCode [this] (hash-combine (hash (class this)) (hash s)))
-  (equals [this x] (and (instance? SqlRaw x) (= (.s this) (.s x))))
-  clojure.lang.IObj
-  (meta [this] _meta)
-  (withMeta [this m] (SqlRaw. (.s this) m)))
+(defrecord SqlRaw [s])
 
 (defn raw
   "Represents a raw SQL string"
   [s]
-  (SqlRaw. (str s) nil))
+  (SqlRaw. (str s)))
 
 (defn read-sql-raw [form]
   (raw form))
@@ -52,18 +36,12 @@
 
 ;;;;
 
-(deftype SqlParam [name _meta]
-  Object
-  (hashCode [this] (hash-combine (hash (class this)) (hash (name name))))
-  (equals [this x] (and (instance? SqlParam x) (= (.name this) (.name x))))
-  clojure.lang.IObj
-  (meta [this] _meta)
-  (withMeta [this m] (SqlParam. (.name this) m)))
+(defrecord SqlParam [name])
 
 (defn param
   "Represents a SQL parameter which can be filled in later"
   [name]
-  (SqlParam. name nil))
+  (SqlParam. name))
 
 (defn param-name [^SqlParam param]
   (.name param))
