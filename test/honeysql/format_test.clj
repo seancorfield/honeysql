@@ -17,3 +17,11 @@
     'foo "foo"
     :foo-bar "foo_bar")
   (is (= (quote-identifier "*" :style :ansi) "*")))
+
+(deftest test-cte
+  (is (= (format-clause
+          (first {:with [[:query {:select [:foo] :from [:bar]}]]}) nil)
+         "WITH query AS SELECT foo FROM bar"))
+  (is (= (format-clause
+          (first {:with-recursive [[:query {:select [:foo] :from [:bar]}]]}) nil)
+         "WITH RECURSIVE query AS SELECT foo FROM bar")))
