@@ -161,7 +161,9 @@
 
 (def default-clause-priorities
   "Determines the order that clauses will be placed within generated SQL"
-  {:select 50
+  {:with 30
+   :with-recursive 40
+   :select 50
    :insert-into 60
    :update 70
    :delete-from 80
@@ -416,3 +418,19 @@
 
 (defmethod format-clause :delete-from [[_ table] _]
   (str "DELETE FROM " (to-sql table)))
+  
+(defn cte->sql
+  [[cte-name query]]
+  (str (to-sql cte-name) " AS " (to-sql query)))
+
+(defmethod format-clause :with [[_ ctes] _]
+  (str "WITH " (comma-join (map cte->sql ctes))))
+
+(defmethod format-clause :with-recursive [[_ ctes] _]
+  (str "WITH RECURSIVE " (comma-join (map cte->sql ctes))))
+
+(defmethod format-clause :union [[_ maps] _]
+  (string/join " UNION " (map to-sql maps)))
+
+(defmethod format-clause :union-all [[_ maps] _]
+  (string/join " UNION ALL " (map to-sql maps)))
