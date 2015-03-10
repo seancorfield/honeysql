@@ -30,6 +30,8 @@
 
 (def ^:dynamic *param-counter* nil)
 
+(def ^:dynamic *all-param-counter* nil)
+
 (def ^:dynamic *input-params* nil)
 
 (def ^:dynamic *fn-context?* false)
@@ -42,7 +44,12 @@
    :sqlserver #(str \[ % \])
    :oracle #(str \" % \")})
 
+(def ^:private parameterizers
+  {:postgresql #(str "$" @*all-param-counter*)
+   :jdbc "?"})
+
 (def ^:dynamic *quote-identifier-fn* nil)
+(def ^:dynamic *parameterizer* nil)
 
 (defn- undasherize [s]
   (string/replace s "-" "_"))
@@ -204,6 +211,7 @@
     :params - input parameters
     :quoting - quote style to use for identifiers; one of :ansi (PostgreSQL),
                :mysql, :sqlserver, or :oracle. Defaults to no quoting.
+    :parameterizer - style of parameter naming, one of :postgresql or :jdbc, defaults to :jdbc
     :return-param-names - when true, returns a vector of
                           [sql-str param-values param-names]"
   [sql-map & params-or-opts]
@@ -214,9 +222,11 @@
                  (:params opts))]
     (binding [*params* (atom [])
               *param-counter* (atom 0)
+              *all-param-counter* (atom 0)
               *param-names* (atom [])
               *input-params* (atom params)
-              *quote-identifier-fn* (quote-fns (:quoting opts))]
+              *quote-identifier-fn* (quote-fns (:quoting opts))
+              *parameterizer* (parameterizers (or (:parameterizer opts) :jdbc))]
       (let [sql-str (to-sql sql-map)]
         (if (seq @*params*)
           (if (:return-param-names opts)
@@ -300,7 +310,10 @@
                                  [x (keyword (str "_" (swap! *param-counter* inc)))])]
                  (swap! *param-names* conj pname)
                  (swap! *params* conj x)
-                 "?")))
+                 (swap! *all-param-counter* inc)
+                 (if (fn? *parameterizer*)
+                   (*parameterizer*)
+                   *parameterizer*))))
 
 (defn sqlable? [x]
   (satisfies? ToSql x))

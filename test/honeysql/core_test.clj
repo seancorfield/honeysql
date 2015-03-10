@@ -56,7 +56,11 @@
               "bort" "gabba" 2]
              (sql/format m1 {:param1 "gabba" :param2 2}))))
     (testing "SQL data prints and reads correctly"
-      (is (= m1 (read-string (pr-str m1)))))))
+      (is (= m1 (read-string (pr-str m1)))))
+    (testing "SQL data formats correctly with alternate param naming"
+      (is (= (sql/format m1 :params {:param1 "gabba" :param2 2} :parameterizer :postgresql)
+             ["SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10 FROM foo f, baz b INNER JOIN draq ON f.b = draq.x LEFT JOIN clod c ON f.a = c.d RIGHT JOIN bock ON bock.z = c.e FULL JOIN beck ON beck.x = c.y WHERE ((f.a = $1 AND b.baz <> $2) OR (1 < 2 AND 2 < 3) OR (f.e in (1, $3, 3)) OR f.e BETWEEN 10 AND 20) GROUP BY f.a HAVING 0 < f.e ORDER BY b.baz DESC, c.quux LIMIT 50 OFFSET 10 "
+              "bort" "gabba" 2])))))
 
 (deftest test-cast
   (is (= ["SELECT foo, CAST(bar AS integer)"]
