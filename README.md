@@ -5,7 +5,7 @@ SQL as Clojure data structures. Build queries programmatically -- even at runtim
 ## Leiningen Coordinate
 
 ```clj
-[honeysql "0.4.3"]
+[honeysql "0.5.1"]
 ```
 
 ## Usage
