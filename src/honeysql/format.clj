@@ -276,6 +276,16 @@
                    (apply fn-handler fn-name (.args x)))))
   SqlRaw
   (-to-sql [x] (.s x))
+  SqlParam
+  (-to-sql [x] (let [pname (param-name x)
+                     x (if (map? @*input-params*)
+                         (get @*input-params* pname)
+                         (let [x (first @*input-params*)]
+                           (swap! *input-params* rest)
+                           x))]
+                 (swap! *param-names* conj pname)
+                 (swap! *params* conj x)
+                 "?"))
   clojure.lang.IPersistentMap
   (-to-sql [x] (let [clause-ops (sort-clauses (keys x))
                      sql-str (binding [*subquery?* true
@@ -289,15 +299,8 @@
   nil
   (-to-sql [x] "NULL")
   Object
-  (-to-sql [x] (let [[x pname] (if (instance? SqlParam x)
-                                 (let [pname (param-name x)]
-                                   (if (map? @*input-params*)
-                                     [(get @*input-params* pname) pname]
-                                     (let [x (first @*input-params*)]
-                                       (swap! *input-params* rest)
-                                       [x pname])))
-                                 ;; Anonymous param name -- :_1, :_2, etc.
-                                 [x (keyword (str "_" (swap! *param-counter* inc)))])]
+  ;; Anonymous param name -- :_1, :_2, etc.
+  (-to-sql [x] (let [pname (keyword (str "_" (swap! *param-counter* inc)))]
                  (swap! *param-names* conj pname)
                  (swap! *params* conj x)
                  "?")))
