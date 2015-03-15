@@ -18,7 +18,8 @@
   (SqlCall. name args nil))
 
 (defn read-sql-call [form]
-  (apply call form))
+  ;; late bind so that we get new class on REPL reset
+  (apply (resolve `call) form))
 
 (defmethod print-method SqlCall [^SqlCall o ^java.io.Writer w]
   (.write w (str "#sql/call " (pr-str (into [(.name o)] (.args o))))))
@@ -42,7 +43,8 @@
   (SqlRaw. (str s) nil))
 
 (defn read-sql-raw [form]
-  (raw form))
+  ;; late bind, as above
+  ((resolve `raw) form))
 
 (defmethod print-method SqlRaw [^SqlRaw o ^java.io.Writer w]
   (.write w (str "#sql/raw " (pr-str (.s o)))))
@@ -69,7 +71,8 @@
   (.name param))
 
 (defn read-sql-param [form]
-  (param form))
+  ;; late bind, as above
+  ((resolve `param) form))
 
 (defmethod print-method SqlParam [^SqlParam o ^java.io.Writer w]
   (.write w (str "#sql/param " (pr-str (.name o)))))
