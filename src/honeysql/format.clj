@@ -45,8 +45,8 @@
    :oracle #(str \" % \")})
 
 (def ^:private parameterizers
-  {:postgresql #(str "$" @*all-param-counter*)
-   :jdbc "?"})
+  {:postgresql #(str "$" (swap! *all-param-counter* inc))
+   :jdbc (constantly "?")})
 
 (def ^:dynamic *quote-identifier-fn* nil)
 (def ^:dynamic *parameterizer* nil)
@@ -316,10 +316,7 @@
                       [x (keyword (str "_" (swap! *param-counter* inc)))])]
       (swap! *param-names* conj pname)
       (swap! *params* conj x)
-      (swap! *all-param-counter* inc)
-      (if (fn? *parameterizer*)
-        (*parameterizer*)
-        *parameterizer*))))
+      (*parameterizer*))))
 
 (defn sqlable? [x]
   (satisfies? ToSql x))
