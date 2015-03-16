@@ -2,6 +2,11 @@
 
 SQL as Clojure data structures. Build queries programmatically -- even at runtime -- without having to bash strings together.
 
+## Build
+
+[![Build Status](https://travis-ci.org/jkk/honeysql.svg?branch=master)](https://travis-ci.org/jkk/honeysql)
+[![Dependencies Status](http://jarkeeper.com/jkk/honeysql/status.svg)](http://jarkeeper.com/jkk/honeysql)
+
 ## Leiningen Coordinates
 
 [![Clojars Project](http://clojars.org/honeysql/latest-version.svg)](http://clojars.org/honeysql)
