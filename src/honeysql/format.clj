@@ -161,7 +161,7 @@
        (to-sql pattern)
        (when (seq opts)
          (str " " (space-join (for [opt opts]
-                                (condp = opt
+                                (case opt
                                   :boolean "IN BOOLEAN MODE"
                                   :natural "IN NATURAL LANGUAGE MODE"
                                   :expand "WITH QUERY EXPANSION")))))
@@ -256,7 +256,7 @@
   clojure.lang.Keyword
   (-to-sql [x]
     (let [s (name x)]
-      (condp = (.charAt s 0)
+      (case (.charAt s 0)
         \% (let [call-args (string/split (subs s 1) #"\." 2)]
              (to-sql (apply call (map keyword call-args))))
         \? (to-sql (param (keyword (subs s 1))))
