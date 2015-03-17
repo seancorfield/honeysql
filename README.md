@@ -107,7 +107,7 @@ and the remaining maps *must* have the same set of keys and values:
 (-> (insert-into :properties)
     (values [{:name "John" :surname "Smith" :age 34}
              {:name "Andrew" :surname "Cooper" :age 12}
-             {:name "Jane" :surname "Daniels" :age 56})
+             {:name "Jane" :surname "Daniels" :age 56}])
     sql/format)
 => ["INSERT INTO properties (age, name, surname) 
      VALUES (34, ?, ?), (12, ?, ?), (56, ?, ?)" 
