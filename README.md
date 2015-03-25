@@ -82,6 +82,16 @@ To add to clauses instead of replacing them, use `merge-select`, `merge-where`, 
 => ["SELECT a, b, c, d, e FROM foo WHERE (f.a = ? AND b > 10)" "baz"]
 ```
 
+`where` will combine multiple clauses together using and:
+
+```clj
+(-> (select :*)
+    (from :foo)
+    (where [:= :a 1] [:< :b 100])
+    sql/format)
+=> ["SELECT * FROM foo WHERE (a = 1 AND b < 100)"]
+```
+
 Inserts are supported in two patterns. 
 In the first pattern, you must explicitly specify the columns to insert,
 then provide a collection of rows, each a collection of column values:
