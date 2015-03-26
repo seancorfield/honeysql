@@ -38,6 +38,11 @@
 
 (def ^:dynamic *subquery?* false)
 
+(def ^:dynamic *handling-values* false)
+(def ^:dynamic *enable-values-subqueries?* 
+  "When False, subqueries are not computed for IPersistentMap values"
+  true)
+
 (def ^:private quote-fns
   {:ansi #(str \" % \")
    :mysql #(str \` % \`)
@@ -226,7 +231,11 @@
               *param-names* (atom [])
               *input-params* (atom params)
               *quote-identifier-fn* (quote-fns (:quoting opts))
-              *parameterizer* (parameterizers (or (:parameterizer opts) :jdbc))]
+              *parameterizer* (parameterizers (or (:parameterizer opts) :jdbc))
+              *enable-values-subqueries?* (if-some 
+                                            [?enable-values-subqueries (:enable-values-subqueries? opts)]
+                                            ?enable-values-subqueries
+                                            *enable-values-subqueries?*)]
       (let [sql-str (to-sql sql-map)]
         (if (seq @*params*)
           (if (:return-param-names opts)
@@ -292,15 +301,21 @@
   (-to-sql [x] (.s x))
   clojure.lang.IPersistentMap
   (-to-sql [x]
-    (let [clause-ops (sort-clauses (keys x))
-          sql-str (binding [*subquery?* true
-                            *fn-context?* false]
-                    (space-join
-                     (map (comp #(-format-clause % x) #(find x %))
-                          clause-ops)))]
-      (if *subquery?*
-        (paren-wrap sql-str)
-        sql-str)))
+    (if (and *handling-values* 
+             (not *enable-values-subqueries?*))
+      (let [pname (keyword (str "_" (swap! *param-counter* inc)))]
+        (swap! *param-names* conj pname)
+        (swap! *params* conj x)
+        (*parameterizer*))
+      (let [clause-ops (sort-clauses (keys x))
+            sql-str (binding [*subquery?* true
+                              *fn-context?* false]
+                      (space-join
+                        (map (comp #(-format-clause % x) #(find x %))
+                             clause-ops)))]
+        (if *subquery?*
+          (paren-wrap sql-str)
+          sql-str))))
   nil
   (-to-sql [x] "NULL")
   Object
@@ -425,8 +440,9 @@
                                  (str "(" (comma-join (map to-sql x)) ")"))))
     (str
       "(" (comma-join (map to-sql (keys (first values)))) ") VALUES "
-      (comma-join (for [x values]
-                    (str "(" (comma-join (map to-sql (vals x))) ")"))))))
+      (binding [*handling-values* true]
+        (comma-join (for [x values]
+                      (str "(" (comma-join (map to-sql (vals x))) ")")))))))
 
 (defmethod format-clause :query-values [[_ query-values] _]
   (to-sql query-values))
