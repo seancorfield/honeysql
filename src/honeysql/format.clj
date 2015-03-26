@@ -8,15 +8,6 @@
 
 ;;;;
 
-(defn comma-join [s]
-  (string/join ", " s))
-
-(defn space-join [s]
-  (string/join " " s))
-
-(defn paren-wrap [x]
-  (str "(" x ")"))
-
 (def ^:dynamic *clause*
   "During formatting, *clause* is bound to :select, :from, :where, etc."
   nil)
@@ -38,6 +29,8 @@
 
 (def ^:dynamic *subquery?* false)
 
+(def ^:dynamic *builder* nil)
+
 (def ^:private quote-fns
   {:ansi #(str \" % \")
    :mysql #(str \` % \`)
@@ -54,6 +47,30 @@
 (defn- undasherize [s]
   (string/replace s "-" "_"))
 
+(defn append-str [^String s]
+  (.append ^StringBuilder *builder* s))
+
+(defn append-obj [o]
+  (.append ^StringBuilder *builder* o))
+
+(defn append-char [c]
+  (.append ^StringBuilder *builder* (char c)))
+
+(defn do-join [sep appender xs]
+  (when (seq xs)
+    (appender (first xs))
+    (doseq [x (rest xs)]
+      (append-str sep)
+      (appender x))))
+
+(defn close-paren []
+  (.append ^StringBuilder *builder* \)))
+
+(defn do-paren-join [sep appender xs]
+  (append-char \()
+  (do-join sep appender xs)
+  (close-paren))
+
 (defn quote-identifier [x & {:keys [style split] :or {split true}}]
   (let [qf (if style
              (quote-fns style)
@@ -63,12 +80,14 @@
             (string? x) (if qf x (undasherize x))
             :else (str x))]
     (if-not qf
-      s
+      (append-str s)
       (let [qf* #(if (= "*" %) % (qf %))]
         (if-not split
-         (qf* s)
-         (let [parts (string/split s #"\.")]
-           (string/join "." (map qf* parts))))))))
+         (append-str (qf* s))
+         (do-join
+           "."
+           append-str
+           (map qf* (string/split s #"\."))))))))
 
 (def infix-fns
   #{"+" "-" "*" "/" "%" "mod" "|" "&" "^"
@@ -89,83 +108,97 @@
 (defmulti fn-handler (fn [op & args] op))
 
 (defn expand-binary-ops [op & args]
-  (str "("
-       (string/join " AND "
-                    (for [[a b] (partition 2 1 args)]
-                      (fn-handler op a b)))
-       ")"))
+  (do-paren-join
+    " AND "
+    (fn [[a b]] (fn-handler op a b))
+    (partition 2 1 args)))
 
 (defmethod fn-handler :default [op & args]
-  (let [args (map to-sql args)]
-    (if (infix-fns op)
-      (paren-wrap (string/join (str " " op " ") args))
-      (str op (paren-wrap (comma-join args))))))
+  (if (infix-fns op)
+    (do-paren-join
+      (str " " op " ")
+      to-sql
+      args)
+    (do
+      (append-str op)
+      (do-paren-join ", " to-sql args))))
 
 (defmethod fn-handler "count-distinct" [_ & args]
-  (str "COUNT(DISTINCT " (comma-join (map to-sql args)) ")"))
+  (append-str "COUNT(DISTINCT")
+  (do-join ", " to-sql args)
+  (close-paren)
+  )
 
 (defmethod fn-handler "distinct-on" [_ & args]
-  (str "DISTINCT ON (" (comma-join (map to-sql args)) ")"))
+  (append-str "DISTINCT ON (")
+  (do-join ", " to-sql args)
+  (close-paren)
+  )
 
 (defmethod fn-handler "cast" [_ field cast-to-type]
-  (str "CAST" (paren-wrap (str (to-sql field)
-                               " AS "
-                               (to-sql cast-to-type)))))
+  (append-str "CAST(")
+  (to-sql field)
+  (append-str " AS ")
+  (to-sql cast-to-type)
+  (close-paren))
 
 (defmethod fn-handler "=" [_ a b & more]
   (if (seq more)
     (apply expand-binary-ops "=" a b more)
     (cond
-     (nil? a) (str (to-sql b) " IS NULL")
-     (nil? b) (str (to-sql a) " IS NULL")
-     :else (str (to-sql a) " = " (to-sql b)))))
+     (nil? a) (do (to-sql b) (append-str " IS NULL"))
+     (nil? b) (do (to-sql a) (append-str " IS NULL"))
+     :else (do (to-sql a) (append-str " = ") (to-sql b)))))
 
 (defmethod fn-handler "<>" [_ a b & more]
   (if (seq more)
     (apply expand-binary-ops "<>" a b more)
     (cond
-     (nil? a) (str (to-sql b) " IS NOT NULL")
-     (nil? b) (str (to-sql a) " IS NOT NULL")
-     :else (str (to-sql a) " <> " (to-sql b)))))
+     (nil? a) (do (to-sql b) (append-str " IS NOT NULL"))
+     (nil? b) (do (to-sql a) (append-str " IS NOT NULL"))
+     :else (do (to-sql a) (append-str " <> ") (to-sql b)))))
 
 (defmethod fn-handler "<" [_ a b & more]
   (if (seq more)
     (apply expand-binary-ops "<" a b more)
-    (str (to-sql a) " < " (to-sql b))))
+    (do (to-sql a) (append-str " < ") (to-sql b))))
 
 (defmethod fn-handler "<=" [_ a b & more]
   (if (seq more)
     (apply expand-binary-ops "<=" a b more)
-    (str (to-sql a) " <= " (to-sql b))))
+    (do (to-sql a) (append-str " <= ") (to-sql b))))
 
 (defmethod fn-handler ">" [_ a b & more]
   (if (seq more)
     (apply expand-binary-ops ">" a b more)
-    (str (to-sql a) " > " (to-sql b))))
+    (do (to-sql a) (append-str " > ") (to-sql b))))
 
 (defmethod fn-handler ">=" [_ a b & more]
   (if (seq more)
     (apply expand-binary-ops ">=" a b more)
-    (str (to-sql a) " >= " (to-sql b))))
+    (do (to-sql a) (append-str " >= ") (to-sql b))))
 
 (defmethod fn-handler "between" [_ field lower upper]
-  (str (to-sql field) " BETWEEN " (to-sql lower) " AND " (to-sql upper)))
+  (to-sql field)
+  (append-str " BETWEEN ")
+  (to-sql lower)
+  (append-str " AND ")
+  (to-sql upper))
 
 ;; Handles MySql's MATCH (field) AGAINST (pattern). The third argument
 ;; can be a set containing one or more of :boolean, :natural, or :expand.
 (defmethod fn-handler "match" [_ fields pattern & [opts]]
-  (str "MATCH ("
-       (comma-join
-        (map to-sql (if (coll? fields) fields [fields])))
-       ") AGAINST ("
-       (to-sql pattern)
-       (when (seq opts)
-         (str " " (space-join (for [opt opts]
-                                (case opt
-                                  :boolean "IN BOOLEAN MODE"
-                                  :natural "IN NATURAL LANGUAGE MODE"
-                                  :expand "WITH QUERY EXPANSION")))))
-       ")"))
+  (append-str "MATCH (")
+  (do-join ", " to-sql (if (coll? fields) fields [fields]))
+  (append-str ") AGAINST (")
+  (to-sql pattern)
+  (doseq [opt opts]
+    (append-str
+      (case opt
+        :boolean " IN BOOLEAN MODE"
+        :natural " IN NATURAL LANGUAGE MODE"
+        :expand " WITH QUERY EXPANSION")))
+  (close-paren))
 
 (def default-clause-priorities
   "Determines the order that clauses will be placed within generated SQL"
@@ -226,8 +259,10 @@
               *param-names* (atom [])
               *input-params* (atom params)
               *quote-identifier-fn* (quote-fns (:quoting opts))
-              *parameterizer* (parameterizers (or (:parameterizer opts) :jdbc))]
-      (let [sql-str (to-sql sql-map)]
+              *parameterizer* (parameterizers (or (:parameterizer opts) :jdbc))
+              *builder* (StringBuilder.)]
+      (to-sql sql-map)
+      (let [sql-str (str *builder*)]
         (if (seq @*params*)
           (if (:return-param-names opts)
             [sql-str @*params* @*param-names*]
@@ -241,8 +276,10 @@
             *param-counter* (atom 0)
             *param-names* (atom [])
             *quote-identifier-fn* (or (quote-fns quoting)
-                                      *quote-identifier-fn*)]
-    (let [sql-str (format-predicate* pred)]
+                                      *quote-identifier-fn*)
+            *builder* (StringBuilder.)]
+    (format-predicate* pred)
+    (let [sql-str (str *builder*)]
       (if (seq @*params*)
         (into [sql-str] @*params*)
         [sql-str]))))
@@ -264,24 +301,26 @@
   clojure.lang.Symbol
   (-to-sql [x] (quote-identifier x))
   java.lang.Number
-  (-to-sql [x] (str x))
+  (-to-sql [x] (append-obj x))
   java.lang.Boolean
   (-to-sql [x]
-    (if x "TRUE" "FALSE"))
+    (append-str (if x "TRUE" "FALSE")))
   clojure.lang.Sequential
   (-to-sql [x]
     (if *fn-context?*
       ;; list argument in fn call
-      (paren-wrap (comma-join (map to-sql x)))
+      (do-paren-join ", " to-sql x)
       ;; alias
-      (str (to-sql (first x))
-           ; Omit AS in FROM, JOIN, etc. - Oracle doesn't allow it
-           (if (= :select *clause*)
-             " AS "
-             " ")
-           (if (string? (second x))
-             (quote-identifier (second x))
-             (to-sql (second x))))))
+      (do
+        (to-sql (first x))
+        ; Omit AS in FROM, JOIN, etc. - Oracle doesn't allow it
+        (append-str
+          (if (= :select *clause*)
+            " AS "
+            " "))
+        (if (string? (second x))
+          (quote-identifier (second x))
+          (to-sql (second x))))))
   SqlCall
   (-to-sql [x]
     (binding [*fn-context?* true]
@@ -289,20 +328,21 @@
              fn-name (fn-aliases fn-name fn-name)]
          (apply fn-handler fn-name (.args x)))))
   SqlRaw
-  (-to-sql [x] (.s x))
+  (-to-sql [x] (append-str (.s x)))
   clojure.lang.IPersistentMap
   (-to-sql [x]
-    (let [clause-ops (sort-clauses (keys x))
-          sql-str (binding [*subquery?* true
-                            *fn-context?* false]
-                    (space-join
-                     (map (comp #(-format-clause % x) #(find x %))
-                          clause-ops)))]
-      (if *subquery?*
-        (paren-wrap sql-str)
-        sql-str)))
+    (when *subquery?*
+      (append-char \())
+    (binding [*subquery?* true
+              *fn-context?* false]
+      (do-join
+        " "
+        (comp #(-format-clause % x) #(find x %))
+        (sort-clauses (keys x))))
+    (when *subquery?*
+      (close-paren)))
   nil
-  (-to-sql [x] "NULL")
+  (-to-sql [x] (append-str "NULL"))
   Object
   (-to-sql [x]
     (let [[x pname] (if (instance? SqlParam x)
@@ -316,7 +356,7 @@
                       [x (keyword (str "_" (swap! *param-counter* inc)))])]
       (swap! *param-names* conj pname)
       (swap! *params* conj x)
-      (*parameterizer*))))
+      (append-obj (*parameterizer*)))))
 
 (defn sqlable? [x]
   (satisfies? ToSql x))
@@ -332,11 +372,12 @@
     (let [[op & args] pred
           op-name (name op)]
       (if (= "not" op-name)
-        (str "NOT " (format-predicate* (first args)))
+        (do (append-str "NOT ") (format-predicate* (first args)))
         (if (#{"and" "or" "xor"} op-name)
-          (paren-wrap
-           (string/join (str " " (string/upper-case op-name) " ")
-                        (map format-predicate* args)))
+          (do-paren-join
+            (str " " (string/upper-case op-name) " ")
+            format-predicate*
+            args)
           (to-sql (apply call pred)))))))
 
 (defmulti format-clause
@@ -348,111 +389,155 @@
   (binding [*clause* (key clause)]
     (format-clause clause _)))
 
-(defmethod format-clause :default [& _]
-  "")
+(defmethod format-clause :default [& _])
 
 (defmethod format-clause :select [[_ fields] sql-map]
-  (str "SELECT "
-       (when (:modifiers sql-map)
-         (str (space-join (map (comp string/upper-case name)
-                               (:modifiers sql-map)))
-              " "))
-       (comma-join (map to-sql fields))))
+  (append-str "SELECT ")
+  (doseq [m (:modifiers sql-map)]
+    (append-str (string/upper-case (name m)))
+    (append-char \space))
+  (do-join ", " to-sql fields))
 
 (defmethod format-clause :from [[_ tables] _]
-  (str "FROM " (comma-join (map to-sql tables))))
+  (append-str "FROM ")
+  (do-join ", " to-sql tables))
 
 (defmethod format-clause :where [[_ pred] _]
-  (str "WHERE " (format-predicate* pred)))
+  (append-str "WHERE ")
+  (format-predicate* pred))
 
 (defn format-join [type table pred]
-  (str (when type
-         (str (string/upper-case (name type)) " "))
-       "JOIN " (to-sql table)
-       " ON " (format-predicate* pred)))
+  (when type
+    (append-str (string/upper-case (name type)))
+    (append-char \space))
+  (append-str "JOIN ")
+  (to-sql table)
+  (append-str " ON ")
+  (format-predicate* pred))
 
 (defmethod format-clause :join [[_ join-groups] _]
-  (space-join (map #(apply format-join :inner %)
-                   (partition 2 join-groups))))
+  (do-join
+    " "
+    #(apply format-join :inner %)
+    (partition 2 join-groups)))
 
 (defmethod format-clause :left-join [[_ join-groups] _]
-  (space-join (map #(apply format-join :left %)
-                   (partition 2 join-groups))))
+  (do-join
+    " "
+    #(apply format-join :left %)
+    (partition 2 join-groups)))
 
 (defmethod format-clause :right-join [[_ join-groups] _]
-  (space-join (map #(apply format-join :right %)
-                   (partition 2 join-groups))))
+  (do-join
+    " "
+    #(apply format-join :right %)
+    (partition 2 join-groups)))
 
 (defmethod format-clause :full-join [[_ join-groups] _]
-  (space-join (map #(apply format-join :full %)
-                   (partition 2 join-groups))))
+  (do-join
+    " "
+    #(apply format-join :full %)
+    (partition 2 join-groups)))
 
 (defmethod format-clause :group-by [[_ fields] _]
-  (str "GROUP BY " (comma-join (map to-sql fields))))
+  (append-str "GROUP BY ")
+  (do-join ", " to-sql fields))
 
 (defmethod format-clause :having [[_ pred] _]
-  (str "HAVING " (format-predicate* pred)))
+  (append-str "HAVING ")
+  (format-predicate* pred))
 
 (defmethod format-clause :order-by [[_ fields] _]
-  (str "ORDER BY "
-       (comma-join (for [field fields]
-                     (if (sequential? field)
-                       (let [[field order] field]
-                         (str (to-sql field) " " (if (= :desc order)
-                                                   "DESC" "ASC")))
-                       (to-sql field))))))
+  (append-str "ORDER BY ")
+  (do-join
+    ", "
+    (fn [field]
+      (if (sequential? field)
+        (let [[field order] field]
+          (to-sql field)
+          (append-str
+            (if (= :desc order) " DESC" " ASC")))
+        (to-sql field)))
+    fields))
 
 (defmethod format-clause :limit [[_ limit] _]
-  (str "LIMIT " (to-sql limit)))
+  (append-str "LIMIT ")
+  (to-sql limit))
 
 (defmethod format-clause :offset [[_ offset] _]
-  (str "OFFSET " (to-sql offset)))
+  (append-str "OFFSET ")
+  (to-sql offset))
 
 (defmethod format-clause :insert-into [[_ table] _]
+  (append-str "INSERT INTO ")
   (if (and (sequential? table) (sequential? (first table)))
-    (str "INSERT INTO "
-         (to-sql (ffirst table))
-         " (" (comma-join (map to-sql (second (first table)))) ") "
-         (to-sql (second table)))
-    (str "INSERT INTO " (to-sql table))))
+    (do
+      (to-sql (ffirst table))
+      (append-char \space)
+      (do-paren-join
+        ", "
+        to-sql
+        (second (first table)))
+      (append-char \space)
+      (to-sql (second table)))
+    (to-sql table)))
 
 (defmethod format-clause :columns [[_ fields] _]
-  (str "(" (comma-join (map to-sql fields)) ")"))
+  (do-paren-join ", " to-sql fields))
 
 (defmethod format-clause :values [[_ values] _]
   (if (sequential? (first values))
-    (str "VALUES " (comma-join (for [x values]
-                                 (str "(" (comma-join (map to-sql x)) ")"))))
-    (str
-      "(" (comma-join (map to-sql (keys (first values)))) ") VALUES "
-      (comma-join (for [x values]
-                    (str "(" (comma-join (map to-sql (vals x))) ")"))))))
+    (do
+      (append-str "VALUES ")
+      (do-join
+        ", "
+        #(do-paren-join to-sql %)
+        values))
+    (do
+      (do-paren-join ", " to-sql (keys (first values)))
+      (append-str " VALUES ")
+      (do-join
+        ", "
+        #(do-paren-join ", " to-sql (vals %))
+        values))))
 
 (defmethod format-clause :query-values [[_ query-values] _]
   (to-sql query-values))
 
 (defmethod format-clause :update [[_ table] _]
-  (str "UPDATE " (to-sql table)))
+  (append-str "UPDATE ")
+  (to-sql table))
 
 (defmethod format-clause :set [[_ values] _]
-  (str "SET " (comma-join (for [[k v] values]
-                            (str (to-sql k) " = " (to-sql v))))))
+  (append-str "SET ")
+  (do-join
+    ", "
+    (fn [[k v]]
+      (to-sql k)
+      (append-str " = ")
+      (to-sql v))
+    values))
 
 (defmethod format-clause :delete-from [[_ table] _]
-  (str "DELETE FROM " (to-sql table)))
+  (append-str "DELETE FROM ")
+  (to-sql table))
   
 (defn cte->sql
   [[cte-name query]]
-  (str (to-sql cte-name) " AS " (to-sql query)))
+  (to-sql cte-name)
+  (append-str " AS ")
+  (to-sql query))
 
 (defmethod format-clause :with [[_ ctes] _]
-  (str "WITH " (comma-join (map cte->sql ctes))))
+  (append-str "WITH ")
+  (do-join ", " cte->sql ctes))
 
 (defmethod format-clause :with-recursive [[_ ctes] _]
-  (str "WITH RECURSIVE " (comma-join (map cte->sql ctes))))
+  (append-str "WITH RECURSIVE ")
+  (do-join ", " cte->sql ctes))
 
 (defmethod format-clause :union [[_ maps] _]
-  (string/join " UNION " (map to-sql maps)))
+  (do-join " UNION " to-sql maps))
 
 (defmethod format-clause :union-all [[_ maps] _]
-  (string/join " UNION ALL " (map to-sql maps)))
+  (do-join " UNION ALL " to-sql maps))
