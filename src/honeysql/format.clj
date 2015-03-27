@@ -314,16 +314,17 @@
         sql-str)))
   nil
   (-to-sql [x] "NULL")
+  SqlParam
+  (-to-seql [x]
+    (let [pname (param-name x)]
+      (if (map? @*input-params*)
+        (add-param pname (get @*input-params* pname))
+        (let [x (first @*input-params*)]
+          (swap! *input-params* rest)
+          (add-param pname x)))))
   Object
   (-to-sql [x]
-    (if (instance? SqlParam x)
-      (let [pname (param-name x)]
-        (if (map? @*input-params*)
-          (add-param pname (get @*input-params* pname))
-          (let [x (first @*input-params*)]
-            (swap! *input-params* rest)
-            (add-param pname x))))
-      (add-anon-param x))))
+    (add-anon-param x)))
 
 (defn sqlable? [x]
   (satisfies? ToSql x))
