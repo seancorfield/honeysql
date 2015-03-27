@@ -261,6 +261,13 @@
 (defprotocol ToSql
   (-to-sql [x]))
 
+(defrecord Value [v]
+  ToSql
+  (-to-sql [_]
+    (add-anon-param v)))
+
+(defn value [x] (Value. x))
+
 (declare -format-clause)
 
 (extend-protocol ToSql
@@ -315,7 +322,7 @@
   nil
   (-to-sql [x] "NULL")
   SqlParam
-  (-to-seql [x]
+  (-to-sql [x]
     (let [pname (param-name x)]
       (if (map? @*input-params*)
         (add-param pname (get @*input-params* pname))
