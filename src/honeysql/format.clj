@@ -247,6 +247,17 @@
         (into [sql-str] @*params*)
         [sql-str]))))
 
+(defn add-param [pname pval]
+  (swap! *param-names* conj pname)
+  (swap! *params* conj pval)
+  (*parameterizer*))
+
+;; Anonymous param name -- :_1, :_2, etc.
+(defn add-anon-param [pval]
+  (add-param
+    (keyword (str "_" (swap! *param-counter* inc)))
+    pval))
+
 (defprotocol ToSql
   (-to-sql [x]))
 
@@ -305,18 +316,14 @@
   (-to-sql [x] "NULL")
   Object
   (-to-sql [x]
-    (let [[x pname] (if (instance? SqlParam x)
-                      (let [pname (param-name x)]
-                        (if (map? @*input-params*)
-                          [(get @*input-params* pname) pname]
-                          (let [x (first @*input-params*)]
-                            (swap! *input-params* rest)
-                            [x pname])))
-                      ;; Anonymous param name -- :_1, :_2, etc.
-                      [x (keyword (str "_" (swap! *param-counter* inc)))])]
-      (swap! *param-names* conj pname)
-      (swap! *params* conj x)
-      (*parameterizer*))))
+    (if (instance? SqlParam x)
+      (let [pname (param-name x)]
+        (if (map? @*input-params*)
+          (add-param pname (get @*input-params* pname))
+          (let [x (first @*input-params*)]
+            (swap! *input-params* rest)
+            (add-param pname x))))
+      (add-anon-param x))))
 
 (defn sqlable? [x]
   (satisfies? ToSql x))
