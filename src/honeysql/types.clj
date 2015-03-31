@@ -1,22 +1,11 @@
 (ns honeysql.types)
 
-(deftype SqlCall [name args _meta]
-  Object
-  (hashCode [_] (hash-combine (hash name) (hash args)))
-  (equals [this x]
-    (cond (identical? this x) true
-          (instance? SqlCall x) (let [^SqlCall x x]
-                                  (and (= name (.name x))
-                                       (= args (.args x))))
-          :else false))
-  clojure.lang.IObj
-  (meta [_] _meta)
-  (withMeta [_ m] (SqlCall. name args m)))
+(defrecord SqlCall [name args])
 
 (defn call
   "Represents a SQL function call. Name should be a keyword."
   [name & args]
-  (SqlCall. name args nil))
+  (SqlCall. name args))
 
 (defn read-sql-call [form]
   ;; late bind so that we get new class on REPL reset
@@ -30,18 +19,12 @@
 
 ;;;;
 
-(deftype SqlRaw [s _meta]
-  Object
-  (hashCode [this] (hash-combine (hash (class this)) (hash s)))
-  (equals [_ x] (and (instance? SqlRaw x) (= s (.s ^SqlRaw x))))
-  clojure.lang.IObj
-  (meta [_] _meta)
-  (withMeta [_ m] (SqlRaw. s m)))
+(defrecord SqlRaw [s])
 
 (defn raw
   "Represents a raw SQL string"
   [s]
-  (SqlRaw. (str s) nil))
+  (SqlRaw. (str s)))
 
 (defn read-sql-raw [form]
   ;; late bind, as above
@@ -55,18 +38,12 @@
 
 ;;;;
 
-(deftype SqlParam [name _meta]
-  Object
-  (hashCode [this] (hash-combine (hash (class this)) (hash (name name))))
-  (equals [_ x] (and (instance? SqlParam x) (= name (.name ^SqlParam x))))
-  clojure.lang.IObj
-  (meta [_] _meta)
-  (withMeta [_ m] (SqlParam. name m)))
+(defrecord SqlParam [name])
 
 (defn param
   "Represents a SQL parameter which can be filled in later"
   [name]
-  (SqlParam. name nil))
+  (SqlParam. name))
 
 (defn param-name [^SqlParam param]
   (.name param))
@@ -83,18 +60,12 @@
 
 ;;;;
 
-(deftype SqlArray [values _meta]
-  Object
-  (hashCode [this] (hash-combine (hash (class this)) (hash values)))
-  (equals [_ x] (and (instance? SqlArray x) (= values (.values ^SqlArray x))))
-  clojure.lang.IObj
-  (meta [_] _meta)
-  (withMeta [_ m] (SqlArray. values m)))
+(defrecord SqlArray [values])
 
 (defn array
   "Represents a SQL array."
   [values]
-  (SqlArray. values nil))
+  (SqlArray. values))
 
 (defn array-vals [^SqlArray a]
   (.-values a))
