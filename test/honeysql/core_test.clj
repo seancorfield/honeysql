@@ -67,3 +67,11 @@
          (sql/format {:select [:foo (sql/call :cast :bar :integer)]})))
   (is (= ["SELECT foo, CAST(bar AS integer)"]
          (sql/format {:select [:foo (sql/call :cast :bar 'integer)]}))))
+
+(deftest test-value
+  (is (= ["INSERT INTO foo (bar) VALUES (?)" {:baz "my-val"}]
+         (->
+           (insert-into :foo)
+           (columns :bar)
+           (values [[(honeysql.format/value {:baz "my-val"})]])
+           sql/format))))
