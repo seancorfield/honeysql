@@ -60,18 +60,12 @@
 
 ;;;;
 
-(deftype SqlArray [values _meta]
-  Object
-  (hashCode [this] (hash-combine (hash (class this)) (hash values)))
-  (equals [_ x] (and (instance? SqlArray x) (= values (.values ^SqlArray x))))
-  clojure.lang.IObj
-  (meta [_] _meta)
-  (withMeta [_ m] (SqlArray. values m)))
+(defrecord SqlArray [values])
 
 (defn array
   "Represents a SQL array."
   [values]
-  (SqlArray. values nil))
+  (SqlArray. values))
 
 (defn array-vals [^SqlArray a]
   (.values a))
