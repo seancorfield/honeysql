@@ -1,6 +1,6 @@
 (ns honeysql.format
   (:refer-clojure :exclude [format])
-  (:require [honeysql.types :refer [call raw param param-name array]]
+  (:require [honeysql.types :refer [call raw param param-name]]
             [clojure.string :as string])
   (:import [honeysql.types SqlCall SqlRaw SqlParam SqlArray]))
 
