@@ -33,3 +33,13 @@
          "INSERT INTO foo SELECT bar FROM baz"))
   (is (= (format-clause (first {:insert-into [[:foo [:a :b :c]] {:select [:d :e :f] :from [:baz]}]}) nil)
          "INSERT INTO foo (a, b, c) SELECT d, e, f FROM baz")))
+
+(deftest array-test
+  (is (= (format {:insert-into :foo
+                  :columns [:baz]
+                  :values [[#sql/array [1 2 3 4]]]})
+         ["INSERT INTO foo (baz) VALUES (ARRAY[1, 2, 3, 4])"]))
+  (is (= (format {:insert-into :foo
+                  :columns [:baz]
+                  :values [[#sql/array ["one" "two" "three"]]]})
+         ["INSERT INTO foo (baz) VALUES (ARRAY[?, ?, ?])" "one" "two" "three"])))

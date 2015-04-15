@@ -57,3 +57,31 @@
 
 (defmethod print-dup SqlParam [o w]
   (print-method o w))
+
+;;;;
+
+(deftype SqlArray [values _meta]
+  Object
+  (hashCode [this] (hash-combine (hash (class this)) (hash values)))
+  (equals [_ x] (and (instance? SqlArray x) (= values (.values ^SqlArray x))))
+  clojure.lang.IObj
+  (meta [_] _meta)
+  (withMeta [_ m] (SqlArray. values m)))
+
+(defn array
+  "Represents a SQL array."
+  [values]
+  (SqlArray. values nil))
+
+(defn array-vals [^SqlArray a]
+  (.values a))
+
+(defn read-sql-array [form]
+  ;; late bind, as above
+  ((resolve `array) form))
+
+(defmethod print-method SqlArray [^SqlArray a ^java.io.Writer w]
+  (.write w (str "#sql/array " (pr-str (.values a)))))
+
+(defmethod print-dup SqlArray [a w]
+  (print-method a w))
