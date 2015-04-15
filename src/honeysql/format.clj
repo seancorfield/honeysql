@@ -412,7 +412,7 @@
   (str "ORDER BY "
        (comma-join (for [field fields]
                      (if (sequential? field)
-                       (let [[field order] field]
+                       (let [[field order & [nulls-order]] field]
                          (str (to-sql field) " " (if (= :desc order)
                                                    "DESC" "ASC")))
                        (to-sql field))))))
