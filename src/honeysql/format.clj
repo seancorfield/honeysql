@@ -331,9 +331,7 @@
           (add-param pname x)))))
   SqlArray
   (-to-sql [x]
-    (let [values (.values x)]
-      (str "ARRAY[" (comma-join (for [v values]
-                                  (-to-sql v))) "]")))
+    (str "ARRAY[" (comma-join (map -to-sql (.values x))) "]"))
   Object
   (-to-sql [x]
     (add-anon-param x)))
