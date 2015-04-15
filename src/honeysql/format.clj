@@ -2,7 +2,7 @@
   (:refer-clojure :exclude [format])
   (:require [honeysql.types :refer [call raw param param-name]]
             [clojure.string :as string])
-  (:import [honeysql.types SqlCall SqlRaw SqlParam]))
+  (:import [honeysql.types SqlCall SqlRaw SqlParam SqlArray]))
 
 ;;(set! *warn-on-reflection* true)
 
@@ -329,6 +329,9 @@
         (let [x (first @*input-params*)]
           (swap! *input-params* rest)
           (add-param pname x)))))
+  SqlArray
+  (-to-sql [x]
+    (str "ARRAY[" (comma-join (map -to-sql (.values x))) "]"))
   Object
   (-to-sql [x]
     (add-anon-param x)))
