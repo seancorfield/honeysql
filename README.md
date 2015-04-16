@@ -249,7 +249,7 @@ Here's a big, complicated query. Note that Honey SQL makes no attempt to verify 
              [:between :f.e 10 20]]
     :group-by [:f.a]
     :having [:< 0 :f.e]
-    :order-by [[:b.baz :desc] :c.quux]
+    :order-by [[:b.baz :desc] :c.quux [:f.a :nulls-first]
     :limit 50
     :offset 10}
 
@@ -265,7 +265,7 @@ Here's a big, complicated query. Note that Honey SQL makes no attempt to verify 
            OR f.e BETWEEN 10 AND 20)
      GROUP BY f.a
      HAVING 0 < f.e
-     ORDER BY b.baz DESC, c.quux
+     ORDER BY b.baz DESC, c.quux, f.a NULLS FIRST
      LIMIT 50
      OFFSET 10 "
      "bort" "gabba" 2]
