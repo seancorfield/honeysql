@@ -413,6 +413,12 @@
        (comma-join (for [field fields]
                      (if (sequential? field)
                        (let [[field order & [nulls-order]] field]
+                         ;; Correct way of handling this would be to
+                         ;; expect a dictionary with either order,
+                         ;; nulls order or both at the same
+                         ;; time. However, so far I'm not sure how to
+                         ;; achieve that, so first iteration will have
+                         ;; to use dirty hacks.
                          (str (to-sql field) " " (if (= :desc order)
                                                    "DESC" "ASC")))
                        (to-sql field))))))
