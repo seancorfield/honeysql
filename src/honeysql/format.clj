@@ -188,6 +188,7 @@
    :order-by 190
    :limit 200
    :offset 210
+   :lock 215
    :values 220
    :query-values 230})
 
@@ -432,6 +433,22 @@
 
 (defmethod format-clause :offset [[_ offset] _]
   (str "OFFSET " (to-sql offset)))
+
+(defmulti format-lock-clause identity)
+
+(defmethod format-lock-clause :update [_]
+  "FOR UPDATE")
+
+(defmethod format-lock-clause :mysql-share [_]
+  "LOCK IN SHARE MODE")
+
+(defmethod format-lock-clause :postgresql-share [_]
+  "FOR SHARE")
+
+(defmethod format-clause :lock [[_ lock] _]
+  (let [{:keys [mode wait]} lock
+        clause (format-lock-clause mode)]
+    (str clause (when (false? wait) " NOWAIT"))))
 
 (defmethod format-clause :insert-into [[_ table] _]
   (if (and (sequential? table) (sequential? (first table)))

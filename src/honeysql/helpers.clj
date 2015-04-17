@@ -154,6 +154,11 @@
     m
     (assoc m :offset (if (coll? o) (first o) o))))
 
+(defhelper lock [m lock]
+  (cond-> m
+          lock
+          (assoc :lock lock)))
+
 (defhelper modifiers [m ms]
   (if (nil? ms)
     m
