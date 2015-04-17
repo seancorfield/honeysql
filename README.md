@@ -232,7 +232,7 @@ Here's a big, complicated query. Note that Honey SQL makes no attempt to verify 
              [:between :f.e 10 20]])
     (group :f.a)
     (having [:< 0 :f.e])
-    (order-by [:b.baz :desc] :c.quux)
+    (order-by [:b.baz :desc] :c.quux [:f.a :nulls-first])
     (limit 50)
     (offset 10))
 => {:select [:f.* :b.baz :c.quux [:b.bla "bla-bla"]
