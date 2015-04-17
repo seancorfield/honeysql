@@ -415,9 +415,16 @@
   (str "ORDER BY "
        (comma-join (for [field fields]
                      (if (sequential? field)
-                       (let [[field order] field]
-                         (str (to-sql field) " " (if (= :desc order)
-                                                   "DESC" "ASC")))
+                       (let [[field & modifiers] field]
+                         (string/join " "
+                                      (cons (to-sql field)
+                                            (for [modifier modifiers]
+                                              (case modifier
+                                                :desc "DESC"
+                                                :asc "ASC"
+                                                :nulls-first "NULLS FIRST"
+                                                :nulls-last "NULLS LAST"
+                                                "")))))
                        (to-sql field))))))
 
 (defmethod format-clause :limit [[_ limit] _]
