@@ -1,5 +1,6 @@
 ## 0.5.3 In development
 
+* Support locking selects (@dball)
 * Add sql array type and reader literal (@loganmhb)
 
 ## 0.5.2
