@@ -89,4 +89,30 @@
           (is (= ["SELECT * FROM customers WHERE (id in (1))"]
                  (sql/format {:select [:*]
                               :from [:customers]
-                              :where [:in :id values]}))))))))
+                              :where [:in :id values]})))
+          (is (= ["SELECT * FROM customers WHERE (id in (?))" 1]
+                 (sql/format {:select [:*]
+                              :from [:customers]
+                              :where [:in :id :?ids]}
+                             {:ids values}))))))
+    (testing "with more than one integer"
+      (let [values [1 2]]
+        (is (= ["SELECT * FROM customers WHERE (id in (1, 2))"]
+               (sql/format {:select [:*]
+                            :from [:customers]
+                            :where [:in :id values]})))
+        (is (= ["SELECT * FROM customers WHERE (id in (?, ?))" 1 2]
+               (sql/format {:select [:*]
+                            :from [:customers]
+                            :where [:in :id :?ids]}
+                           {:ids values})))))
+    (testing "with more than one string"
+      (let [values ["1" "2"]]
+        (is (= ["SELECT * FROM customers WHERE (id in (?, ?))" "1" "2"]
+               (sql/format {:select [:*]
+                            :from [:customers]
+                            :where [:in :id values]})
+               (sql/format {:select [:*]
+                            :from [:customers]
+                            :where [:in :id :?ids]}
+                           {:ids values})))))))

@@ -1,5 +1,6 @@
 ## 0.5.3 In development
 
+* Convert seq param values to literal sql param lists (@dball)
 * Apply seq to sets when converting to sql (@dball)
 * Support locking selects (@dball)
 * Add sql array type and reader literal (@loganmhb)

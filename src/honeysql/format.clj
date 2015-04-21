@@ -248,10 +248,24 @@
         (into [sql-str] @*params*)
         [sql-str]))))
 
+(defprotocol Parameterizable
+  (to-params [value]))
+
+(extend-protocol Parameterizable
+  clojure.lang.Sequential
+  (to-params [value]
+    (paren-wrap (comma-join (mapv to-params value))))
+  clojure.lang.IPersistentSet
+  (to-params [value]
+    (to-params (seq value)))
+  java.lang.Object
+  (to-params [value]
+    (swap! *params* conj value)
+    (*parameterizer*)))
+
 (defn add-param [pname pval]
   (swap! *param-names* conj pname)
-  (swap! *params* conj pval)
-  (*parameterizer*))
+  (to-params pval))
 
 ;; Anonymous param name -- :_1, :_2, etc.
 (defn add-anon-param [pval]
