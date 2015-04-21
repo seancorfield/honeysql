@@ -320,6 +320,9 @@
       (if *subquery?*
         (paren-wrap sql-str)
         sql-str)))
+  clojure.lang.IPersistentSet
+  (-to-sql [x]
+    (-to-sql (seq x)))
   nil
   (-to-sql [x] "NULL")
   SqlParam

@@ -80,3 +80,13 @@
            (columns :bar)
            (values [[(honeysql.format/value {:baz "my-val"})]])
            sql/format))))
+
+(deftest test-operators
+  (testing "in"
+    (doseq [[cname coll] [[:vector []] [:set #{}] [:list '()]]]
+      (testing (str "with values from a " (name cname))
+        (let [values (conj coll 1)]
+          (is (= ["SELECT * FROM customers WHERE (id in (1))"]
+                 (sql/format {:select [:*]
+                              :from [:customers]
+                              :where [:in :id values]}))))))))
