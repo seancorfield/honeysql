@@ -10,4 +10,5 @@ pom.xml*
 .lein-plugins
 .classpath
 .project
+.nrepl-port
 bin

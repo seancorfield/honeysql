@@ -1,5 +1,6 @@
 ## 0.5.3 In development
 
+* Support exists syntax (@cddr)
 * Support locking selects (@dball)
 * Add sql array type and reader literal (@loganmhb)
 * Allow user to specify where in sort order NULLs fall (@mishok13)

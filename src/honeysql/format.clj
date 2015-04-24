@@ -350,13 +350,18 @@
     (to-sql pred)
     (let [[op & args] pred
           op-name (name op)]
-      (if (= "not" op-name)
-        (str "NOT " (format-predicate* (first args)))
-        (if (#{"and" "or" "xor"} op-name)
-          (paren-wrap
-           (string/join (str " " (string/upper-case op-name) " ")
-                        (map format-predicate* args)))
-          (to-sql (apply call pred)))))))
+      (case op-name
+        "not" (str "NOT " (format-predicate* (first args)))
+
+        ("and" "or" "xor")
+        (paren-wrap
+         (string/join (str " " (string/upper-case op-name) " ")
+                      (map format-predicate* args)))
+
+        "exists"
+        (str "EXISTS " (to-sql (first args)))
+
+        (to-sql (apply call pred))))))
 
 (defmulti format-clause
   "Takes a map entry representing a clause and returns an SQL string"
@@ -369,6 +374,9 @@
 
 (defmethod format-clause :default [& _]
   "")
+
+(defmethod format-clause :exists [[_ table-expr] _]
+  (str "EXISTS " (to-sql table-expr)))
 
 (defmethod format-clause :select [[_ fields] sql-map]
   (str "SELECT "
