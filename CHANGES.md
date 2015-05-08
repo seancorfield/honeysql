@@ -1,3 +1,5 @@
+## 0.6.0 In development
+
 ## 0.5.3
 
 * Support exists syntax (@cddr)
