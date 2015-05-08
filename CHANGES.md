@@ -1,4 +1,4 @@
-## 0.5.3 In development
+## 0.5.3
 
 * Support exists syntax (@cddr)
 * Support locking selects (@dball)
