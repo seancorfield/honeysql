@@ -11,4 +11,5 @@ pom.xml*
 .nrepl-port
 .classpath
 .project
+.nrepl-port
 bin

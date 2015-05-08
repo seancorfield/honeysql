@@ -34,6 +34,16 @@
   (is (= (format-clause (first {:insert-into [[:foo [:a :b :c]] {:select [:d :e :f] :from [:baz]}]}) nil)
          "INSERT INTO foo (a, b, c) SELECT d, e, f FROM baz")))
 
+(deftest exists-test
+  (is (= (format {:exists {:select [:a] :from [:foo]}})
+         ["EXISTS (SELECT a FROM foo)"]))
+  (is (= (format {:select [:id]
+                  :from [:foo]
+                  :where [:exists {:select [1]
+                                   :from [:bar]
+                                   :where :deleted}]})
+         ["SELECT id FROM foo WHERE EXISTS (SELECT 1 FROM bar WHERE deleted)"])))
+
 (deftest array-test
   (is (= (format {:insert-into :foo
                   :columns [:baz]
