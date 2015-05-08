@@ -80,3 +80,39 @@
            (columns :bar)
            (values [[(honeysql.format/value {:baz "my-val"})]])
            sql/format))))
+
+(deftest test-operators
+  (testing "in"
+    (doseq [[cname coll] [[:vector []] [:set #{}] [:list '()]]]
+      (testing (str "with values from a " (name cname))
+        (let [values (conj coll 1)]
+          (is (= ["SELECT * FROM customers WHERE (id in (1))"]
+                 (sql/format {:select [:*]
+                              :from [:customers]
+                              :where [:in :id values]})))
+          (is (= ["SELECT * FROM customers WHERE (id in (?))" 1]
+                 (sql/format {:select [:*]
+                              :from [:customers]
+                              :where [:in :id :?ids]}
+                             {:ids values}))))))
+    (testing "with more than one integer"
+      (let [values [1 2]]
+        (is (= ["SELECT * FROM customers WHERE (id in (1, 2))"]
+               (sql/format {:select [:*]
+                            :from [:customers]
+                            :where [:in :id values]})))
+        (is (= ["SELECT * FROM customers WHERE (id in (?, ?))" 1 2]
+               (sql/format {:select [:*]
+                            :from [:customers]
+                            :where [:in :id :?ids]}
+                           {:ids values})))))
+    (testing "with more than one string"
+      (let [values ["1" "2"]]
+        (is (= ["SELECT * FROM customers WHERE (id in (?, ?))" "1" "2"]
+               (sql/format {:select [:*]
+                            :from [:customers]
+                            :where [:in :id values]})
+               (sql/format {:select [:*]
+                            :from [:customers]
+                            :where [:in :id :?ids]}
+                           {:ids values})))))))

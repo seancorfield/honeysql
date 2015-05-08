@@ -1,5 +1,8 @@
 ## 0.6.0 In development
 
+* Convert seq param values to literal sql param lists (@dball)
+* Apply seq to sets when converting to sql (@dball)
+
 ## 0.5.3
 
 * Support exists syntax (@cddr)
