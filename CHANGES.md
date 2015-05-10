@@ -1,4 +1,4 @@
-## 0.6.0 In development
+## 0.6.0
 
 * Convert seq param values to literal sql param lists (@dball)
 * Apply seq to sets when converting to sql (@dball)
