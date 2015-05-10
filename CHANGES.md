@@ -1,3 +1,5 @@
+## 0.6.1 In development
+
 ## 0.6.0
 
 * Convert seq param values to literal sql param lists (@dball)
