@@ -258,6 +258,11 @@
   clojure.lang.IPersistentSet
   (to-params [value pname]
     (to-params (seq value) pname))
+  nil
+  (to-params [value pname]
+    (swap! *params* conj value)
+    (swap! *param-names* conj pname)
+    (*parameterizer*))
   java.lang.Object
   (to-params [value pname]
     (swap! *params* conj value)
