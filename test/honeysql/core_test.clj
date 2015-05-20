@@ -82,6 +82,17 @@
            sql/format))))
 
 (deftest test-operators
+  (testing "="
+    (testing "with nil"
+      (is (= ["SELECT * FROM customers WHERE name IS NULL"]
+             (sql/format {:select [:*]
+                          :from [:customers]
+                          :where [:= :name nil]})))
+      (is (= ["SELECT * FROM customers WHERE name = ?" nil]
+             (sql/format {:select [:*]
+                          :from [:customers]
+                          :where [:= :name :?name]}
+                         {:name nil})))))
   (testing "in"
     (doseq [[cname coll] [[:vector []] [:set #{}] [:list '()]]]
       (testing (str "with values from a " (name cname))
