@@ -1,4 +1,4 @@
-## 0.6.1 In development
+## 0.6.1
 
 * Define parameterizable protocol on nil (@dball)
 
