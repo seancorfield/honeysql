@@ -84,8 +84,6 @@
    "not-like" "not like"
    "regex" "regexp"})
 
-(declare format-predicate*)
-
 (defprotocol ToSql
   (to-sql [x]))
 
@@ -238,19 +236,6 @@
             (into [sql-str] @*params*))
           [sql-str])))))
 
-(defn format-predicate
-  "Formats a predicate (e.g., for WHERE, JOIN, or HAVING) as a string."
-  [pred & {:keys [quoting]}]
-  (binding [*params* (atom [])
-            *param-counter* (atom 0)
-            *param-names* (atom [])
-            *quote-identifier-fn* (or (quote-fns quoting)
-                                      *quote-identifier-fn*)]
-    (let [sql-str (format-predicate* pred)]
-      (if (seq @*params*)
-        (into [sql-str] @*params*)
-        [sql-str]))))
-
 (defprotocol Parameterizable
   (to-params [value pname]))
 
@@ -381,6 +366,19 @@
         (str "EXISTS " (to-sql (first args)))
 
         (to-sql (apply call pred))))))
+
+(defn format-predicate
+  "Formats a predicate (e.g., for WHERE, JOIN, or HAVING) as a string."
+  [pred & {:keys [quoting]}]
+  (binding [*params* (atom [])
+            *param-counter* (atom 0)
+            *param-names* (atom [])
+            *quote-identifier-fn* (or (quote-fns quoting)
+                                      *quote-identifier-fn*)]
+    (let [sql-str (format-predicate* pred)]
+      (if (seq @*params*)
+        (into [sql-str] @*params*)
+        [sql-str]))))
 
 (defmulti format-clause
   "Takes a map entry representing a clause and returns an SQL string"
