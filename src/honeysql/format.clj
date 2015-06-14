@@ -84,7 +84,10 @@
    "not-like" "not like"
    "regex" "regexp"})
 
-(declare to-sql format-predicate*)
+(declare format-predicate*)
+
+(defprotocol ToSql
+  (to-sql [x]))
 
 (defmulti fn-handler (fn [op & args] op))
 
@@ -278,12 +281,9 @@
     (keyword (str "_" (swap! *param-counter* inc)))
     pval))
 
-(defprotocol ToSql
-  (-to-sql [x]))
-
 (defrecord Value [v]
   ToSql
-  (-to-sql [_]
+  (to-sql [_]
     (add-anon-param v)))
 
 (defn value [x] (Value. x))
@@ -292,7 +292,7 @@
 
 (extend-protocol ToSql
   clojure.lang.Keyword
-  (-to-sql [x]
+  (to-sql [x]
     (let [s (name x)]
       (case (.charAt s 0)
         \% (let [call-args (string/split (subs s 1) #"\." 2)]
@@ -300,14 +300,14 @@
         \? (to-sql (param (keyword (subs s 1))))
         (quote-identifier x))))
   clojure.lang.Symbol
-  (-to-sql [x] (quote-identifier x))
+  (to-sql [x] (quote-identifier x))
   java.lang.Number
-  (-to-sql [x] (str x))
+  (to-sql [x] (str x))
   java.lang.Boolean
-  (-to-sql [x]
+  (to-sql [x]
     (if x "TRUE" "FALSE"))
   clojure.lang.Sequential
-  (-to-sql [x]
+  (to-sql [x]
     (if *fn-context?*
       ;; list argument in fn call
       (paren-wrap (comma-join (map to-sql x)))
@@ -321,15 +321,15 @@
              (quote-identifier (second x))
              (to-sql (second x))))))
   SqlCall
-  (-to-sql [x]
+  (to-sql [x]
     (binding [*fn-context?* true]
        (let [fn-name (name (.-name x))
              fn-name (fn-aliases fn-name fn-name)]
          (apply fn-handler fn-name (.-args x)))))
   SqlRaw
-  (-to-sql [x] (.-s x))
+  (to-sql [x] (.-s x))
   clojure.lang.IPersistentMap
-  (-to-sql [x]
+  (to-sql [x]
     (let [clause-ops (sort-clauses (keys x))
           sql-str (binding [*subquery?* true
                             *fn-context?* false]
@@ -340,12 +340,12 @@
         (paren-wrap sql-str)
         sql-str)))
   clojure.lang.IPersistentSet
-  (-to-sql [x]
-    (-to-sql (seq x)))
+  (to-sql [x]
+    (to-sql (seq x)))
   nil
-  (-to-sql [x] "NULL")
+  (to-sql [x] "NULL")
   SqlParam
-  (-to-sql [x]
+  (to-sql [x]
     (let [pname (param-name x)]
       (if (map? @*input-params*)
         (add-param pname (get @*input-params* pname))
@@ -353,17 +353,14 @@
           (swap! *input-params* rest)
           (add-param pname x)))))
   SqlArray
-  (-to-sql [x]
-    (str "ARRAY[" (comma-join (map -to-sql (.-values x))) "]"))
+  (to-sql [x]
+    (str "ARRAY[" (comma-join (map to-sql (.-values x))) "]"))
   Object
-  (-to-sql [x]
+  (to-sql [x]
     (add-anon-param x)))
 
 (defn sqlable? [x]
   (satisfies? ToSql x))
-
-(defn to-sql [x]
-  (-to-sql x))
 
 ;;;;
 
