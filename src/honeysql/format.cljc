@@ -1,8 +1,9 @@
 (ns honeysql.format
   (:refer-clojure :exclude [format])
-  (:require [honeysql.types :refer [call raw param param-name]]
+  (:require [honeysql.types :refer [call raw param param-name
+                                    #?@(:cljs [SqlCall SqlRaw SqlParam SqlArray])]]
             [clojure.string :as string])
-  (:import [honeysql.types SqlCall SqlRaw SqlParam SqlArray]))
+  #?(:clj (:import [honeysql.types SqlCall SqlRaw SqlParam SqlArray])))
 
 ;;(set! *warn-on-reflection* true)
 
@@ -203,7 +204,10 @@
 
 (defn sort-clauses [clauses]
   (let [m @clause-store]
-    (sort-by #(m % Long/MAX_VALUE) clauses)))
+    (sort-by
+      (fn [c]
+        (m c #?(:clj Long/MAX_VALUE :cljs js/Number.MAX_VALUE)))
+      clauses)))
 
 (defn format
   "Takes a SQL map and optional input parameters and returns a vector
@@ -243,11 +247,22 @@
 (defprotocol Parameterizable
   (to-params [value pname]))
 
+(defn to-params-seq [s pname]
+  (paren-wrap (comma-join (mapv #(to-params % pname) s))))
+
+(defn to-params-default [value pname]
+  (swap! *params* conj value)
+  (swap! *param-names* conj pname)
+  (*parameterizer*))
+
 (extend-protocol Parameterizable
-  clojure.lang.Sequential
-  (to-params [value pname]
-    (paren-wrap (comma-join (mapv #(to-params % pname) value))))
-  clojure.lang.IPersistentSet
+  #?@(:clj
+       [clojure.lang.Sequential
+
+        (to-params [value pname]
+          (to-params-seq value pname))])
+  #?(:clj clojure.lang.IPersistentSet
+     :cljs cljs.core/PersistentHashSet)
   (to-params [value pname]
     (to-params (seq value) pname))
   nil
@@ -255,11 +270,14 @@
     (swap! *params* conj value)
     (swap! *param-names* conj pname)
     (*parameterizer*))
-  java.lang.Object
+  #?(:clj Object :cljs default)
   (to-params [value pname]
-    (swap! *params* conj value)
-    (swap! *param-names* conj pname)
-    (*parameterizer*)))
+    #?(:clj
+        (to-params-default value pname)
+       :cljs
+        (if (sequential? value)
+          (to-params-seq value pname)
+          (to-params-default value pname)))))
 
 (defn add-param [pname pval]
   (to-params pval pname))
@@ -279,8 +297,34 @@
 
 (declare -format-clause)
 
+(defn map->sql [m]
+  (let [clause-ops (sort-clauses (keys m))
+        sql-str (binding [*subquery?* true
+                          *fn-context?* false]
+                  (space-join
+                   (map (comp #(-format-clause % m) #(find m %))
+                        clause-ops)))]
+    (if *subquery?*
+      (paren-wrap sql-str)
+      sql-str)))
+
+(defn seq->sql [x]
+  (if *fn-context?*
+    ;; list argument in fn call
+    (paren-wrap (comma-join (map to-sql x)))
+    ;; alias
+    (str (to-sql (first x))
+         ; Omit AS in FROM, JOIN, etc. - Oracle doesn't allow it
+         (if (= :select *clause*)
+           " AS "
+           " ")
+         (if (string? (second x))
+           (quote-identifier (second x))
+           (to-sql (second x))))))
+
 (extend-protocol ToSql
-  clojure.lang.Keyword
+  #?(:clj clojure.lang.Keyword
+     :cljs cljs.core/Keyword)
   (to-sql [x]
     (let [s (name x)]
       (case (.charAt s 0)
@@ -288,25 +332,15 @@
              (to-sql (apply call (map keyword call-args))))
         \? (to-sql (param (keyword (subs s 1))))
         (quote-identifier x))))
-  clojure.lang.Symbol
+  #?(:clj clojure.lang.Symbol
+     :cljs cljs.core/Symbol)
   (to-sql [x] (quote-identifier x))
-  java.lang.Boolean
+  #?(:clj java.lang.Boolean :cljs boolean)
   (to-sql [x]
     (if x "TRUE" "FALSE"))
-  clojure.lang.Sequential
-  (to-sql [x]
-    (if *fn-context?*
-      ;; list argument in fn call
-      (paren-wrap (comma-join (map to-sql x)))
-      ;; alias
-      (str (to-sql (first x))
-           ; Omit AS in FROM, JOIN, etc. - Oracle doesn't allow it
-           (if (= :select *clause*)
-             " AS "
-             " ")
-           (if (string? (second x))
-             (quote-identifier (second x))
-             (to-sql (second x))))))
+  #?@(:clj
+       [clojure.lang.Sequential
+        (to-sql [x] (seq->sql x))])
   SqlCall
   (to-sql [x]
     (binding [*fn-context?* true]
@@ -315,18 +349,12 @@
          (apply fn-handler fn-name (.-args x)))))
   SqlRaw
   (to-sql [x] (.-s x))
-  clojure.lang.IPersistentMap
+  #?(:clj clojure.lang.IPersistentMap
+     :cljs cljs.core/PersistentArrayMap)
   (to-sql [x]
-    (let [clause-ops (sort-clauses (keys x))
-          sql-str (binding [*subquery?* true
-                            *fn-context?* false]
-                    (space-join
-                     (map (comp #(-format-clause % x) #(find x %))
-                          clause-ops)))]
-      (if *subquery?*
-        (paren-wrap sql-str)
-        sql-str)))
-  clojure.lang.IPersistentSet
+    (map->sql x))
+  #?(:clj clojure.lang.IPersistentSet
+     :cljs cljs.core/PersistentHashSet)
   (to-sql [x]
     (to-sql (seq x)))
   nil
@@ -342,9 +370,15 @@
   SqlArray
   (to-sql [x]
     (str "ARRAY[" (comma-join (map to-sql (.-values x))) "]"))
-  Object
+  #?(:clj Object :cljs default)
   (to-sql [x]
-    (add-anon-param x)))
+    #?(:clj (add-anon-param x)
+       :cljs (if (sequential? x)
+               (seq->sql x)
+               (add-anon-param x))))
+  #?@(:cljs
+       [cljs.core/PersistentHashMap
+        (to-sql [x] (map->sql x))]))
 
 (defn sqlable? [x]
   (satisfies? ToSql x))

@@ -1,4 +1,5 @@
-(ns honeysql.types)
+(ns honeysql.types
+  (:refer-clojure :exclude [array]))
 
 (defrecord SqlCall [name args])
 
@@ -9,13 +10,7 @@
 
 (defn read-sql-call [form]
   ;; late bind so that we get new class on REPL reset
-  (apply (resolve `call) form))
-
-(defmethod print-method SqlCall [^SqlCall o ^java.io.Writer w]
-  (.write w (str "#sql/call " (pr-str (into [(.-name o)] (.-args o))))))
-
-(defmethod print-dup SqlCall [o w]
-  (print-method o w))
+  (apply #?(:clj (resolve `call) :cljs call) form))
 
 ;;;;
 
@@ -28,13 +23,7 @@
 
 (defn read-sql-raw [form]
   ;; late bind, as above
-  ((resolve `raw) form))
-
-(defmethod print-method SqlRaw [^SqlRaw o ^java.io.Writer w]
-  (.write w (str "#sql/raw " (pr-str (.-s o)))))
-
-(defmethod print-dup SqlRaw [o w]
-  (print-method o w))
+  (#?(:clj (resolve `raw) :cljs raw) form))
 
 ;;;;
 
@@ -50,13 +39,7 @@
 
 (defn read-sql-param [form]
   ;; late bind, as above
-  ((resolve `param) form))
-
-(defmethod print-method SqlParam [^SqlParam o ^java.io.Writer w]
-  (.write w (str "#sql/param " (pr-str (.-name o)))))
-
-(defmethod print-dup SqlParam [o w]
-  (print-method o w))
+  (#?(:clj (resolve `param) :cljs param) form))
 
 ;;;;
 
@@ -72,10 +55,30 @@
 
 (defn read-sql-array [form]
   ;; late bind, as above
-  ((resolve `array) form))
+  (#?(:clj (resolve `array) :cljs array) form))
 
-(defmethod print-method SqlArray [^SqlArray a ^java.io.Writer w]
-  (.write w (str "#sql/array " (pr-str (.-values a)))))
+#?(:clj
+    (do
+      (defmethod print-method SqlCall [^SqlCall o ^java.io.Writer w]
+        (.write w (str "#sql/call " (pr-str (into [(.-name o)] (.-args o))))))
 
-(defmethod print-dup SqlArray [a w]
-  (print-method a w))
+      (defmethod print-dup SqlCall [o w]
+        (print-method o w))
+
+      (defmethod print-method SqlRaw [^SqlRaw o ^java.io.Writer w]
+        (.write w (str "#sql/raw " (pr-str (.s o)))))
+
+      (defmethod print-dup SqlRaw [o w]
+        (print-method o w))
+
+      (defmethod print-method SqlParam [^SqlParam o ^java.io.Writer w]
+        (.write w (str "#sql/param " (pr-str (.name o)))))
+
+      (defmethod print-dup SqlParam [o w]
+        (print-method o w))
+
+      (defmethod print-method SqlArray [^SqlArray a ^java.io.Writer w]
+        (.write w (str "#sql/array " (pr-str (.values a)))))
+
+      (defmethod print-dup SqlArray [a w]
+        (print-method a w))))
