@@ -23,7 +23,7 @@
   (apply (resolve `call) form))
 
 (defmethod print-method SqlCall [^SqlCall o ^java.io.Writer w]
-  (.write w (str "#sql/call " (pr-str (into [(.name o)] (.args o))))))
+  (.write w (str "#sql/call " (pr-str (into [(.-name o)] (.-args o))))))
 
 (defmethod print-dup SqlCall [o w]
   (print-method o w))
@@ -48,7 +48,7 @@
   ((resolve `raw) form))
 
 (defmethod print-method SqlRaw [^SqlRaw o ^java.io.Writer w]
-  (.write w (str "#sql/raw " (pr-str (.s o)))))
+  (.write w (str "#sql/raw " (pr-str (.-s o)))))
 
 (defmethod print-dup SqlRaw [o w]
   (print-method o w))
@@ -76,7 +76,7 @@
   ((resolve `param) form))
 
 (defmethod print-method SqlParam [^SqlParam o ^java.io.Writer w]
-  (.write w (str "#sql/param " (pr-str (.name o)))))
+  (.write w (str "#sql/param " (pr-str (.-name o)))))
 
 (defmethod print-dup SqlParam [o w]
   (print-method o w))
@@ -97,14 +97,14 @@
   (SqlArray. values nil))
 
 (defn array-vals [^SqlArray a]
-  (.values a))
+  (.-values a))
 
 (defn read-sql-array [form]
   ;; late bind, as above
   ((resolve `array) form))
 
 (defmethod print-method SqlArray [^SqlArray a ^java.io.Writer w]
-  (.write w (str "#sql/array " (pr-str (.values a)))))
+  (.write w (str "#sql/array " (pr-str (.-values a)))))
 
 (defmethod print-dup SqlArray [a w]
   (print-method a w))

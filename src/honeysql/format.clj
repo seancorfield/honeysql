@@ -323,11 +323,11 @@
   SqlCall
   (-to-sql [x]
     (binding [*fn-context?* true]
-       (let [fn-name (name (.name x))
+       (let [fn-name (name (.-name x))
              fn-name (fn-aliases fn-name fn-name)]
-         (apply fn-handler fn-name (.args x)))))
+         (apply fn-handler fn-name (.-args x)))))
   SqlRaw
-  (-to-sql [x] (.s x))
+  (-to-sql [x] (.-s x))
   clojure.lang.IPersistentMap
   (-to-sql [x]
     (let [clause-ops (sort-clauses (keys x))
@@ -354,7 +354,7 @@
           (add-param pname x)))))
   SqlArray
   (-to-sql [x]
-    (str "ARRAY[" (comma-join (map -to-sql (.values x))) "]"))
+    (str "ARRAY[" (comma-join (map -to-sql (.-values x))) "]"))
   Object
   (-to-sql [x]
     (add-anon-param x)))
