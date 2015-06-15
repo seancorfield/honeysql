@@ -46,7 +46,7 @@
   (SqlParam. name))
 
 (defn param-name [^SqlParam param]
-  (.name param))
+  (.-name param))
 
 (defn read-sql-param [form]
   ;; late bind, as above
