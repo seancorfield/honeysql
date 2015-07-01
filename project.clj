@@ -5,4 +5,4 @@
   :url "https://github.com/jkk/honeysql"
   :scm {:name "git"
         :url "https://github.com/jkk/honeysql"}
-  :dependencies [[org.clojure/clojure "1.6.0"]])
+  :dependencies [[org.clojure/clojure "1.7.0"]])
