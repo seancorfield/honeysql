@@ -303,7 +303,7 @@
              " AS "
              " ")
            (if (string? (second x))
-             (quote-identifier (second x))
+             (quote-identifier (second x) :split false)
              (to-sql (second x))))))
   SqlCall
   (to-sql [x]
