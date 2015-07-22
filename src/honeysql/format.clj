@@ -85,7 +85,9 @@
    "regex" "regexp"})
 
 (defprotocol ToSql
-  (to-sql [x]))
+  (to-sql
+    [x]
+    [x & args]))
 
 (defmulti fn-handler (fn [op & args] op))
 
@@ -277,13 +279,14 @@
 
 (extend-protocol ToSql
   clojure.lang.Keyword
-  (to-sql [x]
+  (to-sql [x & {:as args}]
     (let [s (name x)]
       (case (.charAt s 0)
         \% (let [call-args (string/split (subs s 1) #"\." 2)]
              (to-sql (apply call (map keyword call-args))))
         \? (to-sql (param (keyword (subs s 1))))
-        (quote-identifier x))))
+        (->> (apply concat (select-keys args [:split]))
+             (apply quote-identifier x)))))
   clojure.lang.Symbol
   (to-sql [x] (quote-identifier x))
   java.lang.Number
@@ -302,9 +305,13 @@
            (if (= :select *clause*)
              " AS "
              " ")
-           (if (string? (second x))
-             (quote-identifier (second x))
-             (to-sql (second x))))))
+           (cond (string? (second x))
+                 (quote-identifier (second x) :split false)
+                 (keyword? (second x))
+                 (to-sql (second x) :split false)
+                 :else
+                 (to-sql (second x))
+                 ))))
   SqlCall
   (to-sql [x]
     (binding [*fn-context?* true]

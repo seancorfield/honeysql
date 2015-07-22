@@ -127,3 +127,10 @@
                             :from [:customers]
                             :where [:in :id :?ids]}
                            {:ids values})))))))
+
+(deftest test-quoting
+  (testing ":quoting :ansi"
+    (is (= ["SELECT \"b\".\"bla\" AS \"bla.bla\", \"b\".\"bla\" AS \"blu.blu\" FROM \"baz\" \"b\"" ]
+           (-> (select [:b.bla :bla.bla] [:b.bla "blu.blu"])
+               (from [:baz :b])
+               (sql/format :quoting :ansi))))))
