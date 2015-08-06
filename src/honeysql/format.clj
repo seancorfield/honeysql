@@ -523,3 +523,13 @@
 
 (defmethod format-clause :union-all [[_ maps] _]
   (string/join " UNION ALL " (map to-sql maps)))
+
+(defmethod fn-handler "case" [_ & clauses]
+  (str "CASE "
+       (space-join
+        (for [[condition result] (partition 2 clauses)]
+          (if (= :else condition)
+            (str "ELSE " (to-sql result))
+            (let [pred (format-predicate* condition)]
+              (str "WHEN " pred " THEN " (to-sql result))))))
+       " END"))
