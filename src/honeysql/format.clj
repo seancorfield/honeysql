@@ -519,7 +519,7 @@
   (str "WITH RECURSIVE " (comma-join (map cte->sql ctes))))
 
 (defmethod format-clause :union [[_ maps] _]
-  (string/join " UNION " (map to-sql maps)))
+  (str "UNION " (string/join " UNION " (map to-sql maps))))
 
 (defmethod format-clause :union-all [[_ maps] _]
-  (string/join " UNION ALL " (map to-sql maps)))
+  (str "UNION ALL " (string/join " UNION ALL " (map to-sql maps))))

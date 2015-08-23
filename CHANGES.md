@@ -1,5 +1,7 @@
 ## 0.6.2 In development
 
+* Fix union clause (@dball)
+
 ## 0.6.1
 
 * Define parameterizable protocol on nil (@dball)
