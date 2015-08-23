@@ -191,6 +191,7 @@
    :offset 210
    :lock 215
    :values 220
+   :upsert 225
    :query-values 230})
 
 (def clause-store (atom default-clause-priorities))
@@ -494,6 +495,22 @@
       "(" (comma-join (map to-sql (keys (first values)))) ") VALUES "
       (comma-join (for [x values]
                     (str "(" (comma-join (map to-sql (vals x))) ")"))))))
+
+(defmulti format-upsert-clause
+  (fn [mode updates] mode))
+
+(defmethod format-upsert-clause :mysql
+  [_ updates]
+  (when-not (seq updates)
+    (let [msg "upserts clause must have an :updates map"]
+      (throw (IllegalArgumentException. msg))))
+  (str "ON DUPLICATE KEY UPDATE "
+       (comma-join (for [[column value] updates]
+                     (str (to-sql column) "=" (to-sql value))))))
+
+(defmethod format-clause :upsert [[_ upsert] _]
+  (let [{:keys [mode updates]} upsert]
+    (format-upsert-clause mode updates)))
 
 (defmethod format-clause :query-values [[_ query-values] _]
   (to-sql query-values))

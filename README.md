@@ -143,6 +143,22 @@ The column values do not have to be literals, they can be nested queries:
     "user"]
 ```
 
+MySQL upserts are supported:
+
+```clj
+(-> (insert-into :properties)
+    (columns :name :surname :age)
+    (values
+     [["Jon" "Smith" 34]
+      ["Andrew" "Cooper" 12]
+      ["Jane" "Daniels" 56]])
+    (upsert :mysql {:age #sql/call [:values :age]})
+    sql/format)
+=> ["INSERT INTO properties (name, surname, age)
+     VALUES (?, ?, 34), (?, ?, 12), (?, ?, 56)"
+     "Jon" "Smith" "Andrew" "Cooper" "Jane" "Daniels"]
+```
+
 Updates are possible too (note the double S in `sset` to avoid clashing
 with `clojure.core/set`):
 

@@ -159,6 +159,9 @@
           lock
           (assoc :lock lock)))
 
+(defhelper upsert [m mode updates]
+  (assoc m :upsert {:mode mode :updates updates}))
+
 (defhelper modifiers [m ms]
   (if (nil? ms)
     m

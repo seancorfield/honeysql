@@ -1,5 +1,7 @@
 ## 0.6.2 In development
 
+* Support mysql upserts (@dball)
+
 ## 0.6.1
 
 * Define parameterizable protocol on nil (@dball)
