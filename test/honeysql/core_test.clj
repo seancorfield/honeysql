@@ -127,3 +127,29 @@
                             :from [:customers]
                             :where [:in :id :?ids]}
                            {:ids values})))))))
+
+(deftest test-case
+  (is (= ["SELECT CASE WHEN foo < 0 THEN -1 WHEN (foo > 0 AND (foo mod 2) = 0) THEN (foo / 2) ELSE 0 END FROM bar"]
+         (sql/format
+          {:select [(sql/call
+                     :case
+                     [:< :foo 0] -1
+                     [:and [:> :foo 0] [:= (sql/call :mod :foo 2) 0]] (sql/call :/ :foo 2)
+                     :else 0)]
+           :from [:bar]})))
+  (let [param1 1
+        param2 2
+        param3 "three"]
+    (is (= ["SELECT CASE WHEN foo = ? THEN 0 WHEN foo = bar THEN ? WHEN bar = 0 THEN (bar * ?) ELSE ? END FROM baz"
+            param1 param2 param3 "param4"]
+           (sql/format
+            {:select [(sql/call
+                       :case
+                       [:= :foo :?param1] 0
+                       [:= :foo :bar] (sql/param :param2)
+                       [:= :bar 0] (sql/call :* :bar :?param3)
+                       :else "param4")]
+             :from [:baz]}
+            {:param1 param1
+             :param2 param2
+             :param3 param3})))))
