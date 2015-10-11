@@ -38,7 +38,7 @@
 
 (def ^:dynamic *subquery?* false)
 
-(def ^:dynamic *allow-dashed-names?* true)
+(def ^:dynamic *allow-dashed-names?* false)
 
 (def ^:private quote-fns
   {:ansi #(str \" % \")
