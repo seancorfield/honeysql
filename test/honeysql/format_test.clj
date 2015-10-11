@@ -21,7 +21,9 @@
 (deftest test-dashed-quote
   (binding [*allow-dashed-names?* true]
     (is (= (quote-identifier :foo-bar) "foo-bar"))
-    (is (= (quote-identifier :foo-bar :style :ansi) "\"foo-bar\""))))
+    (is (= (quote-identifier :foo-bar :style :ansi) "\"foo-bar\""))
+    (is (= (quote-identifier :foo-bar.moo-bar :style :ansi)
+           "\"foo-bar\".\"moo-bar\""))))
 
 (deftest test-cte
   (is (= (format-clause
