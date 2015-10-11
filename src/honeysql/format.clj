@@ -232,7 +232,7 @@
               *input-params* (atom params)
               *quote-identifier-fn* (quote-fns (:quoting opts))
               *parameterizer* (parameterizers (or (:parameterizer opts) :jdbc))
-              *allow-dashed-names?* (:allow-dashed-names opts)]
+              *allow-dashed-names?* (:allow-dashed-names? opts)]
       (let [sql-str (to-sql sql-map)]
         (if (seq @*params*)
           (if (:return-param-names opts)
