@@ -38,6 +38,8 @@
 
 (def ^:dynamic *subquery?* false)
 
+(def ^:dynamic *allow-dashed-names?* false)
+
 (def ^:private quote-fns
   {:ansi #(str \" % \")
    :mysql #(str \` % \`)
@@ -55,12 +57,13 @@
   (string/replace s "-" "_"))
 
 (defn quote-identifier [x & {:keys [style split] :or {split true}}]
-  (let [qf (if style
+  (let [name-transform-fn (if *allow-dashed-names?* identity undasherize)
+        qf (if style
              (quote-fns style)
              *quote-identifier-fn*)
         s (cond
-            (or (keyword? x) (symbol? x)) (undasherize (name x))
-            (string? x) (if qf x (undasherize x))
+            (or (keyword? x) (symbol? x)) (name-transform-fn (name x))
+            (string? x) (if qf x (name-transform-fn x))
             :else (str x))]
     (if-not qf
       s
@@ -228,7 +231,8 @@
               *param-names* (atom [])
               *input-params* (atom params)
               *quote-identifier-fn* (quote-fns (:quoting opts))
-              *parameterizer* (parameterizers (or (:parameterizer opts) :jdbc))]
+              *parameterizer* (parameterizers (or (:parameterizer opts) :jdbc))
+              *allow-dashed-names?* (:allow-dashed-names opts)]
       (let [sql-str (to-sql sql-map)]
         (if (seq @*params*)
           (if (:return-param-names opts)
