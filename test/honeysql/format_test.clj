@@ -18,6 +18,11 @@
     :foo-bar "foo_bar")
   (is (= (quote-identifier "*" :style :ansi) "*")))
 
+(deftest test-dashed-quote
+  (binding [*allow-dashed-names?* true]
+    (is (= (quote-identifier :foo-bar) "foo-bar"))
+    (is (= (quote-identifier :foo-bar :style :ansi) "\"foo-bar\""))))
+
 (deftest test-cte
   (is (= (format-clause
           (first {:with [[:query {:select [:foo] :from [:bar]}]]}) nil)
