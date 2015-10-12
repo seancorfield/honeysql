@@ -24,7 +24,16 @@
          "WITH query AS SELECT foo FROM bar"))
   (is (= (format-clause
           (first {:with-recursive [[:query {:select [:foo] :from [:bar]}]]}) nil)
-         "WITH RECURSIVE query AS SELECT foo FROM bar")))
+         "WITH RECURSIVE query AS SELECT foo FROM bar"))
+  (is (= (format-clause
+           (first {:with [[[:static {:columns [:a :b :c]}] {:values [[1 2 3] [4 5 6]]}]]}) nil)
+         "WITH static (a, b, c) AS VALUES (1, 2, 3), (4, 5, 6)"))
+  (is (= (format
+           {:with [[[:static {:columns [:a :b :c]}]
+                    {:values [[1 2 3] [4 5 6]]}]]
+            :select [:*]
+            :from [:static]})
+         ["WITH static (a, b, c) AS (VALUES (1, 2, 3), (4, 5, 6)) SELECT * FROM static"])))
 
 (deftest insert-into
   (is (= (format-clause (first {:insert-into :foo}) nil)
