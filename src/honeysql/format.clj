@@ -507,10 +507,12 @@
 
 (defmethod format-clause :delete-from [[_ table] _]
   (str "DELETE FROM " (to-sql table)))
-  
+
 (defn cte->sql
   [[cte-name query]]
-  (str (to-sql cte-name) " AS " (to-sql query)))
+  (if (sequential? cte-name)
+    (str (to-sql (first cte-name)) " " (to-sql (second cte-name)) " AS " (to-sql query))
+    (str (to-sql cte-name) " AS " (to-sql query))))
 
 (defmethod format-clause :with [[_ ctes] _]
   (str "WITH " (comma-join (map cte->sql ctes))))
