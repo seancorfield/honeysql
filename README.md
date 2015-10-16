@@ -238,7 +238,7 @@ lock map may also provide a :wait value, which if false will append the NOWAIT p
 
 To support novel lock modes, implement the `format-lock-clause` multimethod.
 
-To be able to use dashes in quoted names, you can pass the ```:allow-dashed-names true``` as an argument to ```format```.
+To be able to use dashes in quoted names, you can pass ```:allow-dashed-names true``` as an argument to the ```format``` function.
 ```clj
 (format
   {:select [:f.foo-id :f.foo-name]
