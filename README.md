@@ -238,6 +238,17 @@ lock map may also provide a :wait value, which if false will append the NOWAIT p
 
 To support novel lock modes, implement the `format-lock-clause` multimethod.
 
+To be able to use dashes in quoted names, you can pass the ```:allow-dashed-names true``` as an argument to ```format```.
+```clj
+(format
+  {:select [:f.foo-id :f.foo-name]
+   :from [[:foo-bar :f]]
+   :where [:= :f.foo-id 12345]}
+  :allow-dashed-names? true
+  :quoting :ansi)
+=> ["SELECT \"f\".\"foo-id\", \"f\".\"foo-name\" FROM \"foo-bar\" \"f\" WHERE \"f\".\"foo-id\" = 12345"]
+```
+
 Here's a big, complicated query. Note that Honey SQL makes no attempt to verify that your queries make any sense. It merely renders surface syntax.
 
 ```clj
