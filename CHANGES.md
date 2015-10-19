@@ -1,5 +1,13 @@
 ## 0.6.2 In development
 
+Support column names in :with clauses (@emidln)
+Support preserving dashes in quoted names (@jrdoane)
+Document correct use of the :union clause (@dball)
+Tests for :union and :union-all (@dball)
+Add fn-handler for CASE statement (@loganlinn)
+Build/test with Clojure 1.7 (@michaelblume)
+Refactors for clarity (@michaelblume)
+
 ## 0.6.1
 
 * Define parameterizable protocol on nil (@dball)
