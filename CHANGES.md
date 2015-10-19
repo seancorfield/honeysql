@@ -1,4 +1,4 @@
-## 0.6.2 In development
+## 0.6.2
 
 Support column names in :with clauses (@emidln)
 Support preserving dashes in quoted names (@jrdoane)
