@@ -189,6 +189,7 @@
    :limit 200
    :offset 210
    :values 220
+   :returning 225
    :query-values 230})
 
 (def clause-store (atom default-clause-priorities))
@@ -366,13 +367,19 @@
 (defmethod format-clause :default [& _]
   "")
 
-(defmethod format-clause :select [[_ fields] sql-map]
-  (str "SELECT "
+(defn- select-fields [keyword fields sql-map]
+  (str keyword " "
        (when (:modifiers sql-map)
          (str (space-join (map (comp string/upper-case name)
                                (:modifiers sql-map)))
               " "))
        (comma-join (map to-sql fields))))
+
+(defmethod format-clause :select [[_ fields] sql-map]
+  (select-fields "SELECT" fields sql-map))
+
+(defmethod format-clause :returning [[_ fields] sql-map]
+  (select-fields "RETURNING" fields sql-map))
 
 (defmethod format-clause :from [[_ tables] _]
   (str "FROM " (comma-join (map to-sql tables))))

@@ -33,3 +33,7 @@
          "INSERT INTO foo SELECT bar FROM baz"))
   (is (= (format-clause (first {:insert-into [[:foo [:a :b :c]] {:select [:d :e :f] :from [:baz]}]}) nil)
          "INSERT INTO foo (a, b, c) SELECT d, e, f FROM baz")))
+
+(deftest returning
+  (is (= (format-clause (first {:returning [:*]}) nil)
+         "RETURNING *")))
