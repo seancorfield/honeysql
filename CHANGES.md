@@ -1,5 +1,7 @@
 ## 0.6.3 In development
 
+* Add support for :intersect clause (@jakemcc)
+
 ## 0.6.2
 
 Support column names in :with clauses (@emidln)
