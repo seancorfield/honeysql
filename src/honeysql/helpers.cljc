@@ -1,4 +1,5 @@
 (ns honeysql.helpers
+  #?(:cljs (:require-macros [honeysql.helpers :refer [defhelper]]))
   (:refer-clojure :exclude [update]))
 
 (defmulti build-clause (fn [name & args]
@@ -7,18 +8,19 @@
 (defmethod build-clause :default [_ m & args]
   m)
 
-(defmacro defhelper [helper arglist & more]
-  (let [kw (keyword (name helper))]
-    `(do
-       (defmethod build-clause ~kw ~(into ['_] arglist) ~@more)
-       (doto (defn ~helper [& args#]
-               (let [[m# args#] (if (map? (first args#))
-                                  [(first args#) (rest args#)]
-                                  [{} args#])]
-                 (build-clause ~kw m# args#)))
-         ;; maintain the original arglist instead of getting
-         ;; ([& args__6880__auto__])
-         (alter-meta! assoc :arglists '(~arglist))))))
+#?(:clj
+   (defmacro defhelper [helper arglist & more]
+     (let [kw (keyword (name helper))]
+       `(do
+          (defmethod build-clause ~kw ~(into ['_] arglist) ~@more)
+          (doto (defn ~helper [& args#]
+                  (let [[m# args#] (if (map? (first args#))
+                                     [(first args#) (rest args#)]
+                                     [{} args#])]
+                    (build-clause ~kw m# args#)))
+            ;; maintain the original arglist instead of getting
+            ;; ([& args__6880__auto__])
+            (alter-meta! assoc :arglists '(~arglist)))))))
 
 (defn collify [x]
   (if (coll? x) x [x]))
@@ -224,7 +226,7 @@
 (defn delete-from
   ([table] (delete-from nil table))
   ([m table] (build-clause :delete-from m table)))
-  
+
 (defmethod build-clause :with [_ m ctes]
   (assoc m :with ctes))
 
