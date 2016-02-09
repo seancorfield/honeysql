@@ -7,12 +7,17 @@
 (defmethod build-clause :default [_ m & args]
   m)
 
+(defn plain-map? [m]
+  (and
+    (map? m)
+    (not (instance? clojure.lang.IRecord m))))
+
 (defmacro defhelper [helper arglist & more]
   (let [kw (keyword (name helper))]
     `(do
        (defmethod build-clause ~kw ~(into ['_] arglist) ~@more)
        (doto (defn ~helper [& args#]
-               (let [[m# args#] (if (map? (first args#))
+               (let [[m# args#] (if (plain-map? (first args#))
                                   [(first args#) (rest args#)]
                                   [{} args#])]
                  (build-clause ~kw m# args#)))

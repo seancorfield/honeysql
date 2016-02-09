@@ -155,13 +155,13 @@
              :param3 param3})))))
 
 (deftest test-raw
-  (is (= ["1 + 1"]
+  (is (= ["SELECT 1 + 1 FROM foo"]
          (-> (select (sql/raw "1 + 1"))
              (from :foo)
              sql/format))))
 
 (deftest test-call
-  (is (= ["min(?)" "time"]
+  (is (= ["SELECT min(?) FROM ?" "time" "table"]
          (-> (select (sql/call :min "time"))
              (from "table")
              sql/format))))
