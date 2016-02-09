@@ -1,4 +1,8 @@
-## 0.6.3 In development
+## 0.6.4 In development
+
+## 0.6.3
+
+Fix bug when SqlCall/SqlRaw object is first argument to another helper (@MichaelBlume)
 
 ## 0.6.2
 
