@@ -165,3 +165,11 @@
          (-> (select (sql/call :min "time"))
              (from "table")
              sql/format))))
+
+(deftest join-test
+  (testing "nil join"
+    (is (= ["SELECT * FROM foo INNER JOIN x ON foo.id = x.id INNER JOIN y"]
+           (-> (select :*)
+               (from :foo)
+               (join :x [:= :foo.id :x.id] :y nil)
+               sql/format)))))
