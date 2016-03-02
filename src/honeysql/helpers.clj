@@ -241,3 +241,6 @@
 
 (defmethod build-clause :union-all [_ m maps]
   (assoc m :union-all maps))
+
+(defmethod build-clause :intersect [_ m maps]
+  (assoc m :intersect maps))

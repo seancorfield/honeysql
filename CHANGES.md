@@ -4,6 +4,8 @@
 
 Fix bug when SqlCall/SqlRaw object is first argument to another helper (@MichaelBlume)
 
+* Add support for :intersect clause (@jakemcc)
+
 ## 0.6.2
 
 Support column names in :with clauses (@emidln)

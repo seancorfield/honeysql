@@ -531,6 +531,9 @@
 (defmethod format-clause :union-all [[_ maps] _]
   (string/join " UNION ALL " (map to-sql maps)))
 
+(defmethod format-clause :intersect [[_ maps] _]
+  (string/join " INTERSECT " (map to-sql maps)))
+
 (defmethod fn-handler "case" [_ & clauses]
   (str "CASE "
        (space-join

@@ -79,3 +79,8 @@
   (is (= (format {:union-all [{:select [:foo] :from [:bar1]}
                               {:select [:foo] :from [:bar2]}]})
          ["(SELECT foo FROM bar1) UNION ALL (SELECT foo FROM bar2)"])))
+
+(deftest intersect-test
+  (is (= (format {:intersect [{:select [:foo] :from [:bar1]}
+                              {:select [:foo] :from [:bar2]}]})
+         ["(SELECT foo FROM bar1) INTERSECT (SELECT foo FROM bar2)"])))
