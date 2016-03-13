@@ -41,10 +41,10 @@
 (def ^:dynamic *allow-dashed-names?* false)
 
 (def ^:private quote-fns
-  {:ansi #(str \" % \")
-   :mysql #(str \` % \`)
-   :sqlserver #(str \[ % \])
-   :oracle #(str \" % \")})
+  {:ansi #(str \" (string/replace % "\"" "\"\"") \")
+   :mysql #(str \` (string/replace % "`" "``") \`)
+   :sqlserver #(str \[ (string/replace % "]" "]]") \])
+   :oracle #(str \" (string/replace % "\"" "\"\"") \")})
 
 (def ^:private parameterizers
   {:postgresql #(str "$" (swap! *all-param-counter* inc))

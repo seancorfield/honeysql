@@ -16,7 +16,11 @@
     3 "3"
     'foo "foo"
     :foo-bar "foo_bar")
-  (is (= (quote-identifier "*" :style :ansi) "*")))
+  (is (= (quote-identifier "*" :style :ansi) "*"))
+  (is (= (quote-identifier "foo\"bar" :style :ansi) "\"foo\"\"bar\""))
+  (is (= (quote-identifier "foo\"bar" :style :oracle) "\"foo\"\"bar\""))
+  (is (= (quote-identifier "foo`bar" :style :mysql) "`foo``bar`"))
+  (is (= (quote-identifier "foo]bar" :style :sqlserver) "[foo]]bar]")))
 
 (deftest test-dashed-quote
   (binding [*allow-dashed-names?* true]
