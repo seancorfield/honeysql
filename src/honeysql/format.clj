@@ -17,6 +17,14 @@
 (defn paren-wrap [x]
   (str "(" x ")"))
 
+;; Checks if the first is a `DISTINCT ON` statement, if yes then return a string
+;; with an appended space at the end of the first and then comma joining the rest
+;; else simply return a comma joined string
+(defn construct-select [s]
+  (if (re-find #"DISTINCT ON" (first s))
+    (str (first s) " " (comma-join (rest s)))
+    (comma-join s)))
+
 (def ^:dynamic *clause*
   "During formatting, *clause* is bound to :select, :from, :where, etc."
   nil)
@@ -405,7 +413,7 @@
          (str (space-join (map (comp string/upper-case name)
                                (:modifiers sql-map)))
               " "))
-       (comma-join (map to-sql fields))))
+       (construct-select (map to-sql fields))))
 
 (defmethod format-clause :from [[_ tables] _]
   (str "FROM " (comma-join (map to-sql tables))))
