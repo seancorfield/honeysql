@@ -17,13 +17,14 @@
 (defn paren-wrap [x]
   (str "(" x ")"))
 
-;; Checks if the first is a `DISTINCT ON` statement, if yes then return a string
-;; with an appended space at the end of the first and then comma joining the rest
-;; else simply return a comma joined string
+;; Checks if the first elemnet of the list is a `DISTINCT ON` statement, if yes
+;; then return a string with an appended space at the end of the first and then
+;; comma joining the rest else simply return a comma joined string
 (defn construct-select [s]
-  (if (re-find #"DISTINCT ON" (first s))
-    (str (first s) " " (comma-join (rest s)))
-    (comma-join s)))
+  (let [[fst & rst] s]
+    (if (re-find #"DISTINCT ON" fst)
+      (str fst " " (comma-join rst))
+      (comma-join s))))
 
 (def ^:dynamic *clause*
   "During formatting, *clause* is bound to :select, :from, :where, etc."

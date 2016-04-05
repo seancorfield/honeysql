@@ -175,7 +175,7 @@
                sql/format)))))
 
 (deftest distinct-on
-  (testing "Distinct on"
+  (testing "Distinct on query generation"
     (is (= ["SELECT DISTINCT ON (name) name, created_by"]
            (-> (select (sql/call :distinct-on :name) :name :created_by)
                sql/format)))
