@@ -166,6 +166,12 @@
              (from "table")
              sql/format))))
 
+(deftest test-quoted-call
+  (is (= ["SELECT \"foo\".\"bar\"(1, 2, 3)"]
+         (sql/format
+           {:select [(sql/call-quoted :foo.bar 1 2 3)]}
+           :quoting :ansi))))
+
 (deftest join-test
   (testing "nil join"
     (is (= ["SELECT * FROM foo INNER JOIN x ON foo.id = x.id INNER JOIN y"]

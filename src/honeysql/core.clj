@@ -7,6 +7,7 @@
             [clojure.string :as string]))
 
 (defalias call types/call)
+(defalias call-quoted types/call-quoted)
 (defalias raw types/raw)
 (defalias param types/param)
 (defalias format format/format)

@@ -1,18 +1,24 @@
 (ns honeysql.types)
 
-(defrecord SqlCall [name args])
+(defrecord SqlCall [name args quoted?])
 
 (defn call
   "Represents a SQL function call. Name should be a keyword."
   [name & args]
-  (SqlCall. name args))
+  (SqlCall. name args false))
+
+(defn call-quoted
+  "Represents a SQL function call that must be quoted. Like the normal SqlCall
+  the name should be a keyword."
+  [name & args] (SqlCall. name args true))
 
 (defn read-sql-call [form]
   ;; late bind so that we get new class on REPL reset
   (apply (resolve `call) form))
 
 (defmethod print-method SqlCall [^SqlCall o ^java.io.Writer w]
-  (.write w (str "#sql/call " (pr-str (into [(.-name o)] (.-args o))))))
+  (.write w (str "#sql/call" (when (.-quoted? o) "-quoted")
+                 " " (pr-str (into [(.-name o)] (.-args o))))))
 
 (defmethod print-dup SqlCall [o w]
   (print-method o w))
