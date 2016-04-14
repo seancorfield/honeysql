@@ -249,6 +249,16 @@ To be able to use dashes in quoted names, you can pass ```:allow-dashed-names tr
 => ["SELECT \"f\".\"foo-id\", \"f\".\"foo-name\" FROM \"foo-bar\" \"f\" WHERE \"f\".\"foo-id\" = 12345"]
 ```
 
+In some cases, you may want to quote function calls. To do this, you can use the
+```sql/call-quoted``` function instead of the ```sql/call``` function.
+
+```clj
+(sql/format
+  {:select (sql/quoted-call :my-schema.some-function 1 2 3)}
+  :quoting :ansi :allow-quoted-names? true)
+=> ["SELECT \"my-schema\".\"some-function\"(1, 2, 3)"]
+```
+
 Here's a big, complicated query. Note that Honey SQL makes no attempt to verify that your queries make any sense. It merely renders surface syntax.
 
 ```clj
