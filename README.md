@@ -231,7 +231,7 @@ lock map may also provide a :wait value, which if false will append the NOWAIT p
 (-> (select :foo.a)
     (from :foo)
     (where [:= foo.a "baz"])
-    (lock {:mode :update})
+    (lock :mode :update)
     (sql/format))
 => ["SELECT foo.a FROM foo WHERE foo.a = ? FOR UPDATE" "baz"]
 ```
