@@ -36,15 +36,14 @@
   (is (= (format-clause
           (first {:with-recursive [[:query {:select [:foo] :from [:bar]}]]}) nil)
          "WITH RECURSIVE query AS SELECT foo FROM bar"))
-  (is (= (format-clause
-           (first {:with [[[:static {:columns [:a :b :c]}] {:values [[1 2 3] [4 5 6]]}]]}) nil)
-         "WITH static (a, b, c) AS VALUES (1, 2, 3), (4, 5, 6)"))
+  (is (= (format {:with [[[:static {:columns [:a :b :c]}] {:values [[1 2 3] [4 5 6]]}]]})
+         ["WITH static (a, b, c) AS (VALUES (?, ?, ?), (?, ?, ?))" 1 2 3 4 5 6]))
   (is (= (format
            {:with [[[:static {:columns [:a :b :c]}]
                     {:values [[1 2 3] [4 5 6]]}]]
             :select [:*]
             :from [:static]})
-         ["WITH static (a, b, c) AS (VALUES (1, 2, 3), (4, 5, 6)) SELECT * FROM static"])))
+         ["WITH static (a, b, c) AS (VALUES (?, ?, ?), (?, ?, ?)) SELECT * FROM static" 1 2 3 4 5 6])))
 
 (deftest insert-into
   (is (= (format-clause (first {:insert-into :foo}) nil)
@@ -62,13 +61,13 @@
                   :where [:exists {:select [1]
                                    :from [:bar]
                                    :where :deleted}]})
-         ["SELECT id FROM foo WHERE EXISTS (SELECT 1 FROM bar WHERE deleted)"])))
+         ["SELECT id FROM foo WHERE EXISTS (SELECT ? FROM bar WHERE deleted)" 1])))
 
 (deftest array-test
   (is (= (format {:insert-into :foo
                   :columns [:baz]
                   :values [[#sql/array [1 2 3 4]]]})
-         ["INSERT INTO foo (baz) VALUES (ARRAY[1, 2, 3, 4])"]))
+         ["INSERT INTO foo (baz) VALUES (ARRAY[?, ?, ?, ?])" 1 2 3 4]))
   (is (= (format {:insert-into :foo
                   :columns [:baz]
                   :values [[#sql/array ["one" "two" "three"]]]})
