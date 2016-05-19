@@ -290,8 +290,6 @@
         (quote-identifier x))))
   clojure.lang.Symbol
   (to-sql [x] (quote-identifier x))
-  java.lang.Number
-  (to-sql [x] (str x))
   java.lang.Boolean
   (to-sql [x]
     (if x "TRUE" "FALSE"))

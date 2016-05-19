@@ -52,18 +52,18 @@
     (testing "Various construction methods are consistent"
       (is (= m1 m3 m4)))
     (testing "SQL data formats correctly"
-      (is (= ["SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10 FROM foo f, baz b INNER JOIN draq ON f.b = draq.x LEFT JOIN clod c ON f.a = c.d RIGHT JOIN bock ON bock.z = c.e FULL JOIN beck ON beck.x = c.y WHERE ((f.a = ? AND b.baz <> ?) OR (1 < 2 AND 2 < 3) OR (f.e in (1, ?, 3)) OR f.e BETWEEN 10 AND 20) GROUP BY f.a HAVING 0 < f.e ORDER BY b.baz DESC, c.quux, f.a NULLS FIRST LIMIT 50 OFFSET 10 "
-              "bort" "gabba" 2]
+      (is (= ["SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10 FROM foo f, baz b INNER JOIN draq ON f.b = draq.x LEFT JOIN clod c ON f.a = c.d RIGHT JOIN bock ON bock.z = c.e FULL JOIN beck ON beck.x = c.y WHERE ((f.a = ? AND b.baz <> ?) OR (? < ? AND ? < ?) OR (f.e in (?, ?, ?)) OR f.e BETWEEN ? AND ?) GROUP BY f.a HAVING ? < f.e ORDER BY b.baz DESC, c.quux, f.a NULLS FIRST LIMIT ? OFFSET ? "
+              "bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10]
              (sql/format m1 {:param1 "gabba" :param2 2}))))
     (testing "SQL data prints and reads correctly"
       (is (= m1 (read-string (pr-str m1)))))
     (testing "SQL data formats correctly with alternate param naming"
       (is (= (sql/format m1 :params {:param1 "gabba" :param2 2} :parameterizer :postgresql)
-             ["SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10 FROM foo f, baz b INNER JOIN draq ON f.b = draq.x LEFT JOIN clod c ON f.a = c.d RIGHT JOIN bock ON bock.z = c.e FULL JOIN beck ON beck.x = c.y WHERE ((f.a = $1 AND b.baz <> $2) OR (1 < 2 AND 2 < 3) OR (f.e in (1, $3, 3)) OR f.e BETWEEN 10 AND 20) GROUP BY f.a HAVING 0 < f.e ORDER BY b.baz DESC, c.quux, f.a NULLS FIRST LIMIT 50 OFFSET 10 "
-              "bort" "gabba" 2])))
+             ["SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10 FROM foo f, baz b INNER JOIN draq ON f.b = draq.x LEFT JOIN clod c ON f.a = c.d RIGHT JOIN bock ON bock.z = c.e FULL JOIN beck ON beck.x = c.y WHERE ((f.a = $1 AND b.baz <> $2) OR ($3 < $4 AND $5 < $6) OR (f.e in ($7, $8, $9)) OR f.e BETWEEN $10 AND $11) GROUP BY f.a HAVING $12 < f.e ORDER BY b.baz DESC, c.quux, f.a NULLS FIRST LIMIT $13 OFFSET $14 "
+              "bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10])))
     (testing "Locking"
-      (is (= ["SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10 FROM foo f, baz b INNER JOIN draq ON f.b = draq.x LEFT JOIN clod c ON f.a = c.d RIGHT JOIN bock ON bock.z = c.e FULL JOIN beck ON beck.x = c.y WHERE ((f.a = ? AND b.baz <> ?) OR (1 < 2 AND 2 < 3) OR (f.e in (1, ?, 3)) OR f.e BETWEEN 10 AND 20) GROUP BY f.a HAVING 0 < f.e ORDER BY b.baz DESC, c.quux, f.a NULLS FIRST LIMIT 50 OFFSET 10 FOR UPDATE "
-              "bort" "gabba" 2]
+      (is (= ["SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10 FROM foo f, baz b INNER JOIN draq ON f.b = draq.x LEFT JOIN clod c ON f.a = c.d RIGHT JOIN bock ON bock.z = c.e FULL JOIN beck ON beck.x = c.y WHERE ((f.a = ? AND b.baz <> ?) OR (? < ? AND ? < ?) OR (f.e in (?, ?, ?)) OR f.e BETWEEN ? AND ?) GROUP BY f.a HAVING ? < f.e ORDER BY b.baz DESC, c.quux, f.a NULLS FIRST LIMIT ? OFFSET ? FOR UPDATE "
+              "bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10]
              (sql/format (assoc m1 :lock {:mode :update})
                          {:param1 "gabba" :param2 2}))))))
 
@@ -97,7 +97,7 @@
     (doseq [[cname coll] [[:vector []] [:set #{}] [:list '()]]]
       (testing (str "with values from a " (name cname))
         (let [values (conj coll 1)]
-          (is (= ["SELECT * FROM customers WHERE (id in (1))"]
+          (is (= ["SELECT * FROM customers WHERE (id in (?))" 1]
                  (sql/format {:select [:*]
                               :from [:customers]
                               :where [:in :id values]})))
@@ -108,7 +108,7 @@
                              {:ids values}))))))
     (testing "with more than one integer"
       (let [values [1 2]]
-        (is (= ["SELECT * FROM customers WHERE (id in (1, 2))"]
+        (is (= ["SELECT * FROM customers WHERE (id in (?, ?))" 1 2]
                (sql/format {:select [:*]
                             :from [:customers]
                             :where [:in :id values]})))
@@ -129,7 +129,8 @@
                            {:ids values})))))))
 
 (deftest test-case
-  (is (= ["SELECT CASE WHEN foo < 0 THEN -1 WHEN (foo > 0 AND (foo mod 2) = 0) THEN (foo / 2) ELSE 0 END FROM bar"]
+  (is (= ["SELECT CASE WHEN foo < ? THEN ? WHEN (foo > ? AND (foo mod ?) = ?) THEN (foo / ?) ELSE ? END FROM bar"
+          0 -1 0 2 0 2 0]
          (sql/format
           {:select [(sql/call
                      :case
@@ -140,8 +141,8 @@
   (let [param1 1
         param2 2
         param3 "three"]
-    (is (= ["SELECT CASE WHEN foo = ? THEN 0 WHEN foo = bar THEN ? WHEN bar = 0 THEN (bar * ?) ELSE ? END FROM baz"
-            param1 param2 param3 "param4"]
+    (is (= ["SELECT CASE WHEN foo = ? THEN ? WHEN foo = bar THEN ? WHEN bar = ? THEN (bar * ?) ELSE ? END FROM baz"
+            param1 0 param2 0 param3 "param4"]
            (sql/format
             {:select [(sql/call
                        :case
