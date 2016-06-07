@@ -1,4 +1,4 @@
-## 0.6.4 In development
+## 0.7.0
 
 * Parameterize numbers, properly handle NaN, Infinity, -Infinity (@akhudek)
 * Fix lock example in README (@michaelblume)
