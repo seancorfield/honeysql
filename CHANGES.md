@@ -1,5 +1,12 @@
 ## 0.6.4 In development
 
+* Parameterize numbers, properly handle NaN, Infinity, -Infinity (@akhudek)
+* Fix lock example in README (@michaelblume)
+* Allow joins without a predicate (@stuarth)
+* Escape quotes in quoted identifiers (@csummers)
+* Add support for INTERSECT (@jakemcc)
+* Upgrade Clojure dependency (@michaelblume)
+
 ## 0.6.3
 
 Fix bug when SqlCall/SqlRaw object is first argument to another helper (@MichaelBlume)
