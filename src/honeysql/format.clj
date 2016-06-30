@@ -76,7 +76,7 @@
 (def infix-fns
   #{"+" "-" "*" "/" "%" "mod" "|" "&" "^"
     "and" "or" "xor"
-    "in" "not in" "like" "not like" "regexp"})
+    "in" "not in" "like" "not like" "regexp" "@@"})
 
 (def fn-aliases
   {"is" "="
