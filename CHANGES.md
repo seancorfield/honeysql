@@ -1,5 +1,7 @@
 ## 0.7.1 In development
 
+* Allow namespaced keywords and symbols for queries. (@jrdoane)
+
 ## 0.7.0
 
 * Parameterize numbers, properly handle NaN, Infinity, -Infinity (@akhudek)

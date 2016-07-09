@@ -62,7 +62,10 @@
              (quote-fns style)
              *quote-identifier-fn*)
         s (cond
-            (or (keyword? x) (symbol? x)) (name-transform-fn (name x))
+            (or (keyword? x) (symbol? x))
+            (name-transform-fn
+              (str (when-let [n (namespace x)]
+                     (str n "/")) (name x)))
             (string? x) (if qf x (name-transform-fn x))
             :else (str x))]
     (if-not qf
