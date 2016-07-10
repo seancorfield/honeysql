@@ -353,8 +353,12 @@ If you do implement a clause or function handler, consider submitting a pull req
 
 * Create table, etc.
 
+## Extensions
+
+* [For PostgreSQL-specific extensions falling outside of ANSI SQL](https://github.com/nilenso/honeysql-postgres)
+
 ## License
 
-Copyright © 2012 Justin Kramer
+Copyright © 2012-2016 Justin Kramer
 
 Distributed under the Eclipse Public License, the same as Clojure.
