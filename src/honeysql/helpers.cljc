@@ -18,18 +18,20 @@
       (let [kw (keyword (name helper))]
         `(do
            (defmethod build-clause ~kw ~(into ['_] arglist) ~@more)
-           (doto (defn ~helper [& args#]
-                   (let [[m# args#] (if (plain-map? (first args#))
-                                      [(first args#) (rest args#)]
-                                      [{} args#])]
-                     (build-clause ~kw m# args#)))
-             ;; maintain the original arglist instead of getting
-             ;; ([& args__6880__auto__])
-             (alter-meta!
-               assoc
-               :arglists
-               '(~(into [] (rest arglist))
-                 ~(into [(first arglist)] (rest arglist)))))))))
+           (defn ~helper [& args#]
+             (let [[m# args#] (if (plain-map? (first args#))
+                                [(first args#) (rest args#)]
+                                [{} args#])]
+               (build-clause ~kw m# args#)))
+
+           ;; maintain the original arglist instead of getting
+           ;; ([& args__6880__auto__])
+           (alter-meta!
+             (var ~helper)
+             assoc
+             :arglists
+             '(~(into [] (rest arglist))
+               ~(into [(first arglist)] (rest arglist))))))))
 
 (defn collify [x]
   (if (coll? x) x [x]))
