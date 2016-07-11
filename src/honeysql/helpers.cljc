@@ -11,7 +11,7 @@
 (defn plain-map? [m]
   (and
     (map? m)
-    (not (instance? clojure.lang.IRecord m))))
+    (not (record? m))))
 
 #?(:clj
     (defmacro defhelper [helper arglist & more]
