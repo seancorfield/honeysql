@@ -9,6 +9,8 @@
 * Add support for INTERSECT (@jakemcc)
 * Upgrade Clojure dependency (@michaelblume)
 
+* Added support for quoted database function calls. (@jrdoane)
+
 ## 0.6.3
 
 Fix bug when SqlCall/SqlRaw object is first argument to another helper (@MichaelBlume)

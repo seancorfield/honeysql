@@ -310,9 +310,9 @@
   SqlCall
   (to-sql [x]
     (binding [*fn-context?* true]
-       (let [fn-name (name (.-name x))
-             fn-name (fn-aliases fn-name fn-name)]
-         (apply fn-handler fn-name (.-args x)))))
+       (let [quoted? (.-quoted? x)
+             fn-name ((if quoted? to-sql name) (.-name x))]
+         (apply fn-handler (fn-aliases fn-name fn-name) (.-args x)))))
   SqlRaw
   (to-sql [x] (.-s x))
   clojure.lang.IPersistentMap
