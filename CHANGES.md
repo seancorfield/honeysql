@@ -25,6 +25,8 @@ Add fn-handler for CASE statement (@loganlinn)
 Build/test with Clojure 1.7 (@michaelblume)
 Refactors for clarity (@michaelblume)
 
+* Support mysql upserts (@dball)
+
 ## 0.6.1
 
 * Define parameterizable protocol on nil (@dball)

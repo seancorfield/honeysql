@@ -51,7 +51,23 @@
   (is (= (format-clause (first {:insert-into [:foo {:select [:bar] :from [:baz]}]}) nil)
          "INSERT INTO foo SELECT bar FROM baz"))
   (is (= (format-clause (first {:insert-into [[:foo [:a :b :c]] {:select [:d :e :f] :from [:baz]}]}) nil)
-         "INSERT INTO foo (a, b, c) SELECT d, e, f FROM baz")))
+         "INSERT INTO foo (a, b, c) SELECT d, e, f FROM baz"))
+  (is (= (format {:insert-into :letters
+                  :columns [:domain_key]
+                  :values [["a"] ["b"] ["c"]]})
+         ["INSERT INTO letters (domain_key) VALUES (?), (?), (?)" "a" "b" "c"]))
+  (is (= (format {:insert-into :letters
+                  :columns [:domain_key]
+                  :values [["a"] ["b"] ["c"]]
+                  :upsert {:mode :mysql
+                           :updates {:id :id}}})
+         ["INSERT INTO letters (domain_key) VALUES (?), (?), (?) ON DUPLICATE KEY UPDATE id=id" "a" "b" "c"]))
+  (is (= (format {:insert-into :letters
+                  :columns [:domain_key :rank]
+                  :values [["a" 1] ["b" 2] ["c" 3]]
+                  :upsert {:mode :mysql
+                           :updates {:rank #sql/call [:values :rank]}}})
+         ["INSERT INTO letters (domain_key, rank) VALUES (?, 1), (?, 2), (?, 3) ON DUPLICATE KEY UPDATE rank=values(rank)" "a" "b" "c"])))
 
 (deftest exists-test
   (is (= (format {:exists {:select [:a] :from [:foo]}})
