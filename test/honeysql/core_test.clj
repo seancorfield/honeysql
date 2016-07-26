@@ -174,3 +174,12 @@
                (from :foo)
                (join :x [:= :foo.id :x.id] :y nil)
                sql/format)))))
+
+(deftest distinct-on
+  (testing "Distinct on query generation"
+    (is (= ["SELECT DISTINCT ON (name) name, created_by"]
+           (-> (select (sql/call :distinct-on :name) :name :created_by)
+               sql/format)))
+    (is (= ["SELECT DISTINCT ON (name, created_by) name, created_by"]
+           (-> (select (sql/call :distinct-on :name :created_by) :name :created_by)
+               sql/format)))))
