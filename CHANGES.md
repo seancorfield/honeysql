@@ -1,4 +1,8 @@
-## 0.7.1 In development
+## 0.8.0
+
+* Get arglists right for generated helpers (@camsaul, @michaelblume)
+* Allow HoneySQL to be used from Clojurescript (@rnewman, @michaelblume)
+* BREAKING CHANGE: HoneySQL now requires Clojure 1.7.0 or above.
 
 ## 0.7.0
 

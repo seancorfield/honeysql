@@ -1,4 +1,4 @@
-(defproject honeysql "0.7.1-SNAPSHOT"
+(defproject honeysql "0.8.0"
   :description "SQL as Clojure data structures"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
