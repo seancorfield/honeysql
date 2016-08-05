@@ -3,15 +3,15 @@
   (:require [honeysql.format :as format]
             [honeysql.types :as types]
             [honeysql.helpers :refer [build-clause]]
-            [honeysql.util :refer [defalias]]
+            #?(:clj [honeysql.util :refer [defalias]])
             [clojure.string :as string]))
 
-(defalias call types/call)
-(defalias raw types/raw)
-(defalias param types/param)
-(defalias format format/format)
-(defalias format-predicate format/format-predicate)
-(defalias quote-identifier format/quote-identifier)
+(#?(:clj defalias :cljs def) call types/call)
+(#?(:clj defalias :cljs def) raw types/raw)
+(#?(:clj defalias :cljs def) param types/param)
+(#?(:clj defalias :cljs def) format format/format)
+(#?(:clj defalias :cljs def) format-predicate format/format-predicate)
+(#?(:clj defalias :cljs def) quote-identifier format/quote-identifier)
 
 (defn qualify
   "Takes one or more keyword or string qualifers and name. Returns

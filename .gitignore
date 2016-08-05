@@ -1,3 +1,6 @@
+*~
+.sw*
+*.swp
 /target
 /lib
 /classes

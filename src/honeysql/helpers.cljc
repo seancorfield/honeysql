@@ -1,5 +1,6 @@
 (ns honeysql.helpers
-  (:refer-clojure :exclude [update]))
+  (:refer-clojure :exclude [update])
+  #?(:cljs (:require-macros [honeysql.helpers :refer [defhelper]])))
 
 (defmulti build-clause (fn [name & args]
                          name))
@@ -10,24 +11,27 @@
 (defn plain-map? [m]
   (and
     (map? m)
-    (not (instance? clojure.lang.IRecord m))))
+    (not (record? m))))
 
-(defmacro defhelper [helper arglist & more]
-  (let [kw (keyword (name helper))]
-    `(do
-       (defmethod build-clause ~kw ~(into ['_] arglist) ~@more)
-       (doto (defn ~helper [& args#]
-               (let [[m# args#] (if (plain-map? (first args#))
-                                  [(first args#) (rest args#)]
-                                  [{} args#])]
-                 (build-clause ~kw m# args#)))
-         ;; maintain the original arglist instead of getting
-         ;; ([& args__6880__auto__])
-         (alter-meta!
-           assoc
-           :arglists
-           '(~(into [] (rest arglist))
-             ~(into [(first arglist)] (rest arglist))))))))
+#?(:clj
+    (defmacro defhelper [helper arglist & more]
+      (let [kw (keyword (name helper))]
+        `(do
+           (defmethod build-clause ~kw ~(into ['_] arglist) ~@more)
+           (defn ~helper [& args#]
+             (let [[m# args#] (if (plain-map? (first args#))
+                                [(first args#) (rest args#)]
+                                [{} args#])]
+               (build-clause ~kw m# args#)))
+
+           ;; maintain the original arglist instead of getting
+           ;; ([& args__6880__auto__])
+           (alter-meta!
+             (var ~helper)
+             assoc
+             :arglists
+             '(~(into [] (rest arglist))
+               ~(into [(first arglist)] (rest arglist))))))))
 
 (defn collify [x]
   (if (coll? x) x [x]))
@@ -233,7 +237,7 @@
 (defn delete-from
   ([table] (delete-from nil table))
   ([m table] (build-clause :delete-from m table)))
-  
+
 (defmethod build-clause :with [_ m ctes]
   (assoc m :with ctes))
 

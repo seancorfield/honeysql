@@ -1,7 +1,10 @@
 (ns honeysql.format-test
   (:refer-clojure :exclude [format])
-  (:require [clojure.test :refer [deftest testing is are]]
-            [honeysql.format :refer :all]))
+  (:require [#?@(:clj [clojure.test :refer]
+                 :cljs [cljs.test :refer-macros]) [deftest testing is are]]
+            [honeysql.types :as sql]
+            [honeysql.format :refer
+             [*allow-dashed-names?* quote-identifier format-clause format]]))
 
 (deftest test-quote
   (are
@@ -66,11 +69,11 @@
 (deftest array-test
   (is (= (format {:insert-into :foo
                   :columns [:baz]
-                  :values [[#sql/array [1 2 3 4]]]})
+                  :values [[(sql/array [1 2 3 4])]]})
          ["INSERT INTO foo (baz) VALUES (ARRAY[?, ?, ?, ?])" 1 2 3 4]))
   (is (= (format {:insert-into :foo
                   :columns [:baz]
-                  :values [[#sql/array ["one" "two" "three"]]]})
+                  :values [[(sql/array ["one" "two" "three"])]]})
          ["INSERT INTO foo (baz) VALUES (ARRAY[?, ?, ?])" "one" "two" "three"])))
 
 (deftest union-test
