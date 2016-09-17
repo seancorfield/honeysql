@@ -174,7 +174,9 @@
 
 (def default-clause-priorities
   "Determines the order that clauses will be placed within generated SQL"
-  {:with 30
+  {:union 20
+   :union-all 25
+   :with 30
    :with-recursive 40
    :select 50
    :insert-into 60
