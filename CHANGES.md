@@ -1,5 +1,7 @@
 ## 0.8.1 In development
 
+* Add priority for union/union-all (@seancorfield)
+
 ## 0.8.0
 
 * Get arglists right for generated helpers (@camsaul, @michaelblume)
