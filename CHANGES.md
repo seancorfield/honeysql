@@ -1,4 +1,4 @@
-## 0.8.1 In development
+## 0.8.1
 
 * Add priority for union/union-all (@seancorfield)
 
