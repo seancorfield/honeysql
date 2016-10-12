@@ -96,3 +96,17 @@
   (is (= (format {:intersect [{:select [:foo] :from [:bar1]}
                               {:select [:foo] :from [:bar2]}]})
          ["SELECT foo FROM bar1 INTERSECT SELECT foo FROM bar2"])))
+
+(deftest inner-parts-test
+  (testing "The correct way to apply ORDER BY to various parts of a UNION"
+    (is (= (format
+             {:union
+              [{:select [:amount :id :created_on]
+                :from [:transactions]}
+               {:select [:amount :id :created_on]
+                :from [{:select [:amount :id :created_on]
+                        :from [:other_transactions]
+                        :order-by [[:amount :desc]]
+                        :limit 5}]}]
+              :order-by [[:amount :asc]]})
+           ["SELECT amount, id, created_on FROM transactions UNION SELECT amount, id, created_on FROM (SELECT amount, id, created_on FROM other_transactions ORDER BY amount DESC LIMIT ?) ORDER BY amount ASC" 5]))))
