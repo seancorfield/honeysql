@@ -77,16 +77,36 @@
          ["INSERT INTO foo (baz) VALUES (ARRAY[?, ?, ?])" "one" "two" "three"])))
 
 (deftest union-test
+  ;; UNION and INTERSECT subexpressions should not be parenthesized.
+  ;; If you need to add more complex expressions, use a subquery like this:
+  ;;   SELECT foo FROM bar1
+  ;;   UNION
+  ;;   SELECT foo FROM (SELECT foo FROM bar2 ORDER BY baz LIMIT 2)
+  ;;   ORDER BY foo ASC
   (is (= (format {:union [{:select [:foo] :from [:bar1]}
                           {:select [:foo] :from [:bar2]}]})
-         ["(SELECT foo FROM bar1) UNION (SELECT foo FROM bar2)"])))
+         ["SELECT foo FROM bar1 UNION SELECT foo FROM bar2"])))
 
 (deftest union-all-test
   (is (= (format {:union-all [{:select [:foo] :from [:bar1]}
                               {:select [:foo] :from [:bar2]}]})
-         ["(SELECT foo FROM bar1) UNION ALL (SELECT foo FROM bar2)"])))
+         ["SELECT foo FROM bar1 UNION ALL SELECT foo FROM bar2"])))
 
 (deftest intersect-test
   (is (= (format {:intersect [{:select [:foo] :from [:bar1]}
                               {:select [:foo] :from [:bar2]}]})
-         ["(SELECT foo FROM bar1) INTERSECT (SELECT foo FROM bar2)"])))
+         ["SELECT foo FROM bar1 INTERSECT SELECT foo FROM bar2"])))
+
+(deftest inner-parts-test
+  (testing "The correct way to apply ORDER BY to various parts of a UNION"
+    (is (= (format
+             {:union
+              [{:select [:amount :id :created_on]
+                :from [:transactions]}
+               {:select [:amount :id :created_on]
+                :from [{:select [:amount :id :created_on]
+                        :from [:other_transactions]
+                        :order-by [[:amount :desc]]
+                        :limit 5}]}]
+              :order-by [[:amount :asc]]})
+           ["SELECT amount, id, created_on FROM transactions UNION SELECT amount, id, created_on FROM (SELECT amount, id, created_on FROM other_transactions ORDER BY amount DESC LIMIT ?) ORDER BY amount ASC" 5]))))
