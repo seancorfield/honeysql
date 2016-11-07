@@ -179,7 +179,7 @@ Queries may be united within a :union or :union-all keyword:
 ```clj
 (sql/format {:union [(-> (select :*) (from :foo))
                      (-> (select :*) (from :bar))]})
-=> ["(SELECT * FROM foo) UNION (SELECT * FROM bar)"]
+=> ["SELECT * FROM foo UNION SELECT * FROM bar"]
 ```
 
 Keywords that begin with `%` are interpreted as SQL function calls:
