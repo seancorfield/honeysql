@@ -1,3 +1,5 @@
+## 0.8.3 In development
+
 ## 0.8.2
 
 * Don't parenthesize the subclauses of a UNION, UNION ALL, or INTERSECT clause. (@rnewman)
