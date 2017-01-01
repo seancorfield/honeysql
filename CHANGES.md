@@ -1,5 +1,7 @@
 ## 0.8.2 In development
 
+* Don't parenthesize the subclauses of a UNION, UNION ALL, or INTERSECT clause. (@rnewman)
+
 ## 0.8.1
 
 * Add priority for union/union-all (@seancorfield)
