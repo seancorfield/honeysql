@@ -110,3 +110,10 @@
                         :limit 5}]}]
               :order-by [[:amount :asc]]})
            ["SELECT amount, id, created_on FROM transactions UNION SELECT amount, id, created_on FROM (SELECT amount, id, created_on FROM other_transactions ORDER BY amount DESC LIMIT ?) ORDER BY amount ASC" 5]))))
+
+(deftest compare-expressions-test
+  (testing "Sequences should be fns when in value/comparison spots"
+    (is (= ["SELECT foo FROM bar WHERE (col1 mod ?) = (col2 + ?)" 4 4]
+           (format {:select [:foo]
+                    :from [:bar]
+                    :where [:= [:mod :col1 4] [:+ :col2 4]]})))))
