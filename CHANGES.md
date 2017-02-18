@@ -1,5 +1,7 @@
 ## 0.8.3 In development
 
+* Add helpers for :with and :with-recursive clauses
+
 ## 0.8.2
 
 * Don't parenthesize the subclauses of a UNION, UNION ALL, or INTERSECT clause. (@rnewman)

@@ -238,10 +238,10 @@
   ([table] (delete-from nil table))
   ([m table] (build-clause :delete-from m table)))
 
-(defmethod build-clause :with [_ m ctes]
+(defhelper with [m ctes]
   (assoc m :with ctes))
 
-(defmethod build-clause :with-recursive [_ m ctes]
+(defhelper with-recursive [m ctes]
   (assoc m :with-recursive ctes))
 
 (defmethod build-clause :union [_ m maps]
