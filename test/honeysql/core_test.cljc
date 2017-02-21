@@ -6,7 +6,7 @@
             [honeysql.helpers :refer [select modifiers from join left-join
                                       right-join full-join where group having
                                       order-by limit offset values columns
-                                      insert-into]]
+                                      insert-into with]]
             honeysql.format-test))
 
 ;; TODO: more tests
@@ -71,6 +71,21 @@
               "bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10]
              (sql/format (assoc m1 :lock {:mode :update})
                          {:param1 "gabba" :param2 2}))))))
+
+(deftest test-with
+  (let [expected-sql (clojure.string/join " "
+                                          ["WITH f AS (SELECT foo.* FROM foo),"
+                                           "b AS (SELECT bar.* FROM bar)"
+                                           "SELECT f.baz, b.quux"
+                                           "FROM f"
+                                           "INNER JOIN b ON f.id = b.id"])]
+    (is (= [expected-sql]
+        (-> (with [:f (-> (select :foo.* )(from :foo))]
+                  [:b (-> (select :bar.* )(from :bar))])
+            (select :f.baz :b.quux)
+            (from :f)
+            (join :b [:= :f.id :b.id])
+            sql/format)))))
 
 (deftest test-cast
   (is (= ["SELECT foo, CAST(bar AS integer)"]

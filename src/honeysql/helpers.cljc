@@ -36,6 +36,9 @@
 (defn collify [x]
   (if (coll? x) x [x]))
 
+(defhelper with [m ctes]
+  (assoc m :with (collify ctes)))
+
 (defhelper select [m fields]
   (assoc m :select (collify fields)))
 
