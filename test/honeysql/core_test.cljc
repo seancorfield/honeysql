@@ -84,7 +84,13 @@
            (insert-into :foo)
            (columns :bar)
            (values [[(honeysql.format/value {:baz "my-val"})]])
-           sql/format))))
+           sql/format)))
+  (is (= ["INSERT INTO foo (a, b, c) VALUES (?, ?, ?), (?, ?, ?)"
+          "a" "b" "c" "a" "b" "c"]
+         (-> (insert-into :foo)
+             (values [(array-map :a "a" :b "b" :c "c")
+                      (hash-map :a "a" :b "b" :c "c")])
+             sql/format))))
 
 (deftest test-operators
   (testing "="
