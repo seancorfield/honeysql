@@ -15,9 +15,14 @@
 
 #?(:clj
     (defmacro defhelper [helper arglist & more]
-      (let [kw (keyword (name helper))]
+      (when-not (vector? arglist)
+        (throw (IllegalArgumentException. "arglist must be a vector")))
+      (when-not (= (count arglist) 2)
+        (throw (IllegalArgumentException. "arglist must have two entries, map and varargs")))
+      (let [kw (keyword (name helper))
+            [m-arg varargs] arglist]
         `(do
-           (defmethod build-clause ~kw ~(into ['_] arglist) ~@more)
+           (defmethod build-clause ~kw ~['_ m-arg varargs] ~@more)
            (defn ~helper [& args#]
              (let [[m# args#] (if (plain-map? (first args#))
                                 [(first args#) (rest args#)]
@@ -30,8 +35,8 @@
              (var ~helper)
              assoc
              :arglists
-             '(~(into [] (rest arglist))
-               ~(into [(first arglist)] (rest arglist))))))))
+             '(~['& varargs]
+               ~[m-arg '& varargs]))))))
 
 (defn collify [x]
   (if (coll? x) x [x]))
