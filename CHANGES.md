@@ -1,5 +1,7 @@
 ## 0.8.3 In development
 
+* Allow namespaced keywords and symbols for queries. (@jrdoane)
+
 ## 0.8.2
 
 * Don't parenthesize the subclauses of a UNION, UNION ALL, or INTERSECT clause. (@rnewman)

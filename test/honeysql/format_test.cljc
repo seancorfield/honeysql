@@ -32,6 +32,10 @@
     (is (= (quote-identifier :foo-bar.moo-bar :style :ansi)
            "\"foo-bar\".\"moo-bar\""))))
 
+(deftest test-namespaced-identifier
+  (is (= (quote-identifier :foo/bar) "foo/bar"))
+  (is (= (quote-identifier :foo/bar :style :ansi) "\"foo/bar\"")))
+
 (deftest test-cte
   (is (= (format-clause
           (first {:with [[:query {:select [:foo] :from [:bar]}]]}) nil)
