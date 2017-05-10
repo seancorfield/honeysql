@@ -21,7 +21,7 @@
                                          :target :nodejs}}}}
   :doo {:build "test"}
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.8.0"]
-                                  [org.clojure/clojurescript "1.9.89"]
-                                  [cljsbuild "1.1.3"]]
-                   :plugins [[lein-cljsbuild "1.1.3"]
+                                  [org.clojure/clojurescript "1.9.521"]
+                                  [cljsbuild "1.1.6"]]
+                   :plugins [[lein-cljsbuild "1.1.6"]
                              [lein-doo "0.1.6"]]}})

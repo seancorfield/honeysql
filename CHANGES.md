@@ -5,6 +5,7 @@
 * Correct generated arglist for helpers defined with defhelper (@michaelblume)
 * Don't depend on map iteration order, fix bug with multiple map types (@tomconnors)
 * Don't throw away namespace portion of keywords (@jrdoane)
+* Update CLJS dependencies (@michaelblume)
 
 ## 0.8.2
 
