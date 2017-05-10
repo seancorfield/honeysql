@@ -1,6 +1,10 @@
 ## 0.8.3 In development
 
 * Allow namespaced keywords and symbols for queries. (@jrdoane)
+* Ensure sequences act as function invocations when in value position (@joodie)
+* Correct generated arglist for helpers defined with defhelper (@michaelblume)
+* Don't depend on map iteration order, fix bug with multiple map types (@tomconnors)
+* Don't throw away namespace portion of keywords (@jrdoane)
 
 ## 0.8.2
 
