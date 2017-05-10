@@ -1,4 +1,6 @@
-## 0.8.3 In development
+## 0.9.0 In development
+
+## 0.9.0 Beta 1
 
 * Allow namespaced keywords and symbols for queries. (@jrdoane)
 * Ensure sequences act as function invocations when in value position (@joodie)
