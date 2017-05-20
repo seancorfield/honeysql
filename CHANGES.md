@@ -1,5 +1,9 @@
 ## 0.9.0 In development
 
+## 0.9.0 Beta 2
+
+* Helpers for :with and :with-recursive clauses (@enaeher)
+
 ## 0.9.0 Beta 1
 
 * Allow namespaced keywords and symbols for queries. (@jrdoane)
