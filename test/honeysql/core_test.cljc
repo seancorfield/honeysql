@@ -78,6 +78,21 @@
              (sql/format (assoc m1 :lock {:mode :update})
                          {:param1 "gabba" :param2 2}))))))
 
+(deftest test-with
+  (let [expected-sql (clojure.string/join " "
+                                          ["WITH f AS (SELECT foo.* FROM foo),"
+                                           "b AS (SELECT bar.* FROM bar)"
+                                           "SELECT f.baz, b.quux"
+                                           "FROM f"
+                                           "INNER JOIN b ON f.id = b.id"])]
+    (is (= [expected-sql]
+        (-> (with [:f (-> (select :foo.* )(from :foo))]
+                  [:b (-> (select :bar.* )(from :bar))])
+            (select :f.baz :b.quux)
+            (from :f)
+            (join :b [:= :f.id :b.id])
+            sql/format)))))
+
 (deftest test-cast
   (is (= ["SELECT foo, CAST(bar AS integer)"]
          (sql/format {:select [:foo (sql/call :cast :bar :integer)]})))
