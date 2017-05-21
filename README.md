@@ -33,6 +33,14 @@ Everything is built on top of maps representing SQL queries:
 => ["SELECT a, b, c FROM foo WHERE (f.a = ?)" "baz"]
 ```
 
+Honeysql is a relatively "pure" library, it does not manage your sql connection
+or run queries for you, it simply generates SQL strings. You can then pass them
+to jdbc:
+
+```clj
+(jdbc/execute! conn (sql/format sqlmap)
+```
+
 You can build up SQL maps yourself or use helper functions. `build` is the Swiss Army Knife helper. It lets you leave out brackets here and there:
 
 ```clj
