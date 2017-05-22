@@ -24,4 +24,5 @@
                                   [org.clojure/clojurescript "1.9.521"]
                                   [cljsbuild "1.1.6"]]
                    :plugins [[lein-cljsbuild "1.1.6"]
+                             [jonase/eastwood "0.2.4"]
                              [lein-doo "0.1.6"]]}})
