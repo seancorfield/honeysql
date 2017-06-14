@@ -40,19 +40,18 @@
 
 ## 0.6.3
 
-Fix bug when SqlCall/SqlRaw object is first argument to another helper (@MichaelBlume)
-
+* Fix bug when SqlCall/SqlRaw object is first argument to another helper (@MichaelBlume)
 * Add support for :intersect clause (@jakemcc)
 
 ## 0.6.2
 
-Support column names in :with clauses (@emidln)
-Support preserving dashes in quoted names (@jrdoane)
-Document correct use of the :union clause (@dball)
-Tests for :union and :union-all (@dball)
-Add fn-handler for CASE statement (@loganlinn)
-Build/test with Clojure 1.7 (@michaelblume)
-Refactors for clarity (@michaelblume)
+* Support column names in :with clauses (@emidln)
+* Support preserving dashes in quoted names (@jrdoane)
+* Document correct use of the :union clause (@dball)
+* Tests for :union and :union-all (@dball)
+* Add fn-handler for CASE statement (@loganlinn)
+* Build/test with Clojure 1.7 (@michaelblume)
+* Refactors for clarity (@michaelblume)
 
 ## 0.6.1
 
