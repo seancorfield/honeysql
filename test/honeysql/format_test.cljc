@@ -121,3 +121,18 @@
            (format {:select [:foo]
                     :from [:bar]
                     :where [:= [:mod :col1 4] [:+ :col2 4]]})))))
+
+(deftest union-with-cte
+  (is (= (format {:union [{:select [:foo] :from [:bar1]}
+                          {:select [:foo] :from [:bar2]}]
+                  :with [[[:bar {:columns [:spam :eggs]}]
+                          {:values [[1 2] [3 4] [5 6]]}]]})
+         ["WITH bar (spam, eggs) AS (VALUES (?, ?), (?, ?), (?, ?)) SELECT foo FROM bar1 UNION SELECT foo FROM bar2" 1 2 3 4 5 6])))
+
+
+(deftest union-all-with-cte
+  (is (= (format {:union-all [{:select [:foo] :from [:bar1]}
+                              {:select [:foo] :from [:bar2]}]
+                  :with [[[:bar {:columns [:spam :eggs]}]
+                          {:values [[1 2] [3 4] [5 6]]}]]})
+         ["WITH bar (spam, eggs) AS (VALUES (?, ?), (?, ?), (?, ?)) SELECT foo FROM bar1 UNION ALL SELECT foo FROM bar2" 1 2 3 4 5 6])))
