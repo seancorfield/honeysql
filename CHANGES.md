@@ -1,5 +1,7 @@
 ## 0.9.0 In development
 
+* Reprioritize WITH wrt UNION and UNION ALL (@emidln)
+
 ## 0.9.0 Beta 2
 
 * Helpers for :with and :with-recursive clauses (@enaeher)
