@@ -1,21 +1,14 @@
-## 0.9.0 In development
+## 0.9.0
 
 * Reprioritize WITH wrt UNION and UNION ALL (@emidln)
-
-## 0.9.0 Beta 2
-
 * Helpers for :with and :with-recursive clauses (@enaeher)
-
-## 0.9.0 Beta 1
-
 * Allow namespaced keywords and symbols for queries. (@jrdoane)
 * Ensure sequences act as function invocations when in value position (@joodie)
 * Correct generated arglist for helpers defined with defhelper (@michaelblume)
 * Don't depend on map iteration order, fix bug with multiple map types (@tomconnors)
 * Don't throw away namespace portion of keywords (@jrdoane)
 * Update CLJS dependencies (@michaelblume)
-
-* Add helpers for :with and :with-recursive clauses
+* Add helpers for :with and :with-recursive clauses (@enaher)
 
 ## 0.8.2
 
