@@ -1,5 +1,9 @@
 ## 0.9.0
 
+BREAKING CHANGES:
+
+* Some tuples used as values no longer work. See #168.
+
 * Reprioritize WITH wrt UNION and UNION ALL (@emidln)
 * Helpers for :with and :with-recursive clauses (@enaeher)
 * Allow namespaced keywords and symbols for queries. (@jrdoane)
