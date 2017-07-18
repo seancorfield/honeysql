@@ -129,3 +129,9 @@
                   :with [[[:bar {:columns [:spam :eggs]}]
                           {:values [[1 2] [3 4] [5 6]]}]]})
          ["WITH bar (spam, eggs) AS (VALUES (?, ?), (?, ?), (?, ?)) SELECT foo FROM bar1 UNION ALL SELECT foo FROM bar2" 1 2 3 4 5 6])))
+
+(deftest format-tuples
+  (is (= ["SELECT id FROM table WHERE (a, b) = (?, ?)" 1 2]
+         (format {:select [:id]
+                  :from   [:table]
+                  :where  [:= [:a :b] [1 2]]}))))
