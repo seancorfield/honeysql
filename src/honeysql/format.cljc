@@ -37,8 +37,6 @@
 
 (def ^:dynamic *fn-context?* false)
 
-(def ^:dynamic *value-context?* false)
-
 (def ^:dynamic *subquery?* false)
 
 (def ^:dynamic *allow-dashed-names?* false)
@@ -96,10 +94,6 @@
 (defprotocol ToSql
   (to-sql [x]))
 
-(defn to-sql-value [x]
-  (binding [*value-context?* true]
-    (to-sql x)))
-
 (defmulti fn-handler (fn [op & args] op))
 
 (defn expand-binary-ops [op & args]
@@ -130,40 +124,40 @@
   (if (seq more)
     (apply expand-binary-ops "=" a b more)
     (cond
-     (nil? a) (str (to-sql-value b) " IS NULL")
-     (nil? b) (str (to-sql-value a) " IS NULL")
-     :else (str (to-sql-value a) " = " (to-sql-value b)))))
+     (nil? a) (str (to-sql b) " IS NULL")
+     (nil? b) (str (to-sql a) " IS NULL")
+     :else (str (to-sql a) " = " (to-sql b)))))
 
 (defmethod fn-handler "<>" [_ a b & more]
   (if (seq more)
     (apply expand-binary-ops "<>" a b more)
     (cond
-     (nil? a) (str (to-sql-value b) " IS NOT NULL")
-     (nil? b) (str (to-sql-value a) " IS NOT NULL")
-     :else (str (to-sql-value a) " <> " (to-sql-value b)))))
+     (nil? a) (str (to-sql b) " IS NOT NULL")
+     (nil? b) (str (to-sql a) " IS NOT NULL")
+     :else (str (to-sql a) " <> " (to-sql b)))))
 
 (defmethod fn-handler "<" [_ a b & more]
   (if (seq more)
     (apply expand-binary-ops "<" a b more)
-    (str (to-sql-value a) " < " (to-sql-value b))))
+    (str (to-sql a) " < " (to-sql b))))
 
 (defmethod fn-handler "<=" [_ a b & more]
   (if (seq more)
     (apply expand-binary-ops "<=" a b more)
-    (str (to-sql-value a) " <= " (to-sql-value b))))
+    (str (to-sql a) " <= " (to-sql b))))
 
 (defmethod fn-handler ">" [_ a b & more]
   (if (seq more)
     (apply expand-binary-ops ">" a b more)
-    (str (to-sql-value a) " > " (to-sql-value b))))
+    (str (to-sql a) " > " (to-sql b))))
 
 (defmethod fn-handler ">=" [_ a b & more]
   (if (seq more)
     (apply expand-binary-ops ">=" a b more)
-    (str (to-sql-value a) " >= " (to-sql-value b))))
+    (str (to-sql a) " >= " (to-sql b))))
 
 (defmethod fn-handler "between" [_ field lower upper]
-  (str (to-sql-value field) " BETWEEN " (to-sql-value lower) " AND " (to-sql-value upper)))
+  (str (to-sql field) " BETWEEN " (to-sql lower) " AND " (to-sql upper)))
 
 ;; Handles MySql's MATCH (field) AGAINST (pattern). The third argument
 ;; can be a set containing one or more of :boolean, :natural, or :expand.
@@ -172,7 +166,7 @@
        (comma-join
         (map to-sql (if (coll? fields) fields [fields])))
        ") AGAINST ("
-       (to-sql-value pattern)
+       (to-sql pattern)
        (when (seq opts)
          (str " " (space-join (for [opt opts]
                                 (case opt
@@ -319,17 +313,10 @@
       (paren-wrap sql-str)
       sql-str)))
 
-(declare format-predicate*)
-
 (defn seq->sql [x]
-  (cond
-    *value-context?*
-    ;; sequences are operators/functions
-    (format-predicate* x)
-    *fn-context?*
+  (if *fn-context?*
     ;; list argument in fn call
     (paren-wrap (comma-join (map to-sql x)))
-    :else
     ;; alias
     (str (to-sql (first x))
          ; Omit AS in FROM, JOIN, etc. - Oracle doesn't allow it
