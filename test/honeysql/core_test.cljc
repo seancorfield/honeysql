@@ -192,4 +192,11 @@
                (join :x [:= :foo.id :x.id] :y nil)
                sql/format)))))
 
+(deftest inline-test
+  (is (= ["SELECT * FROM foo WHERE id = 5"]
+         (-> (select :*)
+             (from :foo)
+             (where [:= :id (sql/inline 5)])
+             sql/format))))
+
 #?(:cljs (cljs.test/run-all-tests))

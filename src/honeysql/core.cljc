@@ -9,6 +9,7 @@
 (#?(:clj defalias :cljs def) call types/call)
 (#?(:clj defalias :cljs def) raw types/raw)
 (#?(:clj defalias :cljs def) param types/param)
+(#?(:clj defalias :cljs def) inline types/inline)
 (#?(:clj defalias :cljs def) format format/format)
 (#?(:clj defalias :cljs def) format-predicate format/format-predicate)
 (#?(:clj defalias :cljs def) quote-identifier format/quote-identifier)

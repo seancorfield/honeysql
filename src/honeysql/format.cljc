@@ -1,9 +1,9 @@
 (ns honeysql.format
   (:refer-clojure :exclude [format])
   (:require [honeysql.types :refer [call raw param param-name
-                                    #?@(:cljs [SqlCall SqlRaw SqlParam SqlArray])]]
+                                    #?@(:cljs [SqlCall SqlRaw SqlParam SqlArray SqlInline])]]
             [clojure.string :as string])
-  #?(:clj (:import [honeysql.types SqlCall SqlRaw SqlParam SqlArray])))
+  #?(:clj (:import [honeysql.types SqlCall SqlRaw SqlParam SqlArray SqlInline])))
 
 ;;(set! *warn-on-reflection* true)
 
@@ -388,6 +388,9 @@
   SqlArray
   (to-sql [x]
     (str "ARRAY[" (comma-join (map to-sql (.-values x))) "]"))
+  SqlInline
+  (to-sql [x]
+    (str (.-value x)))
   #?(:clj Object :cljs default)
   (to-sql [x]
     #?(:clj (add-anon-param x)
