@@ -115,6 +115,13 @@
               :order-by [[:amount :asc]]})
            ["SELECT amount, id, created_on FROM transactions UNION SELECT amount, id, created_on FROM (SELECT amount, id, created_on FROM other_transactions ORDER BY amount DESC LIMIT ?) ORDER BY amount ASC" 5]))))
 
+(deftest compare-expressions-test
+  (testing "sql/call should produce appropriate function calls"
+    (is (= ["SELECT foo FROM bar WHERE (col1 mod ?) = (col2 + ?)" 4 4]
+           (format {:select [:foo]
+                    :from [:bar]
+                    :where (sql/call := (sql/call :mod :col1 4) (sql/call :+ :col2 4))})))))
+
 (deftest union-with-cte
   (is (= (format {:union [{:select [:foo] :from [:bar1]}
                           {:select [:foo] :from [:bar2]}]
