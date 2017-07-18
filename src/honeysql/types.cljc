@@ -57,6 +57,18 @@
   ;; late bind, as above
   (#?(:clj (resolve `array) :cljs array) form))
 
+;;;;
+
+(defrecord SqlInline [value])
+
+(defn inline
+  "Prevents parameterization"
+  [value]
+  (SqlInline. value))
+
+(defn read-sql-inline [form]
+  (#?(:clj (resolve `inline) :cljs inline) form))
+
 #?(:clj
     (do
       (defmethod print-method SqlCall [^SqlCall o ^java.io.Writer w]
@@ -81,4 +93,10 @@
         (.write w (str "#sql/array " (pr-str (.values a)))))
 
       (defmethod print-dup SqlArray [a w]
+        (print-method a w))
+
+      (defmethod print-method SqlInline [^SqlInline a ^java.io.Writer w]
+        (.write w (str "#sql/inline " (pr-str (.value a)))))
+
+      (defmethod print-dup SqlInline [a w]
         (print-method a w))))
