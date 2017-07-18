@@ -116,11 +116,11 @@
            ["SELECT amount, id, created_on FROM transactions UNION SELECT amount, id, created_on FROM (SELECT amount, id, created_on FROM other_transactions ORDER BY amount DESC LIMIT ?) ORDER BY amount ASC" 5]))))
 
 (deftest compare-expressions-test
-  (testing "Sequences should be fns when in value/comparison spots"
+  (testing "sql/call should produce appropriate function calls"
     (is (= ["SELECT foo FROM bar WHERE (col1 mod ?) = (col2 + ?)" 4 4]
            (format {:select [:foo]
                     :from [:bar]
-                    :where [:= [:mod :col1 4] [:+ :col2 4]]})))))
+                    :where (sql/call := (sql/call :mod :col1 4) (sql/call :+ :col2 4))})))))
 
 (deftest union-with-cte
   (is (= (format {:union [{:select [:foo] :from [:bar1]}
@@ -136,3 +136,9 @@
                   :with [[[:bar {:columns [:spam :eggs]}]
                           {:values [[1 2] [3 4] [5 6]]}]]})
          ["WITH bar (spam, eggs) AS (VALUES (?, ?), (?, ?), (?, ?)) SELECT foo FROM bar1 UNION ALL SELECT foo FROM bar2" 1 2 3 4 5 6])))
+
+(deftest format-tuples
+  (is (= ["SELECT id FROM table WHERE (a, b) = (?, ?)" 1 2]
+         (format {:select [:id]
+                  :from   [:table]
+                  :where  [:= [:a :b] [1 2]]}))))
