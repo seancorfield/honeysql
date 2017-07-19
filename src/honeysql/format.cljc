@@ -587,3 +587,6 @@
             (let [pred (format-predicate* condition)]
               (str "WHEN " pred " THEN " (to-sql result))))))
        " END"))
+
+(defn regularize [sql-string]
+  (string/replace sql-string #"\s+" " "))
