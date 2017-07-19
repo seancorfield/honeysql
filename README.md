@@ -11,16 +11,26 @@ SQL as Clojure data structures. Build queries programmatically -- even at runtim
 
 [![Clojars Project](http://clojars.org/honeysql/latest-version.svg)](http://clojars.org/honeysql)
 
+## Note on code samples
+
+All sample code in this README is automatically run as a unit test using
+[midje-readme](https://github.com/boxed/midje-readme).
+
+Note that while some of these samples show pretty-printed SQL, this is just for
+README readability; honeysql does not generate pretty-printed SQL.
+The #sql/regularize directive tells the test-runner to ignore the extraneous
+whitespace.
+
 ## Usage
 
-```clj
+```clojure
 (require '[honeysql.core :as sql]
-         '[honeysql.helpers :refer :all])
+         '[honeysql.helpers :refer :all :as helpers])
 ```
 
 Everything is built on top of maps representing SQL queries:
 
-```clj
+```clojure
 (def sqlmap {:select [:a :b :c]
              :from [:foo]
              :where [:= :f.a "baz"]})
@@ -28,7 +38,7 @@ Everything is built on top of maps representing SQL queries:
 
 `format` turns maps into `clojure.java.jdbc`-compatible, parameterized SQL:
 
-```clj
+```clojure
 (sql/format sqlmap)
 => ["SELECT a, b, c FROM foo WHERE f.a = ?" "baz"]
 ```
@@ -43,7 +53,7 @@ to jdbc:
 
 You can build up SQL maps yourself or use helper functions. `build` is the Swiss Army Knife helper. It lets you leave out brackets here and there:
 
-```clj
+```clojure
 (sql/build :select :*
            :from :foo
            :where [:= :f.a "baz"])
@@ -52,14 +62,18 @@ You can build up SQL maps yourself or use helper functions. `build` is the Swiss
 
 You can provide a "base" map as the first argument to build:
 
-```clj
+```clojure
 (sql/build sqlmap :offset 10 :limit 10)
-=> {:limit 10, :offset 10, :select [:a :b :c], :where [:= :f.a "baz"], :from [:foo]}
+=> {:limit 10
+    :offset 10
+    :select [:a :b :c]
+    :where [:= :f.a "baz"]
+    :from [:foo]}
 ```
 
 There are also functions for each clause type in the `honeysql.helpers` namespace:
 
-```clj
+```clojure
 (-> (select :a :b :c)
     (from :foo)
     (where [:= :f.a "baz"]))
@@ -67,7 +81,7 @@ There are also functions for each clause type in the `honeysql.helpers` namespac
 
 Order doesn't matter:
 
-```clj
+```clojure
 (= (-> (select :*) (from :foo))
    (-> (from :foo) (select :*)))
 => true
@@ -75,14 +89,14 @@ Order doesn't matter:
 
 When using the vanilla helper functions, new clauses will replace old clauses:
 
-```clj
+```clojure
 (-> sqlmap (select :*))
-=> {:from [:foo], :where [:= :f.a "baz"], :select (:*)}
+=> '{:from [:foo], :where [:= :f.a "baz"], :select (:*)}
 ```
 
 To add to clauses instead of replacing them, use `merge-select`, `merge-where`, etc.:
 
-```clj
+```clojure
 (-> sqlmap
     (merge-select :d :e)
     (merge-where [:> :b 10])
@@ -92,7 +106,7 @@ To add to clauses instead of replacing them, use `merge-select`, `merge-where`, 
 
 `where` will combine multiple clauses together using and:
 
-```clj
+```clojure
 (-> (select :*)
     (from :foo)
     (where [:= :a 1] [:< :b 100])
@@ -104,7 +118,7 @@ Inserts are supported in two patterns.
 In the first pattern, you must explicitly specify the columns to insert,
 then provide a collection of rows, each a collection of column values:
 
-```clj
+```clojure
 (-> (insert-into :properties)
     (columns :name :surname :age)
     (values
@@ -112,7 +126,8 @@ then provide a collection of rows, each a collection of column values:
       ["Andrew" "Cooper" 12]
       ["Jane" "Daniels" 56]])
     sql/format)
-=> ["INSERT INTO properties (name, surname, age)
+=> [#sql/regularize
+    "INSERT INTO properties (name, surname, age)
      VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)"
     "Jon" "Smith" 34 "Andrew" "Cooper" 12 "Jane" "Daniels" 56]
 ```
@@ -121,13 +136,14 @@ then provide a collection of rows, each a collection of column values:
 Alternately, you can simply specify the values as maps; the first map defines the columns to insert,
 and the remaining maps *must* have the same set of keys and values:
 
-```clj
+```clojure
 (-> (insert-into :properties)
     (values [{:name "John" :surname "Smith" :age 34}
              {:name "Andrew" :surname "Cooper" :age 12}
              {:name "Jane" :surname "Daniels" :age 56}])
     sql/format)
-=> ["INSERT INTO properties (name, surname, age)
+=> [#sql/regularize
+    "INSERT INTO properties (name, surname, age)
      VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)"
     "John" "Smith" 34
     "Andrew" "Cooper"  12
@@ -136,7 +152,7 @@ and the remaining maps *must* have the same set of keys and values:
 
 The column values do not have to be literals, they can be nested queries:
 
-```clj
+```clojure
 (let [user-id 12345
       role-name "user"]
   (-> (insert-into :user_profile_to_role)
@@ -146,7 +162,8 @@ The column values do not have to be literals, they can be nested queries:
                                      (where [:= :name role-name]))}])
       sql/format))
 
-=> ["INSERT INTO user_profile_to_role (user_profile_id, role_id)
+=> [#sql/regularize
+    "INSERT INTO user_profile_to_role (user_profile_id, role_id)
      VALUES (?, (SELECT id FROM role WHERE name = ?))"
     12345
     "user"]
@@ -155,18 +172,18 @@ The column values do not have to be literals, they can be nested queries:
 Updates are possible too (note the double S in `sset` to avoid clashing
 with `clojure.core/set`):
 
-```clj
-(-> (update :films)
+```clojure
+(-> (helpers/update :films)
     (sset {:kind "dramatic"
            :watched true})
     (where [:= :kind "drama"])
     sql/format)
-=> ["UPDATE films SET watched = TRUE, kind = ? WHERE kind = ?" "dramatic" "drama"]
+=> ["UPDATE films SET kind = ?, watched = TRUE WHERE kind = ?" "dramatic" "drama"]
 ```
 
 Deletes look as you would expect:
 
-```clj
+```clojure
 (-> (delete-from :films)
     (where [:<> :kind "musical"])
     sql/format)
@@ -175,7 +192,7 @@ Deletes look as you would expect:
 
 Queries can be nested:
 
-```clj
+```clojure
 (-> (select :*)
     (from :foo)
     (where [:in :foo.a (-> (select :a) (from :bar))])
@@ -185,7 +202,7 @@ Queries can be nested:
 
 Queries may be united within a :union or :union-all keyword:
 
-```clj
+```clojure
 (sql/format {:union [(-> (select :*) (from :foo))
                      (-> (select :*) (from :bar))]})
 => ["SELECT * FROM foo UNION SELECT * FROM bar"]
@@ -193,7 +210,7 @@ Queries may be united within a :union or :union-all keyword:
 
 Keywords that begin with `%` are interpreted as SQL function calls:
 
-```clj
+```clojure
 (-> (select :%count.*) (from :foo) sql/format)
 => ["SELECT count(*) FROM foo"]
 (-> (select :%max.id) (from :foo) sql/format)
@@ -202,7 +219,7 @@ Keywords that begin with `%` are interpreted as SQL function calls:
 
 Keywords that begin with `?` are interpreted as bindable parameters:
 
-```clj
+```clojure
 (-> (select :id)
     (from :foo)
     (where [:= :a :?baz])
@@ -212,19 +229,24 @@ Keywords that begin with `?` are interpreted as bindable parameters:
 
 There are helper functions and data literals for SQL function calls, field qualifiers, raw SQL fragments, and named input parameters:
 
-```clj
-(-> (select (sql/call :foo :bar) (sql/qualify :foo :a) (sql/raw "@var := foo.bar"))
-    (from :foo)
-    (where [:= :a (sql/param :baz)]))
-=> {:where [:= :a #sql/param :baz], :from (:foo), :select (#sql/call [:foo :bar] :foo.a #sql/raw "@var := foo.bar")}
+```clojure
+(def call-qualify-map
+  (-> (select (sql/call :foo :bar) (sql/qualify :foo :a) (sql/raw "@var := foo.bar"))
+      (from :foo)
+      (where [:= :a (sql/param :baz)])))
 
-(sql/format *1 :params {:baz "BAZ"})
+call-qualify-map
+=> '{:where [:= :a #sql/param :baz]
+     :from (:foo)
+     :select (#sql/call [:foo :bar] :foo.a #sql/raw "@var := foo.bar")}
+
+(sql/format call-qualify-map :params {:baz "BAZ"})
 => ["SELECT foo(bar), foo.a, @var := foo.bar FROM foo WHERE a = ?" "BAZ"]
 ```
 
 To quote identifiers, pass the `:quoting` keyword option to `format`. Valid options are `:ansi` (PostgreSQL), `:mysql`, or `:sqlserver`:
 
-```clj
+```clojure
 (-> (select :foo.a)
     (from :foo)
     (where [:= :foo.a "baz"])
@@ -236,7 +258,7 @@ To issue a locking select, add a :lock to the query or use the lock helper. The 
 modes are the standard :update (FOR UPDATE) or the vendor-specific :mysql-share (LOCK IN SHARE MODE) or :postresql-share (FOR SHARE). The
 lock map may also provide a :wait value, which if false will append the NOWAIT parameter, supported by PostgreSQL.
 
-```clj
+```clojure
 (-> (select :foo.a)
     (from :foo)
     (where [:= :foo.a "baz"])
@@ -248,36 +270,39 @@ lock map may also provide a :wait value, which if false will append the NOWAIT p
 To support novel lock modes, implement the `format-lock-clause` multimethod.
 
 To be able to use dashes in quoted names, you can pass ```:allow-dashed-names true``` as an argument to the ```format``` function.
-```clj
-(format
+```clojure
+(sql/format
   {:select [:f.foo-id :f.foo-name]
    :from [[:foo-bar :f]]
    :where [:= :f.foo-id 12345]}
   :allow-dashed-names? true
   :quoting :ansi)
-=> ["SELECT \"f\".\"foo-id\", \"f\".\"foo-name\" FROM \"foo-bar\" \"f\" WHERE \"f\".\"foo-id\" = 12345"]
+=> ["SELECT \"f\".\"foo-id\", \"f\".\"foo-name\" FROM \"foo-bar\" \"f\" WHERE \"f\".\"foo-id\" = ?" 12345]
 ```
 
 Here's a big, complicated query. Note that Honey SQL makes no attempt to verify that your queries make any sense. It merely renders surface syntax.
 
-```clj
-(-> (select :f.* :b.baz :c.quux [:b.bla "bla-bla"]
-            (sql/call :now) (sql/raw "@x := 10"))
-    (modifiers :distinct)
-    (from [:foo :f] [:baz :b])
-    (join :draq [:= :f.b :draq.x])
-    (left-join [:clod :c] [:= :f.a :c.d])
-    (right-join :bock [:= :bock.z :c.e])
-    (where [:or
-             [:and [:= :f.a "bort"] [:not= :b.baz (sql/param :param1)]]
-             [:< 1 2 3]
-             [:in :f.e [1 (sql/param :param2) 3]]
-             [:between :f.e 10 20]])
-    (group :f.a)
-    (having [:< 0 :f.e])
-    (order-by [:b.baz :desc] :c.quux [:f.a :nulls-first])
-    (limit 50)
-    (offset 10))
+```clojure
+(def big-complicated-map
+  (-> (select :f.* :b.baz :c.quux [:b.bla "bla-bla"]
+              (sql/call :now) (sql/raw "@x := 10"))
+      (modifiers :distinct)
+      (from [:foo :f] [:baz :b])
+      (join :draq [:= :f.b :draq.x])
+      (left-join [:clod :c] [:= :f.a :c.d])
+      (right-join :bock [:= :bock.z :c.e])
+      (where [:or
+               [:and [:= :f.a "bort"] [:not= :b.baz (sql/param :param1)]]
+               [:< 1 2 3]
+               [:in :f.e [1 (sql/param :param2) 3]]
+               [:between :f.e 10 20]])
+      (group :f.a)
+      (having [:< 0 :f.e])
+      (order-by [:b.baz :desc] :c.quux [:f.a :nulls-first])
+      (limit 50)
+      (offset 10)))
+
+big-complicated-map
 => {:select [:f.* :b.baz :c.quux [:b.bla "bla-bla"]
              (sql/call :now) (sql/raw "@x := 10")]
     :modifiers [:distinct]
@@ -296,8 +321,9 @@ Here's a big, complicated query. Note that Honey SQL makes no attempt to verify 
     :limit 50
     :offset 10}
 
-(sql/format *1 {:param1 "gabba" :param2 2})
-=> ["SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10
+(sql/format big-complicated-map {:param1 "gabba" :param2 2})
+=> [#sql/regularize
+    "SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10
      FROM foo f, baz b
      INNER JOIN draq ON f.b = draq.x
      LEFT JOIN clod c ON f.a = c.d
@@ -314,7 +340,7 @@ Here's a big, complicated query. Note that Honey SQL makes no attempt to verify 
      "bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10]
 
 ;; Printable and readable
-(= *2 (read-string (pr-str *2)))
+(= big-complicated-map (read-string (pr-str big-complicated-map)))
 => true
 ```
 
@@ -322,7 +348,7 @@ Here's a big, complicated query. Note that Honey SQL makes no attempt to verify 
 
 You can define your own function handlers for use in `where`:
 
-```clj
+```clojure
 (require '[honeysql.format :as fmt])
 
 (defmethod fmt/fn-handler "betwixt" [_ field lower upper]
@@ -336,7 +362,7 @@ You can define your own function handlers for use in `where`:
 
 You can also define your own clauses:
 
-```clj
+```clojure
 
 ;; Takes a MapEntry of the operator & clause data, plus the entire SQL map
 (defmethod fmt/format-clause :foobar [[op v] sqlmap]
