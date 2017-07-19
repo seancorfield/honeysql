@@ -30,7 +30,7 @@ Everything is built on top of maps representing SQL queries:
 
 ```clj
 (sql/format sqlmap)
-=> ["SELECT a, b, c FROM foo WHERE (f.a = ?)" "baz"]
+=> ["SELECT a, b, c FROM foo WHERE f.a = ?" "baz"]
 ```
 
 Honeysql is a relatively "pure" library, it does not manage your sql connection
@@ -87,7 +87,7 @@ To add to clauses instead of replacing them, use `merge-select`, `merge-where`, 
     (merge-select :d :e)
     (merge-where [:> :b 10])
     sql/format)
-=> ["SELECT a, b, c, d, e FROM foo WHERE (f.a = ? AND b > 10)" "baz"]
+=> ["SELECT a, b, c, d, e FROM foo WHERE (f.a = ? AND b > ?)" "baz" 10]
 ```
 
 `where` will combine multiple clauses together using and:
@@ -97,7 +97,7 @@ To add to clauses instead of replacing them, use `merge-select`, `merge-where`, 
     (from :foo)
     (where [:= :a 1] [:< :b 100])
     sql/format)
-=> ["SELECT * FROM foo WHERE (a = 1 AND b < 100)"]
+=> ["SELECT * FROM foo WHERE (a = ? AND b < ?)" 1 100]
 ```
 
 Inserts are supported in two patterns. 
@@ -113,8 +113,8 @@ then provide a collection of rows, each a collection of column values:
       ["Jane" "Daniels" 56]])
     sql/format)
 => ["INSERT INTO properties (name, surname, age)
-     VALUES (?, ?, 34), (?, ?, 12), (?, ?, 56)"
-     "Jon" "Smith" "Andrew" "Cooper" "Jane" "Daniels"]
+     VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)"
+    "Jon" "Smith" 34 "Andrew" "Cooper" 12 "Jane" "Daniels" 56]
 ```
 
 
@@ -127,11 +127,11 @@ and the remaining maps *must* have the same set of keys and values:
              {:name "Andrew" :surname "Cooper" :age 12}
              {:name "Jane" :surname "Daniels" :age 56}])
     sql/format)
-=> ["INSERT INTO properties (age, name, surname) 
-     VALUES (34, ?, ?), (12, ?, ?), (56, ?, ?)" 
-    "John" "Smith" 
-    "Andrew" "Cooper" 
-    "Jane" "Daniels"]
+=> ["INSERT INTO properties (name, surname, age)
+     VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)"
+    "John" "Smith" 34
+    "Andrew" "Cooper"  12
+    "Jane" "Daniels" 56]
 ```
 
 The column values do not have to be literals, they can be nested queries:
@@ -146,8 +146,9 @@ The column values do not have to be literals, they can be nested queries:
                                      (where [:= :name role-name]))}])
       sql/format))
 
-=> ["INSERT INTO user_profile_to_role (user_profile_id, role_id) 
-     VALUES (12345, (SELECT id FROM role WHERE name = ?))" 
+=> ["INSERT INTO user_profile_to_role (user_profile_id, role_id)
+     VALUES (?, (SELECT id FROM role WHERE name = ?))"
+    12345
     "user"]
 ```
 
@@ -179,7 +180,7 @@ Queries can be nested:
     (from :foo)
     (where [:in :foo.a (-> (select :a) (from :bar))])
     sql/format)
-=> ["SELECT * FROM foo WHERE (foo.a IN (SELECT a FROM bar))"]
+=> ["SELECT * FROM foo WHERE (foo.a in (SELECT a FROM bar))"]
 ```
 
 Queries may be united within a :union or :union-all keyword:
@@ -218,7 +219,7 @@ There are helper functions and data literals for SQL function calls, field quali
 => {:where [:= :a #sql/param :baz], :from (:foo), :select (#sql/call [:foo :bar] :foo.a #sql/raw "@var := foo.bar")}
 
 (sql/format *1 :params {:baz "BAZ"})
-=> ["SELECT FOO(bar), foo.a, @var := foo.bar FROM foo WHERE a = ?" "BAZ"]
+=> ["SELECT foo(bar), foo.a, @var := foo.bar FROM foo WHERE a = ?" "BAZ"]
 ```
 
 To quote identifiers, pass the `:quoting` keyword option to `format`. Valid options are `:ansi` (PostgreSQL), `:mysql`, or `:sqlserver`:
@@ -238,7 +239,7 @@ lock map may also provide a :wait value, which if false will append the NOWAIT p
 ```clj
 (-> (select :foo.a)
     (from :foo)
-    (where [:= foo.a "baz"])
+    (where [:= :foo.a "baz"])
     (lock :mode :update)
     (sql/format))
 => ["SELECT foo.a FROM foo WHERE foo.a = ? FOR UPDATE" "baz"]
@@ -291,26 +292,26 @@ Here's a big, complicated query. Note that Honey SQL makes no attempt to verify 
              [:between :f.e 10 20]]
     :group-by [:f.a]
     :having [:< 0 :f.e]
-    :order-by [[:b.baz :desc] :c.quux [:f.a :nulls-first]
+    :order-by [[:b.baz :desc] :c.quux [:f.a :nulls-first]]
     :limit 50
     :offset 10}
 
 (sql/format *1 {:param1 "gabba" :param2 2})
-=> ["SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS \"bla-bla\", NOW(), @x := 10
-     FROM foo AS f, baz AS b
+=> ["SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10
+     FROM foo f, baz b
      INNER JOIN draq ON f.b = draq.x
-     LEFT JOIN clod AS c ON f.a = c.d
+     LEFT JOIN clod c ON f.a = c.d
      RIGHT JOIN bock ON bock.z = c.e
      WHERE ((f.a = ? AND b.baz <> ?)
-           OR (1 < 2 AND 2 < 3)
-           OR (f.e IN (1, ?, 3))
-           OR f.e BETWEEN 10 AND 20)
+           OR (? < ? AND ? < ?)
+           OR (f.e in (?, ?, ?))
+           OR f.e BETWEEN ? AND ?)
      GROUP BY f.a
-     HAVING 0 < f.e
+     HAVING ? < f.e
      ORDER BY b.baz DESC, c.quux, f.a NULLS FIRST
-     LIMIT 50
-     OFFSET 10 "
-     "bort" "gabba" 2]
+     LIMIT ?
+     OFFSET ? "
+     "bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10]
 
 ;; Printable and readable
 (= *2 (read-string (pr-str *2)))
@@ -329,7 +330,7 @@ You can define your own function handlers for use in `where`:
        (fmt/to-sql lower) " AND " (fmt/to-sql upper)))
 
 (-> (select :a) (where [:betwixt :a 1 10]) sql/format)
-=> ["SELECT a WHERE a BETWIXT 1 AND 10"]
+=> ["SELECT a WHERE a BETWIXT ? AND ?" 1 10]
 
 ```
 
