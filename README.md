@@ -384,6 +384,29 @@ You can also define your own clauses:
 
 If you do implement a clause or function handler, consider submitting a pull request so others can use it, too. 
 
+## why does my parameter get emitted as `()`?
+If you want to use your own datatype as a parameter then the idiomatic approach of implementing `clojure.java.jdbc`'s [`ISQLValue`](https://clojure.github.io/java.jdbc/#clojure.java.jdbc/ISQLValue) protocol isn't enough as `honeysql` won't correct pass through your datatype, rather it will interpret it incorrectly.
+
+To teach `honeysql` how to handle your datatype you need to implement [`honeysql.format/ToSql`](https://github.com/jkk/honeysql/blob/a9dffec632be62c961be7d9e695d0b2b85732c53/src/honeysql/format.cljc#L94). For example:
+``` clojure
+;; given:
+(defrecord MyDateWrapper [...]
+  (to-sql-timestamp [this]...)
+)
+
+;; executing:
+(hsql/format {:where [:> :some_column (MyDateWrapper. ...)]})
+;; results in => "where :some_column > ()"
+
+;; we can teach honeysql about it:
+(extend-protocol honeysql.format.ToSql 
+  MyDateWrapper
+  (to-sql [v] (to-sql (date/to-sql-timestamp v))))
+  
+;; allowing us to now:
+(hsql/format {:where [:> :some_column (MyDateWrapper. ...)]})
+;; which correctly results in => "where :some_column>?" and the parameter correctly set
+```
 ## TODO
 
 * Create table, etc.
