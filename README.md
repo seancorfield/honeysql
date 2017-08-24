@@ -394,6 +394,6 @@ If you do implement a clause or function handler, consider submitting a pull req
 
 ## License
 
-Copyright © 2012-2016 Justin Kramer
+Copyright © 2012-2017 Justin Kramer
 
 Distributed under the Eclipse Public License, the same as Clojure.
