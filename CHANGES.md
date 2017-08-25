@@ -1,3 +1,7 @@
+## 0.9.1
+
+* Add helper to inline values/prevent parameterization (@michaelblume)
+
 ## 0.9.0
 
 BREAKING CHANGES:
