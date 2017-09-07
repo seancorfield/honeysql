@@ -9,6 +9,26 @@
 
 ;;;;
 
+(def jdbc-present
+  #?(:clj
+     (try
+       (require 'clojure.java.jdbc)
+       true
+       (catch Exception e false))
+     :cljs false))
+
+(def jdbc-value?
+  (if jdbc-present
+    (let [p (resolve 'clojure.java.jdbc/ISQLValue)]
+      (fn [x]
+        (satisfies? p x)))
+    (fn [x] false)))
+
+(def unwrap-jdbc
+  (if jdbc-present
+    (resolve 'clojure.java.jdbc/sql-value)
+    (fn [x] (throw (Exception. "this is not supposed to happen")))))
+
 (defn comma-join [s]
   (string/join ", " s))
 
@@ -92,7 +112,13 @@
    "regex" "regexp"})
 
 (defprotocol ToSql
-  (to-sql [x]))
+  (to-sql* [x]))
+
+(defn to-sql [x]
+  (if (jdbc-value? x)
+    (add-anon-param
+      (unwrap-jdbc x))
+    (to-sql* x)))
 
 (defmulti fn-handler (fn [op & args] op))
 
@@ -295,7 +321,7 @@
 
 (defrecord Value [v]
   ToSql
-  (to-sql [_]
+  (to-sql* [_]
     (add-anon-param v)))
 
 (defn value [x] (Value. x))
@@ -330,7 +356,7 @@
 (extend-protocol ToSql
   #?(:clj clojure.lang.Keyword
      :cljs cljs.core/Keyword)
-  (to-sql [x]
+  (to-sql* [x]
     (let [s (name x)]
       (case (.charAt s 0)
         \% (let [call-args (string/split (subs s 1) #"\." 2)]
@@ -339,33 +365,33 @@
         (quote-identifier x))))
   #?(:clj clojure.lang.Symbol
      :cljs cljs.core/Symbol)
-  (to-sql [x] (quote-identifier x))
+  (to-sql* [x] (quote-identifier x))
   #?(:clj java.lang.Boolean :cljs boolean)
-  (to-sql [x]
+  (to-sql* [x]
     (if x "TRUE" "FALSE"))
   #?@(:clj
        [clojure.lang.Sequential
         (to-sql [x] (seq->sql x))])
   SqlCall
-  (to-sql [x]
+  (to-sql* [x]
     (binding [*fn-context?* true]
        (let [fn-name (name (.-name x))
              fn-name (fn-aliases fn-name fn-name)]
          (apply fn-handler fn-name (.-args x)))))
   SqlRaw
-  (to-sql [x] (.-s x))
+  (to-sql* [x] (.-s x))
   #?(:clj clojure.lang.IPersistentMap
      :cljs cljs.core/PersistentArrayMap)
-  (to-sql [x]
+  (to-sql* [x]
     (map->sql x))
   #?(:clj clojure.lang.IPersistentSet
      :cljs cljs.core/PersistentHashSet)
-  (to-sql [x]
+  (to-sql* [x]
     (to-sql (seq x)))
   nil
-  (to-sql [x] "NULL")
+  (to-sql* [x] "NULL")
   SqlParam
-  (to-sql [x]
+  (to-sql* [x]
     (let [pname (param-name x)]
       (if (map? @*input-params*)
         (add-param pname (get @*input-params* pname))
@@ -373,20 +399,20 @@
           (swap! *input-params* rest)
           (add-param pname x)))))
   SqlArray
-  (to-sql [x]
+  (to-sql* [x]
     (str "ARRAY[" (comma-join (map to-sql (.-values x))) "]"))
   SqlInline
-  (to-sql [x]
+  (to-sql* [x]
     (str (.-value x)))
   #?(:clj Object :cljs default)
-  (to-sql [x]
+  (to-sql* [x]
     #?(:clj (add-anon-param x)
        :cljs (if (sequential? x)
                (seq->sql x)
                (add-anon-param x))))
   #?@(:cljs
        [cljs.core/PersistentHashMap
-        (to-sql [x] (map->sql x))]))
+        (to-sql* [x] (map->sql x))]))
 
 (defn sqlable? [x]
   (satisfies? ToSql x))
