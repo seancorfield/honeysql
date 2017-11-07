@@ -136,3 +136,19 @@
                   :with [[[:bar {:columns [:spam :eggs]}]
                           {:values [[1 2] [3 4] [5 6]]}]]})
          ["WITH bar (spam, eggs) AS (VALUES (?, ?), (?, ?), (?, ?)) SELECT foo FROM bar1 UNION ALL SELECT foo FROM bar2" 1 2 3 4 5 6])))
+
+(deftest parameterizer-none
+  (testing "array parameter"
+    (is (= (format {:insert-into :foo
+                    :columns [:baz]
+                    :values [[(sql/array [1 2 3 4])]]}
+                   :parameterizer :none)
+           ["INSERT INTO foo (baz) VALUES (ARRAY[1, 2, 3, 4])"])))
+
+  (testing "union complex values"
+    (is (= (format {:union [{:select [:foo] :from [:bar1]}
+                            {:select [:foo] :from [:bar2]}]
+                    :with [[[:bar {:columns [:spam :eggs]}]
+                            {:values [[1 2] [3 4] [5 6]]}]]}
+                   :parameterizer :none)
+           ["WITH bar (spam, eggs) AS (VALUES (1, 2), (3, 4), (5, 6)) SELECT foo FROM bar1 UNION SELECT foo FROM bar2"]))))
