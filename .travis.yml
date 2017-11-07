@@ -1,3 +1,11 @@
 language: clojure
-lein: 2.7.1
-script: lein do check, eastwood, test, test-readme
+
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y leiningen npm nodejs-legacy
+  - sudo npm install -g lumo-cljs
+
+install:
+  - jdk_switcher use openjdk8
+
+script: lein do check, eastwood, test, tach lumo, test-readme
