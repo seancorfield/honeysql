@@ -185,6 +185,7 @@
   "Determines the order that clauses will be placed within generated SQL"
   {:with 20
    :with-recursive 30
+   :intersect 35
    :union 40
    :union-all 45
    :select 50
