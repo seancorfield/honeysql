@@ -51,7 +51,8 @@
 
 (def ^:private parameterizers
   {:postgresql #(str "$" (swap! *all-param-counter* inc))
-   :jdbc (constantly "?")})
+   :jdbc (constantly "?")
+   :none #(str (last @*params*))})
 
 (def ^:dynamic *quote-identifier-fn* nil)
 (def ^:dynamic *parameterizer* nil)
@@ -232,7 +233,8 @@
     :params - input parameters
     :quoting - quote style to use for identifiers; one of :ansi (PostgreSQL),
                :mysql, :sqlserver, or :oracle. Defaults to no quoting.
-    :parameterizer - style of parameter naming, one of :postgresql or :jdbc, defaults to :jdbc
+    :parameterizer - style of parameter naming, :postgresql,
+                     :jdbc or :none. Defaults to :jdbc.
     :return-param-names - when true, returns a vector of
                           [sql-str param-values param-names]"
   [sql-map & params-or-opts]
@@ -250,7 +252,7 @@
               *parameterizer* (parameterizers (or (:parameterizer opts) :jdbc))
               *allow-dashed-names?* (:allow-dashed-names? opts)]
       (let [sql-str (to-sql sql-map)]
-        (if (seq @*params*)
+        (if (and (seq @*params*) (not= :none (:parameterizer opts)))
           (if (:return-param-names opts)
             [sql-str @*params* @*param-names*]
             (into [sql-str] @*params*))
