@@ -43,6 +43,8 @@
 
 (def ^:dynamic *allow-dashed-names?* false)
 
+(def ^:dynamic *name-transform-fn* nil)
+
 (def ^:private quote-fns
   {:ansi #(str \" (string/replace % "\"" "\"\"") \")
    :mysql #(str \` (string/replace % "`" "``") \`)
@@ -61,7 +63,10 @@
   (string/replace s "-" "_"))
 
 (defn quote-identifier [x & {:keys [style split] :or {split true}}]
-  (let [name-transform-fn (if *allow-dashed-names?* identity undasherize)
+  (let [name-transform-fn (cond
+                            *name-transform-fn* *name-transform-fn*
+                            *allow-dashed-names?* identity
+                            :else undasherize)
         qf (if style
              (quote-fns style)
              *quote-identifier-fn*)
