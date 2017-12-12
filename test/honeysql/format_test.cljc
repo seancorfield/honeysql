@@ -58,7 +58,9 @@
   (is (= (format-clause (first {:insert-into [:foo {:select [:bar] :from [:baz]}]}) nil)
          "INSERT INTO foo SELECT bar FROM baz"))
   (is (= (format-clause (first {:insert-into [[:foo [:a :b :c]] {:select [:d :e :f] :from [:baz]}]}) nil)
-         "INSERT INTO foo (a, b, c) SELECT d, e, f FROM baz")))
+         "INSERT INTO foo (a, b, c) SELECT d, e, f FROM baz"))
+  (is (= (format {:insert-into [[:foo [:a :b :c]] {:select [:d :e :f] :from [:baz]}]})
+         ["INSERT INTO foo (a, b, c) SELECT d, e, f FROM baz"])))
 
 (deftest exists-test
   (is (= (format {:exists {:select [:a] :from [:foo]}})
