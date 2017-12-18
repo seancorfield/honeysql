@@ -5,7 +5,7 @@ SQL as Clojure data structures. Build queries programmatically -- even at runtim
 ## Build
 
 [![Build Status](https://travis-ci.org/jkk/honeysql.svg?branch=master)](https://travis-ci.org/jkk/honeysql)
-[![Dependencies Status](http://jarkeeper.com/jkk/honeysql/status.svg)](http://jarkeeper.com/jkk/honeysql)
+[![Dependencies Status](https://versions.deps.co/jkk/honeysql/status.svg)](https://versions.deps.co/jkk/honeysql)
 
 ## Leiningen Coordinates
 
