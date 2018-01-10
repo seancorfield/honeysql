@@ -98,7 +98,7 @@
   (to-sql [x]))
 
 (defn to-sql-value [x]
-  (binding [*value-context?* true]
+  (binding [*value-context?* (sequential? x)]
     (to-sql x)))
 
 (defmulti fn-handler (fn [op & args] op))

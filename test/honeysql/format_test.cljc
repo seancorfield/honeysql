@@ -120,7 +120,21 @@
     (is (= ["SELECT foo FROM bar WHERE (col1 mod ?) = (col2 + ?)" 4 4]
            (format {:select [:foo]
                     :from [:bar]
-                    :where [:= [:mod :col1 4] [:+ :col2 4]]})))))
+                    :where [:= [:mod :col1 4] [:+ :col2 4]]}))))
+
+  (testing "Value context only applies to sequences in value/comparison spots"
+    (let [sub {:select [:%sum.amount]
+               :from [:bar]
+               :where [:in :id ["id-1" "id-2"]]}]
+      (is (= ["SELECT total FROM foo WHERE (SELECT sum(amount) FROM bar WHERE (id in (?, ?))) = total" "id-1" "id-2"]
+             (format {:select [:total]
+                      :from [:foo]
+                      :where [:= sub :total]})))
+      (is (= ["WITH t AS (SELECT sum(amount) FROM bar WHERE (id in (?, ?))) SELECT total FROM foo WHERE total = t" "id-1" "id-2"]
+             (format {:with [[:t sub]]
+                      :select [:total]
+                      :from [:foo]
+                      :where [:= :total :t]}))))))
 
 (deftest union-with-cte
   (is (= (format {:union [{:select [:foo] :from [:bar1]}
