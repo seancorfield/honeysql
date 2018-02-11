@@ -540,7 +540,8 @@
     (str "INSERT INTO "
          (to-sql (ffirst table))
          " (" (comma-join (map to-sql (second (first table)))) ") "
-         (to-sql (second table)))
+         (binding [*subquery?* false]
+           (to-sql (second table))))
     (str "INSERT INTO " (to-sql table))))
 
 (defmethod format-clause :columns [[_ fields] _]
