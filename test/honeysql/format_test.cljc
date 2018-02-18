@@ -4,7 +4,8 @@
                  :cljs [cljs.test :refer-macros]) [deftest testing is are]]
             [honeysql.types :as sql]
             [honeysql.format :refer
-             [*allow-dashed-names?* quote-identifier format-clause format]]))
+             [*allow-dashed-names?* quote-identifier format-clause format]]
+            [honeysql.helpers :as helpers]))
 
 (deftest test-quote
   (are
@@ -168,3 +169,9 @@
                             {:values [[1 2] [3 4] [5 6]]}]]}
                    :parameterizer :none)
            ["WITH bar (spam, eggs) AS (VALUES (1, 2), (3, 4), (5, 6)) SELECT foo FROM bar1 UNION SELECT foo FROM bar2"]))))
+
+(deftest where-and
+  (testing "should ignore a nil predicate"
+    (is (= (format (helpers/where [:= :foo "foo"] [:= :bar "bar"] nil)
+                   :parameterizer :postgresql)
+           ["WHERE (foo = $1 AND bar = $2)" "foo" "bar"]))))
