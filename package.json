@@ -1,0 +1,25 @@
+{
+  "name": "@honeysql/honeysql",
+  "version": "0.9.1",
+  "license": "EPL-1.0",
+  "homepage": "https://github.com/jkk/honeysql",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jkk/honeysql"
+  },
+  "contributors": [
+    {
+      "name": "Michael Blume",
+      "email": "blume.mike@gmail.com"
+    }
+  ],
+  "files": [
+    "src/*"
+  ],
+  "directories": {
+    "lib": "src"
+  },
+  "dependencies": {
+    "macrovich": "0.2.1-SNAPSHOT"
+  }
+}
