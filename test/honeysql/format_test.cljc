@@ -168,3 +168,9 @@
                             {:values [[1 2] [3 4] [5 6]]}]]}
                    :parameterizer :none)
            ["WITH bar (spam, eggs) AS (VALUES (1, 2), (3, 4), (5, 6)) SELECT foo FROM bar1 UNION SELECT foo FROM bar2"]))))
+
+(deftest where-and
+  (testing "should ignore a nil predicate"
+    (is (= (format {:where [:and [:= :foo "foo"] [:= :bar "bar"] nil]}
+                   :parameterizer :postgresql)
+           ["WHERE (foo = $1 AND bar = $2)" "foo" "bar"]))))

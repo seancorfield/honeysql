@@ -423,9 +423,11 @@
         "not" (str "NOT " (format-predicate* (first args)))
 
         ("and" "or" "xor")
-        (paren-wrap
-         (string/join (str " " (string/upper-case op-name) " ")
-                      (map format-predicate* args)))
+        (->> args
+             (remove nil?)
+             (map format-predicate*)
+             (string/join (str " " (string/upper-case op-name) " "))
+             (paren-wrap))
 
         "exists"
         (str "EXISTS " (to-sql (first args)))

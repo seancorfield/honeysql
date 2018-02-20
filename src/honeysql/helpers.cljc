@@ -84,7 +84,7 @@
     [m pred logic-op]))
 
 (defn where [& args]
-  (let [[m pred] (prep-where (remove nil? args))]
+  (let [[m pred] (prep-where args)]
     (if (nil? pred)
       m
       (assoc m :where pred))))
