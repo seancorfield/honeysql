@@ -1,9 +1,19 @@
+dist: trusty
+sudo: required
 language: clojure
+
+cache:
+  directories:
+    - $HOME/.npm
+    - $TRAVIS_BUILD_DIR/.cache
+    - $TRAVIS_BUILD_DIR/node_modules
 
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y leiningen npm nodejs-legacy
-  - sudo npm install -g lumo-cljs
+  - sudo apt-get install -y leiningen
+  - nvm install --lts && nvm use --lts && npm install
+  - command -v npm
+  - npm install lumo-cljs -g
 
 install:
   - jdk_switcher use openjdk8
