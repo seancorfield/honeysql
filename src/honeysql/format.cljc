@@ -52,9 +52,10 @@
    :oracle #(str \" (string/replace % "\"" "\"\"") \")})
 
 (def ^:private parameterizers
-  {:postgresql #(str "$" (swap! *all-param-counter* inc))
+  (atom
+   {:postgresql #(str "$" (swap! *all-param-counter* inc))
    :jdbc (constantly "?")
-   :none #(str (last @*params*))})
+   :none #(str (last @*params*))}))
 
 (defn register-parameterizer
   "Register f as a customized parameterizer.
@@ -62,8 +63,8 @@
    (register-parameterizer :single-quote #(str \"'\" % \"'\"))
    (format sql-map :parameterizer :single-quote)"
   [k f]
-  (alter-var-root
-   #'parameterizers
+  (swap!
+   parameterizers
    (fn [m]
      (assoc m k #(f (last @*params*))))))
 
@@ -265,7 +266,7 @@
               *param-names* (atom [])
               *input-params* (atom params)
               *quote-identifier-fn* (quote-fns (:quoting opts))
-              *parameterizer* (parameterizers (or (:parameterizer opts) :jdbc))
+              *parameterizer* (@parameterizers (or (:parameterizer opts) :jdbc))
               *allow-dashed-names?* (:allow-dashed-names? opts)]
       (let [sql-str (to-sql sql-map)]
         (if (and (seq @*params*) (not= :none (:parameterizer opts)))
