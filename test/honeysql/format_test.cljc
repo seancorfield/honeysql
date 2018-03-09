@@ -4,7 +4,8 @@
                  :cljs [cljs.test :refer-macros]) [deftest testing is are]]
             [honeysql.types :as sql]
             [honeysql.format :refer
-             [*allow-dashed-names?* quote-identifier format-clause format]]))
+             [*allow-dashed-names?* quote-identifier format-clause format
+              register-parameterizer]]))
 
 (deftest test-quote
   (are
@@ -174,3 +175,16 @@
     (is (= (format {:where [:and [:= :foo "foo"] [:= :bar "bar"] nil]}
                    :parameterizer :postgresql)
            ["WHERE (foo = $1 AND bar = $2)" "foo" "bar"]))))
+
+(register-parameterizer :single-quote #(str \' % \'))
+(register-parameterizer :mysql-fill (constantly "?"))
+
+(deftest customized-parameterizer
+  (testing "should fill param with single quote"
+    (is (= (format {:where [:and [:= :foo "foo"] [:= :bar "bar"] nil]}
+                   :parameterizer :single-quote)
+           ["WHERE (foo = 'foo' AND bar = 'bar')" "foo" "bar"])))
+  (testing "should fill param with ?"
+    (is (= (format {:where [:and [:= :foo "foo"] [:= :bar "bar"] nil]}
+                   :parameterizer :mysql-fill)
+           ["WHERE (foo = ? AND bar = ?)" "foo" "bar"]))))

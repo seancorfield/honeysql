@@ -56,6 +56,17 @@
    :jdbc (constantly "?")
    :none #(str (last @*params*))})
 
+(defn register-parameterizer
+  "Register f as a customized parameterizer.
+   E.g.:
+   (register-parameterizer :single-quote #(str \"'\" % \"'\"))
+   (format sql-map :parameterizer :single-quote)"
+  [k f]
+  (alter-var-root
+   #'parameterizers
+   (fn [m]
+     (assoc m k #(f (last @*params*))))))
+
 (def ^:dynamic *quote-identifier-fn* nil)
 (def ^:dynamic *parameterizer* nil)
 
