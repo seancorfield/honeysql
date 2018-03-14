@@ -1,3 +1,14 @@
+## 0.9.2
+
+* Remove `nil` `:and` arguments for where. Fix #203. (@michaelblume)
+* Fix nested `select` formatting. Fix #198. (@visibletrap)
+* Limit value context to sequences in value positions. (@xiongtx)
+* Avoid wrapping QUERY with parens while formatting `INSERT INTO ... QUERY`. (@emidln)
+* Allow for custom name-transform-fn. Fix #193. (@madvas)
+* Add :intersect to default-clause-priorities. (@kenfehling)
+* Add `:parameterizer` `:none` for skipping `clojure.java.jdbc` parameter generation. (@arichiardi)
+* Add ClojureScript self-host support. (@arichiardi)
+
 ## 0.9.1
 
 * Add helper to inline values/prevent parameterization (@michaelblume)
