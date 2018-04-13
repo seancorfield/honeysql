@@ -192,6 +192,14 @@
                (join :x [:= :foo.id :x.id] :y nil)
                sql/format)))))
 
+(deftest join-using-test
+  (testing "nil join"
+    (is (= ["SELECT * FROM foo INNER JOIN x USING (id) INNER JOIN y USING (foo, bar)"]
+           (-> (select :*)
+               (from :foo)
+               (join :x [:using :id] :y [:using :foo :bar])
+               sql/format)))))
+
 (deftest inline-test
   (is (= ["SELECT * FROM foo WHERE id = 5"]
          (-> (select :*)

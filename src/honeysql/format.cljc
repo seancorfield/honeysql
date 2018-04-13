@@ -489,10 +489,13 @@
   (str "WHERE " (format-predicate* pred)))
 
 (defn format-join [type table pred]
-  (cond-> (str (when type
-                 (str (string/upper-case (name type)) " "))
-               "JOIN " (to-sql table))
-    pred (str " ON " (format-predicate* pred))))
+  (str (when type
+         (str (string/upper-case (name type)) " "))
+       "JOIN " (to-sql table)
+       (when pred
+         (if (= :using (first pred))
+           (str " USING (" (->> pred rest (map quote-identifier) comma-join) ")")
+           (str " ON " (format-predicate* pred))))))
 
 (defmethod format-clause :join [[_ join-groups] _]
   (space-join (map #(apply format-join :inner %)
