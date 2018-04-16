@@ -188,3 +188,14 @@
     (is (= (format {:where [:and [:= :foo "foo"] [:= :bar "bar"] nil]}
                    :parameterizer :mysql-fill)
            ["WHERE (foo = ? AND bar = ?)" "foo" "bar"]))))
+
+
+(deftest set-after-join
+  (is (=
+       ["UPDATE `foo` INNER JOIN `bar` ON `bar`.`id` = `foo`.`bar_id` SET `a` = ? WHERE `bar`.`b` = ?" 1 42]
+       (->
+         {:update :foo
+          :join  [:bar [:= :bar.id :foo.bar_id]]
+          :set  {:a 1}
+          :where  [:= :bar.b 42]}
+         (format :quoting :mysql)))))
