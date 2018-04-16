@@ -211,12 +211,12 @@
    :update 70
    :delete-from 80
    :columns 90
-   :set 100
    :from 110
    :join 120
    :left-join 130
    :right-join 140
    :full-join 150
+   :set 155
    :where 160
    :group-by 170
    :having 180
