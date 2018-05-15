@@ -51,22 +51,18 @@
    :sqlserver #(str \[ (string/replace % "]" "]]") \])
    :oracle #(str \" (string/replace % "\"" "\"\"") \")})
 
-(def ^:private parameterizers
-  (atom
-   {:postgresql #(str "$" (swap! *all-param-counter* inc))
-   :jdbc (constantly "?")
-   :none #(str (last @*params*))}))
 
-(defn register-parameterizer
-  "Register f as a customized parameterizer.
-   E.g.:
-   (register-parameterizer :single-quote #(str \"'\" % \"'\"))
-   (format sql-map :parameterizer :single-quote)"
-  [k f]
-  (swap!
-   parameterizers
-   (fn [m]
-     (assoc m k #(f (last @*params*))))))
+(defmulti parameterize (fn [parameterizer & args] parameterizer))
+
+(defmethod parameterize :postgresql [_ value pname]
+  (str "$" (swap! *all-param-counter* inc)))
+
+(defmethod parameterize :jdbc [_ value pname]
+  "?")
+
+(defmethod parameterize :none [_ value pname]
+  (str (last @*params*)))
+
 
 (def ^:dynamic *quote-identifier-fn* nil)
 (def ^:dynamic *parameterizer* nil)
@@ -266,7 +262,7 @@
               *param-names* (atom [])
               *input-params* (atom params)
               *quote-identifier-fn* (quote-fns (:quoting opts))
-              *parameterizer* (@parameterizers (or (:parameterizer opts) :jdbc))
+              *parameterizer* (or (:parameterizer opts) :jdbc)
               *allow-dashed-names?* (:allow-dashed-names? opts)]
       (let [sql-str (to-sql sql-map)]
         (if (and (seq @*params*) (not= :none (:parameterizer opts)))
@@ -284,7 +280,7 @@
 (defn to-params-default [value pname]
   (swap! *params* conj value)
   (swap! *param-names* conj pname)
-  (*parameterizer*))
+  (parameterize *parameterizer* value pname))
 
 (extend-protocol Parameterizable
   #?@(:clj
@@ -300,7 +296,7 @@
   (to-params [value pname]
     (swap! *params* conj value)
     (swap! *param-names* conj pname)
-    (*parameterizer*))
+    (parameterize *parameterizer* value pname))
   #?(:clj Object :cljs default)
   (to-params [value pname]
     #?(:clj
