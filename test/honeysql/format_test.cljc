@@ -5,7 +5,7 @@
             [honeysql.types :as sql]
             [honeysql.format :refer
              [*allow-dashed-names?* quote-identifier format-clause format
-              register-parameterizer]]))
+              parameterize]]))
 
 (deftest test-quote
   (are
@@ -176,8 +176,9 @@
                    :parameterizer :postgresql)
            ["WHERE (foo = $1 AND bar = $2)" "foo" "bar"]))))
 
-(register-parameterizer :single-quote #(str \' % \'))
-(register-parameterizer :mysql-fill (constantly "?"))
+
+(defmethod parameterize :single-quote [_ value pname] (str \' value \'))
+(defmethod parameterize :mysql-fill [_ value pname] "?")
 
 (deftest customized-parameterizer
   (testing "should fill param with single quote"
