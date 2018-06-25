@@ -114,7 +114,7 @@ To add to clauses instead of replacing them, use `merge-select`, `merge-where`, 
 => ["SELECT * FROM foo WHERE (a = ? AND b < ?)" 1 100]
 ```
 
-Inserts are supported in two patterns. 
+Inserts are supported in two patterns.
 In the first pattern, you must explicitly specify the columns to insert,
 then provide a collection of rows, each a collection of column values:
 
@@ -227,22 +227,24 @@ Keywords that begin with `?` are interpreted as bindable parameters:
 => ["SELECT id FROM foo WHERE a = ?" "BAZ"]
 ```
 
-There are helper functions and data literals for SQL function calls, field qualifiers, raw SQL fragments, and named input parameters:
+There are helper functions and data literals for SQL function calls, field qualifiers, raw SQL fragments, inline values, and named input parameters:
 
 ```clojure
 (def call-qualify-map
   (-> (select (sql/call :foo :bar) (sql/qualify :foo :a) (sql/raw "@var := foo.bar"))
       (from :foo)
-      (where [:= :a (sql/param :baz)])))
+      (where [:= :a (sql/param :baz)] [:= :b (sql/inline 42)])))
 
 call-qualify-map
-=> '{:where [:= :a #sql/param :baz]
+=> '{:where [:and [:= :a #sql/param :baz] [:= :b #sql/inline 42]]
      :from (:foo)
      :select (#sql/call [:foo :bar] :foo.a #sql/raw "@var := foo.bar")}
 
 (sql/format call-qualify-map :params {:baz "BAZ"})
-=> ["SELECT foo(bar), foo.a, @var := foo.bar FROM foo WHERE a = ?" "BAZ"]
+=> ["SELECT foo(bar), foo.a, @var := foo.bar FROM foo WHERE (a = ? AND b = 42)" "BAZ"]
 ```
+
+Raw SQL fragments are treated exactly as-is when rendered into the formatted SQL string (with no parsing or parameterization). Inline values will not be lifted out as parameters, so they end up in the SQL string as-is.
 
 To quote identifiers, pass the `:quoting` keyword option to `format`. Valid options are `:ansi` (PostgreSQL), `:mysql`, or `:sqlserver`:
 
@@ -382,7 +384,7 @@ You can also define your own clauses:
 
 ```
 
-If you do implement a clause or function handler, consider submitting a pull request so others can use it, too. 
+If you do implement a clause or function handler, consider submitting a pull request so others can use it, too.
 
 ## why does my parameter get emitted as `()`?
 If you want to use your own datatype as a parameter then the idiomatic approach of implementing `clojure.java.jdbc`'s [`ISQLValue`](https://clojure.github.io/java.jdbc/#clojure.java.jdbc/ISQLValue) protocol isn't enough as `honeysql` won't correct pass through your datatype, rather it will interpret it incorrectly.
@@ -399,10 +401,10 @@ To teach `honeysql` how to handle your datatype you need to implement [`honeysql
 ;; results in => "where :some_column > ()"
 
 ;; we can teach honeysql about it:
-(extend-protocol honeysql.format.ToSql 
+(extend-protocol honeysql.format.ToSql
   MyDateWrapper
   (to-sql [v] (to-sql (date/to-sql-timestamp v))))
-  
+
 ;; allowing us to now:
 (hsql/format {:where [:> :some_column (MyDateWrapper. ...)]})
 ;; which correctly results in => "where :some_column>?" and the parameter correctly set
