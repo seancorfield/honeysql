@@ -5,6 +5,7 @@
 /lib
 /classes
 /checkouts
+/dist
 pom.xml*
 *.jar
 *.class
