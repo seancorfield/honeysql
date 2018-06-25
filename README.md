@@ -114,6 +114,20 @@ To add to clauses instead of replacing them, use `merge-select`, `merge-where`, 
 => ["SELECT * FROM foo WHERE (a = ? AND b < ?)" 1 100]
 ```
 
+Column and table names may be aliased by using a vector pair of the original
+name and the desired alias:
+
+```clojure
+(-> (select :a [:b :bar] :c [:d :x])
+    (from [:foo :quux])
+    (where [:= :quux.a 1] [:< :bar 100])
+    sql/format)
+=> ["SELECT a, b AS bar, c, d AS x FROM foo quux WHERE (quux.a = ? AND bar < ?)" 1 100]
+```
+
+In particular, note that `(select [:a :b])` means `SELECT a AS b` rather than
+`SELECT a, b` -- `select` is variadic and does not take a collection of column names.
+
 Inserts are supported in two patterns.
 In the first pattern, you must explicitly specify the columns to insert,
 then provide a collection of rows, each a collection of column values:
