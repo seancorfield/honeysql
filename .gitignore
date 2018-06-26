@@ -9,6 +9,7 @@
 pom.xml*
 *.jar
 *.class
+.cpcache
 .lein-deps-sum
 .lein-failures
 .lein-plugins
