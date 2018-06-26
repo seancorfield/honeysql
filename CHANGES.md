@@ -1,3 +1,13 @@
+## 0.9.3-SNAPSHOT (in progress)
+
+* Add examples of table/column aliases to the README. Fix #215. (@seancorfield)
+* Refactor parameterizer to use multimethods. PR #214. (@xlevus)
+* Add examples of `raw` and `inline` to the README. Fix #213. (@seancorfield)
+* Bring all dependencies up-to-date. (@seancorfield)
+* Add `run-tests.sh` to make it easier to run the same tests manually that run on TravisCI. (@seancorfield)
+* Add `deps.edn` to support `clj`/`tools.deps.alpha`. (@seancorfield)
+* Expose `#sql/inline` data reader. (@seancorfield)
+
 ## 0.9.2
 
 * Remove `nil` `:and` arguments for where. Fix #203. (@michaelblume)
