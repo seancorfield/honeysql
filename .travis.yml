@@ -14,6 +14,7 @@ before_install:
   - nvm install --lts && nvm use --lts && npm install
   - command -v npm
   - npm install lumo-cljs -g
+  - strings /usr/lib/x86_64-linux-gnu/libstdc++.so.6 | grep GLIBCXX
 
 install:
   - jdk_switcher use openjdk8
