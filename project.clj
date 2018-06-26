@@ -6,7 +6,7 @@
   :scm {:name "git"
         :url "https://github.com/jkk/honeysql"}
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [net.cgrand/macrovich "0.2.0"]]
+                 [net.cgrand/macrovich "0.2.1"]]
   :aliases {"test-readme" ["with-profile" "midje" "midje"]}
   :cljsbuild {:builds {:release {:source-paths ["src"]
                                  :compiler {:output-to "dist/honeysql.js"
@@ -24,7 +24,7 @@
   :doo {:build "test"}
   :tach {:test-runner-ns 'honeysql.self-host-runner
          :source-paths ["src" "test"]}
-  :profiles {:midje {:dependencies [[midje "1.9.0-alpha5"]]
+  :profiles {:midje {:dependencies [[midje "1.9.1"]]
                      :plugins      [[lein-midje "3.2.1"]
                                     [midje-readme "1.0.9"]]
                      :midje-readme {:require "[honeysql.core :as sql]
@@ -33,8 +33,8 @@
                                               [honeysql.helpers :refer [defhelper]]"}}
              :dev {:dependencies [[org.clojure/clojure "1.8.0"]
                                   [org.clojure/clojurescript "1.9.521"]
-                                  [cljsbuild "1.1.6"]]
-                   :plugins [[lein-cljsbuild "1.1.6"]
-                             [jonase/eastwood "0.2.4"]
-                             [lein-doo "0.1.6"]
-                             [lein-tach "0.4.0"]]}})
+                                  [cljsbuild "1.1.7"]]
+                   :plugins [[lein-cljsbuild "1.1.7"]
+                             [jonase/eastwood "0.2.6"]
+                             [lein-doo "0.1.10"]
+                             [lein-tach "1.0.0"]]}})
