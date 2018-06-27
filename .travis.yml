@@ -9,7 +9,7 @@ cache:
     - $TRAVIS_BUILD_DIR/node_modules
 
 before_install:
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
   - sudo apt-get -qq update
   - sudo apt-get install -y libstdc++6
   - strings /usr/lib/x86_64-linux-gnu/libstdc++.so.6 | grep GLIBCXX
