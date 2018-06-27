@@ -9,8 +9,7 @@ cache:
     - $TRAVIS_BUILD_DIR/node_modules
 
 before_install:
-  - sudo apt-get install -y leiningen
-  - npm install lumo-cljs@1.9.0-alpha -g
+  - npm install lumo-cljs@1.8.0 -g
 
 install:
   - jdk_switcher use openjdk8
