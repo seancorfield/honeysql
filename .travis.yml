@@ -4,6 +4,7 @@ language: clojure
 
 cache:
   directories:
+    - $HOME/.m2
     - $HOME/.npm
     - $TRAVIS_BUILD_DIR/.cache
     - $TRAVIS_BUILD_DIR/node_modules
