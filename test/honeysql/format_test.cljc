@@ -200,3 +200,17 @@
           :set  {:a 1}
           :where  [:= :bar.b 42]}
          (format :quoting :mysql)))))
+
+(deftest delete-from-test
+  (is (= ["DELETE FROM `foo` WHERE `foo`.`id` = ?" 42]
+         (-> {:delete-from :foo
+              :where [:= :foo.id 42]}
+             (format :quoting :mysql)))))
+
+(deftest delete-test
+  (is (= ["DELETE `t1`, `t2` FROM `table1` `t1` INNER JOIN `table2` `t2` ON `t1`.`fk` = `t2`.`id` WHERE `t1`.`bar` = ?" 42]
+         (-> {:delete [:t1 :t2]
+              :from [[:table1 :t1]]
+              :join [[:table2 :t2] [:= :t1.fk :t2.id]]
+              :where [:= :t1.bar 42]}
+             (format :quoting :mysql)))))

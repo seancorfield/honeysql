@@ -205,6 +205,7 @@
    :select 50
    :insert-into 60
    :update 70
+   :delete 75
    :delete-from 80
    :columns 90
    :from 110
@@ -587,6 +588,9 @@
 
 (defmethod format-clause :delete-from [[_ table] _]
   (str "DELETE FROM " (to-sql table)))
+
+(defmethod format-clause :delete [[_ tables] _]
+  (str "DELETE " (comma-join (map to-sql tables))))
 
 (defn cte->sql
   [[cte-name query]]
