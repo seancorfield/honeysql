@@ -14,9 +14,7 @@ before_install:
   - sudo apt-get install -y libstdc++6
   - strings /usr/lib/x86_64-linux-gnu/libstdc++.so.6 | grep GLIBCXX
   - sudo apt-get install -y leiningen
-  - nvm install --lts && nvm use --lts && npm install
-  - command -v npm
-  - npm install lumo-cljs -g
+  - npm install lumo-cljs@1.9.0-alpha -g
 
 install:
   - jdk_switcher use openjdk8
