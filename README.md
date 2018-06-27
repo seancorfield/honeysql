@@ -204,6 +204,22 @@ Deletes look as you would expect:
 => ["DELETE FROM films WHERE kind <> ?" "musical"]
 ```
 
+If your database supports it, you can also delete from multiple tables:
+
+```clojure
+(-> (delete [:films :directors])
+    (from :films)
+    (join :directors [:= :films.director_id :directors.id])
+    (where [:<> :kind "musical"])
+    sql/format)
+=> [#sql/regularize
+    "DELETE films, directors
+     FROM films
+     INNER JOIN directors ON films.director_id = directors.id
+     WHERE kind <> ?"
+    "musical"]
+```
+
 Queries can be nested:
 
 ```clojure
