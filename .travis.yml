@@ -9,14 +9,10 @@ cache:
     - $TRAVIS_BUILD_DIR/node_modules
 
 before_install:
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-  - sudo apt-get -qq update
-  - sudo apt-get install -y libstdc++6
-  - strings /usr/lib/x86_64-linux-gnu/libstdc++.so.6 | grep GLIBCXX
   - sudo apt-get install -y leiningen
   - npm install lumo-cljs@1.9.0-alpha -g
 
 install:
   - jdk_switcher use openjdk8
 
-script: lein do check, eastwood, test, tach lumo, test-readme
+script: lein do check, eastwood, test-all, tach lumo, test-readme

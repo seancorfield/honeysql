@@ -3,6 +3,7 @@
 * Add examples of table/column aliases to the README. Fix #215. (@seancorfield)
 * Refactor parameterizer to use multimethods. PR #214. (@xlevus)
 * Add examples of `raw` and `inline` to the README. Fix #213. (@seancorfield)
+* Add multi-version testing for Clojure 1.7, 1.8, 1.9, 1.10 (master) (@seancorfield)
 * Bring all dependencies up-to-date. (@seancorfield)
 * Add `run-tests.sh` to make it easier to run the same tests manually that run on TravisCI. (@seancorfield)
 * Add `deps.edn` to support `clj`/`tools.deps.alpha`. (@seancorfield)
