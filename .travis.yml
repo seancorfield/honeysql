@@ -6,6 +6,7 @@ cache:
   directories:
     - $HOME/.m2
     - $HOME/.npm
+    - $HOME/.nvm
     - $TRAVIS_BUILD_DIR/.cache
     - $TRAVIS_BUILD_DIR/node_modules
 
