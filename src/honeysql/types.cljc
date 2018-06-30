@@ -19,7 +19,7 @@
 (defn raw
   "Represents a raw SQL string"
   [s]
-  (SqlRaw. (str s)))
+  (SqlRaw. (if (vector? s) s (str s))))
 
 (defn read-sql-raw [form]
   ;; late bind, as above

@@ -383,7 +383,11 @@
              fn-name (fn-aliases fn-name fn-name)]
          (apply fn-handler fn-name (.-args x)))))
   SqlRaw
-  (to-sql [x] (.-s x))
+  (to-sql [x]
+    (let [s (.-s x)]
+      (if (vector? s)
+        (string/join "" (map (fn [x] (if (string? x) x (to-sql x))) s))
+        s)))
   #?(:clj clojure.lang.IPersistentMap
      :cljs cljs.core/PersistentArrayMap)
   (to-sql [x]

@@ -1,5 +1,6 @@
 ## 0.9.3-SNAPSHOT (in progress)
 
+* Support parameters in `#sql/raw`. Fix #219. (@seancorfield)
 * Add examples of table/column aliases to the README. Fix #215. (@seancorfield)
 * Refactor parameterizer to use multimethods. PR #214. (@xlevus)
 * Add examples of `raw` and `inline` to the README. Fix #213. (@seancorfield)

@@ -257,7 +257,8 @@ Keywords that begin with `?` are interpreted as bindable parameters:
 => ["SELECT id FROM foo WHERE a = ?" "BAZ"]
 ```
 
-There are helper functions and data literals for SQL function calls, field qualifiers, raw SQL fragments, inline values, and named input parameters:
+There are helper functions and data literals for SQL function calls, field
+qualifiers, raw SQL fragments, inline values, and named input parameters:
 
 ```clojure
 (def call-qualify-map
@@ -274,7 +275,30 @@ call-qualify-map
 => ["SELECT foo(bar), foo.a, @var := foo.bar FROM foo WHERE (a = ? AND b = 42)" "BAZ"]
 ```
 
-Raw SQL fragments are treated exactly as-is when rendered into the formatted SQL string (with no parsing or parameterization). Inline values will not be lifted out as parameters, so they end up in the SQL string as-is.
+Raw SQL fragments that are strings are treated exactly as-is when rendered into
+the formatted SQL string (with no parsing or parameterization). Inline values
+will not be lifted out as parameters, so they end up in the SQL string as-is.
+
+Raw SQL can also be supplied as a vector of strings and values. Strings are
+rendered as-is into the formatted SQL string. Non-strings are lifted as
+parameters. If you need a string parameter lifted, you must use `#sql/param`
+or the `param` helper.
+
+```clojure
+(-> (select :*)
+    (from :foo)
+    (where [:< :expired_at (sql/raw ["now() - '" 5 " seconds'"])])
+    (sql/format {:foo 5}))
+=> ["SELECT * FROM foo WHERE expired_at < now() - '? seconds'" 5]
+```
+
+```clojure
+(-> (select :*)
+    (from :foo)
+    (where [:< :expired_at (sql/raw ["now() - '" #sql/param :t " seconds'"])])
+    (sql/format {:t 5}))
+=> ["SELECT * FROM foo WHERE expired_at < now() - '? seconds'" 5]
+```
 
 To quote identifiers, pass the `:quoting` keyword option to `format`. Valid options are `:ansi` (PostgreSQL), `:mysql`, or `:sqlserver`:
 
