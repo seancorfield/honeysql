@@ -1,4 +1,4 @@
-## 0.9.3-SNAPSHOT (in progress)
+## 0.9.3
 
 * Support parameters in `#sql/raw`. Fix #219. (@seancorfield)
 * Add examples of table/column aliases to the README. Fix #215. (@seancorfield)
