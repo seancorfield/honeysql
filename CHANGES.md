@@ -1,3 +1,7 @@
+## 0.9.4 (in progress)
+
+* `#sql/inline nil` should produce `NULL`. Fix #221. (@seancorfield)
+
 ## 0.9.3
 
 * Support parameters in `#sql/raw`. Fix #219. (@seancorfield)

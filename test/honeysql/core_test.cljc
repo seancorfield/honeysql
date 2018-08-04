@@ -205,6 +205,14 @@
          (-> (select :*)
              (from :foo)
              (where [:= :id (sql/inline 5)])
+             sql/format)))
+  ;; testing for = NULL always fails in SQL -- this test is just to show
+  ;; that an #inline nil should render as NULL (so make sure you only use
+  ;; it in contexts where a literal NULL is acceptable!)
+  (is (= ["SELECT * FROM foo WHERE id = NULL"]
+         (-> (select :*)
+             (from :foo)
+             (where [:= :id (sql/inline nil)])
              sql/format))))
 
 #?(:cljs (cljs.test/run-all-tests))

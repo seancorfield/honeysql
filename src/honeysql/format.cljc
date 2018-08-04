@@ -411,7 +411,10 @@
     (str "ARRAY[" (comma-join (map to-sql (.-values x))) "]"))
   SqlInline
   (to-sql [x]
-    (str (.-value x)))
+    (let [v (.-value x)]
+      (if (some? v)
+        (str v)
+        "NULL")))
   #?(:clj Object :cljs default)
   (to-sql [x]
     #?(:clj (add-anon-param x)
