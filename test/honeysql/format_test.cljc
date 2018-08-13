@@ -92,17 +92,17 @@
   ;;   ORDER BY foo ASC
   (is (= (format {:union [{:select [:foo] :from [:bar1]}
                           {:select [:foo] :from [:bar2]}]})
-         ["SELECT foo FROM bar1 UNION SELECT foo FROM bar2"])))
+         ["(SELECT foo FROM bar1) UNION (SELECT foo FROM bar2)"])))
 
 (deftest union-all-test
   (is (= (format {:union-all [{:select [:foo] :from [:bar1]}
                               {:select [:foo] :from [:bar2]}]})
-         ["SELECT foo FROM bar1 UNION ALL SELECT foo FROM bar2"])))
+         ["(SELECT foo FROM bar1) UNION ALL (SELECT foo FROM bar2)"])))
 
 (deftest intersect-test
   (is (= (format {:intersect [{:select [:foo] :from [:bar1]}
                               {:select [:foo] :from [:bar2]}]})
-         ["SELECT foo FROM bar1 INTERSECT SELECT foo FROM bar2"])))
+         ["(SELECT foo FROM bar1) INTERSECT (SELECT foo FROM bar2)"])))
 
 (deftest inner-parts-test
   (testing "The correct way to apply ORDER BY to various parts of a UNION"
@@ -116,7 +116,7 @@
                         :order-by [[:amount :desc]]
                         :limit 5}]}]
               :order-by [[:amount :asc]]})
-           ["SELECT amount, id, created_on FROM transactions UNION SELECT amount, id, created_on FROM (SELECT amount, id, created_on FROM other_transactions ORDER BY amount DESC LIMIT ?) ORDER BY amount ASC" 5]))))
+           ["(SELECT amount, id, created_on FROM transactions) UNION (SELECT amount, id, created_on FROM (SELECT amount, id, created_on FROM other_transactions ORDER BY amount DESC LIMIT ?)) ORDER BY amount ASC" 5]))))
 
 (deftest compare-expressions-test
   (testing "Sequences should be fns when in value/comparison spots"
@@ -144,7 +144,7 @@
                           {:select [:foo] :from [:bar2]}]
                   :with [[[:bar {:columns [:spam :eggs]}]
                           {:values [[1 2] [3 4] [5 6]]}]]})
-         ["WITH bar (spam, eggs) AS (VALUES (?, ?), (?, ?), (?, ?)) SELECT foo FROM bar1 UNION SELECT foo FROM bar2" 1 2 3 4 5 6])))
+         ["WITH bar (spam, eggs) AS (VALUES (?, ?), (?, ?), (?, ?)) (SELECT foo FROM bar1) UNION (SELECT foo FROM bar2)" 1 2 3 4 5 6])))
 
 
 (deftest union-all-with-cte
@@ -152,7 +152,7 @@
                               {:select [:foo] :from [:bar2]}]
                   :with [[[:bar {:columns [:spam :eggs]}]
                           {:values [[1 2] [3 4] [5 6]]}]]})
-         ["WITH bar (spam, eggs) AS (VALUES (?, ?), (?, ?), (?, ?)) SELECT foo FROM bar1 UNION ALL SELECT foo FROM bar2" 1 2 3 4 5 6])))
+         ["WITH bar (spam, eggs) AS (VALUES (?, ?), (?, ?), (?, ?)) (SELECT foo FROM bar1) UNION ALL (SELECT foo FROM bar2)" 1 2 3 4 5 6])))
 
 (deftest parameterizer-none
   (testing "array parameter"
@@ -168,7 +168,7 @@
                     :with [[[:bar {:columns [:spam :eggs]}]
                             {:values [[1 2] [3 4] [5 6]]}]]}
                    :parameterizer :none)
-           ["WITH bar (spam, eggs) AS (VALUES (1, 2), (3, 4), (5, 6)) SELECT foo FROM bar1 UNION SELECT foo FROM bar2"]))))
+           ["WITH bar (spam, eggs) AS (VALUES (1, 2), (3, 4), (5, 6)) (SELECT foo FROM bar1) UNION (SELECT foo FROM bar2)"]))))
 
 (deftest where-and
   (testing "should ignore a nil predicate"

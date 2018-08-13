@@ -614,15 +614,18 @@
 
 (defmethod format-clause :union [[_ maps] _]
   (binding [*subquery?* false]
-    (string/join " UNION " (map to-sql maps))))
+    (string/join " UNION " (map (fn [x]
+                                  (str "(" (to-sql x) ")")) maps))))
 
 (defmethod format-clause :union-all [[_ maps] _]
   (binding [*subquery?* false]
-    (string/join " UNION ALL " (map to-sql maps))))
+    (string/join " UNION ALL " (map (fn [x]
+                                      (str "(" (to-sql x) ")")) maps))))
 
 (defmethod format-clause :intersect [[_ maps] _]
   (binding [*subquery?* false]
-    (string/join " INTERSECT " (map to-sql maps))))
+    (string/join " INTERSECT " (map (fn [x]
+                                      (str "(" (to-sql x) ")")) maps))))
 
 (defmethod fn-handler "case" [_ & clauses]
   (str "CASE "
