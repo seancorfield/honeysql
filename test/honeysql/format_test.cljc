@@ -214,3 +214,9 @@
               :join [[:table2 :t2] [:= :t1.fk :t2.id]]
               :where [:= :t1.bar 42]}
              (format :quoting :mysql)))))
+
+(deftest inlined-values-are-stringified-correctly
+  (is (= ["SELECT foo, bar, NULL"]
+         (format {:select [(honeysql.core/inline "foo")
+                           (honeysql.core/inline :bar)
+                           (honeysql.core/inline nil)]}))))
