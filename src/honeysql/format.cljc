@@ -1,6 +1,7 @@
 (ns honeysql.format
   (:refer-clojure :exclude [format])
-  (:require [honeysql.types :refer [call raw param param-name
+  (:require [honeysql.types :as types
+                            :refer [call raw param param-name inline-str
                                     #?@(:cljs [SqlCall SqlRaw SqlParam SqlArray SqlInline])]]
             [clojure.string :as string])
   #?(:clj (:import [honeysql.types SqlCall SqlRaw SqlParam SqlArray SqlInline])))
@@ -357,6 +358,18 @@
            (quote-identifier (second x))
            (to-sql (second x))))))
 
+(extend-protocol types/Inlinable
+  #?(:clj clojure.lang.Keyword
+     :cljs cljs.core/Keyword)
+  (inline-str [x]
+    (name x))
+  nil
+  (inline-str [_]
+    "NULL")
+  #?(:clj Object :cljs default)
+  (inline-str [x]
+    (str x)))
+
 (extend-protocol ToSql
   #?(:clj clojure.lang.Keyword
      :cljs cljs.core/Keyword)
@@ -411,10 +424,7 @@
     (str "ARRAY[" (comma-join (map to-sql (.-values x))) "]"))
   SqlInline
   (to-sql [x]
-    (let [v (.-value x)]
-      (if (some? v)
-        (str v)
-        "NULL")))
+    (inline-str (.-value x)))
   #?(:clj Object :cljs default)
   (to-sql [x]
     #?(:clj (add-anon-param x)

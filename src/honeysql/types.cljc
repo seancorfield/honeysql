@@ -61,6 +61,9 @@
 
 (defrecord SqlInline [value])
 
+(defprotocol Inlinable
+  (inline-str [x]))
+
 (defn inline
   "Prevents parameterization"
   [value]
