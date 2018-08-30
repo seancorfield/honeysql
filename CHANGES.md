@@ -1,6 +1,7 @@
 ## 0.9.4 (in progress)
 
 * `#sql/inline nil` should produce `NULL`. Fix #221. (@seancorfield)
+* `#sql/inline :kw` should produce `"kw"`. Fix #224 via PR #225. (@vincent-dm) Note: this introduces a new protocol, `Inlinable`, which controls inline value rendering, and changes the behavior of `#sql/inline :foo/bar` to produce just `"bar"` (where it was probably invalid SQL before).
 
 ## 0.9.3
 
