@@ -349,14 +349,16 @@
     (paren-wrap (comma-join (map to-sql x)))
     :else
     ;; alias
-    (str (to-sql (first x))
-         ; Omit AS in FROM, JOIN, etc. - Oracle doesn't allow it
-         (if (= :select *clause*)
-           " AS "
-           " ")
-         (if (string? (second x))
-           (quote-identifier (second x))
-           (to-sql (second x))))))
+    (do
+      (assert (= 2 (count x)) (str "Alias should have two parts" x))
+      (str (to-sql (first x))
+           ; Omit AS in FROM, JOIN, etc. - Oracle doesn't allow it
+           (if (= :select *clause*)
+             " AS "
+             " ")
+           (if (string? (second x))
+             (quote-identifier (second x))
+             (to-sql (second x)))))))
 
 (extend-protocol types/Inlinable
   #?(:clj clojure.lang.Keyword
