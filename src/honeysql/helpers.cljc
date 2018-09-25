@@ -78,7 +78,7 @@
         [logic-op preds] (if (keyword? (first preds))
                            [(first preds) (rest preds)]
                            [:and preds])
-        pred (if (= 1 (count preds))
+        pred (if (>= 1 (count preds))
                (first preds)
                (into [logic-op] preds))]
     [m pred logic-op]))
