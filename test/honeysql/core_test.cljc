@@ -6,7 +6,7 @@
             [honeysql.helpers :refer [select modifiers from join left-join
                                       right-join full-join where group having
                                       order-by limit offset values columns
-                                      insert-into with]]
+                                      insert-into with merge-where]]
             honeysql.format-test))
 
 ;; TODO: more tests
@@ -213,6 +213,22 @@
          (-> (select :*)
              (from :foo)
              (where [:= :id (sql/inline nil)])
+             sql/format))))
+
+(deftest merge-where-no-params-test
+  (testing "merge-where called with just the map as parameter - see #228"
+    (let [sqlmap (-> (select :*)
+                     (from :table)
+                     (where [:= :foo :bar]))]
+      (is (= ["SELECT * FROM table WHERE foo = bar"]
+             (sql/format (apply merge-where sqlmap [])))))))
+
+(deftest merge-where-test
+  (is (= ["SELECT * FROM table WHERE (foo = bar AND quuz = xyzzy)"]
+         (-> (select :*)
+             (from :table)
+             (where [:= :foo :bar])
+             (merge-where [:= :quuz :xyzzy])
              sql/format))))
 
 #?(:cljs (cljs.test/run-all-tests))
