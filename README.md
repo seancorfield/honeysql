@@ -189,10 +189,15 @@ with `clojure.core/set`):
 ```clojure
 (-> (helpers/update :films)
     (sset {:kind "dramatic"
-           :watched true})
+           :watched (sql/call :+ :watched 1)})
     (where [:= :kind "drama"])
     sql/format)
-=> ["UPDATE films SET kind = ?, watched = TRUE WHERE kind = ?" "dramatic" "drama"]
+=> [#sql/regularize
+    "UPDATE films SET kind = ?, watched = (watched + ?)
+     WHERE kind = ?"
+    "dramatic"
+    1
+    "drama"]
 ```
 
 Deletes look as you would expect:
