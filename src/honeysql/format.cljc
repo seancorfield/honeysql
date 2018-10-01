@@ -351,14 +351,13 @@
     ;; alias
     (do
       (assert (= 2 (count x)) (str "Alias should have two parts" x))
-      (str (to-sql (first x))
-           ; Omit AS in FROM, JOIN, etc. - Oracle doesn't allow it
-           (if (= :select *clause*)
-             " AS "
-             " ")
-           (if (string? (second x))
-             (quote-identifier (second x))
-             (to-sql (second x)))))))
+      (let [[target alias] x]
+        (str (to-sql target)
+             ; Omit AS in FROM, JOIN, etc. - Oracle doesn't allow it
+             (if (= :select *clause*) " AS " " ")
+             (if (or (string? alias) (keyword? alias) (symbol? alias))
+               (quote-identifier alias :split false)
+               (to-sql alias)))))))
 
 (extend-protocol types/Inlinable
   #?(:clj clojure.lang.Keyword

@@ -37,6 +37,14 @@
   (is (= (quote-identifier :foo/bar) "foo/bar"))
   (is (= (quote-identifier :foo/bar :style :ansi) "\"foo/bar\"")))
 
+(deftest alias-splitting
+  (is (= ["SELECT `aa`.`c` AS `a.c`, `bb`.`c` AS `b.c`, `cc`.`c` AS `c.c`"]
+         (format {:select [[:aa.c "a.c"]
+                           [:bb.c :b.c]
+                           [:cc.c 'c.c]]}
+                 :quoting :mysql))
+      "aliases containing \".\" are quoted as necessary but not split"))
+
 (deftest test-cte
   (is (= (format-clause
           (first {:with [[:query {:select [:foo] :from [:bar]}]]}) nil)
