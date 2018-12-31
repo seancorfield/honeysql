@@ -461,7 +461,7 @@ To teach `honeysql` how to handle your datatype you need to implement [`honeysql
 ;; results in => "where :some_column > ()"
 
 ;; we can teach honeysql about it:
-(extend-protocol honeysql.format.ToSql
+(extend-protocol honeysql.format/ToSql
   MyDateWrapper
   (to-sql [v] (to-sql (date/to-sql-timestamp v))))
 
