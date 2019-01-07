@@ -1,3 +1,7 @@
+## 0.9.5 in progress
+
+* `format-predicate` now accepts `parameterizer` as a named argument (default `:jdbc`) to match `format`. PR #234. (@glittershark)
+
 ## 0.9.4
 
 * `#sql/inline nil` should produce `NULL`. Fix #221. (@seancorfield)
