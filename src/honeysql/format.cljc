@@ -463,12 +463,14 @@
 
 (defn format-predicate
   "Formats a predicate (e.g., for WHERE, JOIN, or HAVING) as a string."
-  [pred & {:keys [quoting]}]
+  [pred & {:keys [quoting parameterizer]
+           :or {parameterizer :jdbc}}]
   (binding [*params* (atom [])
             *param-counter* (atom 0)
             *param-names* (atom [])
             *quote-identifier-fn* (or (quote-fns quoting)
-                                      *quote-identifier-fn*)]
+                                      *quote-identifier-fn*)
+            *parameterizer* parameterizer]
     (let [sql-str (format-predicate* pred)]
       (if (seq @*params*)
         (into [sql-str] @*params*)
