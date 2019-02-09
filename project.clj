@@ -27,7 +27,7 @@
   :doo {:build "test"}
   :tach {:test-runner-ns 'honeysql.self-host-runner
          :source-paths ["src" "test"]}
-  :profiles {:midje {:dependencies [[midje "1.9.1"]]
+  :profiles {:midje {:dependencies [[midje "1.9.6"]]
                      :plugins      [[lein-midje "3.2.1"]
                                     [midje-readme "1.0.9"]]
                      :midje-readme {:require "[honeysql.core :as sql]
