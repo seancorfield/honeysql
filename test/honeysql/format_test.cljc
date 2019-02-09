@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [format])
   (:require [#?@(:clj [clojure.test :refer]
                  :cljs [cljs.test :refer-macros]) [deftest testing is are]]
+            honeysql.core
             [honeysql.types :as sql]
             [honeysql.format :refer
              [*allow-dashed-names?* quote-identifier format-clause format
@@ -228,3 +229,21 @@
          (format {:select [(honeysql.core/inline "foo")
                            (honeysql.core/inline :bar)
                            (honeysql.core/inline nil)]}))))
+
+;; Make sure if Locale is Turkish we're not generating queries like İNNER JOIN (dot over the I) because
+;; `string/upper-case` is converting things to upper-case using the default Locale. Generated query should be the same
+;; regardless of system Locale. See #236
+#?(:clj
+   (deftest statements-generated-correctly-with-turkish-locale
+     (let [format-with-locale (fn [^String language-tag]
+                                (let [original-locale (java.util.Locale/getDefault)]
+                                  (try
+                                    (java.util.Locale/setDefault (java.util.Locale/forLanguageTag language-tag))
+                                    (format {:select [:t2.name]
+                                             :from   [[:table1 :t1]]
+                                             :join   [[:table2 :t2] [:= :t1.fk :t2.id]]
+                                             :where  [:= :t1.id 1]})
+                                    (finally
+                                      (java.util.Locale/setDefault original-locale)))))]
+       (is (= (format-with-locale "en")
+              (format-with-locale "tr"))))))

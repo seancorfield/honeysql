@@ -71,6 +71,17 @@
 (defn- undasherize [s]
   (string/replace s "-" "_"))
 
+;; String.toUpperCase() or `string/upper-case` for that matter converts the string to uppercase for the DEFAULT
+;; LOCALE. Normally this does what you'd expect but things like `inner join` get converted to `İNNER JOIN` (dot over
+;; the I) when user locale is Turkish. This predictably has bad consequences for people who like their SQL queries to
+;; work. The fix here is to use String.toUpperCase(Locale/US) instead which always converts things the way we'd expect.
+;;
+;; Use this function instead of `string/upper-case` as it will always use Locale/US.
+(def ^:private ^{:arglists '([s])} upper-case
+  ;; TODO - not sure if there's a JavaScript equivalent here we should be using as well
+  #?(:clj (fn [s] (.. s toString (toUpperCase (java.util.Locale/US))))
+     :cljs string/upper-case))
+
 (defn quote-identifier [x & {:keys [style split] :or {split true}}]
   (let [name-transform-fn (cond
                             *name-transform-fn* *name-transform-fn*
@@ -453,7 +464,7 @@
         (->> args
              (remove nil?)
              (map format-predicate*)
-             (string/join (str " " (string/upper-case op-name) " "))
+             (string/join (str " " (upper-case op-name) " "))
              (paren-wrap))
 
         "exists"
@@ -494,7 +505,7 @@
 (defmethod format-clause :select [[_ fields] sql-map]
   (str "SELECT "
        (when (:modifiers sql-map)
-         (str (space-join (map (comp string/upper-case name)
+         (str (space-join (map (comp upper-case name)
                                (:modifiers sql-map)))
               " "))
        (comma-join (map to-sql fields))))
@@ -507,7 +518,7 @@
 
 (defn format-join [type table pred]
   (str (when type
-         (str (string/upper-case (name type)) " "))
+         (str (upper-case (name type)) " "))
        "JOIN " (to-sql table)
        (when pred
          (if (= :using (first pred))
