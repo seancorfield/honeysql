@@ -216,6 +216,7 @@
    :union-all 45
    :select 50
    :insert-into 60
+   :replace-into 60
    :update 70
    :delete 75
    :delete-from 80
@@ -593,6 +594,15 @@
          (binding [*subquery?* false]
            (to-sql (second table))))
     (str "INSERT INTO " (to-sql table))))
+
+(defmethod format-clause :replace-into [[_ table] _]
+  (if (and (sequential? table) (sequential? (first table)))
+    (str "REPLACE INTO "
+          (to-sql (ffirst table))
+          " (" (comma-join (map to-sql (second (first table)))) ") "
+          (binding [*subquery?* false]
+            (to-sql (second table))))
+    (str "REPLACE INTO " (to-sql table))))
 
 (defmethod format-clause :columns [[_ fields] _]
   (str "(" (comma-join (map to-sql fields)) ")"))

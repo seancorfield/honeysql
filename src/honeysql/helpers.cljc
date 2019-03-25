@@ -220,6 +220,13 @@
   ([table] (insert-into nil table))
   ([m table] (build-clause :insert-into m table)))
 
+(defmethod build-clause :replace-into [_ m table]
+  (assoc m :replace-into table))
+
+(defn replace-into
+  ([table] (replace-into nil table))
+  ([m table] (build-clause :replace-into m table)))
+  
 (macros/usetime
  (defhelper columns [m fields]
    (assoc m :columns (collify fields))))
