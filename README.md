@@ -444,9 +444,16 @@ You can also define your own clauses:
 
 ```
 
-If you do implement a clause or function handler, consider submitting a pull request so others can use it, too.
+When adding a new clause, you may also need to register it with a specific priority so that it formats correctly, for example:
+
+```clojure
+(fmt/register-clause! :foobar 110)
+```
+
+If you do implement a clause or function handler for an ANSI SQL, consider submitting a pull request so others can use it, too. For non-standard clauses and/or functions, look for a library that extends `honeysql` for that specific database or create one, if no such library exists.
 
 ## why does my parameter get emitted as `()`?
+
 If you want to use your own datatype as a parameter then the idiomatic approach of implementing `clojure.java.jdbc`'s [`ISQLValue`](https://clojure.github.io/java.jdbc/#clojure.java.jdbc/ISQLValue) protocol isn't enough as `honeysql` won't correct pass through your datatype, rather it will interpret it incorrectly.
 
 To teach `honeysql` how to handle your datatype you need to implement [`honeysql.format/ToSql`](https://github.com/jkk/honeysql/blob/a9dffec632be62c961be7d9e695d0b2b85732c53/src/honeysql/format.cljc#L94). For example:
