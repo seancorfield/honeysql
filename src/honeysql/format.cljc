@@ -388,7 +388,7 @@
   (to-sql [x]
     (let [s (name x)]
       (case (.charAt s 0)
-        \% (let [call-args (string/split (subs s 1) #"\." 2)]
+        \% (let [call-args (string/split (subs s 1) #"\.")]
              (to-sql (apply call (map keyword call-args))))
         \? (to-sql (param (keyword (subs s 1))))
         (quote-identifier x))))

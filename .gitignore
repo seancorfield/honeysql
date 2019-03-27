@@ -10,6 +10,7 @@ pom.xml*
 *.jar
 *.class
 .cpcache
+.eastwood
 .lein-deps-sum
 .lein-failures
 .lein-plugins

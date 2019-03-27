@@ -1,5 +1,6 @@
 ## 0.9.5 in progress
 
+* `:%call.arg` syntax extended to support more than one argument: `%call.first.second` Fix #240.
 * `format-predicate` now accepts `parameterizer` as a named argument (default `:jdbc`) to match `format`. PR #234. (@glittershark)
 
 ## 0.9.4

@@ -9,7 +9,7 @@
                  [net.cgrand/macrovich "0.2.1"]]
   :aliases {"test-readme" ["with-profile" "midje" "midje"]
             "test-all" ["with-profile"
-                         "default:1.7,default:1.8,default:1.9,default:master"
+                         "default:1.7,default:1.8,default:1.9,default:1.10,default:master"
                          "test"]}
   :cljsbuild {:builds {:release {:source-paths ["src"]
                                  :compiler {:output-to "dist/honeysql.js"
@@ -35,13 +35,14 @@
                                               [honeysql.format :as fmt]
                                               [honeysql.helpers :refer [defhelper]]"}}
              :master {:repositories [["snapshots" "https://oss.sonatype.org/content/repositories/snapshots/"]]
-                      :dependencies [[org.clojure/clojure "1.10.0-master-SNAPSHOT"]]}
+                      :dependencies [[org.clojure/clojure "1.11.0-master-SNAPSHOT"]]}
+             :1.10 {:dependencies [[org.clojure/clojure "1.10.0"]]}
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]]}
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
-             :dev {:dependencies [[org.clojure/clojurescript "1.9.521"]
+             :dev {:dependencies [[org.clojure/clojurescript "1.10.520"]
                                   [cljsbuild "1.1.7"]]
                    :plugins [[lein-cljsbuild "1.1.7"]
-                             [jonase/eastwood "0.2.6"]
-                             [lein-doo "0.1.10"]
+                             [jonase/eastwood "0.3.5"]
+                             [lein-doo "0.1.11"]
                              [lein-tach "1.0.0"]]}})
