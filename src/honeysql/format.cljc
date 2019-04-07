@@ -502,12 +502,17 @@
 (defmethod format-clause :exists [[_ table-expr] _]
   (str "EXISTS " (to-sql table-expr)))
 
+(defmulti format-modifiers (fn [[op & _]] op))
+
+(defmethod format-modifiers :distinct [_] "DISTINCT")
+
+(defmethod format-modifiers :default [coll]
+  (space-join (map (comp upper-case name) coll)))
+
 (defmethod format-clause :select [[_ fields] sql-map]
   (str "SELECT "
        (when (:modifiers sql-map)
-         (str (space-join (map (comp upper-case name)
-                               (:modifiers sql-map)))
-              " "))
+         (str (format-modifiers (:modifiers sql-map)) " "))
        (comma-join (map to-sql fields))))
 
 (defmethod format-clause :from [[_ tables] _]
