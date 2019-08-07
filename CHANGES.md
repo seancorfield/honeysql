@@ -1,5 +1,7 @@
-## 0.9.5 in progress
+## 0.9.5
 
+* Support JDK11 (update Midje). PR #238. (@camsaul)
+* Support Turkish user.language. PR #237. (@camsaul)
 * `format-predicate` now accepts `parameterizer` as a named argument (default `:jdbc`) to match `format`. PR #234. (@glittershark)
 
 ## 0.9.4
