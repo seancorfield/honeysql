@@ -79,7 +79,7 @@
 ;; Use this function instead of `string/upper-case` as it will always use Locale/US.
 (def ^:private ^{:arglists '([s])} upper-case
   ;; TODO - not sure if there's a JavaScript equivalent here we should be using as well
-  #?(:clj (fn [s] (.. s toString (toUpperCase (java.util.Locale/US))))
+  #?(:clj (fn [^String s] (.. s toString (toUpperCase (java.util.Locale/US))))
      :cljs string/upper-case))
 
 (defn quote-identifier [x & {:keys [style split] :or {split true}}]

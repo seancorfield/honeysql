@@ -80,7 +80,7 @@
                            [:and preds])
         pred (if (>= 1 (count preds))
                (first preds)
-               (into [logic-op] preds))]
+               (into [logic-op] (remove nil? preds)))]
     [m pred logic-op]))
 
 (defn where [& args]

@@ -227,8 +227,21 @@
   (is (= ["SELECT * FROM table WHERE (foo = bar AND quuz = xyzzy)"]
          (-> (select :*)
              (from :table)
+             (where [:= :foo :bar] [:= :quuz :xyzzy])
+             sql/format)))
+  (is (= ["SELECT * FROM table WHERE (foo = bar AND quuz = xyzzy)"]
+         (-> (select :*)
+             (from :table)
              (where [:= :foo :bar])
              (merge-where [:= :quuz :xyzzy])
              sql/format))))
+
+(deftest where-nil-params-test
+  (testing "where called with nil parameters - see #246"
+    (is (= ["SELECT * FROM table WHERE (foo = bar AND quuz = xyzzy)"]
+           (-> (select :*)
+               (from :table)
+               (where nil [:= :foo :bar] nil [:= :quuz :xyzzy] nil)
+               sql/format)))))
 
 #?(:cljs (cljs.test/run-all-tests))

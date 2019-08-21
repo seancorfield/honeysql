@@ -1,3 +1,8 @@
+## Coming in 0.9.6
+
+* Filter `nil` conditions out of `where`/`merge-where`. Fix #246. (@seancorfield)
+* Fix reflection warning introduced in 0.9.5 (via PR #237).
+
 ## 0.9.5
 
 * Support JDK11 (update Midje). PR #238. (@camsaul)
