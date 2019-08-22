@@ -242,6 +242,16 @@
            (-> (select :*)
                (from :table)
                (where nil [:= :foo :bar] nil [:= :quuz :xyzzy] nil)
+               sql/format)))
+    (is (= ["SELECT * FROM table"]
+           (-> (select :*)
+               (from :table)
+               (where)
+               sql/format)))
+    (is (= ["SELECT * FROM table"]
+           (-> (select :*)
+               (from :table)
+               (where nil nil nil nil)
                sql/format)))))
 
 #?(:cljs (cljs.test/run-all-tests))

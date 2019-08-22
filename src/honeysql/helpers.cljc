@@ -78,9 +78,10 @@
         [logic-op preds] (if (keyword? (first preds))
                            [(first preds) (rest preds)]
                            [:and preds])
+        preds (remove nil? preds)
         pred (if (>= 1 (count preds))
                (first preds)
-               (into [logic-op] (remove nil? preds)))]
+               (into [logic-op] preds))]
     [m pred logic-op]))
 
 (defn where [& args]
