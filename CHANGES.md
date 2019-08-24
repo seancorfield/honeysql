@@ -1,4 +1,4 @@
-## Coming in 0.9.6
+## 0.9.6
 
 * Filter `nil` conditions out of `where`/`merge-where`. Fix #246. (@seancorfield)
 * Fix reflection warning introduced in 0.9.5 (via PR #237).
