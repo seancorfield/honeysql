@@ -1,3 +1,7 @@
+## Changes coming in 0.9.7
+
+* Fix #248 by treating alias as "not a subquery" when generating SQL for it. (@seancorfield)
+
 ## 0.9.6
 
 * Filter `nil` conditions out of `where`/`merge-where`. Fix #246. (@seancorfield)

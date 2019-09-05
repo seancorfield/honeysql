@@ -46,6 +46,10 @@
                  :quoting :mysql))
       "aliases containing \".\" are quoted as necessary but not split"))
 
+(deftest values-alias
+  (is (= ["SELECT vals.a FROM (VALUES (?, ?, ?)) vals (a, b, c)" 1 2 3]
+         (format {:select [:vals.a]
+                  :from [[{:values [[1 2 3]]} [:vals {:columns [:a :b :c]}]]]}))))
 (deftest test-cte
   (is (= (format-clause
           (first {:with [[:query {:select [:foo] :from [:bar]}]]}) nil)

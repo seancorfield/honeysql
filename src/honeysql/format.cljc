@@ -368,7 +368,8 @@
              (if (= :select *clause*) " AS " " ")
              (if (or (string? alias) (keyword? alias) (symbol? alias))
                (quote-identifier alias :split false)
-               (to-sql alias)))))))
+               (binding [*subquery?* false]
+                 (to-sql alias))))))))
 
 (extend-protocol types/Inlinable
   #?(:clj clojure.lang.Keyword
