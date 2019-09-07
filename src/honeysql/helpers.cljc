@@ -221,13 +221,34 @@
   ([table] (insert-into nil table))
   ([m table] (build-clause :insert-into m table)))
 
-(macros/usetime
- (defhelper columns [m fields]
-   (assoc m :columns (collify fields))))
+(defn- check-varargs
+  "Called for helpers that require unrolled arguments to catch the mistake
+  of passing a collection as a single argument."
+  [helper args]
+  (when (and (coll? args) (= 1 (count args)) (coll? (first args)))
+    (let [msg (str (name helper) " takes varargs, not a single collection")]
+      (throw #?(:clj (IllegalArgumentException. msg)
+                :cljs (js/Error. msg))))))
 
-(macros/usetime
- (defhelper merge-columns [m fields]
-   (update-in m [:columns] concat (collify fields))))
+(defmethod build-clause :columns [_ m fields]
+  (assoc m :columns (collify fields)))
+
+(defn columns [& args]
+  (let [[m fields] (if (map? (first args))
+                     [(first args) (rest args)]
+                     [{} args])]
+    (check-varargs :columns fields)
+    (build-clause :columns m fields)))
+
+(defmethod build-clause :merge-columns [_ m fields]
+  (update-in m [:columns] concat (collify fields)))
+
+(defn merge-columns [& args]
+  (let [[m fields] (if (map? (first args))
+                     [(first args) (rest args)]
+                     [{} args])]
+    (check-varargs :merge-columns fields)
+    (build-clause :merge-columns m fields)))
 
 (defmethod build-clause :values [_ m vs]
   (assoc m :values vs))
