@@ -1,6 +1,7 @@
 ## Changes coming in 0.9.7
 
 * Fix #248 by treating alias as "not a subquery" when generating SQL for it. (@seancorfield)
+* Fix #99 by adding a note to the first use of `select` in the README that column names can be keywords or symbols but not strings.
 
 ## 0.9.6
 

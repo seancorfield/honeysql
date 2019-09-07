@@ -37,6 +37,8 @@ Everything is built on top of maps representing SQL queries:
              :where [:= :f.a "baz"]})
 ```
 
+Column names can be provided as keywords or symbols (but not strings -- HoneySQL treats strings as values that should be lifted out of the SQL as parameters).
+
 `format` turns maps into `clojure.java.jdbc`-compatible, parameterized SQL:
 
 ```clojure
