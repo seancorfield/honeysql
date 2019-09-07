@@ -334,8 +334,8 @@ To quote identifiers, pass the `:quoting` keyword option to `format`. Valid opti
 => ["SELECT `foo`.`a` FROM `foo` WHERE `foo`.`a` = ?" "baz"]
 ```
 
-To issue a locking select, add a :lock to the query or use the lock helper. The lock value must be a map with a :mode value. The built-in
-modes are the standard :update (FOR UPDATE) or the vendor-specific :mysql-share (LOCK IN SHARE MODE) or :postresql-share (FOR SHARE). The
+To issue a locking select, add a `:lock` to the query or use the lock helper. The lock value must be a map with a `:mode` value. The built-in
+modes are the standard :update (FOR UPDATE) or the vendor-specific `:mysql-share` (LOCK IN SHARE MODE) or `:postresql-share` (FOR SHARE). The
 lock map may also provide a :wait value, which if false will append the NOWAIT parameter, supported by PostgreSQL.
 
 ```clojure

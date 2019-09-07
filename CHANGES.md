@@ -1,6 +1,7 @@
 ## Changes coming in 0.9.7
 
 * Fix #248 by treating alias as "not a subquery" when generating SQL for it. (@seancorfield)
+* Fix #247 by reverting #132 / #131 so the default behavior is friendlier for namespace-qualified keywords used for table and column names, but adds `honeysql.format/*allow-namespaced-names?*` to restore the previous behavior. A `:allow-namespaced-names?` option has been adding to `format` to set this more easily.
 * Fix #235 by adding `set0` (`:set0`) and `set1` (`:set1`) variants of `sset` (`:set`) to support different placements of `SET` (before `FROM` or after `JOIN` respectively) that different databases require. See also #200. (@seancorfield)
 * Fix #139 by checking arguments to `columns`/`merge-columns` and throwing an exception if a single collection is supplied (instead of varargs). (@seancorfield)
 * Fix #128 by adding `truncate` support. (@seancorfield)
@@ -64,7 +65,6 @@ BREAKING CHANGES:
 
 * Reprioritize WITH wrt UNION and UNION ALL (@emidln)
 * Helpers for :with and :with-recursive clauses (@enaeher)
-* Allow namespaced keywords and symbols for queries. (@jrdoane)
 * Ensure sequences act as function invocations when in value position (@joodie)
 * Correct generated arglist for helpers defined with defhelper (@michaelblume)
 * Don't depend on map iteration order, fix bug with multiple map types (@tomconnors)

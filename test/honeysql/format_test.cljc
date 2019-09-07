@@ -5,7 +5,8 @@
             honeysql.core
             [honeysql.types :as sql]
             [honeysql.format :refer
-             [*allow-dashed-names?* quote-identifier format-clause format
+             [*allow-dashed-names?* *allow-namespaced-names?*
+              quote-identifier format-clause format
               parameterize]]))
 
 (deftest test-quote
@@ -35,8 +36,11 @@
            "\"foo-bar\".\"moo-bar\""))))
 
 (deftest test-namespaced-identifier
-  (is (= (quote-identifier :foo/bar) "foo/bar"))
-  (is (= (quote-identifier :foo/bar :style :ansi) "\"foo/bar\"")))
+  (is (= (quote-identifier :foo/bar) "bar"))
+  (is (= (quote-identifier :foo/bar :style :ansi) "\"bar\""))
+  (binding [*allow-namespaced-names?* true]
+    (is (= (quote-identifier :foo/bar) "foo/bar"))
+    (is (= (quote-identifier :foo/bar :style :ansi) "\"foo/bar\""))))
 
 (deftest alias-splitting
   (is (= ["SELECT `aa`.`c` AS `a.c`, `bb`.`c` AS `b.c`, `cc`.`c` AS `c.c`"]
