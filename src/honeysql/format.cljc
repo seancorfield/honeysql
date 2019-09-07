@@ -221,12 +221,14 @@
    :delete-from 80
    :truncate 85
    :columns 90
+   :set0 100 ; low-priority set clause
    :from 110
    :join 120
    :left-join 130
    :right-join 140
    :full-join 150
    :set 155
+   :set1 156 ; high-priority set clause (synonym for :set)
    :where 160
    :group-by 170
    :having 180
@@ -621,6 +623,14 @@
   (str "UPDATE " (to-sql table)))
 
 (defmethod format-clause :set [[_ values] _]
+  (str "SET " (comma-join (for [[k v] values]
+                            (str (to-sql k) " = " (to-sql v))))))
+
+(defmethod format-clause :set0 [[_ values] _]
+  (str "SET " (comma-join (for [[k v] values]
+                            (str (to-sql k) " = " (to-sql v))))))
+
+(defmethod format-clause :set1 [[_ values] _]
   (str "SET " (comma-join (for [[k v] values]
                             (str (to-sql k) " = " (to-sql v))))))
 

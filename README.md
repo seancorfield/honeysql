@@ -203,6 +203,14 @@ with `clojure.core/set`):
     "drama"]
 ```
 
+If you are trying to build a compound update statement (with `from` or `join`),
+be aware that different databases have slightly different syntax in terms of
+where `SET` should appear. The default above is to put `SET` after any `JOIN`.
+There are two variants of `sset` (and the underlying `:set` in the SQL map):
+
+* `set0` (and `:set0`) -- this puts the `SET` before `FROM`,
+* `set1` (and `:set1`) -- a synonym for `sset` (and `:set`) that puts the `SET` after `JOIN`.
+
 Deletes look as you would expect:
 
 ```clojure

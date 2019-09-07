@@ -1,9 +1,10 @@
 ## Changes coming in 0.9.7
 
 * Fix #248 by treating alias as "not a subquery" when generating SQL for it. (@seancorfield)
-* Fix #139 by checking arguments to `columns`/`merge-columns` and throwing an exception if a single collection is supplied (instead of varargs).
-* Fix #128 by adding `truncate` support.
-* Fix #99 by adding a note to the first use of `select` in the README that column names can be keywords or symbols but not strings.
+* Fix #235 by adding `set0` (`:set0`) and `set1` (`:set1`) variants of `sset` (`:set`) to support different placements of `SET` (before `FROM` or after `JOIN` respectively) that different databases require. See also #200. (@seancorfield)
+* Fix #139 by checking arguments to `columns`/`merge-columns` and throwing an exception if a single collection is supplied (instead of varargs). (@seancorfield)
+* Fix #128 by adding `truncate` support. (@seancorfield)
+* Fix #99 by adding a note to the first use of `select` in the README that column names can be keywords or symbols but not strings. (@seancorfield)
 
 ## 0.9.6
 

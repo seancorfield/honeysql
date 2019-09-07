@@ -283,8 +283,24 @@
 
 ;; short for sql set, to avoid name collision with clojure.core/set
 (defn sset
-  ([vs] (values nil vs))
+  ([vs] (sset nil vs))
   ([m vs] (build-clause :set m vs)))
+
+(defmethod build-clause :set0 [_ m values]
+  (assoc m :set0 values))
+
+;; set with lower priority (before from)
+(defn set0
+  ([vs] (set0 nil vs))
+  ([m vs] (build-clause :set0 m vs)))
+
+(defmethod build-clause :set [_ m values]
+  (assoc m :set values))
+
+;; set with higher priority (after join)
+(defn set1
+  ([vs] (set1 nil vs))
+  ([m vs] (build-clause :set1 m vs)))
 
 (defmethod build-clause :delete-from [_ m table]
   (assoc m :delete-from table))
