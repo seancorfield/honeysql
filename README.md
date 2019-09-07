@@ -186,6 +186,21 @@ The column values do not have to be literals, they can be nested queries:
     "user"]
 ```
 
+Composite types are supported:
+
+```clojure
+(-> (insert-into :comp_table)
+    (columns :name :comp_column)
+    (values
+     [["small" (composite 1 "inch")]
+      ["large" (composite 10 "feet")]])
+    sql/format)
+=> [#sql/regularize
+    "INSERT INTO comp_table (name, comp_column)
+     VALUES (?, (?, ?)), (?, (?, ?))"
+    "small" 1 "inch" "large" 10 "feet"]
+```
+
 Updates are possible too (note the double S in `sset` to avoid clashing
 with `clojure.core/set`):
 

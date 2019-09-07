@@ -250,6 +250,12 @@
     (check-varargs :merge-columns fields)
     (build-clause :merge-columns m fields)))
 
+(macros/usetime
+ (defhelper composite [m ms]
+   (if (nil? ms)
+     m
+     (assoc m :composite (collify ms)))))
+
 (defmethod build-clause :values [_ m vs]
   (assoc m :values vs))
 

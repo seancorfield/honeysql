@@ -226,6 +226,7 @@
    :delete-from 80
    :truncate 85
    :columns 90
+   :composite 95
    :set0 100 ; low-priority set clause
    :from 110
    :join 120
@@ -611,6 +612,9 @@
 
 (defmethod format-clause :columns [[_ fields] _]
   (str "(" (comma-join (map to-sql fields)) ")"))
+
+(defmethod format-clause :composite [[_ fields] _]
+  (comma-join (map to-sql fields)))
 
 (defmethod format-clause :values [[_ values] _]
   (if (sequential? (first values))
