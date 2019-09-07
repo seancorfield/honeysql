@@ -228,6 +228,11 @@
               :where [:= :t1.bar 42]}
              (format :quoting :mysql)))))
 
+(deftest truncate-test
+  (is (= ["TRUNCATE `foo`"]
+         (-> {:truncate :foo}
+             (format :quoting :mysql)))))
+
 (deftest inlined-values-are-stringified-correctly
   (is (= ["SELECT foo, bar, NULL"]
          (format {:select [(honeysql.core/inline "foo")

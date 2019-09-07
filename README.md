@@ -228,6 +228,14 @@ If your database supports it, you can also delete from multiple tables:
     "musical"]
 ```
 
+If you want to delete everything from a table, you can use `truncate`:
+
+```clojure
+(-> (truncate :films)
+    sql/format)
+=> ["TRUNCATE films"]
+```
+
 Queries can be nested:
 
 ```clojure

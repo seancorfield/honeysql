@@ -219,6 +219,7 @@
    :update 70
    :delete 75
    :delete-from 80
+   :truncate 85
    :columns 90
    :from 110
    :join 120
@@ -628,6 +629,9 @@
 
 (defmethod format-clause :delete [[_ tables] _]
   (str "DELETE " (comma-join (map to-sql tables))))
+
+(defmethod format-clause :truncate [[_ table] _]
+  (str "TRUNCATE " (to-sql table)))
 
 (defn cte->sql
   [[cte-name query]]

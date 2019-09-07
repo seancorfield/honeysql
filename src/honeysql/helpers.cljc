@@ -279,6 +279,13 @@
   ([tables] (delete nil tables))
   ([m tables] (build-clause :delete m tables)))
 
+(defmethod build-clause :truncate [_ m table]
+  (assoc m :truncate table))
+
+(defn truncate
+  ([table] (truncate nil table))
+  ([m table] (build-clause :truncate m table)))
+
 (macros/usetime
  (defhelper with [m ctes]
    (assoc m :with ctes)))
