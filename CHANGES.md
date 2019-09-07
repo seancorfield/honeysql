@@ -1,4 +1,4 @@
-## Changes coming in 0.9.7
+## 0.9.7
 
 * Fix #248 by treating alias as "not a subquery" when generating SQL for it. (@seancorfield)
 * Fix #247 by reverting #132 / #131 so the default behavior is friendlier for namespace-qualified keywords used for table and column names, but adds `honeysql.format/*allow-namespaced-names?*` to restore the previous behavior. A `:allow-namespaced-names?` option has been adding to `format` to set this more easily.
