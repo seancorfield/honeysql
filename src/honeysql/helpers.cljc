@@ -251,10 +251,10 @@
     (build-clause :merge-columns m fields)))
 
 (macros/usetime
- (defhelper composite [m ms]
-   (if (nil? ms)
+ (defhelper composite [m vs]
+   (if (nil? vs)
      m
-     (assoc m :composite (collify ms)))))
+     (assoc m :composite (collify vs)))))
 
 (defmethod build-clause :values [_ m vs]
   (assoc m :values vs))
