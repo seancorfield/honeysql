@@ -1,11 +1,11 @@
-(defproject honeysql "0.9.7"
+(defproject honeysql "0.9.8"
   :description "SQL as Clojure data structures"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :url "https://github.com/jkk/honeysql"
   :scm {:name "git"
         :url "https://github.com/jkk/honeysql"}
-  :dependencies [[org.clojure/clojure "1.9.0"]
+  :dependencies [[org.clojure/clojure "1.10.1"]
                  [net.cgrand/macrovich "0.2.1"]]
   :aliases {"test-readme" ["with-profile" "midje" "midje"]
             "test-all" ["with-profile"
@@ -36,7 +36,7 @@
                                               [honeysql.helpers :refer [defhelper]]"}}
              :master {:repositories [["snapshots" "https://oss.sonatype.org/content/repositories/snapshots/"]]
                       :dependencies [[org.clojure/clojure "1.11.0-master-SNAPSHOT"]]}
-             :1.10 {:dependencies [[org.clojure/clojure "1.10.0"]]}
+             :1.10 {:dependencies [[org.clojure/clojure "1.10.1"]]}
              :1.9 {:dependencies [[org.clojure/clojure "1.9.0"]]}
              :1.8 {:dependencies [[org.clojure/clojure "1.8.0"]]}
              :1.7 {:dependencies [[org.clojure/clojure "1.7.0"]]}
