@@ -33,8 +33,8 @@ Everything is built on top of maps representing SQL queries:
 
 ```clojure
 (def sqlmap {:select [:a :b :c]
-             :from [:foo]
-             :where [:= :f.a "baz"]})
+             :from   [:foo]
+             :where  [:= :f.a "baz"]})
 ```
 
 Column names can be provided as keywords or symbols (but not strings -- HoneySQL treats strings as values that should be lifted out of the SQL as parameters).
@@ -44,6 +44,18 @@ Column names can be provided as keywords or symbols (but not strings -- HoneySQL
 ```clojure
 (sql/format sqlmap)
 => ["SELECT a, b, c FROM foo WHERE f.a = ?" "baz"]
+```
+
+By default, namespace-qualified keywords as treated as simple keywords: their namespace portion is ignored. This was the behavior in HoneySQL prior to the 0.9.0 release and has been restored since the 0.9.7 release as this is considered the least surprising behavior.
+As of version 0.9.7, `format` accepts `:allow-namespaced-names? true` to provide the somewhat unusual behavior of 0.9.0-0.9.6, namely that namespace-qualified keywords were passed through into the SQL "as-is", i.e., with the `/` in them (which generally required a quoting strategy as well).
+As of version 0.9.8, `format` accepts `:namespace-as-table? true` to treat namespace-qualified keywords as if the `/` were `.`, allowing `:table/column` as an alternative to `:table.column`. This approach is likely to be more compatible with code that uses libraries like [`next.jdbc`](https://github.com/seancorfield/next-jdbc) and [`seql`](https://github.com/exoscale/seql), as well as being more convenient in a world of namespace-qualified keywords, following the example of `clojure.spec` etc.
+
+```clojure
+(def q-sqlmap {:select [:foo/a :foo/b :foo/c]
+               :from   [:foo]
+               :where  [:= :foo/a "baz"]})
+(sql/format q-sqlmap :namespace-as-table? true)
+=> ["SELECT foo.a, foo.b, foo.c FROM foo WHERE foo.a = ?" "baz"]
 ```
 
 Honeysql is a relatively "pure" library, it does not manage your sql connection

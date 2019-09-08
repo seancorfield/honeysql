@@ -6,6 +6,7 @@
             [honeysql.types :as sql]
             [honeysql.format :refer
              [*allow-dashed-names?* *allow-namespaced-names?*
+              *namespace-as-table?*
               quote-identifier format-clause format
               parameterize]]))
 
@@ -38,6 +39,10 @@
 (deftest test-namespaced-identifier
   (is (= (quote-identifier :foo/bar) "bar"))
   (is (= (quote-identifier :foo/bar :style :ansi) "\"bar\""))
+  (binding [*namespace-as-table?* true]
+    (is (= (quote-identifier :foo/bar) "foo.bar"))
+    (is (= (quote-identifier :foo/bar :style :ansi) "\"foo\".\"bar\""))
+    (is (= (quote-identifier :foo/bar :style :ansi :split false) "\"foo.bar\"")))
   (binding [*allow-namespaced-names?* true]
     (is (= (quote-identifier :foo/bar) "foo/bar"))
     (is (= (quote-identifier :foo/bar :style :ansi) "\"foo/bar\""))))

@@ -1,3 +1,7 @@
+## 0.9.8
+
+* Fix #249 by adding `honeysql.format/*namespace-as-table?*` and `:namespace-as-table?` option to `format`. (@seancorfield)
+
 ## 0.9.7
 
 * Fix #248 by treating alias as "not a subquery" when generating SQL for it. (@seancorfield)

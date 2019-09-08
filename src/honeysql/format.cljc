@@ -46,6 +46,8 @@
 
 (def ^:dynamic *allow-namespaced-names?* false)
 
+(def ^:dynamic *namespace-as-table?* false)
+
 (def ^:dynamic *name-transform-fn* nil)
 
 (def ^:private quote-fns
@@ -95,11 +97,16 @@
         s (cond
             (or (keyword? x) (symbol? x))
             (name-transform-fn
-              (if *allow-namespaced-names?*
-                (str (when-let [n (namespace x)]
-                       (str n "/"))
-                     (name x))
-                (name x)))
+              (cond *namespace-as-table?*
+                    (str (when-let [n (namespace x)]
+                           (str n "."))
+                         (name x))
+                    *allow-namespaced-names?*
+                    (str (when-let [n (namespace x)]
+                           (str n "/"))
+                         (name x))
+                    :else
+                    (name x)))
             (string? x) (if qf x (name-transform-fn x))
             :else (str x))]
     (if-not qf
@@ -286,7 +293,8 @@
               *quote-identifier-fn* (quote-fns (:quoting opts))
               *parameterizer* (or (:parameterizer opts) :jdbc)
               *allow-dashed-names?* (:allow-dashed-names? opts)
-              *allow-namespaced-names?* (:allow-namespaced-names? opts)]
+              *allow-namespaced-names?* (:allow-namespaced-names? opts)
+              *namespace-as-table?* (:namespace-as-table? opts)]
       (let [sql-str (to-sql sql-map)]
         (if (and (seq @*params*) (not= :none (:parameterizer opts)))
           (if (:return-param-names opts)
