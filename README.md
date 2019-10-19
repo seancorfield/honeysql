@@ -19,7 +19,7 @@ All sample code in this README is automatically run as a unit test using
 
 Note that while some of these samples show pretty-printed SQL, this is just for
 README readability; honeysql does not generate pretty-printed SQL.
-The #sql/regularize directive tells the test-runner to ignore the extraneous
+The `#sql/regularize` directive tells the test-runner to ignore the extraneous
 whitespace.
 
 ## Usage
@@ -324,6 +324,21 @@ call-qualify-map
 
 (sql/format call-qualify-map :params {:baz "BAZ"})
 => ["SELECT foo(bar), foo.a, @var := foo.bar FROM foo WHERE (a = ? AND b = 42)" "BAZ"]
+```
+
+A common example in the wild is the PostGIS extension to PostgreSQL where you
+have a lot of function calls needed in code:
+
+```clojure
+(-> (insert-into :sample)
+    (values [{:location (sql/call :ST_SetSRID
+                          (sql/call :ST_MakePoint 0.291 32.621)
+                          (sql/call :cast 4326 :integer))}])
+    (sql/format))
+=> [#sql/regularize
+    "INSERT INTO sample (location)
+     VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))"
+    0.291 32.621 4326]
 ```
 
 Raw SQL fragments that are strings are treated exactly as-is when rendered into
