@@ -97,7 +97,7 @@
         s (cond
             (or (keyword? x) (symbol? x))
             (name-transform-fn
-              (cond *namespace-as-table?*
+              (cond (and *namespace-as-table?* (not= :from *clause*))
                     (str (when-let [n (namespace x)]
                            (str n "."))
                          (name x))
