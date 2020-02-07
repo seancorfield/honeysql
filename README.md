@@ -119,7 +119,7 @@ To add to clauses instead of replacing them, use `merge-select`, `merge-where`, 
 => ["SELECT a, b, c, d, e FROM foo WHERE (f.a = ? AND b > ?)" "baz" 10]
 ```
 
-`where` will combine multiple clauses together using and:
+`where` will combine multiple clauses together using SQL's `AND`:
 
 ```clojure
 (-> (select :*)
