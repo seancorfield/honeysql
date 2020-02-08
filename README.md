@@ -39,6 +39,8 @@ Everything is built on top of maps representing SQL queries:
 
 Column names can be provided as keywords or symbols (but not strings -- HoneySQL treats strings as values that should be lifted out of the SQL as parameters).
 
+### `format`
+
 `format` turns maps into `clojure.java.jdbc`-compatible, parameterized SQL:
 
 ```clojure
@@ -66,6 +68,8 @@ to jdbc:
 (jdbc/query conn (sql/format sqlmap))
 ```
 
+### `build`
+
 You can build up SQL maps yourself or use helper functions. `build` is the Swiss Army Knife helper. It lets you leave out brackets here and there:
 
 ```clojure
@@ -85,6 +89,8 @@ You can provide a "base" map as the first argument to build:
     :where [:= :f.a "baz"]
     :from [:foo]}
 ```
+
+### Vanilla SQL clause helpers
 
 There are also functions for each clause type in the `honeysql.helpers` namespace:
 
@@ -143,6 +149,8 @@ name and the desired alias:
 In particular, note that `(select [:a :b])` means `SELECT a AS b` rather than
 `SELECT a, b` -- `select` is variadic and does not take a collection of column names.
 
+### Inserts
+
 Inserts are supported in two patterns.
 In the first pattern, you must explicitly specify the columns to insert,
 then provide a collection of rows, each a collection of column values:
@@ -179,6 +187,8 @@ and the remaining maps *must* have the same set of keys and values:
     "Jane" "Daniels" 56]
 ```
 
+### Nested subqueries
+
 The column values do not have to be literals, they can be nested queries:
 
 ```clojure
@@ -198,6 +208,16 @@ The column values do not have to be literals, they can be nested queries:
     "user"]
 ```
 
+```clojure
+(-> (select :*)
+    (from :foo)
+    (where [:in :foo.a (-> (select :a) (from :bar))])
+    sql/format)
+=> ["SELECT * FROM foo WHERE (foo.a in (SELECT a FROM bar))"]
+```
+
+### Composite types
+
 Composite types are supported:
 
 ```clojure
@@ -212,6 +232,8 @@ Composite types are supported:
      VALUES (?, (?, ?)), (?, (?, ?))"
     "small" 1 "inch" "large" 10 "feet"]
 ```
+
+### Updates
 
 Updates are possible too (note the double S in `sset` to avoid clashing
 with `clojure.core/set`):
@@ -237,6 +259,8 @@ There are two variants of `sset` (and the underlying `:set` in the SQL map):
 
 * `set0` (and `:set0`) -- this puts the `SET` before `FROM`,
 * `set1` (and `:set1`) -- a synonym for `sset` (and `:set`) that puts the `SET` after `JOIN`.
+
+### Deletes
 
 Deletes look as you would expect:
 
@@ -271,15 +295,7 @@ If you want to delete everything from a table, you can use `truncate`:
 => ["TRUNCATE films"]
 ```
 
-Queries can be nested:
-
-```clojure
-(-> (select :*)
-    (from :foo)
-    (where [:in :foo.a (-> (select :a) (from :bar))])
-    sql/format)
-=> ["SELECT * FROM foo WHERE (foo.a in (SELECT a FROM bar))"]
-```
+### Unions
 
 Queries may be united within a :union or :union-all keyword:
 
@@ -288,6 +304,8 @@ Queries may be united within a :union or :union-all keyword:
                      (-> (select :*) (from :bar))]})
 => ["SELECT * FROM foo UNION SELECT * FROM bar"]
 ```
+
+### Functions
 
 Keywords that begin with `%` are interpreted as SQL function calls:
 
@@ -298,6 +316,8 @@ Keywords that begin with `%` are interpreted as SQL function calls:
 => ["SELECT max(id) FROM foo"]
 ```
 
+### Bindable parameters
+
 Keywords that begin with `?` are interpreted as bindable parameters:
 
 ```clojure
@@ -307,6 +327,8 @@ Keywords that begin with `?` are interpreted as bindable parameters:
     (sql/format :params {:baz "BAZ"}))
 => ["SELECT id FROM foo WHERE a = ?" "BAZ"]
 ```
+
+### Miscellaneous
 
 There are helper functions and data literals for SQL function calls, field
 qualifiers, raw SQL fragments, inline values, and named input parameters:
@@ -326,6 +348,8 @@ call-qualify-map
 => ["SELECT foo(bar), foo.a, @var := foo.bar FROM foo WHERE (a = ? AND b = 42)" "BAZ"]
 ```
 
+#### PostGIS
+
 A common example in the wild is the PostGIS extension to PostgreSQL where you
 have a lot of function calls needed in code:
 
@@ -340,6 +364,8 @@ have a lot of function calls needed in code:
      VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))"
     0.291 32.621 4326]
 ```
+
+#### Raw SQL fragments
 
 Raw SQL fragments that are strings are treated exactly as-is when rendered into
 the formatted SQL string (with no parsing or parameterization). Inline values
@@ -366,6 +392,8 @@ or the `param` helper.
 => ["SELECT * FROM foo WHERE expired_at < now() - '? seconds'" 5]
 ```
 
+#### Identifiers
+
 To quote identifiers, pass the `:quoting` keyword option to `format`. Valid options are `:ansi` (PostgreSQL), `:mysql`, or `:sqlserver`:
 
 ```clojure
@@ -376,9 +404,11 @@ To quote identifiers, pass the `:quoting` keyword option to `format`. Valid opti
 => ["SELECT `foo`.`a` FROM `foo` WHERE `foo`.`a` = ?" "baz"]
 ```
 
+#### Locking
+
 To issue a locking select, add a `:lock` to the query or use the lock helper. The lock value must be a map with a `:mode` value. The built-in
-modes are the standard :update (FOR UPDATE) or the vendor-specific `:mysql-share` (LOCK IN SHARE MODE) or `:postresql-share` (FOR SHARE). The
-lock map may also provide a :wait value, which if false will append the NOWAIT parameter, supported by PostgreSQL.
+modes are the standard `:update` (FOR UPDATE) or the vendor-specific `:mysql-share` (LOCK IN SHARE MODE) or `:postresql-share` (FOR SHARE). The
+lock map may also provide a `:wait` value, which if false will append the NOWAIT parameter, supported by PostgreSQL.
 
 ```clojure
 (-> (select :foo.a)
@@ -401,6 +431,8 @@ To be able to use dashes in quoted names, you can pass ```:allow-dashed-names tr
   :quoting :ansi)
 => ["SELECT \"f\".\"foo-id\", \"f\".\"foo-name\" FROM \"foo-bar\" \"f\" WHERE \"f\".\"foo-id\" = ?" 12345]
 ```
+
+### Big, complicated example
 
 Here's a big, complicated query. Note that Honey SQL makes no attempt to verify that your queries make any sense. It merely renders surface syntax.
 
@@ -538,7 +570,7 @@ To teach `honeysql` how to handle your datatype you need to implement [`honeysql
 ```
 ## TODO
 
-* Create table, etc.
+- [ ] Create table, etc.
 
 ## Extensions
 
