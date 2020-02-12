@@ -418,7 +418,7 @@ Here's a big, complicated query. Note that Honey SQL makes no attempt to verify 
                [:< 1 2 3]
                [:in :f.e [1 (sql/param :param2) 3]]
                [:between :f.e 10 20]])
-      (group :f.a)
+      (group :f.a :c.e)
       (having [:< 0 :f.e])
       (order-by [:b.baz :desc] :c.quux [:f.a :nulls-first])
       (limit 50)
@@ -437,7 +437,7 @@ big-complicated-map
              [:< 1 2 3]
              [:in :f.e [1 (sql/param :param2) 3]]
              [:between :f.e 10 20]]
-    :group-by [:f.a]
+    :group-by [:f.a :c.e]
     :having [:< 0 :f.e]
     :order-by [[:b.baz :desc] :c.quux [:f.a :nulls-first]]
     :limit 50
@@ -454,7 +454,7 @@ big-complicated-map
            OR (? < ? AND ? < ?)
            OR (f.e in (?, ?, ?))
            OR f.e BETWEEN ? AND ?)
-     GROUP BY f.a
+     GROUP BY f.a, c.e
      HAVING ? < f.e
      ORDER BY b.baz DESC, c.quux, f.a NULLS FIRST
      LIMIT ?
