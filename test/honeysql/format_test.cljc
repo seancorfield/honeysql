@@ -285,3 +285,10 @@
                                       (java.util.Locale/setDefault original-locale)))))]
        (is (= (format-with-locale "en")
               (format-with-locale "tr"))))))
+
+(deftest join-on-true-253
+  ;; used to work on honeysql 0.9.2; broke in 0.9.3
+  (is (= ["SELECT foo FROM bar INNER JOIN table t ON TRUE"]
+         (format {:select [:foo]
+                  :from [:bar]
+                  :join [[:table :t] true]}))))

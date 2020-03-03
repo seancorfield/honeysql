@@ -1,3 +1,7 @@
+## 0.9.9
+
+* Fix #253 by supporting non-sequential join expressions.
+
 ## 0.9.8
 
 * Fix #249 by adding `honeysql.format/*namespace-as-table?*` and `:namespace-as-table?` option to `format`. (@seancorfield)
