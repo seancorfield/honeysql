@@ -11,4 +11,6 @@
                         {:git/url "https://github.com/cognitect-labs/test-runner"
                          :sha "76568540e7f40268ad2b646110f237a60295fa3c"}}
            :main-opts ["-m" "cognitect.test-runner"
-                       "-d" "test"]}}}
+                       "-d" "test"]}
+  :readme {:extra-deps {seancorfield/readme {:mvn/version "1.0.8"}}
+           :main-opts ["-m" "seancorfield.readme"]}}}

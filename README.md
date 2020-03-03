@@ -312,6 +312,8 @@ Keywords that begin with `%` are interpreted as SQL function calls:
 ```clojure
 (-> (select :%count.*) (from :foo) sql/format)
 => ["SELECT count(*) FROM foo"]
+```
+```clojure
 (-> (select :%max.id) (from :foo) sql/format)
 => ["SELECT max(id) FROM foo"]
 ```
@@ -338,12 +340,14 @@ qualifiers, raw SQL fragments, inline values, and named input parameters:
   (-> (select (sql/call :foo :bar) (sql/qualify :foo :a) (sql/raw "@var := foo.bar"))
       (from :foo)
       (where [:= :a (sql/param :baz)] [:= :b (sql/inline 42)])))
-
+```
+```clojure
 call-qualify-map
 => '{:where [:and [:= :a #sql/param :baz] [:= :b #sql/inline 42]]
      :from (:foo)
      :select (#sql/call [:foo :bar] :foo.a #sql/raw "@var := foo.bar")}
-
+```
+```clojure
 (sql/format call-qualify-map :params {:baz "BAZ"})
 => ["SELECT foo(bar), foo.a, @var := foo.bar FROM foo WHERE (a = ? AND b = 42)" "BAZ"]
 ```
@@ -455,7 +459,8 @@ Here's a big, complicated query. Note that Honey SQL makes no attempt to verify 
       (order-by [:b.baz :desc] :c.quux [:f.a :nulls-first])
       (limit 50)
       (offset 10)))
-
+```
+```clojure
 big-complicated-map
 => {:select [:f.* :b.baz :c.quux [:b.bla "bla-bla"]
              (sql/call :now) (sql/raw "@x := 10")]
@@ -474,7 +479,8 @@ big-complicated-map
     :order-by [[:b.baz :desc] :c.quux [:f.a :nulls-first]]
     :limit 50
     :offset 10}
-
+```
+```clojure
 (sql/format big-complicated-map {:param1 "gabba" :param2 2})
 => [#sql/regularize
     "SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10
@@ -492,7 +498,8 @@ big-complicated-map
      LIMIT ?
      OFFSET ? "
      "bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10]
-
+```
+```clojure
 ;; Printable and readable
 (= big-complicated-map (read-string (pr-str big-complicated-map)))
 => true
@@ -504,27 +511,27 @@ You can define your own function handlers for use in `where`:
 
 ```clojure
 (require '[honeysql.format :as fmt])
-
+```
+```clojure
 (defmethod fmt/fn-handler "betwixt" [_ field lower upper]
   (str (fmt/to-sql field) " BETWIXT "
        (fmt/to-sql lower) " AND " (fmt/to-sql upper)))
 
 (-> (select :a) (where [:betwixt :a 1 10]) sql/format)
 => ["SELECT a WHERE a BETWIXT ? AND ?" 1 10]
-
 ```
 
 You can also define your own clauses:
 
 ```clojure
-
 ;; Takes a MapEntry of the operator & clause data, plus the entire SQL map
 (defmethod fmt/format-clause :foobar [[op v] sqlmap]
   (str "FOOBAR " (fmt/to-sql v)))
 
 (sql/format {:select [:a :b] :foobar :baz})
 => ["SELECT a, b FOOBAR baz"]
-
+```
+```clojure
 (require '[honeysql.helpers :refer [defhelper]])
 
 ;; Defines a helper function, and allows 'build' to recognize your clause
