@@ -545,7 +545,7 @@
   (str (when type
          (str (upper-case (name type)) " "))
        "JOIN " (to-sql table)
-       (when pred
+       (when (some? pred)
          (if (and (sequential? pred) (= :using (first pred)))
            (str " USING (" (->> pred rest (map quote-identifier) comma-join) ")")
            (str " ON " (format-predicate* pred))))))
