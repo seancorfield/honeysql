@@ -126,6 +126,11 @@
                               {:select [:foo] :from [:bar2]}]})
          ["SELECT foo FROM bar1 INTERSECT SELECT foo FROM bar2"])))
 
+(deftest except-test
+  (is (= (format {:except [{:select [:foo] :from [:bar1]}
+                           {:select [:foo] :from [:bar2]}]})
+         ["SELECT foo FROM bar1 EXCEPT SELECT foo FROM bar2"])))
+
 (deftest inner-parts-test
   (testing "The correct way to apply ORDER BY to various parts of a UNION"
     (is (= (format

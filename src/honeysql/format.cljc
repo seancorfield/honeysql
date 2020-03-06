@@ -226,6 +226,7 @@
    :intersect 35
    :union 40
    :union-all 45
+   :except 47
    :select 50
    :insert-into 60
    :update 70
@@ -685,6 +686,10 @@
 (defmethod format-clause :intersect [[_ maps] _]
   (binding [*subquery?* false]
     (string/join " INTERSECT " (map to-sql maps))))
+
+(defmethod format-clause :except [[_ maps] _]
+  (binding [*subquery?* false]
+    (string/join " EXCEPT " (map to-sql maps))))
 
 (defmethod fn-handler "case" [_ & clauses]
   (str "CASE "
