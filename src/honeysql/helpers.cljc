@@ -345,3 +345,6 @@
 
 (defmethod build-clause :intersect [_ m maps]
   (assoc m :intersect maps))
+
+(defmethod build-clause :except [_ m maps]
+  (assoc m :except maps))

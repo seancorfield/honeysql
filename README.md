@@ -295,9 +295,9 @@ If you want to delete everything from a table, you can use `truncate`:
 => ["TRUNCATE films"]
 ```
 
-### Unions
+### Set operations
 
-Queries may be united within a :union or :union-all keyword:
+Queries may be combined within a :union, :union-all, :intersect or :except keyword:
 
 ```clojure
 (sql/format {:union [(-> (select :*) (from :foo))
