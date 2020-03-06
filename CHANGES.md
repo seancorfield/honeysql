@@ -1,7 +1,8 @@
-## 0.9.10 -- unreleased
+## 0.9.10
 
 * Fix #254 #255 by adding support for `except`. (@ted-coakley-otm)
 * Fix #253 properly by supporting `false` as well. (@ted-coakley-otm)
+* Add cljs testing to `deps.edn`, also multi-version clj testing and new `readme` testing.
 
 ## 0.9.9
 
