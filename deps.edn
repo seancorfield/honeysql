@@ -1,16 +1,20 @@
-;; A basic deps.edn for HoneySQL
-;; Only supports the Clojure (.cljc) side of the house.
-;; Provides basic support for running the tests (in Clojure).
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.1"}
         net.cgrand/macrovich {:mvn/version "0.2.1"}}
  :aliases
- {;; clj -A:test:runner
+ {:1.7 {:override-deps {org.clojure/clojure {:mvn/version "1.7.0"}}}
+  :1.8 {:override-deps {org.clojure/clojure {:mvn/version "1.8.0"}}}
+  :1.9 {:override-deps {org.clojure/clojure {:mvn/version "1.9.0"}}}
+  :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.1"}}}
+  :master {:override-deps {org.clojure/clojure {:mvn/version "1.11.0-master-SNAPSHOT"}}}
+  ;; clj -A:test:runner
   :test {:extra-paths ["test"]}
   :runner {:extra-deps {com.cognitect/test-runner
                         {:git/url "https://github.com/cognitect-labs/test-runner"
-                         :sha "76568540e7f40268ad2b646110f237a60295fa3c"}}
+                         :sha "f7ef16dc3b8332b0d77bc0274578ad5270fbfedd"}}
            :main-opts ["-m" "cognitect.test-runner"
                        "-d" "test"]}
-  :readme {:extra-deps {seancorfield/readme {:mvn/version "1.0.8"}}
+  :cljs-runner {:extra-deps {olical/cljs-test-runner {:mvn/version "3.7.0"}}
+                :main-opts ["-m" "cljs-test-runner.main"]}
+  :readme {:extra-deps {seancorfield/readme {:mvn/version "1.0.12"}}
            :main-opts ["-m" "seancorfield.readme"]}}}

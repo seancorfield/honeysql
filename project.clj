@@ -17,7 +17,7 @@
                                             :output-wrapper false
                                             :parallel-build true
                                             :pretty-print false}}
-                       :test {:source-paths ["src" "test"]
+                       :test {:source-paths ["src" "test" "test-lein"]
                               :compiler {:output-to "target/test/honeysql.js"
                                          :output-dir "target/test"
                                          :source-map true
@@ -26,7 +26,7 @@
                                          :target :nodejs}}}}
   :doo {:build "test"}
   :tach {:test-runner-ns 'honeysql.self-host-runner
-         :source-paths ["src" "test"]}
+         :source-paths ["src" "test" "test-lein"]}
   :profiles {:midje {:dependencies [[midje "1.9.6"]]
                      :plugins      [[lein-midje "3.2.1"]
                                     [midje-readme "1.0.9"]]
