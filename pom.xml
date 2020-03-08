@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>jkk</groupId>
+  <artifactId>honeysql</artifactId>
+  <version>1.0.next</version>
+  <name>honeysql</name>
+  <description>SQL as Clojure data structures.</description>
+  <url>https://github.com/jkk/honeysql</url>
+  <licenses>
+    <license>
+      <name>Eclipse Public License</name>
+      <url>http://www.eclipse.org/legal/epl-v10.html</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <name>Sean Corfield</name>
+    </developer>
+    <developer>
+      <name>Justin Kramer</name>
+    </developer>
+  </developers>
+  <scm>
+    <url>https://github.com/jkk/honeysql</url>
+    <connection>scm:git:git://github.com/jkk/honeysql.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/jkk/honeysql.git</developerConnection>
+    <tag>v1.0.next</tag>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>org.clojure</groupId>
+      <artifactId>clojure</artifactId>
+      <version>1.10.1</version>
+    </dependency>
+    <dependency>
+      <groupId>net.cgrand</groupId>
+      <artifactId>macrovich</artifactId>
+      <version>0.2.1</version>
+    </dependency>
+  </dependencies>
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+  </build>
+  <repositories>
+    <repository>
+      <id>clojars</id>
+      <url>https://repo.clojars.org/</url>
+    </repository>
+    <repository>
+      <id>sonatype</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    </repository>
+  </repositories>
+  <distributionManagement>
+    <repository>
+      <id>clojars</id>
+      <name>Clojars repository</name>
+      <url>https://clojars.org/repo</url>
+    </repository>
+  </distributionManagement>
+</project>

@@ -1,12 +1,13 @@
-# Honey SQL
+# Honey SQL [![CircleCI](https://circleci.com/gh/jkk/honeysql/tree/master.svg?style=svg)](https://circleci.com/gh/jkk/honeysql/tree/master)
 
 SQL as Clojure data structures. Build queries programmatically -- even at runtime -- without having to bash strings together.
 
 ## Build
 
-[![Build Status](https://travis-ci.org/jkk/honeysql.svg?branch=master)](https://travis-ci.org/jkk/honeysql)
-[![Dependencies Status](https://versions.deps.co/jkk/honeysql/status.svg)](https://versions.deps.co/jkk/honeysql)
-[![project chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://clojurians.zulipchat.com/#narrow/stream/152091-honeysql)
+The latest versions on Clojars and on cljdoc:
+
+[![Clojars Project](https://clojars.org/honeysql/latest-version.svg)](https://clojars.org/honeysql) [![cljdoc badge](https://cljdoc.org/badge/honeysql/honeysql?1.0.next)](https://cljdoc.org/d/honeysql/honeysql/CURRENT)
+
 
 ## Leiningen Coordinates
 
@@ -527,7 +528,8 @@ You can also define your own clauses:
 ;; Takes a MapEntry of the operator & clause data, plus the entire SQL map
 (defmethod fmt/format-clause :foobar [[op v] sqlmap]
   (str "FOOBAR " (fmt/to-sql v)))
-
+```
+```clojure
 (sql/format {:select [:a :b] :foobar :baz})
 => ["SELECT a, b FOOBAR baz"]
 ```
@@ -537,7 +539,8 @@ You can also define your own clauses:
 ;; Defines a helper function, and allows 'build' to recognize your clause
 (defhelper foobar [m args]
   (assoc m :foobar (first args)))
-
+```
+```clojure
 (-> (select :a :b) (foobar :baz) sql/format)
 => ["SELECT a, b FOOBAR baz"]
 
@@ -551,7 +554,7 @@ When adding a new clause, you may also need to register it with a specific prior
 
 If you do implement a clause or function handler for an ANSI SQL, consider submitting a pull request so others can use it, too. For non-standard clauses and/or functions, look for a library that extends `honeysql` for that specific database or create one, if no such library exists.
 
-## why does my parameter get emitted as `()`?
+## Why does my parameter get emitted as `()`?
 
 If you want to use your own datatype as a parameter then the idiomatic approach of implementing `clojure.java.jdbc`'s [`ISQLValue`](https://clojure.github.io/java.jdbc/#clojure.java.jdbc/ISQLValue) protocol isn't enough as `honeysql` won't correct pass through your datatype, rather it will interpret it incorrectly.
 

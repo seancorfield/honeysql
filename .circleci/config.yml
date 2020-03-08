@@ -1,0 +1,19 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/honeysql
+    docker:
+      - image: circleci/clojure:openjdk-11-tools-deps-1.10.0.442
+#    environment:
+#      JVM_OPTS: -Xmx3200m
+    steps:
+      - checkout
+      - restore_cache:
+          key: honeysql-{{ checksum "deps.edn" }}
+      - run: clojure -R:test:runner -Spath
+      - save_cache:
+          paths:
+            - ~/.m2
+            - ~/.gitlibs
+          key: honeysql-{{ checksum "deps.edn" }}
+      - run: sh run-tests.sh

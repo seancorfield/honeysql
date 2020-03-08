@@ -7,14 +7,22 @@
   :1.9 {:override-deps {org.clojure/clojure {:mvn/version "1.9.0"}}}
   :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.1"}}}
   :master {:override-deps {org.clojure/clojure {:mvn/version "1.11.0-master-SNAPSHOT"}}}
-  ;; clj -A:test:runner
   :test {:extra-paths ["test"]}
-  :runner {:extra-deps {com.cognitect/test-runner
-                        {:git/url "https://github.com/cognitect-labs/test-runner"
-                         :sha "f7ef16dc3b8332b0d77bc0274578ad5270fbfedd"}}
-           :main-opts ["-m" "cognitect.test-runner"
-                       "-d" "test"]}
+  :runner
+  {:extra-deps {com.cognitect/test-runner
+                {:git/url "https://github.com/cognitect-labs/test-runner"
+                 :sha "f7ef16dc3b8332b0d77bc0274578ad5270fbfedd"}}
+   :main-opts ["-m" "cognitect.test-runner"
+               "-d" "test"]}
   :cljs-runner {:extra-deps {olical/cljs-test-runner {:mvn/version "3.7.0"}}
                 :main-opts ["-m" "cljs-test-runner.main"]}
-  :readme {:extra-deps {seancorfield/readme {:mvn/version "1.0.12"}}
-           :main-opts ["-m" "seancorfield.readme"]}}}
+  :readme {:extra-deps {seancorfield/readme {:mvn/version "1.0.13"}}
+           :main-opts ["-m" "seancorfield.readme"]}
+  :eastwood {:extra-deps {jonase/eastwood {:mvn/version "RELEASE"}}
+             :main-opts ["-m" "eastwood.lint" "{:source-paths,[\"src\"]}"]}
+  :jar {:extra-deps {seancorfield/depstar {:mvn/version "0.5.2"}}
+        :main-opts ["-m" "hf.depstar.jar" "honeysql.jar"]}
+  :install {:extra-deps {deps-deploy {:mvn/version "0.0.9"}}
+            :main-opts ["-m" "deps-deploy.deps-deploy" "install" "honeysql.jar"]}
+  :deploy {:extra-deps {deps-deploy {:mvn/version "0.0.9"}}
+           :main-opts ["-m" "deps-deploy.deps-deploy" "deploy" "honeysql.jar"]}}}

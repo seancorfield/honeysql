@@ -1,3 +1,7 @@
+## 1.0.next in progress
+
+* Switch dev/test pipeline to use CLI/`deps.edn` instead of Leiningen.
+
 ## 0.9.10
 
 * Fix #254 #255 by adding support for `except`. (@ted-coakley-otm)
