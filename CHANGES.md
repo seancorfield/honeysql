@@ -1,6 +1,7 @@
 ## 1.0.next in progress
 
 * Switch dev/test pipeline to use CLI/`deps.edn` instead of Leiningen.
+* Remove macrovich dependency as this is no longer needed with modern ClojureScript.
 
 ## 0.9.10
 

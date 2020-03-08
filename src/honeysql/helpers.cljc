@@ -1,8 +1,6 @@
 (ns honeysql.helpers
   (:refer-clojure :exclude [update])
-  #?(:clj (:require [net.cgrand.macrovich :as macros])
-     :cljs (:require-macros [net.cgrand.macrovich :as macros]
-                            [honeysql.helpers :refer [defhelper]])))
+  #?(:cljs (:require-macros [honeysql.helpers :refer [defhelper]])))
 
 (defmulti build-clause (fn [name & args]
                          name))
@@ -15,56 +13,51 @@
     (map? m)
     (not (record? m))))
 
-(macros/deftime
-  (defmacro defhelper [helper arglist & more]
-    (when-not (vector? arglist)
-      (throw #?(:clj (IllegalArgumentException. "arglist must be a vector")
-                :cljs (js/Error. "arglist must be a vector"))))
-    (when-not (= (count arglist) 2)
-      (throw #?(:clj (IllegalArgumentException. "arglist must have two entries, map and varargs")
-                :cljs (js/Error. "arglist must have two entries, map and varargs"))))
+#?(:clj
+    (defmacro defhelper [helper arglist & more]
+      (when-not (vector? arglist)
+        (throw #?(:clj (IllegalArgumentException. "arglist must be a vector")
+                  :cljs (js/Error. "arglist must be a vector"))))
+      (when-not (= (count arglist) 2)
+        (throw #?(:clj (IllegalArgumentException. "arglist must have two entries, map and varargs")
+                  :cljs (js/Error. "arglist must have two entries, map and varargs"))))
 
-    (let [kw (keyword (name helper))
-          [m-arg varargs] arglist]
-      `(do
-         (defmethod build-clause ~kw ~['_ m-arg varargs] ~@more)
-         (defn ~helper [& args#]
-           (let [[m# args#] (if (plain-map? (first args#))
-                              [(first args#) (rest args#)]
-                              [{} args#])]
-             (build-clause ~kw m# args#)))
+      (let [kw (keyword (name helper))
+            [m-arg varargs] arglist]
+        `(do
+           (defmethod build-clause ~kw ~['_ m-arg varargs] ~@more)
+           (defn ~helper [& args#]
+             (let [[m# args#] (if (plain-map? (first args#))
+                                [(first args#) (rest args#)]
+                                [{} args#])]
+               (build-clause ~kw m# args#)))
 
-         ;; maintain the original arglist instead of getting
-         ;; ([& args__6880__auto__])
-         (alter-meta!
-          (var ~helper)
-          assoc
-          :arglists
-          '(~['& varargs]
-            ~[m-arg '& varargs]))))))
+           ;; maintain the original arglist instead of getting
+           ;; ([& args__6880__auto__])
+           (alter-meta!
+            (var ~helper)
+            assoc
+            :arglists
+            '(~['& varargs]
+              ~[m-arg '& varargs]))))))
 
 (defn collify [x]
   (if (coll? x) x [x]))
 
-(macros/usetime
- (defhelper select [m fields]
-   (assoc m :select (collify fields))))
+(defhelper select [m fields]
+  (assoc m :select (collify fields)))
 
-(macros/usetime
- (defhelper merge-select [m fields]
-   (update-in m [:select] concat (collify fields))))
+(defhelper merge-select [m fields]
+  (update-in m [:select] concat (collify fields)))
 
-(macros/usetime
- (defhelper un-select [m fields]
-   (update-in m [:select] #(remove (set (collify fields)) %))))
+(defhelper un-select [m fields]
+  (update-in m [:select] #(remove (set (collify fields)) %)))
 
-(macros/usetime
- (defhelper from [m tables]
-   (assoc m :from (collify tables))))
+(defhelper from [m tables]
+  (assoc m :from (collify tables)))
 
-(macros/usetime
- (defhelper merge-from [m tables]
-   (update-in m [:from] concat (collify tables))))
+(defhelper merge-from [m tables]
+  (update-in m [:from] concat (collify tables)))
 
 (defmethod build-clause :where [_ m pred]
   (if (nil? pred)
@@ -105,37 +98,29 @@
                         [logic-op (:where m) pred]
                         pred)))))
 
-(macros/usetime
- (defhelper join [m clauses]
-   (assoc m :join clauses)))
+(defhelper join [m clauses]
+  (assoc m :join clauses))
 
-(macros/usetime
- (defhelper merge-join [m clauses]
-   (update-in m [:join] concat clauses)))
+(defhelper merge-join [m clauses]
+  (update-in m [:join] concat clauses))
 
-(macros/usetime
- (defhelper left-join [m clauses]
-   (assoc m :left-join clauses)))
+(defhelper left-join [m clauses]
+  (assoc m :left-join clauses))
 
-(macros/usetime
- (defhelper merge-left-join [m clauses]
-   (update-in m [:left-join] concat clauses)))
+(defhelper merge-left-join [m clauses]
+  (update-in m [:left-join] concat clauses))
 
-(macros/usetime
- (defhelper right-join [m clauses]
-   (assoc m :right-join clauses)))
+(defhelper right-join [m clauses]
+  (assoc m :right-join clauses))
 
-(macros/usetime
- (defhelper merge-right-join [m clauses]
-   (update-in m [:right-join] concat clauses)))
+(defhelper merge-right-join [m clauses]
+  (update-in m [:right-join] concat clauses))
 
-(macros/usetime
- (defhelper full-join [m clauses]
-   (assoc m :full-join clauses)))
+(defhelper full-join [m clauses]
+  (assoc m :full-join clauses))
 
-(macros/usetime
- (defhelper merge-full-join [m clauses]
-   (update-in m [:full-join] concat clauses)))
+(defhelper merge-full-join [m clauses]
+  (update-in m [:full-join] concat clauses))
 
 (defmethod build-clause :group-by [_ m fields]
   (assoc m :group-by (collify fields)))
@@ -146,9 +131,8 @@
                      [{} args])]
     (build-clause :group-by m fields)))
 
-(macros/usetime
- (defhelper merge-group-by [m fields]
-   (update-in m [:group-by] concat (collify fields))))
+(defhelper merge-group-by [m fields]
+  (update-in m [:group-by] concat (collify fields)))
 
 (defmethod build-clause :having [_ m pred]
   (if (nil? pred)
@@ -176,43 +160,36 @@
                          [logic-op (:having m) pred]
                          pred)))))
 
-(macros/usetime
- (defhelper order-by [m fields]
-   (assoc m :order-by (collify fields))))
+(defhelper order-by [m fields]
+  (assoc m :order-by (collify fields)))
 
-(macros/usetime
- (defhelper merge-order-by [m fields]
-   (update-in m [:order-by] concat (collify fields))))
+(defhelper merge-order-by [m fields]
+  (update-in m [:order-by] concat (collify fields)))
 
-(macros/usetime
- (defhelper limit [m l]
-   (if (nil? l)
-     m
-     (assoc m :limit (if (coll? l) (first l) l)))))
+(defhelper limit [m l]
+  (if (nil? l)
+    m
+    (assoc m :limit (if (coll? l) (first l) l))))
 
-(macros/usetime
- (defhelper offset [m o]
-   (if (nil? o)
-     m
-     (assoc m :offset (if (coll? o) (first o) o)))))
+(defhelper offset [m o]
+  (if (nil? o)
+    m
+    (assoc m :offset (if (coll? o) (first o) o))))
 
-(macros/usetime
- (defhelper lock [m lock]
-   (cond-> m
-     lock
-     (assoc :lock lock))))
+(defhelper lock [m lock]
+  (cond-> m
+    lock
+    (assoc :lock lock)))
 
-(macros/usetime
- (defhelper modifiers [m ms]
-   (if (nil? ms)
-     m
-     (assoc m :modifiers (collify ms)))))
+(defhelper modifiers [m ms]
+  (if (nil? ms)
+    m
+    (assoc m :modifiers (collify ms))))
 
-(macros/usetime
- (defhelper merge-modifiers [m ms]
-   (if (nil? ms)
-     m
-     (update-in m [:modifiers] concat (collify ms)))))
+(defhelper merge-modifiers [m ms]
+  (if (nil? ms)
+    m
+    (update-in m [:modifiers] concat (collify ms))))
 
 (defmethod build-clause :insert-into [_ m table]
   (assoc m :insert-into table))
@@ -250,11 +227,10 @@
     (check-varargs :merge-columns fields)
     (build-clause :merge-columns m fields)))
 
-(macros/usetime
- (defhelper composite [m vs]
-   (if (nil? vs)
-     m
-     (assoc m :composite (collify vs)))))
+(defhelper composite [m vs]
+  (if (nil? vs)
+    m
+    (assoc m :composite (collify vs))))
 
 (defmethod build-clause :values [_ m vs]
   (assoc m :values vs))
@@ -329,13 +305,11 @@
   ([table] (truncate nil table))
   ([m table] (build-clause :truncate m table)))
 
-(macros/usetime
- (defhelper with [m ctes]
-   (assoc m :with ctes)))
+(defhelper with [m ctes]
+  (assoc m :with ctes))
 
-(macros/usetime
- (defhelper with-recursive [m ctes]
-   (assoc m :with-recursive ctes)))
+(defhelper with-recursive [m ctes]
+  (assoc m :with-recursive ctes))
 
 (defmethod build-clause :union [_ m maps]
   (assoc m :union maps))

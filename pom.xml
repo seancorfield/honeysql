@@ -33,11 +33,6 @@
       <artifactId>clojure</artifactId>
       <version>1.10.1</version>
     </dependency>
-    <dependency>
-      <groupId>net.cgrand</groupId>
-      <artifactId>macrovich</artifactId>
-      <version>0.2.1</version>
-    </dependency>
   </dependencies>
   <build>
     <sourceDirectory>src</sourceDirectory>

@@ -1,6 +1,5 @@
 {:paths ["src" "resources"]
- :deps {org.clojure/clojure {:mvn/version "1.10.1"}
-        net.cgrand/macrovich {:mvn/version "0.2.1"}}
+ :deps {org.clojure/clojure {:mvn/version "1.10.1"}}
  :aliases
  {:1.7 {:override-deps {org.clojure/clojure {:mvn/version "1.7.0"}}}
   :1.8 {:override-deps {org.clojure/clojure {:mvn/version "1.8.0"}}}
