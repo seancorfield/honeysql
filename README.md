@@ -1,4 +1,4 @@
-# Honey SQL [![CircleCI](https://circleci.com/gh/jkk/honeysql/tree/master.svg?style=svg)](https://circleci.com/gh/jkk/honeysql/tree/master)
+# Honey SQL
 
 SQL as Clojure data structures. Build queries programmatically -- even at runtime -- without having to bash strings together.
 
@@ -8,15 +8,10 @@ The latest versions on Clojars and on cljdoc:
 
 [![Clojars Project](https://clojars.org/honeysql/latest-version.svg)](https://clojars.org/honeysql) [![cljdoc badge](https://cljdoc.org/badge/honeysql/honeysql?1.0.next)](https://cljdoc.org/d/honeysql/honeysql/CURRENT)
 
-
-## Leiningen Coordinates
-
-[![Clojars Project](http://clojars.org/honeysql/latest-version.svg)](http://clojars.org/honeysql)
-
 ## Note on code samples
 
 All sample code in this README is automatically run as a unit test using
-[midje-readme](https://github.com/boxed/midje-readme).
+[seancorfield/readme](https://github.com/seancorfield/readme).
 
 Note that while some of these samples show pretty-printed SQL, this is just for
 README readability; honeysql does not generate pretty-printed SQL.
