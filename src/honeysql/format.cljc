@@ -267,7 +267,8 @@
 
 (defn format
   "Takes a SQL map and optional input parameters and returns a vector
-  of a SQL string and parameters, as expected by clojure.java.jdbc.
+  of a SQL string and parameters, as expected by `next.jbc` and
+  `clojure.java.jdbc`.
 
   Input parameters will be filled into designated spots according to
   name (if a map is provided) or by position (if a sequence is provided).

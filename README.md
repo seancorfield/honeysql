@@ -37,7 +37,7 @@ Column names can be provided as keywords or symbols (but not strings -- HoneySQL
 
 ### `format`
 
-`format` turns maps into `clojure.java.jdbc`-compatible, parameterized SQL:
+`format` turns maps into `next.jdbc`-compatible (and `clojure.java.jdbc`-compatible), parameterized SQL:
 
 ```clojure
 (sql/format sqlmap)
@@ -551,7 +551,9 @@ If you do implement a clause or function handler for an ANSI SQL, consider submi
 
 ## Why does my parameter get emitted as `()`?
 
-If you want to use your own datatype as a parameter then the idiomatic approach of implementing `clojure.java.jdbc`'s [`ISQLValue`](https://clojure.github.io/java.jdbc/#clojure.java.jdbc/ISQLValue) protocol isn't enough as `honeysql` won't correct pass through your datatype, rather it will interpret it incorrectly.
+If you want to use your own datatype as a parameter then the idiomatic approach of implementing
+`next.jdbc`'s [`SettableParameter`](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.prepare#SettableParameter)
+or `clojure.java.jdbc`'s [`ISQLValue`](https://clojure.github.io/java.jdbc/#clojure.java.jdbc/ISQLValue) protocol isn't enough as `honeysql` won't correct pass through your datatype, rather it will interpret it incorrectly.
 
 To teach `honeysql` how to handle your datatype you need to implement [`honeysql.format/ToSql`](https://github.com/jkk/honeysql/blob/a9dffec632be62c961be7d9e695d0b2b85732c53/src/honeysql/format.cljc#L94). For example:
 ``` clojure

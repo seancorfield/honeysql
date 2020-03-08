@@ -2,6 +2,7 @@
 
 * Switch dev/test pipeline to use CLI/`deps.edn` instead of Leiningen.
 * Remove macrovich dependency as this is no longer needed with modern ClojureScript.
+* Add mention of `next.jdbc` everywhere `clojure.java.jdbc` was mentioned.
 
 ## 0.9.10
 
@@ -70,7 +71,7 @@
 * Avoid wrapping QUERY with parens while formatting `INSERT INTO ... QUERY`. (@emidln)
 * Allow for custom name-transform-fn. Fix #193. (@madvas)
 * Add :intersect to default-clause-priorities. (@kenfehling)
-* Add `:parameterizer` `:none` for skipping `clojure.java.jdbc` parameter generation. (@arichiardi)
+* Add `:parameterizer` `:none` for skipping `next.jdbc` or `clojure.java.jdbc` parameter generation. (@arichiardi)
 * Add ClojureScript self-host support. (@arichiardi)
 
 ## 0.9.1
