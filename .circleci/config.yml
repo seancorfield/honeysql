@@ -5,7 +5,7 @@ jobs:
     docker:
       - image: circleci/clojure:openjdk-11-tools-deps-1.10.0.442
 #    environment:
-#      JVM_OPTS: -Xmx3200m
+#      JVM_OPTS:  -Xmx3200m
     steps:
       - checkout
       - restore_cache:
