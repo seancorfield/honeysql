@@ -44,7 +44,7 @@ Column names can be provided as keywords or symbols (but not strings -- HoneySQL
 => ["SELECT a, b, c FROM foo WHERE f.a = ?" "baz"]
 ```
 
-By default, namespace-qualified keywords as treated as simple keywords: their namespace portion is ignored. This was the behavior in HoneySQL prior to the 0.9.0 release and has been restored since the 0.9.7 release as this is considered the least surprising behavior.
+By default, namespace-qualified keywords are treated as simple keywords: their namespace portion is ignored. This was the behavior in HoneySQL prior to the 0.9.0 release and has been restored since the 0.9.7 release as this is considered the least surprising behavior.
 As of version 0.9.7, `format` accepts `:allow-namespaced-names? true` to provide the somewhat unusual behavior of 0.9.0-0.9.6, namely that namespace-qualified keywords were passed through into the SQL "as-is", i.e., with the `/` in them (which generally required a quoting strategy as well).
 As of version 0.9.8, `format` accepts `:namespace-as-table? true` to treat namespace-qualified keywords as if the `/` were `.`, allowing `:table/column` as an alternative to `:table.column`. This approach is likely to be more compatible with code that uses libraries like [`next.jdbc`](https://github.com/seancorfield/next-jdbc) and [`seql`](https://github.com/exoscale/seql), as well as being more convenient in a world of namespace-qualified keywords, following the example of `clojure.spec` etc.
 
