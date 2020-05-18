@@ -85,6 +85,19 @@
   (is (= (format {:insert-into [[:foo [:a :b :c]] {:select [:d :e :f] :from [:baz]}]})
          ["INSERT INTO foo (a, b, c) SELECT d, e, f FROM baz"])))
 
+(deftest insert-into-namespaced
+  ;; un-namespaced: works as expected:
+  (is (= (format {:insert-into :foo :values [{:foo/id 1}]})
+         ["INSERT INTO foo (id) VALUES (?)" 1]))
+  (is (= (format {:insert-into :foo :columns [:foo/id] :values [[2]]})
+         ["INSERT INTO foo (id) VALUES (?)" 2]))
+  (is (= (format {:insert-into :foo :values [{:foo/id 1}]}
+                 :namespace-as-table? true)
+         ["INSERT INTO foo (id) VALUES (?)" 1]))
+  (is (= (format {:insert-into :foo :columns [:foo/id] :values [[2]]}
+                 :namespace-as-table? true)
+         ["INSERT INTO foo (id) VALUES (?)" 2])))
+
 (deftest exists-test
   (is (= (format {:exists {:select [:a] :from [:foo]}})
          ["EXISTS (SELECT a FROM foo)"]))

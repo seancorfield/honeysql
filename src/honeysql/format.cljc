@@ -615,13 +615,15 @@
   (if (and (sequential? table) (sequential? (first table)))
     (str "INSERT INTO "
          (to-sql (ffirst table))
-         " (" (comma-join (map to-sql (second (first table)))) ") "
+         (binding [*namespace-as-table?* false]
+           (str " (" (comma-join (map to-sql (second (first table)))) ") "))
          (binding [*subquery?* false]
            (to-sql (second table))))
     (str "INSERT INTO " (to-sql table))))
 
 (defmethod format-clause :columns [[_ fields] _]
-  (str "(" (comma-join (map to-sql fields)) ")"))
+  (binding [*namespace-as-table?* false]
+    (str "(" (comma-join (map to-sql fields)) ")")))
 
 (defmethod format-clause :composite [[_ fields] _]
   (comma-join (map to-sql fields)))
@@ -632,7 +634,9 @@
                                  (str "(" (comma-join (map to-sql x)) ")"))))
     (let [cols (keys (first values))]
       (str
-       "(" (comma-join (map to-sql cols)) ") VALUES "
+       (binding [*namespace-as-table?* false]
+         (str "(" (comma-join (map to-sql cols)) ")"))
+       " VALUES "
        (comma-join (for [x values]
                      (str "(" (comma-join (map #(to-sql (get x %)) cols)) ")")))))))
 

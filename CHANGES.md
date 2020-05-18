@@ -1,5 +1,6 @@
 ## 1.0.next in progress
 
+* Fix #259 so column names are always unqualified in inserts. (@jrdoane)
 * Switch dev/test pipeline to use CLI/`deps.edn` instead of Leiningen.
 * Remove macrovich dependency as this is no longer needed with modern ClojureScript.
 * Add mention of `next.jdbc` everywhere `clojure.java.jdbc` was mentioned.
