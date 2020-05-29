@@ -1,8 +1,9 @@
-## 1.0.next in progress
+## 1.0.444 on 2020-05-29
 
 * Fix #259 so column names are always unqualified in inserts. (@jrdoane)
 * Fix #257 by adding support for `cross-join` / `merge-cross-join` / `:cross-join`. (@dcj)
 * Switch dev/test pipeline to use CLI/`deps.edn` instead of Leiningen. Also add CI vi both CircleCI and GitHub Actions.
+* Switch to MAJOR.MINOR.COMMITS versioning.
 * Remove macrovich dependency as this is no longer needed with modern ClojureScript.
 * Add mention of `next.jdbc` everywhere `clojure.java.jdbc` was mentioned.
 
