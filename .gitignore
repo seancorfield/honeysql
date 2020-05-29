@@ -9,6 +9,7 @@
 *.jar
 *.class
 .cpcache
+.clj-kondo/.cache
 .eastwood
 .nrepl-port
 .classpath
