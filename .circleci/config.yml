@@ -10,7 +10,19 @@ jobs:
       - checkout
       - restore_cache:
           key: honeysql-{{ checksum "deps.edn" }}
-      - run: clojure -R:test:runner -Spath
+      # Install Node for JH Build
+      - run:
+          name: Download Node
+          command: curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash
+      - run:
+          name: Install Node
+          command: sudo apt-get install -y nodejs
+      - run:
+          name: update-npm
+          command: sudo npm install -g npm@latest
+      - run:
+          name: Run Tests
+          command: clojure -R:test:runner -Spath
       - save_cache:
           paths:
             - ~/.m2
