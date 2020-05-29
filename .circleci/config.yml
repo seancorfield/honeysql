@@ -17,9 +17,9 @@ jobs:
       - run:
           name: Install Node
           command: sudo apt-get install -y nodejs
-      - run:
-          name: update-npm
-          command: sudo npm install -g npm@latest
+      # - run:
+      #     name: update-npm
+      #     command: sudo npm install -g npm@latest
       - run:
           name: Download Dependencies
           command: clojure -R:test:runner:cljs-runner:eastwood:readme -Spath && clojure -A:1.7 -Spath && clojure -A:1.8 -Spath && clojure -A:1.9 -Spath
