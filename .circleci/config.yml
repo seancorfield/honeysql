@@ -11,9 +11,9 @@ jobs:
       - restore_cache:
           key: honeysql-{{ checksum "deps.edn" }}
       # Install Node for JH Build
-      - run:
-          name: Download Node
-          command: curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash
+      # - run:
+      #     name: Download Node
+      #     command: curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash
       - run:
           name: Install Node
           command: sudo apt-get install -y nodejs
@@ -21,11 +21,14 @@ jobs:
           name: update-npm
           command: sudo npm install -g npm@latest
       - run:
-          name: Run Tests
-          command: clojure -R:test:runner -Spath
+          name: Download Dependencies
+          command: clojure -R:test:runner:cljs-runner:eastwood:readme -Spath && clojure -A:1.7 -Spath && clojure -A:1.8 -Spath && clojure -A:1.9 -Spath
       - save_cache:
           paths:
             - ~/.m2
             - ~/.gitlibs
+            - ~/node_modules
           key: honeysql-{{ checksum "deps.edn" }}
-      - run: sh run-tests.sh
+      - run:
+          name: Run all the tests
+          command: sh run-tests.sh all
