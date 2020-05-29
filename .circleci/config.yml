@@ -12,9 +12,10 @@ jobs:
           key: honeysql-{{ checksum "deps.edn" }}
       - run:
           name: Install Node
-          command:
-            - sudo apt-get install -y nodejs
-            - sudo ln -s /usr/bin/js /usr/bin/node
+          command: sudo apt-get install -y nodejs
+      - run:
+          name: Add node symlink
+          command: sudo ln -s /usr/bin/js /usr/bin/node
       - run:
           name: Download Dependencies
           command: clojure -R:test:runner:cljs-runner:eastwood:readme -Spath && clojure -A:1.7 -Spath && clojure -A:1.8 -Spath && clojure -A:1.9 -Spath
