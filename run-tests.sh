@@ -21,4 +21,6 @@ then
     echo ==== Test Clojure ====
     clojure -A:test:runner
   fi
+else
+  exit 1
 fi
