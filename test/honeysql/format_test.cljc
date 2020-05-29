@@ -310,3 +310,13 @@
          (format {:select [:foo]
                   :from [:bar]
                   :join [[:table :t] true]}))))
+
+(deftest cross-join-test
+  (is (= ["SELECT * FROM foo CROSS JOIN bar"]
+         (format {:select [:*]
+                  :from [:foo]
+                  :cross-join [:bar]})))
+  (is (= ["SELECT * FROM foo f CROSS JOIN bar b"]
+         (format {:select [:*]
+                  :from [[:foo :f]]
+                  :cross-join [[:bar :b]]}))))

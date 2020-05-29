@@ -241,6 +241,7 @@
    :left-join 130
    :right-join 140
    :full-join 150
+   :cross-join 152
    :set 155
    :set1 156 ; high-priority set clause (synonym for :set)
    :where 160
@@ -566,6 +567,9 @@
 (defmethod format-clause :full-join [[_ join-groups] _]
   (space-join (map #(apply format-join :full %)
                    (partition 2 join-groups))))
+
+(defmethod format-clause :cross-join [[_ join-groups] _]
+  (space-join (map #(format-join :cross % nil) join-groups)))
 
 (defmethod format-clause :group-by [[_ fields] _]
   (str "GROUP BY " (comma-join (map to-sql fields))))

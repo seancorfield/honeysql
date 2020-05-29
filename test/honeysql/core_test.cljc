@@ -4,7 +4,8 @@
                  :cljs [cljs.test :refer-macros]) [deftest testing is]]
             [honeysql.core :as sql]
             [honeysql.helpers :refer [select modifiers from join left-join
-                                      right-join full-join where group having
+                                      right-join full-join cross-join
+                                      where group having
                                       order-by limit offset values columns
                                       insert-into with merge-where]]
             honeysql.format-test))
@@ -253,5 +254,17 @@
                (from :table)
                (where nil nil nil nil)
                sql/format)))))
+
+(deftest cross-join-test
+  (is (= ["SELECT * FROM foo CROSS JOIN bar"]
+         (-> (select :*)
+             (from :foo)
+             (cross-join :bar)
+             sql/format)))
+  (is (= ["SELECT * FROM foo f CROSS JOIN bar b"]
+         (-> (select :*)
+             (from [:foo :f])
+             (cross-join [:bar :b])
+             sql/format))))
 
 #?(:cljs (cljs.test/run-all-tests))

@@ -122,6 +122,12 @@
 (defhelper merge-full-join [m clauses]
   (update-in m [:full-join] concat clauses))
 
+(defhelper cross-join [m clauses]
+  (assoc m :cross-join clauses))
+
+(defhelper merge-cross-join [m clauses]
+  (update-in m [:cross-join] concat clauses))
+
 (defmethod build-clause :group-by [_ m fields]
   (assoc m :group-by (collify fields)))
 
