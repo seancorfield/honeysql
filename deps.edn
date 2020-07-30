@@ -22,7 +22,7 @@
              :main-opts ["-m" "eastwood.lint" "{:source-paths,[\"src\"]}"]}
   :jar {:extra-deps {seancorfield/depstar {:mvn/version "0.5.2"}}
         :main-opts ["-m" "hf.depstar.jar" "honeysql.jar"]}
-  :install {:extra-deps {deps-deploy {:mvn/version "0.0.9"}}
+  :install {:extra-deps {deps-deploy/deps-deploy {:mvn/version "0.0.9"}}
             :main-opts ["-m" "deps-deploy.deps-deploy" "install" "honeysql.jar"]}
-  :deploy {:extra-deps {deps-deploy {:mvn/version "0.0.9"}}
+  :deploy {:extra-deps {deps-deploy/deps-deploy {:mvn/version "0.0.9"}}
            :main-opts ["-m" "deps-deploy.deps-deploy" "deploy" "honeysql.jar"]}}}
