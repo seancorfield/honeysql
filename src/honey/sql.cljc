@@ -227,19 +227,15 @@
         :else
         ["?" x]))
 
-(defn- sql-format
-  "Format the data into SQL + params according to the options."
-  [data opts]
-  (let [dialect (get dialects (get opts :dialect :ansi))]
-    (binding [*dialect* dialect
-              *quoted*  (if (contains? opts :quoted) (:quoted opts) true)]
-      (format-dsl data))))
-
 (defn format
   "Turn the data DSL into a vector containing a SQL string followed by
   any parameter values that were encountered in the DSL structure."
-  ([data]      (sql-format data {}))
-  ([data opts] (sql-format data opts)))
+  ([data] (format data {}))
+  ([data opts]
+   (let [dialect (get dialects (get opts :dialect :ansi))]
+     (binding [*dialect* dialect
+               *quoted*  (if (contains? opts :quoted) (:quoted opts) true)]
+       (format-dsl data)))))
 
 (defn set-dialect!
   "Set the default dialect for formatting.
@@ -257,13 +253,13 @@
   (format-expr 1)
   (format-where :where [:= :id 1])
   (format-dsl {:select [:*] :from [:table] :where [:= :id 1]})
-  (sql-format {:select [:t.*] :from [[:table :t]] :where [:= :id 1]} {})
-  (sql-format {:select [:*] :from [:table] :group-by [:foo :bar]} {})
-  (sql-format {:select [:*] :from [:table] :group-by [[:date :bar]]} {})
-  (sql-format {:select [:*] :from [:table] :order-by [[:foo :desc] :bar]} {})
-  (sql-format {:select [:*] :from [:table] :order-by [[[:date :expiry] :desc] :bar]} {})
-  (sql-format {:select [:*] :from [:table] :where [:< [:date_add :expiry [:interval 30 :days]] [:now]]} {})
+  (format {:select [:t.*] :from [[:table :t]] :where [:= :id 1]} {})
+  (format {:select [:*] :from [:table] :group-by [:foo :bar]} {})
+  (format {:select [:*] :from [:table] :group-by [[:date :bar]]} {})
+  (format {:select [:*] :from [:table] :order-by [[:foo :desc] :bar]} {})
+  (format {:select [:*] :from [:table] :order-by [[[:date :expiry] :desc] :bar]} {})
+  (format {:select [:*] :from [:table] :where [:< [:date_add :expiry [:interval 30 :days]] [:now]]} {})
   (format-expr [:interval 30 :days])
-  (sql-format {:select [:*] :from [:table] :where [:= :id 1]} {:dialect :mysql})
-  (sql-format {:select [:*] :from [:table] :where [:in :id [1 2 3 4]]} {})
+  (format {:select [:*] :from [:table] :where [:= :id 1]} {:dialect :mysql})
+  (format {:select [:*] :from [:table] :where [:in :id [1 2 3 4]]} {})
   ,)

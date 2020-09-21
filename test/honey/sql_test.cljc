@@ -7,7 +7,7 @@
 
 (deftest mysql-tests
   (is (= ["SELECT * FROM `table` WHERE `id` = ?" 1]
-         (#'sut/sql-format {:select [:*] :from [:table] :where [:= :id 1]}
+         (#'sut/format {:select [:*] :from [:table] :where [:= :id 1]}
            {:dialect :mysql}))))
 
 (deftest expr-tests
@@ -31,20 +31,20 @@
 
 (deftest general-tests
   (is (= ["SELECT * FROM \"table\" WHERE \"id\" = ?" 1]
-         (#'sut/sql-format {:select [:*] :from [:table] :where [:= :id 1]} {})))
+         (#'sut/format {:select [:*] :from [:table] :where [:= :id 1]} {})))
   (is (= ["SELECT \"t\".* FROM \"table\" AS \"t\" WHERE \"id\" = ?" 1]
-         (#'sut/sql-format {:select [:t.*] :from [[:table :t]] :where [:= :id 1]} {})))
+         (#'sut/format {:select [:t.*] :from [[:table :t]] :where [:= :id 1]} {})))
   (is (= ["SELECT * FROM \"table\" GROUP BY \"foo\", \"bar\""]
-         (#'sut/sql-format {:select [:*] :from [:table] :group-by [:foo :bar]} {})))
+         (#'sut/format {:select [:*] :from [:table] :group-by [:foo :bar]} {})))
   (is (= ["SELECT * FROM \"table\" GROUP BY DATE(\"bar\")"]
-         (#'sut/sql-format {:select [:*] :from [:table] :group-by [[:date :bar]]} {})))
+         (#'sut/format {:select [:*] :from [:table] :group-by [[:date :bar]]} {})))
   (is (= ["SELECT * FROM \"table\" ORDER BY \"foo\" DESC, \"bar\" ASC"]
-         (#'sut/sql-format {:select [:*] :from [:table] :order-by [[:foo :desc] :bar]} {})))
+         (#'sut/format {:select [:*] :from [:table] :order-by [[:foo :desc] :bar]} {})))
   (is (= ["SELECT * FROM \"table\" ORDER BY DATE(\"expiry\") DESC, \"bar\" ASC"]
-         (#'sut/sql-format {:select [:*] :from [:table] :order-by [[[:date :expiry] :desc] :bar]} {})))
+         (#'sut/format {:select [:*] :from [:table] :order-by [[[:date :expiry] :desc] :bar]} {})))
   (is (= ["SELECT * FROM \"table\" WHERE DATE_ADD(\"expiry\", INTERVAL ? DAYS) < NOW()" 30]
-         (#'sut/sql-format {:select [:*] :from [:table] :where [:< [:date_add :expiry [:interval 30 :days]] [:now]]} {})))
+         (#'sut/format {:select [:*] :from [:table] :where [:< [:date_add :expiry [:interval 30 :days]] [:now]]} {})))
   (is (= ["SELECT * FROM `table` WHERE `id` = ?" 1]
-         (#'sut/sql-format {:select [:*] :from [:table] :where [:= :id 1]} {:dialect :mysql})))
+         (#'sut/format {:select [:*] :from [:table] :where [:= :id 1]} {:dialect :mysql})))
   (is (= ["SELECT * FROM \"table\" WHERE \"id\" IN (?,?,?,?)" 1 2 3 4]
-         (#'sut/sql-format {:select [:*] :from [:table] :where [:in :id [1 2 3 4]]} {}))))
+         (#'sut/format {:select [:*] :from [:table] :where [:in :id [1 2 3 4]]} {}))))
