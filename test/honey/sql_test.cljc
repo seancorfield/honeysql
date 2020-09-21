@@ -7,5 +7,5 @@
 
 (deftest mysql-tests
   (is (= ["SELECT * FROM `table` WHERE `id` = ?" 1]
-         (sut/format {:select [:*] :from [:table] :where [:= :id 1]}
-                     {:dialect :mysql}))))
+         (#'sut/sql-format {:select [:*] :from [:table] :where [:= :id 1]}
+           {:dialect :mysql}))))
