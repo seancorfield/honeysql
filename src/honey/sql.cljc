@@ -249,7 +249,6 @@
   (reset! default-dialect (get dialects dialect :ansi)))
 
 (comment
-  format
   (format-expr [:= :id 1])
   (format-expr [:+ :id 1])
   (format-expr [:+ 1 [:+ 1 :quux]])
