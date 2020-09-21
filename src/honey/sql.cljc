@@ -41,7 +41,7 @@
       (str (q t) "."))))
 
 (defn- format-selectable [x]
-  (if (vector? x)
+  (if (sequential? x)
     (str (let [s (first x)]
            (if (map? s)
              (format-dsl s)
@@ -53,7 +53,9 @@
 ;; primary clauses
 
 (defn- format-selector [k xs]
-  [(str (sql-kw k) " " (str/join ", " (map #'format-selectable xs)))])
+  (if (sequential? xs)
+    [(str (sql-kw k) " " (str/join ", " (map #'format-selectable xs)))]
+    [(str (sql-kw k) " " (format-selectable xs))]))
 
 (defn- format-join [k [j e]]
   (let [[sql & params] (format-expr e)]
@@ -74,8 +76,9 @@
     (into [(str (sql-kw k) " " (str/join ", " sqls))] params)))
 
 (defn- format-order-by [k xs]
-  (let [dirs (map #(if (vector? %) (second %) :asc) xs)
-        [sqls params] (format-expr-list (map #(if (vector? %) (first %) %) xs))]
+  (let [dirs (map #(if (sequential? %) (second %) :asc) xs)
+        [sqls params]
+        (format-expr-list (map #(if (sequential? %) (first %) %) xs))]
     (into [(str (sql-kw k) " "
                 (str/join ", " (map (fn [sql dir] (str sql " " (sql-kw dir)))
                                     sqls
@@ -83,17 +86,64 @@
 
 (def ^:private clause-order
   "The (default) order for known clauses. Can have items added and removed."
-  (atom [:select :from :join :where :group-by :order-by]))
+  (atom [:select :from
+         :join :left-join :right-join :inner-join :outer-join :full-join
+         :where :group-by :having :order-by]))
 
 (def ^:private clause-format
   "The (default) behavior for each known clause. Can also have items added
   and removed."
-  (atom {:select   #'format-selector
-         :from     #'format-selector
-         :join     #'format-join ; any join works
-         :where    #'format-where
-         :group-by #'format-group-by
-         :order-by #'format-order-by}))
+  (atom {:select         #'format-selector
+         :insert-into    #'format-selector
+         :update         #'format-selector
+         :delete         #'format-selector
+         :delete-from    #'format-selector
+         :truncate       #'format-selector
+         :from           #'format-selector
+         :join           #'format-join
+         :left-join      #'format-join
+         :right-join     #'format-join
+         :inner-join     #'format-join
+         :outer-join     #'format-join
+         :full-join      #'format-join
+         :where          #'format-where
+         :group-by       #'format-group-by
+         :having         #'format-where
+         :order-by       #'format-order-by}))
+
+(comment :target
+  {:with 20
+   :with-recursive 30
+   :intersect 35
+   :union 40
+   :union-all 45
+   :except 47
+   ;:select 50
+   ;:insert-into 60
+   ;:update 70
+   ;:delete 75
+   ;:delete-from 80
+   ;:truncate 85
+   :columns 90
+   :composite 95
+   :set0 100 ; low-priority set clause
+   ;:from 110
+   ;:join 120
+   ;:left-join 130
+   ;:right-join 140
+   ;:full-join 150
+   :cross-join 152 ; doesn't have on clauses
+   :set 155
+   :set1 156 ; high-priority set clause (synonym for :set)
+   ;:where 160
+   ;:group-by 170
+   ;:having 180
+   ;:order-by 190
+   :limit 200
+   :offset 210
+   :lock 215
+   :values 220
+   :query-values 230})
 
 (defn- format-dsl [x]
   (let [[sqls params]
@@ -125,7 +175,16 @@
       (->> (into #{} (map keyword)))))
 
 (def ^:private special-syntax
-  {:cast
+  {:between
+   (fn [[x a b]]
+     (let [[sql-x & params-x] (format-expr x true)
+           [sql-a & params-a] (format-expr a true)
+           [sql-b & params-b] (format-expr b true)]
+       (-> [(str sql-x " BETWEEN " sql-a " AND " sql-b)]
+           (into params-x)
+           (into params-a)
+           (into params-b))))
+   :cast
    (fn [[x type]]
      (let [[sql & params] (format-expr x)]
        (into [(str "CAST(" sql " AS " (sql-kw type) ")")] params)))
@@ -138,7 +197,7 @@
   (cond (keyword? x)
         [(format-entity x)]
 
-        (vector? x)
+        (sequential? x)
         (let [op (first x)]
           (if (keyword? op)
             (cond (infix-ops op)
@@ -168,10 +227,10 @@
         :else
         ["?" x]))
 
-(defn Hformat
+(defn format
   "Turn the data DSL into a vector containing a SQL string followed by
   any parameter values that were encountered in the DSL structure."
-  ([data] (Hformat data {}))
+  ([data] (format data {}))
   ([data opts]
    (let [dialect (get dialects (get opts :dialect :ansi))]
      (binding [*dialect* dialect
@@ -186,6 +245,7 @@
   (reset! default-dialect (get dialects dialect :ansi)))
 
 (comment
+  format
   (format-expr [:= :id 1])
   (format-expr [:+ :id 1])
   (format-expr [:+ 1 [:+ 1 :quux]])
@@ -194,12 +254,13 @@
   (format-expr 1)
   (format-where :where [:= :id 1])
   (format-dsl {:select [:*] :from [:table] :where [:= :id 1]})
-  (Hformat {:select [:t.*] :from [[:table :t]] :where [:= :id 1]})
-  (Hformat {:select [:*] :from [:table] :group-by [:foo :bar]})
-  (Hformat {:select [:*] :from [:table] :group-by [[:date :bar]]})
-  (Hformat {:select [:*] :from [:table] :order-by [[:foo :desc] :bar]})
-  (Hformat {:select [:*] :from [:table] :order-by [[[:date :expiry] :desc] :bar]})
-  (Hformat {:select [:*] :from [:table] :where [:< [:date_add :expiry [:interval 30 :days]] [:now]]})
+  (format {:select [:t.*] :from [[:table :t]] :where [:= :id 1]})
+  (format {:select [:*] :from [:table] :group-by [:foo :bar]})
+  (format {:select [:*] :from [:table] :group-by [[:date :bar]]})
+  (format {:select [:*] :from [:table] :order-by [[:foo :desc] :bar]})
+  (format {:select [:*] :from [:table] :order-by [[[:date :expiry] :desc] :bar]})
+  (format {:select [:*] :from [:table] :where [:< [:date_add :expiry [:interval 30 :days]] [:now]]})
   (format-expr [:interval 30 :days])
-  (Hformat {:select [:*] :from [:table] :where [:= :id 1]} {:dialect :mysql})
+  (format {:select [:*] :from [:table] :where [:= :id 1]} {:dialect :mysql})
+  (format {:select [:*] :from [:table] :where [:in :id [1 2 3 4]]})
   ,)
