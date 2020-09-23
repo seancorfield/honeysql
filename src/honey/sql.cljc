@@ -41,27 +41,75 @@
       (str (q t) "."))))
 
 (defn- format-selectable [x]
-  (if (sequential? x)
-    (str (let [s (first x)]
-           (if (map? s)
-             (format-dsl s)
-             (format-entity s)))
-         " AS "
-         (format-entity (second x)))
-    (format-entity x)))
+  (cond (sequential? x)
+        (str (let [s (first x)]
+               (if (map? s)
+                 (format-dsl s true)
+                 (format-entity s)))
+             #_" AS " " "
+             (format-entity (second x)))
+
+        :else
+        (format-entity x)))
+
+(defn- format-selectable-dsl [x]
+  (cond (map? x)
+        (format-dsl x true)
+
+        (sequential? x)
+        (let [s (first x)
+              [sql & params] (if (map? s) (format-dsl s true) [(format-entity s)])]
+          (into [(str sql #_" AS " " " (format-entity (second x)))] params))
+
+        :else
+        [(format-entity x)]))
 
 ;; primary clauses
 
+(defn- format-union [k xs]
+  (let [[sqls params]
+        (reduce (fn [[sql params] [sql' & params']]
+                  [(conj sql sql') (if params' (into params params') params)])
+                [[] []]
+                (map #'format-dsl xs))]
+    (into [(str/join (str " " (sql-kw k) " ") sqls)] params)))
+
 (defn- format-selector [k xs]
   (if (sequential? xs)
-    [(str (sql-kw k) " " (str/join ", " (map #'format-selectable xs)))]
-    [(str (sql-kw k) " " (format-selectable xs))]))
+    (let [[sqls params]
+          (reduce (fn [[sql params] [sql' & params']]
+                    [(conj sql sql') (if params' (into params params') params)])
+                  [[] []]
+                  (map #'format-selectable-dsl xs))]
+      (into [(str (sql-kw k) " " (str/join ", " sqls))] params))
+    (let [[sql & params] (format-selectable-dsl xs)]
+      (into [(str (sql-kw k) " " sql)] params))))
+
+(defn- format-insert [k table]
+  ;; table can be just a table, a pair of table and statement, or a
+  ;; pair of a pair of table and columns and a statement (yikes!)
+  (if (sequential? table)
+    (if (sequential? (first table))
+      (let [[[table cols] statement] table
+            [sql & params] (format-dsl statement)]
+        (into [(str (sql-kw k) " " (format-selectable table)
+                    " ("
+                    (str/join ", " (map #'format-selectable cols))
+                    ") "
+                    sql)]
+              params))
+      (let [[table statement] table
+            [sql & params] (format-dsl statement)]
+        (into [(str (sql-kw k) " " (format-selectable table)
+                    " " sql)]
+              params)))
+    [(str (sql-kw k) " " (format-selectable table))]))
 
 (defn- format-join [k [j e]]
   (let [[sql & params] (format-expr e)]
     (into [(str (sql-kw k) " " (format-selectable j) " ON " sql)] params)))
 
-(defn- format-where [k e]
+(defn- format-on-expr [k e]
   (let [[sql & params] (format-expr e)]
     (into [(str (sql-kw k) " " sql)] params)))
 
@@ -86,15 +134,19 @@
 
 (def ^:private clause-order
   "The (default) order for known clauses. Can have items added and removed."
-  (atom [:select :from
+  (atom [:union :union-all
+         :select :insert-into :update :delete :delete-from :truncate :from
          :join :left-join :right-join :inner-join :outer-join :full-join
-         :where :group-by :having :order-by]))
+         :cross-join
+         :where :group-by :having :order-by :limit :offset]))
 
 (def ^:private clause-format
   "The (default) behavior for each known clause. Can also have items added
   and removed."
-  (atom {:select         #'format-selector
-         :insert-into    #'format-selector
+  (atom {:union          #'format-union
+         :union-all      #'format-union
+         :select         #'format-selector
+         :insert-into    #'format-insert
          :update         #'format-selector
          :delete         #'format-selector
          :delete-from    #'format-selector
@@ -106,17 +158,22 @@
          :inner-join     #'format-join
          :outer-join     #'format-join
          :full-join      #'format-join
-         :where          #'format-where
+         :cross-join     #'format-selector
+         :where          #'format-on-expr
          :group-by       #'format-group-by
-         :having         #'format-where
-         :order-by       #'format-order-by}))
+         :having         #'format-on-expr
+         :order-by       #'format-order-by
+         :limit          #'format-on-expr
+         :offset         #'format-on-expr}))
+
+(assert (= (set @clause-order) (set (keys @clause-format))))
 
 (comment :target
   {:with 20
    :with-recursive 30
    :intersect 35
-   :union 40
-   :union-all 45
+   ;:union 40
+   ;:union-all 45
    :except 47
    ;:select 50
    ;:insert-into 60
@@ -139,23 +196,30 @@
    ;:group-by 170
    ;:having 180
    ;:order-by 190
-   :limit 200
-   :offset 210
+   ;:limit 200
+   ;:offset 210
    :lock 215
    :values 220
    :query-values 230})
 
-(defn- format-dsl [x]
-  (let [[sqls params]
-        (reduce (fn [[sql params] k]
+(defn- format-dsl [x & [nested?]]
+  (let [[sqls params leftover]
+        (reduce (fn [[sql params leftover] k]
                   (if-let [xs (k x)]
                     (let [formatter (k @clause-format)
                           [sql' & params'] (formatter k xs)]
-                      [(conj sql sql') (if params' (into params params') params)])
-                    [sql params]))
-                [[] []]
+                      [(conj sql sql')
+                       (if params' (into params params') params)
+                       (dissoc leftover k)])
+                    [sql params leftover]))
+                [[] [] x]
                 @clause-order)]
-    (into [(str/join " " sqls)] params)))
+    (when (seq leftover)
+      (throw (ex-info (str "Unknown SQL clauses: "
+                           (str/join ", " (keys leftover)))
+                      leftover)))
+    (into [(cond-> (str/join " " sqls)
+             nested? (as-> s (str "(" s ")")))] params)))
 
 (def ^:private infix-aliases
   "Provided for backward compatibility with earlier HoneySQL versions."
@@ -193,7 +257,7 @@
      (let [[sql & params] (format-expr n)]
        (into [(str "INTERVAL " sql " " (sql-kw units))] params)))})
 
-(defn format-expr [x & nested?]
+(defn format-expr [x & [nested?]]
   (cond (keyword? x)
         [(format-entity x)]
 
@@ -234,7 +298,9 @@
   ([data opts]
    (let [dialect (get dialects (get opts :dialect :ansi))]
      (binding [*dialect* dialect
-               *quoted*  (if (contains? opts :quoted) (:quoted opts) true)]
+               *quoted*  (if (contains? opts :quoted)
+                           (:quoted opts)
+                           (contains? opts :dialect))]
        (format-dsl data)))))
 
 (defn set-dialect!
@@ -245,13 +311,14 @@
   (reset! default-dialect (get dialects dialect :ansi)))
 
 (comment
+  (format {:truncate :foo})
   (format-expr [:= :id 1])
   (format-expr [:+ :id 1])
   (format-expr [:+ 1 [:+ 1 :quux]])
   (format-expr [:foo [:bar [:+ 2 [:g :abc]]] [:f 1 :quux]])
   (format-expr :id)
   (format-expr 1)
-  (format-where :where [:= :id 1])
+  (format-on-expr :where [:= :id 1])
   (format-dsl {:select [:*] :from [:table] :where [:= :id 1]})
   (format {:select [:t.*] :from [[:table :t]] :where [:= :id 1]} {})
   (format {:select [:*] :from [:table] :group-by [:foo :bar]} {})
