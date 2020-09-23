@@ -12,21 +12,65 @@
 
 ;; dynamic dialect handling for formatting
 
+(def ^:private default-clause-order
+  "The (default) order for known clauses. Can have items added and removed."
+  [:intersect :union :union-all :except
+   :select :insert-into :update :delete :delete-from :truncate
+   :columns :set :from
+   :join :left-join :right-join :inner-join :outer-join :full-join
+   :cross-join
+   :where :group-by :having :order-by :limit :offset :values])
+
+(defn- add-clause-before
+  "Low-level helper just to insert a new clause."
+  [order clause before]
+  (if before
+    (do
+      (when-not (contains? (set order) before)
+        (throw (ex-info (str "Unrecognized clause: " before)
+                        {:known-clauses order})))
+      (reduce (fn [v k]
+                (if (= k before)
+                  (conj v clause k)
+                  (conj v k)))
+              []
+              order))
+    (conj order clause)))
+
 (def ^:private dialects
   {:ansi  {:quote #(str \" % \")}
    :mssql {:quote #(str \[ % \])}
-   :mysql {:quote #(str \` % \`)}})
+   :mysql {:quote #(str \` % \`)
+           :clause-order-fn #(add-clause-before
+                              (filterv (complement #{:set}) %)
+                              :set
+                              :where)}})
 
 ; should become defonce
 (def ^:private default-dialect (atom (:ansi dialects)))
 
 (def ^:private ^:dynamic *dialect* nil)
+(def ^:private ^:dynamic *clause-order* nil)
 (def ^:private ^:dynamic *quoted* nil)
 
 ;; clause helpers
 
+;; String.toUpperCase() or `str/upper-case` for that matter converts the
+;; string to uppercase for the DEFAULT LOCALE. Normally this does what you'd
+;; expect but things like `inner join` get converted to `İNNER JOİN` (dot over
+;; the I) when user locale is Turkish. This predictably has bad consequences
+;; for people who like their SQL queries to work. The fix here is to use
+;; String.toUpperCase(Locale/US) instead which always converts things the
+;; way we'd expect.
+;;
+;; Use this instead of `str/upper-case` as it will always use Locale/US.
+(def ^:private ^{:arglists '([s])} upper-case
+  ;; TODO - not sure if there's a JavaScript equivalent here we should be using as well
+  #?(:clj (fn [^String s] (.. s toString (toUpperCase (java.util.Locale/US))))
+     :cljs str/upper-case))
+
 (defn- sql-kw [k]
-  (-> k (name) (str/upper-case) (str/replace "-" " ")))
+  (-> k (name) (upper-case) (str/replace "-" " ")))
 
 (defn- format-entity [x]
   (let [q (if *quoted* (:quote *dialect*) identity)
@@ -61,12 +105,15 @@
               [sql & params] (if (map? s) (format-dsl s true) [(format-entity s)])]
           (into [(str sql #_" AS " " " (format-entity (second x)))] params))
 
+        (keyword? x)
+        [(format-entity x)]
+
         :else
-        [(format-entity x)]))
+        (format-expr x)))
 
 ;; primary clauses
 
-(defn- format-union [k xs]
+(defn- format-on-set-op [k xs]
   (let [[sqls params]
         (reduce (fn [[sql params] [sql' & params']]
                   [(conj sql sql') (if params' (into params params') params)])
@@ -107,7 +154,11 @@
 
 (defn- format-join [k [j e]]
   (let [[sql & params] (format-expr e)]
-    (into [(str (sql-kw k) " " (format-selectable j) " ON " sql)] params)))
+    ;; for backward compatibility, treat plain JOIN as INNER JOIN:
+    (into [(str (sql-kw (if (= :join k) :inner-join k)) " "
+                (format-selectable j) " ON "
+                sql)]
+          params)))
 
 (defn- format-on-expr [k e]
   (let [[sql & params] (format-expr e)]
@@ -132,25 +183,43 @@
                                     sqls
                                     dirs)))] params)))
 
-(def ^:private clause-order
-  "The (default) order for known clauses. Can have items added and removed."
-  (atom [:union :union-all
-         :select :insert-into :update :delete :delete-from :truncate :from
-         :join :left-join :right-join :inner-join :outer-join :full-join
-         :cross-join
-         :where :group-by :having :order-by :limit :offset]))
+(defn- format-values [k xs]
+  (if (sequential? (first xs))
+    ;; [[1 2 3] [4 5 6]]
+    (let [[sqls params]
+          (reduce (fn [[sql params] [sqls' params']]
+                    [(conj sql (str "(" (str/join ", " sqls') ")"))
+                     (into params params')])
+                  [[] []]
+                  (map #'format-expr-list xs))]
+      (into [(str (sql-kw k) " " (str/join ", " sqls))] params))
+    ;; [1 2 3]
+    (let [[sqls params] (format-expr-list xs)]
+      (into [(str (sql-kw k) " (" (str/join ", " sqls) ")")] params))))
+
+(defn- format-set-exprs [k xs]
+  ;; TODO: !!!
+  ["SET a = ?, b = ?" 42 13])
+
+(def ^:private current-clause-order
+  "The (current) order for known clauses. Can have items added and removed."
+  (atom default-clause-order))
 
 (def ^:private clause-format
   "The (default) behavior for each known clause. Can also have items added
   and removed."
-  (atom {:union          #'format-union
-         :union-all      #'format-union
+  (atom {:intersect      #'format-on-set-op
+         :union          #'format-on-set-op
+         :union-all      #'format-on-set-op
+         :except         #'format-on-set-op
          :select         #'format-selector
          :insert-into    #'format-insert
          :update         #'format-selector
          :delete         #'format-selector
          :delete-from    #'format-selector
          :truncate       #'format-selector
+         :columns        #'format-selector
+         :set            #'format-set-exprs
          :from           #'format-selector
          :join           #'format-join
          :left-join      #'format-join
@@ -164,24 +233,25 @@
          :having         #'format-on-expr
          :order-by       #'format-order-by
          :limit          #'format-on-expr
-         :offset         #'format-on-expr}))
+         :offset         #'format-on-expr
+         :values         #'format-values}))
 
-(assert (= (set @clause-order) (set (keys @clause-format))))
+(assert (= (set @current-clause-order) (set (keys @clause-format))))
 
 (comment :target
   {:with 20
    :with-recursive 30
-   :intersect 35
+   ;:intersect 35
    ;:union 40
    ;:union-all 45
-   :except 47
+   ;:except 47
    ;:select 50
    ;:insert-into 60
    ;:update 70
    ;:delete 75
    ;:delete-from 80
    ;:truncate 85
-   :columns 90
+   ;:columns 90
    :composite 95
    :set0 100 ; low-priority set clause
    ;:from 110
@@ -189,7 +259,7 @@
    ;:left-join 130
    ;:right-join 140
    ;:full-join 150
-   :cross-join 152 ; doesn't have on clauses
+   ;:cross-join 152 ; doesn't have on clauses
    :set 155
    :set1 156 ; high-priority set clause (synonym for :set)
    ;:where 160
@@ -213,13 +283,18 @@
                        (dissoc leftover k)])
                     [sql params leftover]))
                 [[] [] x]
-                @clause-order)]
-    (when (seq leftover)
-      (throw (ex-info (str "Unknown SQL clauses: "
-                           (str/join ", " (keys leftover)))
-                      leftover)))
-    (into [(cond-> (str/join " " sqls)
-             nested? (as-> s (str "(" s ")")))] params)))
+                *clause-order*)]
+    (if (seq leftover)
+      (do
+        ;; TODO: for testing purposes, make this less noisy
+        (println (str "\n-------------------\nUnknown SQL clauses: "
+                      (str/join ", " (keys leftover))))
+        #_(throw (ex-info (str "Unknown SQL clauses: "
+                               (str/join ", " (keys leftover)))
+                          leftover))
+        [(str "<unknown" (str/join (keys leftover)) ">")])
+      (into [(cond-> (str/join " " sqls)
+               nested? (as-> s (str "(" s ")")))] params))))
 
 (def ^:private infix-aliases
   "Provided for backward compatibility with earlier HoneySQL versions."
@@ -261,6 +336,9 @@
   (cond (keyword? x)
         [(format-entity x)]
 
+        (map? x)
+        (format-dsl x true)
+
         (sequential? x)
         (let [op (first x)]
           (if (keyword? op)
@@ -291,16 +369,28 @@
         :else
         ["?" x]))
 
+(defn- check-dialect [dialect]
+  (when-not (contains? dialects dialect)
+    (throw (ex-info (str "Invalid dialect: " dialect)
+                    {:valid-dialects (vec (sort (keys dialects)))})))
+  dialect)
+
 (defn format
   "Turn the data DSL into a vector containing a SQL string followed by
   any parameter values that were encountered in the DSL structure."
   ([data] (format data {}))
   ([data opts]
-   (let [dialect (get dialects (get opts :dialect :ansi))]
-     (binding [*dialect* dialect
+   (let [dialect? (contains? opts :dialect)
+         dialect  (when dialect? (get dialects (check-dialect (:dialect opts))))]
+     (binding [*dialect* (if dialect? dialect @default-dialect)
+               *clause-order* (if dialect?
+                                (if-let [f (:clause-order-fn dialect)]
+                                  (f @current-clause-order)
+                                  @current-clause-order)
+                                @current-clause-order)
                *quoted*  (if (contains? opts :quoted)
                            (:quoted opts)
-                           (contains? opts :dialect))]
+                           dialect?)]
        (format-dsl data)))))
 
 (defn set-dialect!
@@ -308,7 +398,17 @@
 
   Can be: `:ansi` (the default), `:mssql`, `:mysql`."
   [dialect]
-  (reset! default-dialect (get dialects dialect :ansi)))
+  (reset! default-dialect (get dialects (check-dialect dialect)))
+  (when-let [f (:clause-order-fn @default-dialect)]
+    (swap! current-clause-order f)))
+
+(defn register-clause!
+  "Register a new clause formatter. If `before` is `nil`, the clause is
+  added to the end of the list of known clauses, otherwise it is inserted
+  immediately prior to that clause."
+  [clause formatter before]
+  (swap! current-clause-order add-clause-before clause before)
+  (swap! clause-format assoc clause formatter))
 
 (comment
   (format {:truncate :foo})

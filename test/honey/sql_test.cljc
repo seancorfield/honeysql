@@ -242,15 +242,15 @@
 
 (deftest set-before-from ; issue 235
   (is (=
-       ["UPDATE `films` `f` SET `kind` = `c`.`test` FROM (SELECT `b`.`test` FROM `bar` `b` WHERE `b`.`id` = ?) `c` WHERE `f`.`kind` = ?" 1 "drama"]
+       ["UPDATE \"films\" \"f\" SET \"kind\" = \"c\".\"test\" FROM (SELECT \"b\".\"test\" FROM \"bar\" \"b\" WHERE \"b\".\"id\" = ?) \"c\" WHERE \"f\".\"kind\" = ?" 1 "drama"]
        (->
          {:update [:films :f]
-          :set0   {:kind :c.test}
+          :set    {:kind :c.test}
           :from   [[{:select [:b.test]
                      :from   [[:bar :b]]
                      :where  [:= :b.id 1]} :c]]
           :where  [:= :f.kind "drama"]}
-         (format {:dialect :mysql})))))
+         (format)))))
 
 (deftest set-after-join
   (is (=
@@ -259,14 +259,6 @@
          {:update :foo
           :join   [:bar [:= :bar.id :foo.bar_id]]
           :set    {:a 1}
-          :where  [:= :bar.b 42]}
-         (format {:dialect :mysql}))))
-  (is (=
-       ["UPDATE `foo` INNER JOIN `bar` ON `bar`.`id` = `foo`.`bar_id` SET `a` = ? WHERE `bar`.`b` = ?" 1 42]
-       (->
-         {:update :foo
-          :join   [:bar [:= :bar.id :foo.bar_id]]
-          :set1   {:a 1}
           :where  [:= :bar.b 42]}
          (format {:dialect :mysql})))))
 
