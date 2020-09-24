@@ -292,8 +292,16 @@
                    xs)]
     (into [(str (sql-kw k) " " (str/join ", " sqls))] params)))
 
+(def ^:private base-clause-order
+  "The (base) order for known clauses. Can have items added and removed.
+
+  This is the 'pre-dialect' ordering."
+  (atom default-clause-order))
+
 (def ^:private current-clause-order
-  "The (current) order for known clauses. Can have items added and removed."
+  "The (current) order for known clauses. Can have items added and removed.
+
+  This is the 'post-dialect` ordering when a new default dialect is set."
   (atom default-clause-order))
 
 (def ^:private clause-format
@@ -329,7 +337,9 @@
          :offset         #'format-on-expr
          :values         #'format-values}))
 
-(assert (= (set @current-clause-order) (set (keys @clause-format))))
+(assert (= (set @base-clause-order)
+           (set @current-clause-order)
+           (set (keys @clause-format))))
 
 (comment :target
   {;:with 20
@@ -502,7 +512,7 @@
      (binding [*dialect* (if dialect? dialect @default-dialect)
                *clause-order* (if dialect?
                                 (if-let [f (:clause-order-fn dialect)]
-                                  (f @current-clause-order)
+                                  (f @base-clause-order)
                                   @current-clause-order)
                                 @current-clause-order)
                *quoted*  (if (contains? opts :quoted)
@@ -513,17 +523,28 @@
 (defn set-dialect!
   "Set the default dialect for formatting.
 
-  Can be: `:ansi` (the default), `:mssql`, `:mysql`."
+  Can be: `:ansi` (the default), `:mssql`, `:mysql`.
+
+  Dialects are always applied to the base order to create the current order."
   [dialect]
   (reset! default-dialect (get dialects (check-dialect dialect)))
   (when-let [f (:clause-order-fn @default-dialect)]
-    (swap! current-clause-order f)))
+    (reset! current-clause-order (f @base-clause-order))))
 
 (defn register-clause!
   "Register a new clause formatter. If `before` is `nil`, the clause is
   added to the end of the list of known clauses, otherwise it is inserted
-  immediately prior to that clause."
+  immediately prior to that clause.
+
+  New clauses are registered in the base order and the current order so
+  that any dialect selections are able to include them while still working
+  predictably from the base order. Caveat: that means if you are a new
+  clause `before` a clause that is ordered differently in different
+  dialects, your new clause may also end up in a different place. The
+  only clause so far where that would matter is `:set` which differs in
+  MySQL..."
   [clause formatter before]
+  (swap! base-clause-order add-clause-before clause before)
   (swap! current-clause-order add-clause-before clause before)
   (swap! clause-format assoc clause formatter))
 
