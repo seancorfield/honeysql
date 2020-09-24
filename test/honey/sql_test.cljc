@@ -291,11 +291,10 @@
              (format {:dialect :mysql})))))
 
 (deftest inlined-values-are-stringified-correctly
-    (is nil "inline unimplemented")
-  #_(is (= ["SELECT foo, bar, NULL"]
-           (format {:select [(honeysql.core/inline "foo")
-                             (honeysql.core/inline :bar)
-                             (honeysql.core/inline nil)]}))))
+  (is (= ["SELECT foo, bar, NULL"]
+         (format {:select [[[:inline "foo"]]
+                           [[:inline :bar]]
+                           [[:inline nil]]]}))))
 
 ;; Make sure if Locale is Turkish we're not generating queries like İNNER JOIN (dot over the I) because
 ;; `string/upper-case` is converting things to upper-case using the default Locale. Generated query should be the same

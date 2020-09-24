@@ -101,13 +101,15 @@
 
 (defn- format-entity-alias [x]
   (cond (sequential? x)
-        (str (let [s (first x)]
-               (if (map? s)
-                 (throw (ex-info "selectable cannot be statement!"
-                                 {:selectable s}))
-                 (format-entity s)))
-             #_" AS " " "
-             (format-entity (second x) {:aliased? true}))
+        (let [s     (first x)
+              pair? (< 1 (count x))]
+          (when (map? s)
+            (throw (ex-info "selectable cannot be statement!"
+                            {:selectable s})))
+          (cond-> (format-entity s)
+            pair?
+            (str #_" AS " " "
+                 (format-entity (second x) {:aliased? true}))))
 
         :else
         (format-entity x)))
@@ -117,16 +119,20 @@
         (format-dsl x {:nested? true})
 
         (sequential? x)
-        (let [s (first x)
-              a (second x)
+        (let [s     (first x)
+              pair? (< 1 (count x))
+              a     (second x)
               [sql & params] (if (map? s)
                                (format-dsl s {:nested? true})
                                (format-expr s))
-              [sql' & params'] (if (sequential? a)
-                                 (let [[sql params] (format-expr-list a {:aliased? true})]
-                                   (into [(str/join " " sql)] params))
-                                 (format-selectable-dsl a {:aliased? true}))]
-          (-> [(str sql (if as? " AS " " ") sql')]
+              [sql' & params'] (when pair?
+                                 (if (sequential? a)
+                                   (let [[sql params] (format-expr-list a {:aliased? true})]
+                                     (into [(str/join " " sql)] params))
+                                   (format-selectable-dsl a {:aliased? true})))]
+          (-> [(cond-> sql
+                 pair?
+                 (str (if as? " AS " " ") sql'))]
               (into params)
               (into params')))
 
@@ -401,6 +407,14 @@
       (into (vals infix-aliases))
       (->> (into #{} (map keyword)))))
 
+(defn- sqlize-value [x]
+  (cond
+    (nil? x)     "NULL"
+    (string? x)  x ; I feel this should be 'single-quoted' but 1.x does not
+    (symbol? x)  (name x)
+    (keyword? x) (name x)
+    :else        (str x)))
+
 (def ^:private special-syntax
   {:array
    (fn [[arr]]
@@ -419,6 +433,9 @@
    (fn [[x type]]
      (let [[sql & params] (format-expr x)]
        (into [(str "CAST(" sql " AS " (sql-kw type) ")")] params)))
+   :inline
+   (fn [[x]]
+     [(sqlize-value x)])
    :interval
    (fn [[n units]]
      (let [[sql & params] (format-expr n)]
