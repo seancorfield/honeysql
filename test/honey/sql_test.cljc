@@ -8,8 +8,8 @@
 
 (deftest mysql-tests
   (is (= ["SELECT * FROM `table` WHERE `id` = ?" 1]
-         (#'sut/format {:select [:*] :from [:table] :where [:= :id 1]}
-           {:dialect :mysql}))))
+         (sut/format {:select [:*] :from [:table] :where [:= :id 1]}
+                     {:dialect :mysql}))))
 
 (deftest expr-tests
   (is (= ["id = ?" 1]
@@ -33,24 +33,24 @@
 
 (deftest general-tests
   (is (= ["SELECT * FROM \"table\" WHERE \"id\" = ?" 1]
-         (#'sut/format {:select [:*] :from [:table] :where [:= :id 1]} {:quoted true})))
+         (sut/format {:select [:*] :from [:table] :where [:= :id 1]} {:quoted true})))
   ;; temporarily remove AS from alias here
   (is (= ["SELECT \"t\".* FROM \"table\" \"t\" WHERE \"id\" = ?" 1]
-         (#'sut/format {:select [:t.*] :from [[:table :t]] :where [:= :id 1]} {:quoted true})))
+         (sut/format {:select [:t.*] :from [[:table :t]] :where [:= :id 1]} {:quoted true})))
   (is (= ["SELECT * FROM \"table\" GROUP BY \"foo\", \"bar\""]
-         (#'sut/format {:select [:*] :from [:table] :group-by [:foo :bar]} {:quoted true})))
+         (sut/format {:select [:*] :from [:table] :group-by [:foo :bar]} {:quoted true})))
   (is (= ["SELECT * FROM \"table\" GROUP BY DATE(\"bar\")"]
-         (#'sut/format {:select [:*] :from [:table] :group-by [[:date :bar]]} {:quoted true})))
+         (sut/format {:select [:*] :from [:table] :group-by [[:date :bar]]} {:quoted true})))
   (is (= ["SELECT * FROM \"table\" ORDER BY \"foo\" DESC, \"bar\" ASC"]
-         (#'sut/format {:select [:*] :from [:table] :order-by [[:foo :desc] :bar]} {:quoted true})))
+         (sut/format {:select [:*] :from [:table] :order-by [[:foo :desc] :bar]} {:quoted true})))
   (is (= ["SELECT * FROM \"table\" ORDER BY DATE(\"expiry\") DESC, \"bar\" ASC"]
-         (#'sut/format {:select [:*] :from [:table] :order-by [[[:date :expiry] :desc] :bar]} {:quoted true})))
+         (sut/format {:select [:*] :from [:table] :order-by [[[:date :expiry] :desc] :bar]} {:quoted true})))
   (is (= ["SELECT * FROM \"table\" WHERE DATE_ADD(\"expiry\", INTERVAL ? DAYS) < NOW()" 30]
-         (#'sut/format {:select [:*] :from [:table] :where [:< [:date_add :expiry [:interval 30 :days]] [:now]]} {:quoted true})))
+         (sut/format {:select [:*] :from [:table] :where [:< [:date_add :expiry [:interval 30 :days]] [:now]]} {:quoted true})))
   (is (= ["SELECT * FROM `table` WHERE `id` = ?" 1]
-         (#'sut/format {:select [:*] :from [:table] :where [:= :id 1]} {:dialect :mysql})))
-  (is (= ["SELECT * FROM \"table\" WHERE \"id\" IN (?,?,?,?)" 1 2 3 4]
-         (#'sut/format {:select [:*] :from [:table] :where [:in :id [1 2 3 4]]} {:quoted true}))))
+         (sut/format {:select [:*] :from [:table] :where [:= :id 1]} {:dialect :mysql})))
+  (is (= ["SELECT * FROM \"table\" WHERE \"id\" IN (?, ?, ?, ?)" 1 2 3 4]
+         (sut/format {:select [:*] :from [:table] :where [:in :id [1 2 3 4]]} {:quoted true}))))
 
 ;; tests lifted from HoneySQL v1 to check for compatibility
 
@@ -105,8 +105,12 @@
          ["INSERT INTO foo (id) VALUES (?)" 2])))
 
 (deftest exists-test
-  (is (= (format {:exists {:select [:a] :from [:foo]}})
-         ["EXISTS (SELECT a FROM foo)"]))
+  ;; EXISTS should never have been implemented as SQL syntax: it's an operator!
+  #_(is (= (format {:exists {:select [:a] :from [:foo]}})
+           ["EXISTS (SELECT a FROM foo)"]))
+  ;; ugly because it's hard to select just a function call without an alias:
+  (is (= (format {:select [[[:exists {:select [:a] :from [:foo]}] :x]]})
+         ["SELECT EXISTS (SELECT a FROM foo) AS x"]))
   (is (= (format {:select [:id]
                   :from [:foo]
                   :where [:exists {:select [1]
@@ -115,12 +119,12 @@
          ["SELECT id FROM foo WHERE EXISTS (SELECT ? FROM bar WHERE deleted)" 1])))
 
 (deftest array-test
-  (println 'sql-array :unimplemented)
+  (is nil "sql-array unimplemented")
   #_(is (= (format {:insert-into :foo
                     :columns [:baz]
                     :values [[(sql/array [1 2 3 4])]]})
            ["INSERT INTO foo (baz) VALUES (ARRAY[?, ?, ?, ?])" 1 2 3 4]))
-  (println 'sql-array :unimplemented)
+  (is nil "sql-array unimplemented")
   #_(is (= (format {:insert-into :foo
                     :columns [:baz]
                     :values [[(sql/array ["one" "two" "three"])]]})
@@ -135,7 +139,15 @@
   ;;   ORDER BY foo ASC
   (is (= (format {:union [{:select [:foo] :from [:bar1]}
                           {:select [:foo] :from [:bar2]}]})
-         ["SELECT foo FROM bar1 UNION SELECT foo FROM bar2"])))
+         ["SELECT foo FROM bar1 UNION SELECT foo FROM bar2"]))
+
+  (testing "union complex values"
+    (is (= (format {:union [{:select [:foo] :from [:bar1]}
+                            {:select [:foo] :from [:bar2]}]
+                    :with [[[:bar {:columns [:spam :eggs]}]
+                            {:values [[1 2] [3 4] [5 6]]}]]})
+           ["WITH bar (spam, eggs) AS (VALUES (?, ?), (?, ?), (?, ?)) SELECT foo FROM bar1 UNION SELECT foo FROM bar2"
+            1 2 3 4 5 6]))))
 
 (deftest union-all-test
   (is (= (format {:union-all [{:select [:foo] :from [:bar1]}
@@ -168,7 +180,7 @@
 
 (deftest compare-expressions-test
   (testing "Sequences should be fns when in value/comparison spots"
-    (is (= ["SELECT foo FROM bar WHERE (col1 mod ?) = (col2 + ?)" 4 4]
+    (is (= ["SELECT foo FROM bar WHERE (col1 MOD ?) = (col2 + ?)" 4 4]
            (format {:select [:foo]
                     :from [:bar]
                     :where [:= [:mod :col1 4] [:+ :col2 4]]}))))
@@ -177,11 +189,11 @@
     (let [sub {:select [:%sum.amount]
                :from [:bar]
                :where [:in :id ["id-1" "id-2"]]}]
-      (is (= ["SELECT total FROM foo WHERE (SELECT sum(amount) FROM bar WHERE (id in (?, ?))) = total" "id-1" "id-2"]
+      (is (= ["SELECT total FROM foo WHERE (SELECT sum(amount) FROM bar WHERE id IN (?, ?)) = total" "id-1" "id-2"]
              (format {:select [:total]
                       :from [:foo]
                       :where [:= sub :total]})))
-      (is (= ["WITH t AS (SELECT sum(amount) FROM bar WHERE (id in (?, ?))) SELECT total FROM foo WHERE total = t" "id-1" "id-2"]
+      (is (= ["WITH t AS (SELECT sum(amount) FROM bar WHERE id IN (?, ?)) SELECT total FROM foo WHERE total = t" "id-1" "id-2"]
              (format {:with [[:t sub]]
                       :select [:total]
                       :from [:foo]
@@ -204,7 +216,7 @@
 
 (deftest parameterizer-none
   (testing "array parameter"
-    (println 'sql-array :unimplemented)
+    (is nil "sql-array unimplemented")
     #_(is (= (format {:insert-into :foo
                       :columns [:baz]
                       :values [[(sql/array [1 2 3 4])]]}
@@ -250,7 +262,7 @@
                      :from   [[:bar :b]]
                      :where  [:= :b.id 1]} :c]]
           :where  [:= :f.kind "drama"]}
-         (format)))))
+         (format {:quoted true})))))
 
 (deftest set-after-join
   (is (=
@@ -282,7 +294,7 @@
              (format {:dialect :mysql})))))
 
 (deftest inlined-values-are-stringified-correctly
-  (println 'inline :unimplemented)
+    (is nil "inline unimplemented")
   #_(is (= ["SELECT foo, bar, NULL"]
            (format {:select [(honeysql.core/inline "foo")
                              (honeysql.core/inline :bar)
