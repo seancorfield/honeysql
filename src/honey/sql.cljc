@@ -480,7 +480,7 @@
                                       (repeat (count x) "?")) ")")]
                   x)))
 
-        (boolean? x)
+        (or (true? x) (false? x)) ; because (boolean? x) requires Clojure 1.9+
         [(upper-case (str x))]
 
         :else
