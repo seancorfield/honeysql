@@ -13,19 +13,19 @@
 
 (deftest expr-tests
   (is (= ["id = ?" 1]
-         (#'sut/format-expr [:= :id 1])))
+         (sut/format-expr [:= :id 1])))
   (is (= ["id + ?" 1]
-         (#'sut/format-expr [:+ :id 1])))
+         (sut/format-expr [:+ :id 1])))
   (is (= ["? + (? + quux)" 1 1]
-         (#'sut/format-expr [:+ 1 [:+ 1 :quux]])))
+         (sut/format-expr [:+ 1 [:+ 1 :quux]])))
   (is (= ["FOO(BAR(? + G(abc)), F(?, quux))" 2 1]
-         (#'sut/format-expr [:foo [:bar [:+ 2 [:g :abc]]] [:f 1 :quux]])))
+         (sut/format-expr [:foo [:bar [:+ 2 [:g :abc]]] [:f 1 :quux]])))
   (is (= ["id"]
-         (#'sut/format-expr :id)))
+         (sut/format-expr :id)))
   (is (= ["?" 1]
-         (#'sut/format-expr 1)))
+         (sut/format-expr 1)))
   (is (= ["INTERVAL ? DAYS" 30]
-         (#'sut/format-expr [:interval 30 :days]))))
+         (sut/format-expr [:interval 30 :days]))))
 
 (deftest where-test
   (is (= ["WHERE id = ?" 1]
@@ -119,16 +119,14 @@
          ["SELECT id FROM foo WHERE EXISTS (SELECT ? FROM bar WHERE deleted)" 1])))
 
 (deftest array-test
-  (is nil "sql-array unimplemented")
-  #_(is (= (format {:insert-into :foo
-                    :columns [:baz]
-                    :values [[(sql/array [1 2 3 4])]]})
-           ["INSERT INTO foo (baz) VALUES (ARRAY[?, ?, ?, ?])" 1 2 3 4]))
-  (is nil "sql-array unimplemented")
-  #_(is (= (format {:insert-into :foo
-                    :columns [:baz]
-                    :values [[(sql/array ["one" "two" "three"])]]})
-           ["INSERT INTO foo (baz) VALUES (ARRAY[?, ?, ?])" "one" "two" "three"])))
+  (is (= (format {:insert-into :foo
+                  :columns [:baz]
+                  :values [[[:array [1 2 3 4]]]]})
+         ["INSERT INTO foo (baz) VALUES (ARRAY[?, ?, ?, ?])" 1 2 3 4]))
+  (is (= (format {:insert-into :foo
+                  :columns [:baz]
+                  :values [[[:array ["one" "two" "three"]]]]})
+         ["INSERT INTO foo (baz) VALUES (ARRAY[?, ?, ?])" "one" "two" "three"])))
 
 (deftest union-test
   ;; UNION and INTERSECT subexpressions should not be parenthesized.
@@ -216,12 +214,11 @@
 
 (deftest parameterizer-none
   (testing "array parameter"
-    (is nil "sql-array unimplemented")
-    #_(is (= (format {:insert-into :foo
-                      :columns [:baz]
-                      :values [[(sql/array [1 2 3 4])]]}
-                     {:parameterizer :none})
-             ["INSERT INTO foo (baz) VALUES (ARRAY[1, 2, 3, 4])"])))
+    (is (= (format {:insert-into :foo
+                    :columns [:baz]
+                    :values [[[:array [1 2 3 4]]]]}
+                   {:parameterizer :none})
+           ["INSERT INTO foo (baz) VALUES (ARRAY[1, 2, 3, 4])"])))
 
   (testing "union complex values"
     (is (= (format {:union [{:select [:foo] :from [:bar1]}

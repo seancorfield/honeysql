@@ -402,7 +402,11 @@
       (->> (into #{} (map keyword)))))
 
 (def ^:private special-syntax
-  {:between
+  {:array
+   (fn [[arr]]
+     (let [[sqls params] (format-expr-list arr)]
+       (into [(str "ARRAY[" (str/join ", " sqls) "]")] params)))
+   :between
    (fn [[x a b]]
      (let [[sql-x & params-x] (format-expr x {:nested? true})
            [sql-a & params-a] (format-expr a {:nested? true})
