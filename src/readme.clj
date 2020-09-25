@@ -52,11 +52,23 @@
 
 
 
-(seancorfield.readme/defreadme readme-55
+
+
+
+
+
+
+
+
+
+
+
+
+(seancorfield.readme/defreadme readme-67
 (def q-sqlmap {:select [:foo/a :foo/b :foo/c]
                :from   [:foo]
                :where  [:= :foo/a "baz"]})
-(sql/format q-sqlmap :namespace-as-table? true)
+(sql/format q-sqlmap)
 => ["SELECT foo.a, foo.b, foo.c FROM foo WHERE foo.a = ?" "baz"]
 )
 
@@ -66,35 +78,7 @@
 
 
 
-
-
-
-
-
-
-(seancorfield.readme/defreadme readme-75
-(sql/build :select :*
-           :from :foo
-           :where [:= :f.a "baz"])
-=> {:where [:= :f.a "baz"], :from [:foo], :select [:*]}
-)
-
-
-
-(seancorfield.readme/defreadme readme-84
-(sql/build sqlmap :offset 10 :limit 10)
-=> {:limit 10
-    :offset 10
-    :select [:a :b :c]
-    :where [:= :f.a "baz"]
-    :from [:foo]}
-)
-
-
-
-
-
-(seancorfield.readme/defreadme readme-97
+(seancorfield.readme/defreadme readme-81
 (-> (select :a :b :c)
     (from :foo)
     (where [:= :f.a "baz"]))
@@ -102,7 +86,7 @@
 
 
 
-(seancorfield.readme/defreadme readme-105
+(seancorfield.readme/defreadme readme-89
 (= (-> (select :*) (from :foo))
    (-> (from :foo) (select :*)))
 => true
@@ -110,40 +94,41 @@
 
 
 
-(seancorfield.readme/defreadme readme-113
-(-> sqlmap (select :*))
-=> '{:from [:foo], :where [:= :f.a "baz"], :select (:*)}
+(seancorfield.readme/defreadme readme-97
+(-> sqlmap (select :d))
+=> '{:from [:foo], :where [:= :f.a "baz"], :select [:a :b :c :d]}
 )
 
 
 
-(seancorfield.readme/defreadme readme-120
+(seancorfield.readme/defreadme readme-104
 (-> sqlmap
-    (merge-select :d :e)
-    (merge-where [:> :b 10])
+    (dissoc :select)
+    (select :*)
+    (where [:> :b 10])
     sql/format)
-=> ["SELECT a, b, c, d, e FROM foo WHERE (f.a = ? AND b > ?)" "baz" 10]
+=> ["SELECT * FROM foo WHERE (f.a = ?) AND (b > ?)" "baz" 10]
 )
 
 
 
-(seancorfield.readme/defreadme readme-130
+(seancorfield.readme/defreadme readme-115
 (-> (select :*)
     (from :foo)
     (where [:= :a 1] [:< :b 100])
     sql/format)
-=> ["SELECT * FROM foo WHERE (a = ? AND b < ?)" 1 100]
+=> ["SELECT * FROM foo WHERE (a = ?) AND (b < ?)" 1 100]
 )
 
 
 
 
-(seancorfield.readme/defreadme readme-141
+(seancorfield.readme/defreadme readme-126
 (-> (select :a [:b :bar] :c [:d :x])
     (from [:foo :quux])
     (where [:= :quux.a 1] [:< :bar 100])
     sql/format)
-=> ["SELECT a, b AS bar, c, d AS x FROM foo quux WHERE (quux.a = ? AND bar < ?)" 1 100]
+=> ["SELECT a, b AS bar, c, d AS x FROM foo quux WHERE (quux.a = ?) AND (bar < ?)" 1 100]
 )
 
 
@@ -155,7 +140,7 @@
 
 
 
-(seancorfield.readme/defreadme readme-158
+(seancorfield.readme/defreadme readme-143
 (-> (insert-into :properties)
     (columns :name :surname :age)
     (values
@@ -173,7 +158,7 @@
 
 
 
-(seancorfield.readme/defreadme readme-176
+(seancorfield.readme/defreadme readme-161
 (-> (insert-into :properties)
     (values [{:name "John" :surname "Smith" :age 34}
              {:name "Andrew" :surname "Cooper" :age 12}
@@ -191,7 +176,7 @@
 
 
 
-(seancorfield.readme/defreadme readme-194
+(seancorfield.readme/defreadme readme-179
 (let [user-id 12345
       role-name "user"]
   (-> (insert-into :user_profile_to_role)
@@ -208,7 +193,7 @@
     "user"]
 )
 
-(seancorfield.readme/defreadme readme-211
+(seancorfield.readme/defreadme readme-196
 (-> (select :*)
     (from :foo)
     (where [:in :foo.a (-> (select :a) (from :bar))])
@@ -220,7 +205,7 @@
 
 
 
-(seancorfield.readme/defreadme readme-223
+(seancorfield.readme/defreadme readme-208
 (-> (insert-into :comp_table)
     (columns :name :comp_column)
     (values
@@ -238,7 +223,7 @@
 
 
 
-(seancorfield.readme/defreadme readme-241
+(seancorfield.readme/defreadme readme-226
 (-> (helpers/update :films)
     (sset {:kind "dramatic"
            :watched (sql/call :+ :watched 1)})
@@ -263,8 +248,7 @@
 
 
 
-
-(seancorfield.readme/defreadme readme-267
+(seancorfield.readme/defreadme readme-251
 (-> (delete-from :films)
     (where [:<> :kind "musical"])
     sql/format)
@@ -273,7 +257,7 @@
 
 
 
-(seancorfield.readme/defreadme readme-276
+(seancorfield.readme/defreadme readme-260
 (-> (delete [:films :directors])
     (from :films)
     (join :directors [:= :films.director_id :directors.id])
@@ -289,7 +273,7 @@
 
 
 
-(seancorfield.readme/defreadme readme-292
+(seancorfield.readme/defreadme readme-276
 (-> (truncate :films)
     sql/format)
 => ["TRUNCATE films"]
@@ -299,7 +283,7 @@
 
 
 
-(seancorfield.readme/defreadme readme-302
+(seancorfield.readme/defreadme readme-286
 (sql/format {:union [(-> (select :*) (from :foo))
                      (-> (select :*) (from :bar))]})
 => ["SELECT * FROM foo UNION SELECT * FROM bar"]
@@ -309,11 +293,11 @@
 
 
 
-(seancorfield.readme/defreadme readme-312
+(seancorfield.readme/defreadme readme-296
 (-> (select :%count.*) (from :foo) sql/format)
 => ["SELECT count(*) FROM foo"]
 )
-(seancorfield.readme/defreadme readme-316
+(seancorfield.readme/defreadme readme-300
 (-> (select :%max.id) (from :foo) sql/format)
 => ["SELECT max(id) FROM foo"]
 )
@@ -322,7 +306,9 @@
 
 
 
-(seancorfield.readme/defreadme readme-325
+
+
+(seancorfield.readme/defreadme readme-311
 (-> (select :id)
     (from :foo)
     (where [:= :a :?baz])
@@ -335,21 +321,21 @@
 
 
 
-(seancorfield.readme/defreadme readme-338
+(seancorfield.readme/defreadme readme-324
 (def call-qualify-map
-  (-> (select (sql/call :foo :bar) (sql/qualify :foo :a) (sql/raw "@var := foo.bar"))
+  (-> (select [[:foo :bar]] [[:raw "@var := foo.bar"]])
       (from :foo)
-      (where [:= :a (sql/param :baz)] [:= :b (sql/inline 42)])))
+      (where [:= :a (???/param :baz)] [:= :b [:inline 42]])))
 )
-(seancorfield.readme/defreadme readme-344
+(seancorfield.readme/defreadme readme-330
 call-qualify-map
-=> '{:where [:and [:= :a #sql/param :baz] [:= :b #sql/inline 42]]
+=> '{:where [:and [:= :a ???/param :baz] [:= :b [:inline 42]]]
      :from (:foo)
-     :select (#sql/call [:foo :bar] :foo.a #sql/raw "@var := foo.bar")}
+     :select [[[:foo :bar]] [[:raw "@var := foo.bar"]]]}
 )
-(seancorfield.readme/defreadme readme-350
-(sql/format call-qualify-map :params {:baz "BAZ"})
-=> ["SELECT foo(bar), foo.a, @var := foo.bar FROM foo WHERE (a = ? AND b = 42)" "BAZ"]
+(seancorfield.readme/defreadme readme-336
+(sql/format call-qualify-map :??? {:baz "BAZ"})
+=> ["SELECT foo(bar), @var := foo.bar FROM foo WHERE (a = ?) AND (b = 42)" "BAZ"]
 )
 
 
@@ -357,11 +343,11 @@ call-qualify-map
 
 
 
-(seancorfield.readme/defreadme readme-360
+(seancorfield.readme/defreadme readme-346
 (-> (insert-into :sample)
-    (values [{:location (sql/call :ST_SetSRID
-                          (sql/call :ST_MakePoint 0.291 32.621)
-                          (sql/call :cast 4326 :integer))}])
+    (values [{:location [:ST_SetSRID
+                         [:ST_MakePoint 0.291 32.621]
+                         [:cast 4325 :integer]]}])
     (sql/format))
 => [#sql/regularize
     "INSERT INTO sample (location)
@@ -380,7 +366,9 @@ call-qualify-map
 
 
 
-(seancorfield.readme/defreadme readme-383
+
+
+(seancorfield.readme/defreadme readme-371
 (-> (select :*)
     (from :foo)
     (where [:< :expired_at (sql/raw ["now() - '" 5 " seconds'"])])
@@ -388,7 +376,7 @@ call-qualify-map
 => ["SELECT * FROM foo WHERE expired_at < now() - '? seconds'" 5]
 )
 
-(seancorfield.readme/defreadme readme-391
+(seancorfield.readme/defreadme readme-379
 (-> (select :*)
     (from :foo)
     (where [:< :expired_at (sql/raw ["now() - '" #sql/param :t " seconds'"])])
@@ -400,11 +388,16 @@ call-qualify-map
 
 
 
-(seancorfield.readme/defreadme readme-403
+
+
+
+
+
+(seancorfield.readme/defreadme readme-396
 (-> (select :foo.a)
     (from :foo)
     (where [:= :foo.a "baz"])
-    (sql/format :quoting :mysql))
+    (sql/format {:dialect :mysql}))
 => ["SELECT `foo`.`a` FROM `foo` WHERE `foo`.`a` = ?" "baz"]
 )
 
@@ -414,7 +407,9 @@ call-qualify-map
 
 
 
-(seancorfield.readme/defreadme readme-417
+
+
+(seancorfield.readme/defreadme readme-412
 (-> (select :foo.a)
     (from :foo)
     (where [:= :foo.a "baz"])
@@ -426,7 +421,7 @@ call-qualify-map
 
 
 
-(seancorfield.readme/defreadme readme-429
+(seancorfield.readme/defreadme readme-424
 (sql/format
   {:select [:f.foo-id :f.foo-name]
    :from [[:foo-bar :f]]
@@ -440,19 +435,19 @@ call-qualify-map
 
 
 
-(seancorfield.readme/defreadme readme-443
+(seancorfield.readme/defreadme readme-438
 (def big-complicated-map
   (-> (select :f.* :b.baz :c.quux [:b.bla "bla-bla"]
-              (sql/call :now) (sql/raw "@x := 10"))
-      (modifiers :distinct)
+              [[:now]] [[:raw "@x := 10"]])
+      (modifiers :distinct) ; this is not implemented yet
       (from [:foo :f] [:baz :b])
       (join :draq [:= :f.b :draq.x])
       (left-join [:clod :c] [:= :f.a :c.d])
       (right-join :bock [:= :bock.z :c.e])
       (where [:or
-               [:and [:= :f.a "bort"] [:not= :b.baz (sql/param :param1)]]
+               [:and [:= :f.a "bort"] [:not= :b.baz (???/param :param1)]]
                [:< 1 2 3]
-               [:in :f.e [1 (sql/param :param2) 3]]
+               [:in :f.e [1 (???/param :param2) 3]]
                [:between :f.e 10 20]])
       (group :f.a :c.e)
       (having [:< 0 :f.e])
@@ -460,19 +455,19 @@ call-qualify-map
       (limit 50)
       (offset 10)))
 )
-(seancorfield.readme/defreadme readme-463
+(seancorfield.readme/defreadme readme-458
 big-complicated-map
 => {:select [:f.* :b.baz :c.quux [:b.bla "bla-bla"]
-             (sql/call :now) (sql/raw "@x := 10")]
+             [[:now]] [[:raw "@x := 10"]]]
     :modifiers [:distinct]
     :from [[:foo :f] [:baz :b]]
     :join [:draq [:= :f.b :draq.x]]
     :left-join [[:clod :c] [:= :f.a :c.d]]
     :right-join [:bock [:= :bock.z :c.e]]
     :where [:or
-             [:and [:= :f.a "bort"] [:not= :b.baz (sql/param :param1)]]
+             [:and [:= :f.a "bort"] [:not= :b.baz (???/param :param1)]]
              [:< 1 2 3]
-             [:in :f.e [1 (sql/param :param2) 3]]
+             [:in :f.e [1 (????/param :param2) 3]]
              [:between :f.e 10 20]]
     :group-by [:f.a :c.e]
     :having [:< 0 :f.e]
@@ -480,7 +475,7 @@ big-complicated-map
     :limit 50
     :offset 10}
 )
-(seancorfield.readme/defreadme readme-483
+(seancorfield.readme/defreadme readme-478
 (sql/format big-complicated-map {:param1 "gabba" :param2 2})
 => [#sql/regularize
     "SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10
@@ -499,7 +494,7 @@ big-complicated-map
      OFFSET ? "
      "bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10]
 )
-(seancorfield.readme/defreadme readme-502
+(seancorfield.readme/defreadme readme-497
 ;; Printable and readable
 (= big-complicated-map (read-string (pr-str big-complicated-map)))
 => true
@@ -509,10 +504,9 @@ big-complicated-map
 
 
 
-(seancorfield.readme/defreadme readme-512
-(require '[honeysql.format :as fmt])
-)
-(seancorfield.readme/defreadme readme-515
+
+
+(seancorfield.readme/defreadme readme-509
 (defmethod fmt/fn-handler "betwixt" [_ field lower upper]
   (str (fmt/to-sql field) " BETWIXT "
        (fmt/to-sql lower) " AND " (fmt/to-sql upper)))
@@ -523,23 +517,23 @@ big-complicated-map
 
 
 
-(seancorfield.readme/defreadme readme-526
+(seancorfield.readme/defreadme readme-520
 ;; Takes a MapEntry of the operator & clause data, plus the entire SQL map
 (defmethod fmt/format-clause :foobar [[op v] sqlmap]
   (str "FOOBAR " (fmt/to-sql v)))
 )
-(seancorfield.readme/defreadme readme-531
+(seancorfield.readme/defreadme readme-525
 (sql/format {:select [:a :b] :foobar :baz})
 => ["SELECT a, b FOOBAR baz"]
 )
-(seancorfield.readme/defreadme readme-535
+(seancorfield.readme/defreadme readme-529
 (require '[honeysql.helpers :refer [defhelper]])
 
 ;; Defines a helper function, and allows 'build' to recognize your clause
 (defhelper foobar [m args]
   (assoc m :foobar (first args)))
 )
-(seancorfield.readme/defreadme readme-542
+(seancorfield.readme/defreadme readme-536
 (-> (select :a :b) (foobar :baz) sql/format)
 => ["SELECT a, b FOOBAR baz"]
 
@@ -547,7 +541,7 @@ big-complicated-map
 
 
 
-(seancorfield.readme/defreadme readme-550
+(seancorfield.readme/defreadme readme-544
 (fmt/register-clause! :foobar 110)
 )
 
