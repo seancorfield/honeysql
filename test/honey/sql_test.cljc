@@ -33,6 +33,8 @@
          (sut/format-expr [:+ :id 1])))
   (is (= ["? + (? + quux)" 1 1]
          (sut/format-expr [:+ 1 [:+ 1 :quux]])))
+  (is (= ["? + ? + quux" 1 1]
+         (sut/format-expr [:+ 1 1 :quux])))
   (is (= ["FOO(BAR(? + G(abc)), F(?, quux))" 2 1]
          (sut/format-expr [:foo [:bar [:+ 2 [:g :abc]]] [:f 1 :quux]])))
   (is (= ["id"]

@@ -458,27 +458,47 @@
         (format-dsl x (assoc opts :nested? true))
 
         (sequential? x)
-        (let [op (first x)]
+        (let [op (first x)
+              op-ignore-nil #{:and :or}
+              op-variadic   #{:and :or :+ :*}]
           (if (keyword? op)
             (cond (infix-ops op)
-                  (let [[_ a b]   x
-                        [s1 & p1] (format-expr a {:nested? true})
-                        [s2 & p2] (format-expr b {:nested? true})
-                        op        (get infix-aliases op op)]
-                      (if (and (#{:= :<>} op) (or (nil? a) (nil? b)))
-                        (-> (str (if (nil? a)
-                                   (if (nil? b) "NULL" s2)
-                                   s1)
-                                 (if (= := op) " IS NULL" " IS NOT NULL"))
-                            (cond-> nested?
-                              (as-> s (str "(" s ")")))
-                            (vector))
-                        (-> (str s1 " " (sql-kw op) " " s2)
-                            (cond-> nested?
-                              (as-> s (str "(" s ")")))
-                            (vector)
-                            (into p1)
-                            (into p2))))
+                  (if (op-variadic op) ; no aliases here, no special semantics
+                    (let [x (if (op-ignore-nil op) (remove nil? x) x)
+                          [sqls params]
+                          (reduce (fn [[sql params] [sql' & params']]
+                                    [(conj sql sql')
+                                     (if params' (into params params') params)])
+                                  [[] []]
+                                  (map #(format-expr % {:nested? true})
+                                       (rest x)))]
+                      (into [(cond-> (str/join (str " " (sql-kw op) " ") sqls)
+                               nested?
+                               (as-> s (str "(" s ")")))]
+                            params))
+                    (let [[_ a b & y] x
+                          _           (when (seq y)
+                                        (throw (ex-info (str "only binary "
+                                                             op
+                                                             "is supported")
+                                                        {:expr x})))
+                          [s1 & p1]   (format-expr a {:nested? true})
+                          [s2 & p2]   (format-expr b {:nested? true})
+                          op          (get infix-aliases op op)]
+                        (if (and (#{:= :<>} op) (or (nil? a) (nil? b)))
+                          (-> (str (if (nil? a)
+                                     (if (nil? b) "NULL" s2)
+                                     s1)
+                                   (if (= := op) " IS NULL" " IS NOT NULL"))
+                              (cond-> nested?
+                                (as-> s (str "(" s ")")))
+                              (vector))
+                          (-> (str s1 " " (sql-kw op) " " s2)
+                              (cond-> nested?
+                                (as-> s (str "(" s ")")))
+                              (vector)
+                              (into p1)
+                              (into p2)))))
                   (special-syntax op)
                   (let [formatter (special-syntax op)]
                     (formatter (rest x)))
