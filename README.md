@@ -1,14 +1,16 @@
-# Honey SQL [![CircleCI](https://circleci.com/gh/seancorfield/honeysql/tree/develop.svg?style=svg)](https://circleci.com/gh/seancorfield/honeysql/tree/develop)
+# Honey SQL [![CircleCI](https://circleci.com/gh/seancorfield/honeysql/tree/v2.svg?style=svg)](https://circleci.com/gh/seancorfield/honeysql/tree/v2)
 
 SQL as Clojure data structures. Build queries programmatically -- even at runtime -- without having to bash strings together.
 
 ## Build
 
-The latest versions on Clojars and on cljdoc:
+The latest stable version (1.0.444) on Clojars and on cljdoc:
 
 [![Clojars Project](https://clojars.org/honeysql/latest-version.svg)](https://clojars.org/honeysql) [![cljdoc badge](https://cljdoc.org/badge/honeysql/honeysql?1.0.444)](https://cljdoc.org/d/honeysql/honeysql/CURRENT)
 
 This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINOR provide some relative indication of the size of the change, but do not follow semantic versioning. In general, all changes endeavor to be non-breaking (by moving to new names rather than by breaking existing names). COMMITS is an ever-increasing counter of commits since the beginning of this repository.
+
+This is the README for the upcoming 2.x version of HoneySQL which provides a streamlined codebase and a simpler method for extending the DSL. It also supports SQL dialects out-of-the-box and will be extended to support vendor-specific language features over time (unlike the 1.x version).
 
 ## Note on code samples
 
@@ -17,14 +19,14 @@ All sample code in this README is automatically run as a unit test using
 
 Note that while some of these samples show pretty-printed SQL, this is just for
 README readability; honeysql does not generate pretty-printed SQL.
-The `#sql/regularize` directive tells the test-runner to ignore the extraneous
-whitespace.
+
+_The `#sql/regularize` directive tells the test-runner to ignore the extraneous whitespace._ [TODO: replace with pretty print option!]
 
 ## Usage
 
 ```clojure
-(require '[honeysql.core :as sql]
-         '[honeysql.helpers :refer :all :as helpers])
+(require '[honey.sql :as sql]
+         '[honey.sql.helpers :refer :all :as helpers])
 ```
 
 Everything is built on top of maps representing SQL queries:
@@ -46,6 +48,8 @@ Column names can be provided as keywords or symbols (but not strings -- HoneySQL
 => ["SELECT a, b, c FROM foo WHERE f.a = ?" "baz"]
 ```
 
+_The handling of namespace-qualified keywords is under review in 2.x._
+
 By default, namespace-qualified keywords are treated as simple keywords: their namespace portion is ignored. This was the behavior in HoneySQL prior to the 0.9.0 release and has been restored since the 0.9.7 release as this is considered the least surprising behavior.
 As of version 0.9.7, `format` accepts `:allow-namespaced-names? true` to provide the somewhat unusual behavior of 0.9.0-0.9.6, namely that namespace-qualified keywords were passed through into the SQL "as-is", i.e., with the `/` in them (which generally required a quoting strategy as well).
 As of version 0.9.8, `format` accepts `:namespace-as-table? true` to treat namespace-qualified keywords as if the `/` were `.`, allowing `:table/column` as an alternative to `:table.column`. This approach is likely to be more compatible with code that uses libraries like [`next.jdbc`](https://github.com/seancorfield/next-jdbc) and [`seql`](https://github.com/exoscale/seql), as well as being more convenient in a world of namespace-qualified keywords, following the example of `clojure.spec` etc.
@@ -54,13 +58,13 @@ As of version 0.9.8, `format` accepts `:namespace-as-table? true` to treat names
 (def q-sqlmap {:select [:foo/a :foo/b :foo/c]
                :from   [:foo]
                :where  [:= :foo/a "baz"]})
-(sql/format q-sqlmap :namespace-as-table? true)
+(sql/format q-sqlmap)
 => ["SELECT foo.a, foo.b, foo.c FROM foo WHERE foo.a = ?" "baz"]
 ```
 
-Honeysql is a relatively "pure" library, it does not manage your sql connection
+HoneySQL is a relatively "pure" library, it does not manage your sql connection
 or run queries for you, it simply generates SQL strings. You can then pass them
-to jdbc:
+to a JDBC library, such as [`next.jdbc`](https://github.com/seancorfield/next-jdbc):
 
 ```clj
 (jdbc/query conn (sql/format sqlmap))
@@ -587,6 +591,6 @@ To teach `honeysql` how to handle your datatype you need to implement [`honeysql
 
 ## License
 
-Copyright © 2012-2017 Justin Kramer
+Copyright (c) 2020 Sean Corfield. HoneySQL 1.x was copyright (c) 2012-2020 Justin Kramer and Sean Corfield.
 
 Distributed under the Eclipse Public License, the same as Clojure.

@@ -39,13 +39,14 @@
     (conj order clause)))
 
 (def ^:private dialects
-  {:ansi  {:quote #(str \" % \")}
-   :mssql {:quote #(str \[ % \])}
-   :mysql {:quote #(str \` % \`)
-           :clause-order-fn #(add-clause-before
-                              (filterv (complement #{:set}) %)
-                              :set
-                              :where)}})
+  {:ansi      {:quote #(str \" % \")}
+   :sqlserver {:quote #(str \[ % \])}
+   :mysql     {:quote #(str \` % \`)
+               :clause-order-fn #(add-clause-before
+                                  (filterv (complement #{:set}) %)
+                                  :set
+                                  :where)}
+   :oracle    {:quote #(str \" % \")}})
 
 ; should become defonce
 (def ^:private default-dialect (atom (:ansi dialects)))
@@ -523,7 +524,7 @@
 (defn set-dialect!
   "Set the default dialect for formatting.
 
-  Can be: `:ansi` (the default), `:mssql`, `:mysql`.
+  Can be: `:ansi` (the default), `:mysql`, `:oracle`, or `:sqlserver`.
 
   Dialects are always applied to the base order to create the current order."
   [dialect]
@@ -544,9 +545,15 @@
   only clause so far where that would matter is `:set` which differs in
   MySQL..."
   [clause formatter before]
-  (swap! base-clause-order add-clause-before clause before)
-  (swap! current-clause-order add-clause-before clause before)
-  (swap! clause-format assoc clause formatter))
+  (let [f (if (keyword? formatter)
+            (get @clause-format formatter)
+            formatter)]
+    (when-not (and f (fn? f))
+      (throw (ex-info "The formatter must be a function or existing clause"
+                      {:type (type formatter)})))
+    (swap! base-clause-order add-clause-before clause before)
+    (swap! current-clause-order add-clause-before clause before)
+    (swap! clause-format assoc clause f)))
 
 (comment
   (format {:truncate :foo})
@@ -556,6 +563,7 @@
   (format-expr [:foo [:bar [:+ 2 [:g :abc]]] [:f 1 :quux]])
   (format-expr :id)
   (format-expr 1)
+  (format {:select [:a [:b :c] [[:d :e]] [[:f :g] :h]]})
   (format-on-expr :where [:= :id 1])
   (format-dsl {:select [:*] :from [:table] :where [:= :id 1]})
   (format {:select [:t.*] :from [[:table :t]] :where [:= :id 1]} {})

@@ -108,9 +108,12 @@
   ;; EXISTS should never have been implemented as SQL syntax: it's an operator!
   #_(is (= (format {:exists {:select [:a] :from [:foo]}})
            ["EXISTS (SELECT a FROM foo)"]))
-  ;; ugly because it's hard to select just a function call without an alias:
+  ;; select function call with an alias:
   (is (= (format {:select [[[:exists {:select [:a] :from [:foo]}] :x]]})
          ["SELECT EXISTS (SELECT a FROM foo) AS x"]))
+  ;; select function call with no alias required:
+  (is (= (format {:select [[[:exists {:select [:a] :from [:foo]}]]]})
+         ["SELECT EXISTS (SELECT a FROM foo)"]))
   (is (= (format {:select [:id]
                   :from [:foo]
                   :where [:exists {:select [1]

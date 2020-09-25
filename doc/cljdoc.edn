@@ -1,0 +1,11 @@
+{:cljdoc.doc/tree [["Readme" {:file "README.md"}]
+                   ["Changes" {:file "CHANGELOG.md"}]
+                   ["Getting Started" {:file "doc/getting-started.md"}
+                    #_["Friendly SQL Functions" {:file "doc/friendly-sql-functions.md"}]
+                    #_["Tips & Tricks" {:file "doc/tips-and-tricks.md"}]
+                    #_["Result Set Builders" {:file "doc/result-set-builders.md"}]
+                    #_["Prepared Statements" {:file "doc/prepared-statements.md"}]
+                    #_["Transactions" {:file "doc/transactions.md"}]]
+                   #_["All The Options" {:file "doc/all-the-options.md"}]
+                   #_["datafy, nav, and :schema" {:file "doc/datafy-nav-and-schema.md"}]
+                   ["Differences from 1.x" {:file "doc/difference-from-1-x.md"}]]}
