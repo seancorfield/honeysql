@@ -309,8 +309,9 @@
              (format {:dialect :mysql})))))
 
 (deftest inlined-values-are-stringified-correctly
-  (is (= ["SELECT foo, bar, NULL"]
+  (is (= ["SELECT 'foo', 'It''s a quote!', bar, NULL"]
          (format {:select [[[:inline "foo"]]
+                           [[:inline "It's a quote!"]]
                            [[:inline :bar]]
                            [[:inline nil]]]}))))
 

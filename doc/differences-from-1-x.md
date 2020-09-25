@@ -97,7 +97,7 @@ The following new syntax has been added:
 * `:inline` -- used as a function to replace the `sql/inline` / `#sql/inline` machinery,
 * `:interval` -- used as a function to support `INTERVAL <n> <units>`, e.g., `[:interval 30 :days]`.
 
-> Note 1: `:inline` currently inlines strings like `"foo"` as `foo` which matches the 1.x behavior but this will almost certainly change to inline as `'foo'`, i.e., a SQL string value, before release.
+> Note 1: in 1.x, inlining a string `"foo"` produced `foo` but in 2.x it produces `'foo'`, i.e., string literals become SQL strings without needing internal quotes (1.x required `"'foo'"`).
 
 > Note 2: expect `:raw` to be added in some form before release.
 

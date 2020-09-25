@@ -421,7 +421,7 @@
 (defn- sqlize-value [x]
   (cond
     (nil? x)     "NULL"
-    (string? x)  x ; I feel this should be 'single-quoted' but 1.x does not
+    (string? x)  (str \' (str/replace x "'" "''") \')
     (symbol? x)  (name x)
     (keyword? x) (name x)
     :else        (str x)))
