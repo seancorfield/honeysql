@@ -12,6 +12,21 @@
                      {:dialect :mysql}))))
 
 (deftest expr-tests
+  (is (= ["id IS NULL"]
+         (sut/format-expr [:= :id nil])))
+  (is (= ["id IS NULL"]
+         (sut/format-expr [:is :id nil])))
+  (is (= ["id IS NOT NULL"]
+         (sut/format-expr [:<> :id nil])))
+  (is (= ["id IS NOT NULL"]
+         (sut/format-expr [:!= :id nil])))
+  (is (= ["id IS NOT NULL"]
+         (sut/format-expr [:is-not :id nil])))
+  ;; degenerate cases:
+  (is (= ["NULL IS NULL"]
+         (sut/format-expr [:= nil nil])))
+  (is (= ["NULL IS NOT NULL"]
+         (sut/format-expr [:<> nil nil])))
   (is (= ["id = ?" 1]
          (sut/format-expr [:= :id 1])))
   (is (= ["id + ?" 1]

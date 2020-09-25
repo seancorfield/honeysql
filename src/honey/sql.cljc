@@ -463,17 +463,24 @@
         (let [op (first x)]
           (if (keyword? op)
             (cond (infix-ops op)
-                  (let [[_ a b] x
+                  (let [[_ a b]   x
                         [s1 & p1] (format-expr a {:nested? true})
-                        [s2 & p2] (format-expr b {:nested? true})]
-                    (-> (str s1 " "
-                             (sql-kw (get infix-aliases op op))
-                             " " s2)
-                        (cond-> nested?
-                          (as-> s (str "(" s ")")))
-                        (vector)
-                        (into p1)
-                        (into p2)))
+                        [s2 & p2] (format-expr b {:nested? true})
+                        op        (get infix-aliases op op)]
+                      (if (and (#{:= :<>} op) (or (nil? a) (nil? b)))
+                        (-> (str (if (nil? a)
+                                   (if (nil? b) "NULL" s2)
+                                   s1)
+                                 (if (= := op) " IS NULL" " IS NOT NULL"))
+                            (cond-> nested?
+                              (as-> s (str "(" s ")")))
+                            (vector))
+                        (-> (str s1 " " (sql-kw op) " " s2)
+                            (cond-> nested?
+                              (as-> s (str "(" s ")")))
+                            (vector)
+                            (into p1)
+                            (into p2))))
                   (special-syntax op)
                   (let [formatter (special-syntax op)]
                     (formatter (rest x)))
@@ -573,6 +580,7 @@
   (format {:select [:*] :from [:table] :order-by [[[:date :expiry] :desc] :bar]} {})
   (format {:select [:*] :from [:table] :where [:< [:date_add :expiry [:interval 30 :days]] [:now]]} {})
   (format-expr [:interval 30 :days])
-  (format {:select [:*] :from [:table] :where [:= :id 1]} {:dialect :mysql})
+  (format {:select [:*] :from [:table] :where [:= :id (int 1)]} {:dialect :mysql})
+  (map fn? (format {:select [:*] :from [:table] :where [:= :id (with-meta (constantly 42) {:foo true})]} {:dialect :mysql}))
   (format {:select [:*] :from [:table] :where [:in :id [1 2 3 4]]} {})
   ,)
