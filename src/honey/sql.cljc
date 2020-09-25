@@ -193,10 +193,8 @@
                 (map (fn [[x expr]]
                        (let [[sql & params]   (format-with-part x)
                              [sql' & params'] (format-dsl expr)]
-                         (cond-> [(str sql " AS "
-                                       (if (seq params')
-                                         (str "(" sql' ")")
-                                         sql'))]
+                         ;; according to docs, CTE should _always_ be wrapped:
+                         (cond-> [(str sql " AS " (str "(" sql' ")"))]
                            params  (into params)
                            params' (into params'))))
                      xs))]

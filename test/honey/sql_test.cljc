@@ -84,9 +84,9 @@
                   :from [[{:values [[1 2 3]]} [:vals {:columns [:a :b :c]}]]]}))))
 (deftest test-cte
   (is (= (format {:with [[:query {:select [:foo] :from [:bar]}]]})
-         ["WITH query AS SELECT foo FROM bar"]))
+         ["WITH query AS (SELECT foo FROM bar)"]))
   (is (= (format {:with-recursive [[:query {:select [:foo] :from [:bar]}]]})
-         ["WITH RECURSIVE query AS SELECT foo FROM bar"]))
+         ["WITH RECURSIVE query AS (SELECT foo FROM bar)"]))
   (is (= (format {:with [[[:static {:columns [:a :b :c]}] {:values [[1 2 3] [4 5 6]]}]]})
          ["WITH static (a, b, c) AS (VALUES (?, ?, ?), (?, ?, ?))" 1 2 3 4 5 6]))
   (is (= (format
