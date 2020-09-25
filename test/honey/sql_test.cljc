@@ -231,14 +231,14 @@
          ["WITH bar (spam, eggs) AS (VALUES (?, ?), (?, ?), (?, ?)) SELECT foo FROM bar1 UNION ALL SELECT foo FROM bar2" 1 2 3 4 5 6])))
 
 (deftest parameterizer-none
-  (testing "array parameter"
+  (testing "array parameter -- fail: parameterizer"
     (is (= (format {:insert-into :foo
                     :columns [:baz]
                     :values [[[:array [1 2 3 4]]]]}
                    {:parameterizer :none})
            ["INSERT INTO foo (baz) VALUES (ARRAY[1, 2, 3, 4])"])))
 
-  (testing "union complex values"
+  (testing "union complex values -- fail: parameterizer"
     (is (= (format {:union [{:select [:foo] :from [:bar1]}
                             {:select [:foo] :from [:bar2]}]
                     :with [[[:bar {:columns [:spam :eggs]}]
@@ -246,26 +246,61 @@
                    {:parameterizer :none})
            ["WITH bar (spam, eggs) AS (VALUES (1, 2), (3, 4), (5, 6)) SELECT foo FROM bar1 UNION SELECT foo FROM bar2"]))))
 
-(deftest where-and
-  (testing "should ignore a nil predicate"
-    (is (= (format {:where [:and [:= :foo "foo"] [:= :bar "bar"] nil]}
-                   {:parameterizer :postgresql})
-           ["WHERE (foo = $1 AND bar = $2)" "foo" "bar"]))))
+(deftest inline-was-parameterizer-none
+  (testing "array parameter"
+    (is (= (format {:insert-into :foo
+                    :columns [:baz]
+                    :values [[[:array (mapv vector
+                                            (repeat :inline)
+                                            [1 2 3 4])]]]})
+           ["INSERT INTO foo (baz) VALUES (ARRAY[1, 2, 3, 4])"])))
 
+  (testing "union complex values"
+    (is (= (format {:union [{:select [:foo] :from [:bar1]}
+                            {:select [:foo] :from [:bar2]}]
+                    :with [[[:bar {:columns [:spam :eggs]}]
+                            {:values (mapv #(mapv vector (repeat :inline) %)
+                                           [[1 2] [3 4] [5 6]])}]]})
+           ["WITH bar (spam, eggs) AS (VALUES (1, 2), (3, 4), (5, 6)) SELECT foo FROM bar1 UNION SELECT foo FROM bar2"]))))
 
 #_(defmethod parameterize :single-quote [_ value pname] (str \' value \'))
 #_(defmethod parameterize :mysql-fill [_ value pname] "?")
 
-(deftest customized-parameterizer
-  (testing "should fill param with single quote"
-    (is (= (format {:where [:and [:= :foo "foo"] [:= :bar "bar"] nil]}
-                   {:parameterizer :single-quote})
-           ["WHERE (foo = 'foo' AND bar = 'bar')" "foo" "bar"])))
+(deftest former-parameterizer-tests-where-and
+  (testing "should ignore a nil predicate -- fail: postgresql parameterizer"
+    (is (= (format {:where [:and
+                            [:= :foo "foo"]
+                            [:= :bar "bar"]
+                            nil
+                            [:= :quux "quux"]]}
+                   {:parameterizer :postgresql})
+           ["WHERE (foo = ?) AND (bar = $2) AND (quux = $3)" "foo" "bar" "quux"])))
+  ;; this is _almost_ what :inline should be doing:
+  #_(testing "should fill param with single quote"
+      (is (= (format {:where [:and
+                              [:= :foo "foo"]
+                              [:= :bar "bar"]
+                              nil
+                              [:= :quux "quux"]]}
+                     {:parameterizer :single-quote})
+             ["WHERE (foo = 'foo') AND (bar = 'bar') AND (quux = 'quux')" "foo" "bar" "quux"])))
+  (testing "should inline params with single quote"
+    (is (= (format {:where [:and
+                            [:= :foo [:inline "foo"]]
+                            [:= :bar [:inline "bar"]]
+                            nil
+                            [:= :quux [:inline "quux"]]]})
+           ["WHERE (foo = 'foo') AND (bar = 'bar') AND (quux = 'quux')"])))
+  ;; this is the normal behavior -- not a custom parameterizer!
   (testing "should fill param with ?"
-    (is (= (format {:where [:and [:= :foo "foo"] [:= :bar "bar"] nil]}
-                   {:parameterizer :mysql-fill})
-           ["WHERE (foo = ? AND bar = ?)" "foo" "bar"]))))
-
+    (is (= (format {:where [:and
+                            [:= :foo "foo"]
+                            [:= :bar "bar"]
+                            nil
+                            [:= :quux "quux"]]}
+                   ;; this never did anything useful:
+                   #_{:parameterizer :mysql-fill})
+           ["WHERE (foo = ?) AND (bar = ?) AND (quux = ?)" "foo" "bar" "quux"]))))
 
 (deftest set-before-from ; issue 235
   (is (=
