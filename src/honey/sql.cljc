@@ -374,7 +374,7 @@
    ;:values 220
    :query-values 230})
 
-(defn- format-dsl [x & [{:keys [aliased? nested?]}]]
+(defn- format-dsl [x & [{:keys [aliased? nested? pretty?]}]]
   (let [[sqls params leftover]
         (reduce (fn [[sql params leftover] k]
                   (if-let [xs (k x)]
@@ -395,7 +395,9 @@
                                (str/join ", " (keys leftover)))
                           leftover))
         [(str "<unknown" (str/join (keys leftover)) ">")])
-      (into [(cond-> (str/join " " sqls)
+      (into [(cond-> (str/join (if pretty? "\n" " ") sqls)
+               pretty?
+               (as-> s (str "\n" s "\n"))
                (and nested? (not aliased?))
                (as-> s (str "(" s ")")))] params))))
 
@@ -551,7 +553,7 @@
                *quoted*  (if (contains? opts :quoted)
                            (:quoted opts)
                            dialect?)]
-       (mapv #(unwrap % opts) (format-dsl data))))))
+       (mapv #(unwrap % opts) (format-dsl data opts))))))
 
 (defn set-dialect!
   "Set the default dialect for formatting.
@@ -603,9 +605,10 @@
   (format {:select [:*] :from [:table] :group-by [[:date :bar]]} {})
   (format {:select [:*] :from [:table] :order-by [[:foo :desc] :bar]} {})
   (format {:select [:*] :from [:table] :order-by [[[:date :expiry] :desc] :bar]} {})
+  (println (format {:select [:*] :from [:table] :order-by [[[:date :expiry] :desc] :bar]} {:pretty? true}))
   (format {:select [:*] :from [:table] :where [:< [:date_add :expiry [:interval 30 :days]] [:now]]} {})
   (format-expr [:interval 30 :days])
   (format {:select [:*] :from [:table] :where [:= :id (int 1)]} {:dialect :mysql})
   (map fn? (format {:select [:*] :from [:table] :where [:= :id (with-meta (constantly 42) {:foo true})]} {:dialect :mysql}))
-  (format {:select [:*] :from [:table] :where [:in :id [1 2 3 4]]} {})
+  (println (format {:select [:*] :from [:table] :where [:in :id [1 2 3 4]]} {:pretty? true}))
   ,)

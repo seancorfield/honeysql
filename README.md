@@ -20,8 +20,6 @@ All sample code in this README is automatically run as a unit test using
 Note that while some of these samples show pretty-printed SQL, this is just for
 README readability; honeysql does not generate pretty-printed SQL.
 
-_The `#sql/regularize` directive tells the test-runner to ignore the extraneous whitespace._ [TODO: replace with pretty print option!]
-
 ## Usage
 
 ```clojure
@@ -147,11 +145,12 @@ then provide a collection of rows, each a collection of column values:
      [["Jon" "Smith" 34]
       ["Andrew" "Cooper" 12]
       ["Jane" "Daniels" 56]])
-    sql/format)
-=> [#sql/regularize
-    "INSERT INTO properties (name, surname, age)
-     VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)"
-    "Jon" "Smith" 34 "Andrew" "Cooper" 12 "Jane" "Daniels" 56]
+    (sql/format {:pretty? true}))
+=> ["
+INSERT INTO properties (name, surname, age)
+VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
+"
+"Jon" "Smith" 34 "Andrew" "Cooper" 12 "Jane" "Daniels" 56]
 ```
 
 
@@ -163,13 +162,14 @@ and the remaining maps *must* have the same set of keys and values:
     (values [{:name "John" :surname "Smith" :age 34}
              {:name "Andrew" :surname "Cooper" :age 12}
              {:name "Jane" :surname "Daniels" :age 56}])
-    sql/format)
-=> [#sql/regularize
-    "INSERT INTO properties (name, surname, age)
-     VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)"
-    "John" "Smith" 34
-    "Andrew" "Cooper"  12
-    "Jane" "Daniels" 56]
+    (sql/format {:pretty? true}))
+=> ["
+INSERT INTO properties (name, surname, age)
+VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
+"
+"John" "Smith" 34
+"Andrew" "Cooper"  12
+"Jane" "Daniels" 56]
 ```
 
 ### Nested subqueries
@@ -184,13 +184,14 @@ The column values do not have to be literals, they can be nested queries:
                 :role_id         (-> (select :id)
                                      (from :role)
                                      (where [:= :name role-name]))}])
-      sql/format))
+      (sql/format {:pretty? true})))
 
-=> [#sql/regularize
-    "INSERT INTO user_profile_to_role (user_profile_id, role_id)
-     VALUES (?, (SELECT id FROM role WHERE name = ?))"
-    12345
-    "user"]
+=> ["
+INSERT INTO user_profile_to_role (user_profile_id, role_id)
+VALUES (?, (SELECT id FROM role WHERE name = ?))
+"
+12345
+"user"]
 ```
 
 ```clojure
@@ -211,11 +212,12 @@ Composite types are supported:
     (values
      [["small" (composite 1 "inch")]
       ["large" (composite 10 "feet")]])
-    sql/format)
-=> [#sql/regularize
-    "INSERT INTO comp_table (name, comp_column)
-     VALUES (?, (?, ?)), (?, (?, ?))"
-    "small" 1 "inch" "large" 10 "feet"]
+    (sql/format {:pretty? true}))
+=> ["
+INSERT INTO comp_table (name, comp_column)
+VALUES (?, (?, ?)), (?, (?, ?))
+"
+"small" 1 "inch" "large" 10 "feet"]
 ```
 
 ### Updates
@@ -228,13 +230,14 @@ with `clojure.core/set`):
     (sset {:kind "dramatic"
            :watched (sql/call :+ :watched 1)})
     (where [:= :kind "drama"])
-    sql/format)
-=> [#sql/regularize
-    "UPDATE films SET kind = ?, watched = (watched + ?)
-     WHERE kind = ?"
-    "dramatic"
-    1
-    "drama"]
+    (sql/format {:pretty? true}))
+=> ["
+UPDATE films SET kind = ?, watched = (watched + ?)
+WHERE kind = ?
+"
+"dramatic"
+1
+"drama"]
 ```
 
 If you are trying to build a compound update statement (with `from` or `join`),
@@ -251,7 +254,7 @@ Deletes look as you would expect:
 ```clojure
 (-> (delete-from :films)
     (where [:<> :kind "musical"])
-    sql/format)
+    (sql/format))
 => ["DELETE FROM films WHERE kind <> ?" "musical"]
 ```
 
@@ -262,20 +265,21 @@ If your database supports it, you can also delete from multiple tables:
     (from :films)
     (join :directors [:= :films.director_id :directors.id])
     (where [:<> :kind "musical"])
-    sql/format)
-=> [#sql/regularize
-    "DELETE films, directors
-     FROM films
-     INNER JOIN directors ON films.director_id = directors.id
-     WHERE kind <> ?"
-    "musical"]
+    (sql/format {:pretty? true}))
+=> ["
+DELETE films, directors
+FROM films
+INNER JOIN directors ON films.director_id = directors.id
+WHERE kind <> ?
+"
+"musical"]
 ```
 
 If you want to delete everything from a table, you can use `truncate`:
 
 ```clojure
 (-> (truncate :films)
-    sql/format)
+    (sql/format))
 => ["TRUNCATE films"]
 ```
 
@@ -348,11 +352,12 @@ have a lot of function calls needed in code:
     (values [{:location [:ST_SetSRID
                          [:ST_MakePoint 0.291 32.621]
                          [:cast 4325 :integer]]}])
-    (sql/format))
-=> [#sql/regularize
-    "INSERT INTO sample (location)
-     VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))"
-    0.291 32.621 4326]
+    (sql/format {:pretty? true}))
+=> ["
+INSERT INTO sample (location)
+VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))
+"
+0.291 32.621 4326]
 ```
 
 #### Raw SQL fragments
@@ -477,22 +482,20 @@ big-complicated-map
 ```
 ```clojure
 (sql/format big-complicated-map {:param1 "gabba" :param2 2})
-=> [#sql/regularize
-    "SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10
-     FROM foo f, baz b
-     INNER JOIN draq ON f.b = draq.x
-     LEFT JOIN clod c ON f.a = c.d
-     RIGHT JOIN bock ON bock.z = c.e
-     WHERE ((f.a = ? AND b.baz <> ?)
-           OR (? < ? AND ? < ?)
-           OR (f.e in (?, ?, ?))
-           OR f.e BETWEEN ? AND ?)
-     GROUP BY f.a, c.e
-     HAVING ? < f.e
-     ORDER BY b.baz DESC, c.quux, f.a NULLS FIRST
-     LIMIT ?
-     OFFSET ? "
-     "bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10]
+=> ["
+SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10
+FROM foo f, baz b
+INNER JOIN draq ON f.b = draq.x
+LEFT JOIN clod c ON f.a = c.d
+RIGHT JOIN bock ON bock.z = c.e
+WHERE ((f.a = ? AND b.baz <> ?) OR (? < ? AND ? < ?) OR (f.e in (?, ?, ?)) OR f.e BETWEEN ? AND ?)
+GROUP BY f.a, c.e
+HAVING ? < f.e
+ORDER BY b.baz DESC, c.quux, f.a NULLS FIRST
+LIMIT ?
+OFFSET ?
+"
+"bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10]
 ```
 ```clojure
 ;; Printable and readable
