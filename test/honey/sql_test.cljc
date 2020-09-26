@@ -52,7 +52,7 @@
   (is (= ["SELECT * FROM \"table\" WHERE \"id\" = ?" 1]
          (sut/format {:select [:*] :from [:table] :where [:= :id 1]} {:quoted true})))
   ;; temporarily remove AS from alias here
-  (is (= ["SELECT \"t\".* FROM \"table\" \"t\" WHERE \"id\" = ?" 1]
+  (is (= ["SELECT \"t\".* FROM \"table\" AS \"t\" WHERE \"id\" = ?" 1]
          (sut/format {:select [:t.*] :from [[:table :t]] :where [:= :id 1]} {:quoted true})))
   (is (= ["SELECT * FROM \"table\" GROUP BY \"foo\", \"bar\""]
          (sut/format {:select [:*] :from [:table] :group-by [:foo :bar]} {:quoted true})))
@@ -69,8 +69,20 @@
   (is (= ["SELECT * FROM \"table\" WHERE \"id\" IN (?, ?, ?, ?)" 1 2 3 4]
          (sut/format {:select [:*] :from [:table] :where [:in :id [1 2 3 4]]} {:quoted true}))))
 
-;; tests lifted from HoneySQL v1 to check for compatibility
+;; issue-based tests
 
+(deftest subquery-alias-263
+  (is (= ["SELECT type FROM (SELECT address AS field-alias FROM Candidate) AS sub-q-alias"]
+         (sut/format {:select [:type]
+                      :from [[{:select [[:address :field-alias]]
+                               :from [:Candidate]} :sub-q-alias]]})))
+  (is (= ["SELECT type FROM (SELECT address field-alias FROM Candidate) sub-q-alias"]
+         (sut/format {:select [:type]
+                      :from [[{:select [[:address :field-alias]]
+                               :from [:Candidate]} :sub-q-alias]]}
+                     {:dialect :oracle :quoted false}))))
+
+;; tests lifted from HoneySQL v1 to check for compatibility
 
 (deftest alias-splitting
   (is (= ["SELECT `aa`.`c` AS `a.c`, `bb`.`c` AS `b.c`, `cc`.`c` AS `c.c`"]
@@ -81,7 +93,7 @@
       "aliases containing \".\" are quoted as necessary but not split"))
 
 (deftest values-alias
-  (is (= ["SELECT vals.a FROM (VALUES (?, ?, ?)) vals (a, b, c)" 1 2 3]
+  (is (= ["SELECT vals.a FROM (VALUES (?, ?, ?)) AS vals (a, b, c)" 1 2 3]
          (format {:select [:vals.a]
                   :from [[{:values [[1 2 3]]} [:vals {:columns [:a :b :c]}]]]}))))
 (deftest test-cte
@@ -306,7 +318,7 @@
 
 (deftest set-before-from ; issue 235
   (is (=
-       ["UPDATE \"films\" \"f\" SET \"kind\" = \"c\".\"test\" FROM (SELECT \"b\".\"test\" FROM \"bar\" \"b\" WHERE \"b\".\"id\" = ?) \"c\" WHERE \"f\".\"kind\" = ?" 1 "drama"]
+       ["UPDATE \"films\" \"f\" SET \"kind\" = \"c\".\"test\" FROM (SELECT \"b\".\"test\" FROM \"bar\" AS \"b\" WHERE \"b\".\"id\" = ?) AS \"c\" WHERE \"f\".\"kind\" = ?" 1 "drama"]
        (->
          {:update [:films :f]
           :set    {:kind :c.test}
@@ -333,7 +345,7 @@
              (format {:dialect :mysql})))))
 
 (deftest delete-test
-  (is (= ["DELETE `t1`, `t2` FROM `table1` `t1` INNER JOIN `table2` `t2` ON `t1`.`fk` = `t2`.`id` WHERE `t1`.`bar` = ?" 42]
+  (is (= ["DELETE `t1`, `t2` FROM `table1` AS `t1` INNER JOIN `table2` AS `t2` ON `t1`.`fk` = `t2`.`id` WHERE `t1`.`bar` = ?" 42]
          (-> {:delete [:t1 :t2]
               :from [[:table1 :t1]]
               :join [[:table2 :t2] [:= :t1.fk :t2.id]]
@@ -372,7 +384,7 @@
 
 (deftest join-on-true-253
   ;; used to work on honeysql 0.9.2; broke in 0.9.3
-  (is (= ["SELECT foo FROM bar INNER JOIN table t ON TRUE"]
+  (is (= ["SELECT foo FROM bar INNER JOIN table AS t ON TRUE"]
          (format {:select [:foo]
                   :from [:bar]
                   :join [[:table :t] true]}))))
@@ -382,7 +394,7 @@
          (format {:select [:*]
                   :from [:foo]
                   :cross-join [:bar]})))
-  (is (= ["SELECT * FROM foo f CROSS JOIN bar b"]
+  (is (= ["SELECT * FROM foo AS f CROSS JOIN bar b"]
          (format {:select [:*]
                   :from [[:foo :f]]
                   :cross-join [[:bar :b]]}))))

@@ -46,7 +46,7 @@
                                   (filterv (complement #{:set}) %)
                                   :set
                                   :where)}
-   :oracle    {:quote #(str \" % \")}})
+   :oracle    {:quote #(str \" % \") :as false}})
 
 ; should become defonce
 (def ^:private default-dialect (atom (:ansi dialects)))
@@ -109,7 +109,7 @@
                             {:selectable s})))
           (cond-> (format-entity s)
             pair?
-            (str #_" AS " " "
+            (str (if (and (contains? *dialect* :as) (not (:as *dialect*))) " " " AS ")
                  (format-entity (second x) {:aliased? true}))))
 
         :else
@@ -133,7 +133,12 @@
                                    (format-selectable-dsl a {:aliased? true})))]
           (-> [(cond-> sql
                  pair?
-                 (str (if as? " AS " " ") sql'))]
+                 (str (if as?
+                        (if (and (contains? *dialect* :as)
+                                 (not (:as *dialect*)))
+                          " "
+                          " AS ")
+                        " ") sql'))]
               (into params)
               (into params')))
 
@@ -172,9 +177,9 @@
           (reduce (fn [[sql params] [sql' & params']]
                     [(conj sql sql') (if params' (into params params') params)])
                   [[] []]
-                  (map #(format-selectable-dsl % {:as? (= k :select)}) xs))]
+                  (map #(format-selectable-dsl % {:as? (#{:select :from} k)}) xs))]
       (into [(str (sql-kw k) " " (str/join ", " sqls))] params))
-    (let [[sql & params] (format-selectable-dsl xs {:as? (= k :select)})]
+    (let [[sql & params] (format-selectable-dsl xs {:as? (#{:select :from} k)})]
       (into [(str (sql-kw k) " " sql)] params))))
 
 (defn- format-with-part [x]
