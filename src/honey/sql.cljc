@@ -20,7 +20,8 @@
    :columns :set :from
    :join :left-join :right-join :inner-join :outer-join :full-join
    :cross-join
-   :where :group-by :having :order-by :limit :offset :values])
+   :where :group-by :having :order-by :limit :offset :values
+   :returning])
 
 (defn- add-clause-before
   "Low-level helper just to insert a new clause."
@@ -339,7 +340,8 @@
          :order-by       #'format-order-by
          :limit          #'format-on-expr
          :offset         #'format-on-expr
-         :values         #'format-values}))
+         :values         #'format-values
+         :returning      #'format-selects}))
 
 (assert (= (set @base-clause-order)
            (set @current-clause-order)
@@ -378,6 +380,11 @@
    :lock 215
    ;:values 220
    :query-values 230})
+;; :on-conflict -- https://www.postgresqltutorial.com/postgresql-upsert/
+;; :on-constraint (part of :on-conflict)
+;; :do-update-set
+;; ;do-nothing
+   ;:returning
 
 (defn- format-dsl [x & [{:keys [aliased? nested? pretty?]}]]
   (let [[sqls params leftover]
