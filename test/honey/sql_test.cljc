@@ -398,3 +398,7 @@
          (format {:select [:*]
                   :from [[:foo :f]]
                   :cross-join [[:bar :b]]}))))
+
+(comment ; make on conflict tests, based on nilenso repo and PG docs
+  (format {:insert-into :foo, :values [[1 2 3]], :on-conflict :e :do-nothing true})
+  (format {:insert-into :foo, :values [[1 2 3]], :on-conflict {:on-constraint :foo_key} :do-update-set {:a 42 :b :excluded.b}}))

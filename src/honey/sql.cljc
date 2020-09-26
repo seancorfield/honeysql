@@ -21,6 +21,7 @@
    :join :left-join :right-join :inner-join :outer-join :full-join
    :cross-join
    :where :group-by :having :order-by :limit :offset :values
+   :on-conflict :on-constraint :do-nothing :do-update-set
    :returning])
 
 (defn- add-clause-before
@@ -297,6 +298,19 @@
                    xs)]
     (into [(str (sql-kw k) " " (str/join ", " sqls))] params)))
 
+(defn- format-on-conflict [k x]
+  (if (keyword? x)
+    [(str (sql-kw k) " (" (format-entity x) ")")]
+    (let [[sql & params] (format-dsl x)]
+      (into [(str (sql-kw k) " " sql)] params))))
+
+(defn- format-do-update-set [k x]
+  (if (keyword? x)
+    (let [e (format-entity x {:drop-ns? true})]
+      [(str (sql-kw k) " " e " = EXCLUDED." e)])
+    (let [[sql & params] (format-set-exprs :set x)]
+      (into [(str (sql-kw k) " " sql)] params))))
+
 (def ^:private base-clause-order
   "The (base) order for known clauses. Can have items added and removed.
 
@@ -341,6 +355,10 @@
          :limit          #'format-on-expr
          :offset         #'format-on-expr
          :values         #'format-values
+         :on-conflict    #'format-on-conflict
+         :on-constraint  #'format-selector
+         :do-nothing     (fn [k _] (vector (sql-kw k)))
+         :do-update-set  #'format-do-update-set
          :returning      #'format-selects}))
 
 (assert (= (set @base-clause-order)
