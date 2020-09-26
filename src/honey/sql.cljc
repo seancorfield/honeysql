@@ -528,6 +528,13 @@
                     {:valid-dialects (vec (sort (keys dialects)))})))
   dialect)
 
+(defn- unwrap [x opts]
+  (if-let [m (meta x)]
+    (if-let [f (::wrapper m)]
+      (f x opts)
+      x)
+    x))
+
 (defn format
   "Turn the data DSL into a vector containing a SQL string followed by
   any parameter values that were encountered in the DSL structure."
@@ -544,7 +551,7 @@
                *quoted*  (if (contains? opts :quoted)
                            (:quoted opts)
                            dialect?)]
-       (format-dsl data)))))
+       (mapv #(unwrap % opts) (format-dsl data))))))
 
 (defn set-dialect!
   "Set the default dialect for formatting.
