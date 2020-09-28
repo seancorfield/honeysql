@@ -399,6 +399,44 @@
                   :from [[:foo :f]]
                   :cross-join [[:bar :b]]}))))
 
-(comment ; make on conflict tests, based on nilenso repo and PG docs
-  (format {:insert-into :foo, :values [[1 2 3]], :on-conflict :e :do-nothing true})
-  (format {:insert-into :foo, :values [[1 2 3]], :on-conflict {:on-constraint :foo_key} :do-update-set {:a 42 :b :excluded.b}}))
+(deftest on-conflict-tests
+  ;; these examples are taken from https://www.postgresqltutorial.com/postgresql-upsert/
+  (is (= ["
+INSERT INTO customers
+(name, email)
+VALUES ('Microsoft', 'hotline@microsoft.com')
+ON CONFLICT ON CONSTRAINT customers_name_key
+DO NOTHING
+"]
+         (format {:insert-into :customers
+                  :columns [:name :email]
+                  :values [[[:inline "Microsoft"], [:inline "hotline@microsoft.com"]]]
+                  :on-conflict {:on-constraint :customers_name_key}
+                  :do-nothing true}
+                 {:pretty? true})))
+  (is (= ["
+INSERT INTO customers
+(name, email)
+VALUES ('Microsoft', 'hotline@microsoft.com')
+ON CONFLICT (name)
+DO NOTHING
+"]
+         (format {:insert-into :customers
+                  :columns [:name :email]
+                  :values [[[:inline "Microsoft"], [:inline "hotline@microsoft.com"]]]
+                  :on-conflict :name
+                  :do-nothing true}
+                 {:pretty? true})))
+  (is (= ["
+INSERT INTO customers
+(name, email)
+VALUES ('Microsoft', 'hotline@microsoft.com')
+ON CONFLICT (name)
+DO UPDATE SET email = EXCLUDED.email || ';' || customers.email
+"]
+         (format {:insert-into :customers
+                  :columns [:name :email]
+                  :values [[[:inline "Microsoft"], [:inline "hotline@microsoft.com"]]]
+                  :on-conflict :name
+                  :do-update-set {:email [:|| :EXCLUDED.email [:inline ";"] :customers.email]}}
+                 {:pretty? true}))))

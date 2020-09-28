@@ -308,8 +308,7 @@
   (if (keyword? x)
     (let [e (format-entity x {:drop-ns? true})]
       [(str (sql-kw k) " " e " = EXCLUDED." e)])
-    (let [[sql & params] (format-set-exprs :set x)]
-      (into [(str (sql-kw k) " " sql)] params))))
+    (format-set-exprs k x)))
 
 (def ^:private base-clause-order
   "The (base) order for known clauses. Can have items added and removed.
