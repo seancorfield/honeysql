@@ -15,7 +15,7 @@
 
 (def ^:private default-clause-order
   "The (default) order for known clauses. Can have items added and removed."
-  [:with :with-recursive :intersect :union :union-all :except
+  [:with :with-recursive :intersect :union :union-all :except :except-all
    :select :insert-into :update :delete :delete-from :truncate
    :columns :set :from
    :join :left-join :right-join :inner-join :outer-join :full-join
@@ -211,23 +211,24 @@
   (format-selects k [xs]))
 
 (defn- format-insert [k table]
-  ;; table can be just a table, a pair of table and statement, or a
-  ;; pair of a pair of table and columns and a statement (yikes!)
   (if (sequential? table)
-    (if (sequential? (first table))
-      (let [[[table cols] statement] table
-            [sql & params] (format-dsl statement)]
-        (into [(str (sql-kw k) " " (format-entity-alias table)
-                    " ("
-                    (str/join ", " (map #'format-entity-alias cols))
-                    ") "
-                    sql)]
-              params))
-      (let [[table statement] table
-            [sql & params] (format-dsl statement)]
-        (into [(str (sql-kw k) " " (format-entity-alias table)
-                    " " sql)]
-              params)))
+    (cond (sequential? (first table))
+          (let [[[table cols] statement] table
+                [sql & params] (format-dsl statement)]
+            (into [(str (sql-kw k) " " (format-entity-alias table)
+                        " ("
+                        (str/join ", " (map #'format-entity-alias cols))
+                        ") "
+                        sql)]
+                  params))
+          (map? (second table))
+          (let [[table statement] table
+                [sql & params] (format-dsl statement)]
+            (into [(str (sql-kw k) " " (format-entity-alias table)
+                        " " sql)]
+                  params))
+          :else
+          [(str (sql-kw k) " " (format-entity-alias table))])
     [(str (sql-kw k) " " (format-entity-alias table))]))
 
 (defn- format-join [k [j e]]
