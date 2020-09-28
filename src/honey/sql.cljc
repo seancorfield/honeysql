@@ -460,11 +460,11 @@
 
 (def ^:private special-syntax
   {:array
-   (fn [[arr]]
+   (fn [k [arr]]
      (let [[sqls params] (format-expr-list arr)]
        (into [(str "ARRAY[" (str/join ", " sqls) "]")] params)))
    :between
-   (fn [[x a b]]
+   (fn [k [x a b]]
      (let [[sql-x & params-x] (format-expr x {:nested? true})
            [sql-a & params-a] (format-expr a {:nested? true})
            [sql-b & params-b] (format-expr b {:nested? true})]
@@ -473,18 +473,21 @@
            (into params-a)
            (into params-b))))
    :cast
-   (fn [[x type]]
+   (fn [k [x type]]
      (let [[sql & params] (format-expr x)]
        (into [(str "CAST(" sql " AS " (sql-kw type) ")")] params)))
+   :default
+   (fn [k []]
+     ["DEFAULT"])
    :inline
-   (fn [[x]]
+   (fn [k [x]]
      [(sqlize-value x)])
    :interval
-   (fn [[n units]]
+   (fn [k [n units]]
      (let [[sql & params] (format-expr n)]
        (into [(str "INTERVAL " sql " " (sql-kw units))] params)))
    :not
-   (fn [[x]]
+   (fn [k [x]]
      (let [[sql & params] (format-expr x)]
        (into [(str "NOT " sql)] params)))})
 
@@ -539,7 +542,7 @@
                               (into p2)))))
                   (special-syntax op)
                   (let [formatter (special-syntax op)]
-                    (formatter (rest x)))
+                    (formatter op (rest x)))
                   :else
                   (let [args          (rest x)
                         [sqls params] (format-expr-list args)]
