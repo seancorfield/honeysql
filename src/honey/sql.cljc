@@ -480,7 +480,11 @@
    :interval
    (fn [[n units]]
      (let [[sql & params] (format-expr n)]
-       (into [(str "INTERVAL " sql " " (sql-kw units))] params)))})
+       (into [(str "INTERVAL " sql " " (sql-kw units))] params)))
+   :not
+   (fn [[x]]
+     (let [[sql & params] (format-expr x)]
+       (into [(str "NOT " sql)] params)))})
 
 (defn format-expr [x & [{:keys [nested?] :as opts}]]
   (cond (or (keyword? x) (symbol? x))
@@ -550,6 +554,9 @@
 
         (or (true? x) (false? x)) ; because (boolean? x) requires Clojure 1.9+
         [(upper-case (str x))]
+
+        (nil? x)
+        ["NULL"]
 
         :else
         ["?" x]))
