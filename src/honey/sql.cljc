@@ -331,6 +331,7 @@
          :union          #'format-on-set-op
          :union-all      #'format-on-set-op
          :except         #'format-on-set-op
+         :except-all     #'format-on-set-op
          :select         #'format-selects
          :insert-into    #'format-insert
          :update         #'format-selector
