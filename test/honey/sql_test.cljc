@@ -215,6 +215,10 @@
                     :from [:bar]
                     :where [:= [:mod :col1 4] [:+ :col2 4]]}))))
 
+  (testing "Example from dharrigan"
+    (is (= ["SELECT pg_try_advisory_lock(1)"]
+           (format {:select [:%pg_try_advisory_lock.1]}))))
+
   (testing "Value context only applies to sequences in value/comparison spots"
     (let [sub {:select [:%sum.amount]
                :from [:bar]
@@ -235,7 +239,6 @@
                   :with [[[:bar {:columns [:spam :eggs]}]
                           {:values [[1 2] [3 4] [5 6]]}]]})
          ["WITH bar (spam, eggs) AS (VALUES (?, ?), (?, ?), (?, ?)) SELECT foo FROM bar1 UNION SELECT foo FROM bar2" 1 2 3 4 5 6])))
-
 
 (deftest union-all-with-cte
   (is (= (format {:union-all [{:select [:foo] :from [:bar1]}
@@ -398,6 +401,50 @@
          (format {:select [:*]
                   :from [[:foo :f]]
                   :cross-join [[:bar :b]]}))))
+
+(deftest insert-example-tests
+  ;; these examples are taken from https://www.postgresql.org/docs/13/sql-insert.html
+  (is (= ["
+INSERT INTO films
+VALUES ('UA502', 'Bananas', 105, '1971-07-13', 'Comedy', '82 minutes')
+"]
+         (format {:insert-into :films
+                  :values [[[:inline "UA502"] [:inline "Bananas"] [:inline 105]
+                            [:inline "1971-07-13"] [:inline "Comedy"]
+                            [:inline "82 minutes"]]]}
+                 {:pretty? true})))
+  (is (= ["
+INSERT INTO films
+VALUES (?, ?, ?, ?, ?, ?)
+" "UA502", "Bananas", 105, "1971-07-13", "Comedy", "82 minutes"]
+         (format {:insert-into :films
+                  :values [["UA502" "Bananas" 105 "1971-07-13" "Comedy" "82 minutes"]]}
+                 {:pretty? true})))
+  (is (= ["
+INSERT INTO films
+(code, title, did, date_prod, kind)
+VALUES (?, ?, ?, ?, ?)
+" "T_601", "Yojimo", 106, "1961-06-16", "Drama"]
+         (format {:insert-into :films
+                  :columns [:code :title :did :date_prod :kind]
+                  :values [["T_601", "Yojimo", 106, "1961-06-16", "Drama"]]}
+                 {:pretty? true})))
+  (is (= ["
+INSERT INTO films
+VALUES (?, ?, ?, DEFAULT, ?, ?)
+" "UA502", "Bananas", 105, "Comedy", "82 minutes"]
+         (format {:insert-into :films
+                  :values [["UA502" "Bananas" 105 [:default] "Comedy" "82 minutes"]]}
+                 {:pretty? true})))
+  (is (= ["
+INSERT INTO films
+(code, title, did, date_prod, kind)
+VALUES (?, ?, ?, DEFAULT, ?)
+" "T_601", "Yojimo", 106, "Drama"]
+         (format {:insert-into :films
+                  :columns [:code :title :did :date_prod :kind]
+                  :values [["T_601", "Yojimo", 106, [:default], "Drama"]]}
+                 {:pretty? true}))))
 
 (deftest on-conflict-tests
   ;; these examples are taken from https://www.postgresqltutorial.com/postgresql-upsert/
