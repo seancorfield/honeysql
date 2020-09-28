@@ -440,7 +440,7 @@
    :regex :regexp})
 
 (def ^:private infix-ops
-  (-> #{"mod" "and" "or" "xor" "<>" "<=" ">="
+  (-> #{"mod" "and" "or" "xor" "<>" "<=" ">=" "||"
         "in" "not-in" "like" "not-like" "regexp"
         "is" "is-not" "not=" "!=" "regex"}
       (into (map str "+-*/%|&^=<>"))
@@ -492,7 +492,7 @@
         (sequential? x)
         (let [op (first x)
               op-ignore-nil #{:and :or}
-              op-variadic   #{:and :or :+ :*}]
+              op-variadic   #{:and :or :+ :* :||}]
           (if (keyword? op)
             (cond (infix-ops op)
                   (if (op-variadic op) ; no aliases here, no special semantics
