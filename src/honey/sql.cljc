@@ -17,7 +17,7 @@
   "The (default) order for known clauses. Can have items added and removed."
   [:with :with-recursive :intersect :union :union-all :except :except-all
    :select :insert-into :update :delete :delete-from :truncate
-   :columns :set :from
+   :columns :composite :set :from
    :join :left-join :right-join :inner-join :outer-join :full-join
    :cross-join
    :where :group-by :having :order-by :limit :offset :values
@@ -169,8 +169,8 @@
           [[] []]
           (map #(format-expr % opts) xs)))
 
-(defn- format-columns [_ xs]
-  (let [[sqls params] (format-expr-list xs {:drop-ns? true})]
+(defn- format-columns [k xs]
+  (let [[sqls params] (format-expr-list xs {:drop-ns? (= :columns k)})]
     (into [(str "(" (str/join ", " sqls) ")")] params)))
 
 (defn- format-selects [k xs]
@@ -340,6 +340,7 @@
          :delete-from    #'format-selector
          :truncate       #'format-selector
          :columns        #'format-columns
+         :composite      #'format-columns
          :set            #'format-set-exprs
          :from           #'format-selects
          :join           #'format-join

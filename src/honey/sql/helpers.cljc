@@ -40,6 +40,7 @@
 (defn delete-from [& args] (generic :delete-from args))
 (defn truncate [& args] (generic :truncate args))
 (defn columns [& args] (generic :columns args))
+(defn composite [& args] (generic :composite args))
 (defn set [& args] (generic :set args))
 (defn from [& args] (generic :from args))
 (defn join [& args] (generic :join args))

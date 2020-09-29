@@ -224,11 +224,10 @@ VALUES (?, (?, ?)), (?, (?, ?))
 
 
 
-
-(seancorfield.readme/defreadme readme-228
+(seancorfield.readme/defreadme readme-227
 (-> (helpers/update :films)
-    (sset {:kind "dramatic"
-           :watched (sql/call :+ :watched 1)})
+    (set {:kind "dramatic"
+           :watched [:+ :watched 1]})
     (where [:= :kind "drama"])
     (sql/format {:pretty? true}))
 => ["
@@ -251,7 +250,7 @@ WHERE kind = ?
 
 
 
-(seancorfield.readme/defreadme readme-254
+(seancorfield.readme/defreadme readme-253
 (-> (delete-from :films)
     (where [:<> :kind "musical"])
     (sql/format))
@@ -260,7 +259,7 @@ WHERE kind = ?
 
 
 
-(seancorfield.readme/defreadme readme-263
+(seancorfield.readme/defreadme readme-262
 (-> (delete [:films :directors])
     (from :films)
     (join :directors [:= :films.director_id :directors.id])
@@ -277,7 +276,7 @@ WHERE kind <> ?
 
 
 
-(seancorfield.readme/defreadme readme-280
+(seancorfield.readme/defreadme readme-279
 (-> (truncate :films)
     (sql/format))
 => ["TRUNCATE films"]
@@ -287,7 +286,7 @@ WHERE kind <> ?
 
 
 
-(seancorfield.readme/defreadme readme-290
+(seancorfield.readme/defreadme readme-289
 (sql/format {:union [(-> (select :*) (from :foo))
                      (-> (select :*) (from :bar))]})
 => ["SELECT * FROM foo UNION SELECT * FROM bar"]
@@ -297,11 +296,11 @@ WHERE kind <> ?
 
 
 
-(seancorfield.readme/defreadme readme-300
+(seancorfield.readme/defreadme readme-299
 (-> (select :%count.*) (from :foo) sql/format)
 => ["SELECT count(*) FROM foo"]
 )
-(seancorfield.readme/defreadme readme-304
+(seancorfield.readme/defreadme readme-303
 (-> (select :%max.id) (from :foo) sql/format)
 => ["SELECT max(id) FROM foo"]
 )
@@ -312,7 +311,7 @@ WHERE kind <> ?
 
 
 
-(seancorfield.readme/defreadme readme-315
+(seancorfield.readme/defreadme readme-314
 (-> (select :id)
     (from :foo)
     (where [:= :a :?baz])
@@ -325,20 +324,20 @@ WHERE kind <> ?
 
 
 
-(seancorfield.readme/defreadme readme-328
+(seancorfield.readme/defreadme readme-327
 (def call-qualify-map
   (-> (select [[:foo :bar]] [[:raw "@var := foo.bar"]])
       (from :foo)
-      (where [:= :a (???/param :baz)] [:= :b [:inline 42]])))
+      (where [:= :a [:param :baz]] [:= :b [:inline 42]])))
 )
-(seancorfield.readme/defreadme readme-334
+(seancorfield.readme/defreadme readme-333
 call-qualify-map
-=> '{:where [:and [:= :a ???/param :baz] [:= :b [:inline 42]]]
+=> '{:where [:and [:= :a [:param :baz]] [:= :b [:inline 42]]]
      :from (:foo)
      :select [[[:foo :bar]] [[:raw "@var := foo.bar"]]]}
 )
-(seancorfield.readme/defreadme readme-340
-(sql/format call-qualify-map :??? {:baz "BAZ"})
+(seancorfield.readme/defreadme readme-339
+(sql/format call-qualify-map {:params {:baz "BAZ"}})
 => ["SELECT foo(bar), @var := foo.bar FROM foo WHERE (a = ?) AND (b = 42)" "BAZ"]
 )
 
@@ -347,7 +346,7 @@ call-qualify-map
 
 
 
-(seancorfield.readme/defreadme readme-350
+(seancorfield.readme/defreadme readme-349
 (-> (insert-into :sample)
     (values [{:location [:ST_SetSRID
                          [:ST_MakePoint 0.291 32.621]
@@ -373,18 +372,18 @@ VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))
 
 
 
-(seancorfield.readme/defreadme readme-376
+(seancorfield.readme/defreadme readme-375
 (-> (select :*)
     (from :foo)
-    (where [:< :expired_at (sql/raw ["now() - '" 5 " seconds'"])])
+    (where [:< :expired_at [:raw ["now() - '" 5 " seconds'"]]])
     (sql/format {:foo 5}))
 => ["SELECT * FROM foo WHERE expired_at < now() - '? seconds'" 5]
 )
 
-(seancorfield.readme/defreadme readme-384
+(seancorfield.readme/defreadme readme-383
 (-> (select :*)
     (from :foo)
-    (where [:< :expired_at (sql/raw ["now() - '" #sql/param :t " seconds'"])])
+    (where [:< :expired_at [:raw ["now() - '" [:param :t] " seconds'"]]])
     (sql/format {:t 5}))
 => ["SELECT * FROM foo WHERE expired_at < now() - '? seconds'" 5]
 )
@@ -398,7 +397,7 @@ VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))
 
 
 
-(seancorfield.readme/defreadme readme-401
+(seancorfield.readme/defreadme readme-400
 (-> (select :foo.a)
     (from :foo)
     (where [:= :foo.a "baz"])
@@ -414,7 +413,7 @@ VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))
 
 
 
-(seancorfield.readme/defreadme readme-417
+(seancorfield.readme/defreadme readme-416
 (-> (select :foo.a)
     (from :foo)
     (where [:= :foo.a "baz"])
@@ -426,7 +425,7 @@ VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))
 
 
 
-(seancorfield.readme/defreadme readme-429
+(seancorfield.readme/defreadme readme-428
 (sql/format
   {:select [:f.foo-id :f.foo-name]
    :from [[:foo-bar :f]]
@@ -440,7 +439,7 @@ VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))
 
 
 
-(seancorfield.readme/defreadme readme-443
+(seancorfield.readme/defreadme readme-442
 (def big-complicated-map
   (-> (select :f.* :b.baz :c.quux [:b.bla "bla-bla"]
               [[:now]] [[:raw "@x := 10"]])
@@ -450,9 +449,9 @@ VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))
       (left-join [:clod :c] [:= :f.a :c.d])
       (right-join :bock [:= :bock.z :c.e])
       (where [:or
-               [:and [:= :f.a "bort"] [:not= :b.baz (???/param :param1)]]
+               [:and [:= :f.a "bort"] [:not= :b.baz [:param :param1]]]
                [:< 1 2 3]
-               [:in :f.e [1 (???/param :param2) 3]]
+               [:in :f.e [1 [:param :param2] 3]]
                [:between :f.e 10 20]])
       (group :f.a :c.e)
       (having [:< 0 :f.e])
@@ -460,7 +459,7 @@ VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))
       (limit 50)
       (offset 10)))
 )
-(seancorfield.readme/defreadme readme-463
+(seancorfield.readme/defreadme readme-462
 big-complicated-map
 => {:select [:f.* :b.baz :c.quux [:b.bla "bla-bla"]
              [[:now]] [[:raw "@x := 10"]]]
@@ -470,9 +469,9 @@ big-complicated-map
     :left-join [[:clod :c] [:= :f.a :c.d]]
     :right-join [:bock [:= :bock.z :c.e]]
     :where [:or
-             [:and [:= :f.a "bort"] [:not= :b.baz (???/param :param1)]]
+             [:and [:= :f.a "bort"] [:not= :b.baz [:param :param1]]]
              [:< 1 2 3]
-             [:in :f.e [1 (????/param :param2) 3]]
+             [:in :f.e [1 [:param :param2] 3]]
              [:between :f.e 10 20]]
     :group-by [:f.a :c.e]
     :having [:< 0 :f.e]
@@ -480,7 +479,7 @@ big-complicated-map
     :limit 50
     :offset 10}
 )
-(seancorfield.readme/defreadme readme-483
+(seancorfield.readme/defreadme readme-482
 (sql/format big-complicated-map {:param1 "gabba" :param2 2})
 => ["
 SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10
@@ -497,7 +496,7 @@ OFFSET ?
 "
 "bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10]
 )
-(seancorfield.readme/defreadme readme-500
+(seancorfield.readme/defreadme readme-499
 ;; Printable and readable
 (= big-complicated-map (read-string (pr-str big-complicated-map)))
 => true
@@ -509,7 +508,7 @@ OFFSET ?
 
 
 
-(seancorfield.readme/defreadme readme-512
+(seancorfield.readme/defreadme readme-511
 (defmethod fmt/fn-handler "betwixt" [_ field lower upper]
   (str (fmt/to-sql field) " BETWIXT "
        (fmt/to-sql lower) " AND " (fmt/to-sql upper)))
@@ -520,23 +519,23 @@ OFFSET ?
 
 
 
-(seancorfield.readme/defreadme readme-523
+(seancorfield.readme/defreadme readme-522
 ;; Takes a MapEntry of the operator & clause data, plus the entire SQL map
 (defmethod fmt/format-clause :foobar [[op v] sqlmap]
   (str "FOOBAR " (fmt/to-sql v)))
 )
-(seancorfield.readme/defreadme readme-528
+(seancorfield.readme/defreadme readme-527
 (sql/format {:select [:a :b] :foobar :baz})
 => ["SELECT a, b FOOBAR baz"]
 )
-(seancorfield.readme/defreadme readme-532
+(seancorfield.readme/defreadme readme-531
 (require '[honeysql.helpers :refer [defhelper]])
 
 ;; Defines a helper function, and allows 'build' to recognize your clause
 (defhelper foobar [m args]
   (assoc m :foobar (first args)))
 )
-(seancorfield.readme/defreadme readme-539
+(seancorfield.readme/defreadme readme-538
 (-> (select :a :b) (foobar :baz) sql/format)
 => ["SELECT a, b FOOBAR baz"]
 
@@ -544,7 +543,7 @@ OFFSET ?
 
 
 
-(seancorfield.readme/defreadme readme-547
+(seancorfield.readme/defreadme readme-546
 (fmt/register-clause! :foobar 110)
 )
 

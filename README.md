@@ -222,13 +222,12 @@ VALUES (?, (?, ?)), (?, (?, ?))
 
 ### Updates
 
-Updates are possible too (note the double S in `sset` to avoid clashing
-with `clojure.core/set`):
+Updates are possible too:
 
 ```clojure
 (-> (helpers/update :films)
-    (sset {:kind "dramatic"
-           :watched (sql/call :+ :watched 1)})
+    (set {:kind "dramatic"
+           :watched [:+ :watched 1]})
     (where [:= :kind "drama"])
     (sql/format {:pretty? true}))
 => ["
@@ -329,16 +328,16 @@ to identify inline parameter values, and how to add in raw SQL fragments!
 (def call-qualify-map
   (-> (select [[:foo :bar]] [[:raw "@var := foo.bar"]])
       (from :foo)
-      (where [:= :a (???/param :baz)] [:= :b [:inline 42]])))
+      (where [:= :a [:param :baz]] [:= :b [:inline 42]])))
 ```
 ```clojure
 call-qualify-map
-=> '{:where [:and [:= :a ???/param :baz] [:= :b [:inline 42]]]
+=> '{:where [:and [:= :a [:param :baz]] [:= :b [:inline 42]]]
      :from (:foo)
      :select [[[:foo :bar]] [[:raw "@var := foo.bar"]]]}
 ```
 ```clojure
-(sql/format call-qualify-map :??? {:baz "BAZ"})
+(sql/format call-qualify-map {:params {:baz "BAZ"}})
 => ["SELECT foo(bar), @var := foo.bar FROM foo WHERE (a = ?) AND (b = 42)" "BAZ"]
 ```
 
@@ -370,13 +369,13 @@ will not be lifted out as parameters, so they end up in the SQL string as-is.
 
 Raw SQL can also be supplied as a vector of strings and values. Strings are
 rendered as-is into the formatted SQL string. Non-strings are lifted as
-parameters. If you need a string parameter lifted, you must use `#sql/param`
+parameters. If you need a string parameter lifted, you must use `:param`
 or the `param` helper.
 
 ```clojure
 (-> (select :*)
     (from :foo)
-    (where [:< :expired_at (sql/raw ["now() - '" 5 " seconds'"])])
+    (where [:< :expired_at [:raw ["now() - '" 5 " seconds'"]]])
     (sql/format {:foo 5}))
 => ["SELECT * FROM foo WHERE expired_at < now() - '? seconds'" 5]
 ```
@@ -384,7 +383,7 @@ or the `param` helper.
 ```clojure
 (-> (select :*)
     (from :foo)
-    (where [:< :expired_at (sql/raw ["now() - '" #sql/param :t " seconds'"])])
+    (where [:< :expired_at [:raw ["now() - '" [:param :t] " seconds'"]]])
     (sql/format {:t 5}))
 => ["SELECT * FROM foo WHERE expired_at < now() - '? seconds'" 5]
 ```
@@ -450,9 +449,9 @@ Here's a big, complicated query. Note that Honey SQL makes no attempt to verify 
       (left-join [:clod :c] [:= :f.a :c.d])
       (right-join :bock [:= :bock.z :c.e])
       (where [:or
-               [:and [:= :f.a "bort"] [:not= :b.baz (???/param :param1)]]
+               [:and [:= :f.a "bort"] [:not= :b.baz [:param :param1]]]
                [:< 1 2 3]
-               [:in :f.e [1 (???/param :param2) 3]]
+               [:in :f.e [1 [:param :param2] 3]]
                [:between :f.e 10 20]])
       (group :f.a :c.e)
       (having [:< 0 :f.e])
@@ -470,9 +469,9 @@ big-complicated-map
     :left-join [[:clod :c] [:= :f.a :c.d]]
     :right-join [:bock [:= :bock.z :c.e]]
     :where [:or
-             [:and [:= :f.a "bort"] [:not= :b.baz (???/param :param1)]]
+             [:and [:= :f.a "bort"] [:not= :b.baz [:param :param1]]]
              [:< 1 2 3]
-             [:in :f.e [1 (????/param :param2) 3]]
+             [:in :f.e [1 [:param :param2] 3]]
              [:between :f.e 10 20]]
     :group-by [:f.a :c.e]
     :having [:< 0 :f.e]
