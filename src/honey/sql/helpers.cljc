@@ -2,7 +2,7 @@
 
 (ns honey.sql.helpers
   "Helper functions for the built-in clauses in honey.sql."
-  (:refer-clojure :exclude [update set group-by])
+  (:refer-clojure :exclude [update set group-by for])
   (:require [honey.sql :as h]))
 
 (defn- default-merge [current args]
@@ -56,6 +56,7 @@
 (defn order-by [& args] (generic :order-by args))
 (defn limit [& args] (generic :limit args))
 (defn offset [& args] (generic :offset args))
+(defn for [& args] (generic :for args))
 (defn values [& args] (generic :values args))
 (defn on-conflict [& args] (generic :on-conflict args))
 (defn on-constraint [& args] (generic :on-constraint args))

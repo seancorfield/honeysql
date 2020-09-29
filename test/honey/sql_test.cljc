@@ -402,6 +402,46 @@
                   :from [[:foo :f]]
                   :cross-join [[:bar :b]]}))))
 
+(deftest locking-select-tests
+  (testing "PostgreSQL/ANSI FOR"
+    (is (= ["SELECT * FROM foo FOR UPDATE"]
+           (format {:select [:*] :from :foo :for :update})))
+    (is (= ["SELECT * FROM foo FOR NO KEY UPDATE"]
+           (format {:select [:*] :from :foo :for :no-key-update})))
+    (is (= ["SELECT * FROM foo FOR SHARE"]
+           (format {:select [:*] :from :foo :for :share})))
+    (is (= ["SELECT * FROM foo FOR KEY SHARE"]
+           (format {:select [:*] :from :foo :for :key-share})))
+    (is (= ["SELECT * FROM foo FOR UPDATE"]
+           (format {:select [:*] :from :foo :for [:update]})))
+    (is (= ["SELECT * FROM foo FOR NO KEY UPDATE"]
+           (format {:select [:*] :from :foo :for [:no-key-update]})))
+    (is (= ["SELECT * FROM foo FOR SHARE"]
+           (format {:select [:*] :from :foo :for [:share]})))
+    (is (= ["SELECT * FROM foo FOR KEY SHARE"]
+           (format {:select [:*] :from :foo :for [:key-share]})))
+    (is (= ["SELECT * FROM foo FOR UPDATE NOWAIT"]
+           (format {:select [:*] :from :foo :for [:update :nowait]})))
+    (is (= ["SELECT * FROM foo FOR UPDATE OF bar NOWAIT"]
+           (format {:select [:*] :from :foo :for [:update :bar :nowait]})))
+    (is (= ["SELECT * FROM foo FOR UPDATE OF bar, quux"]
+           (format {:select [:*] :from :foo :for [:update [:bar :quux]]}))))
+  (testing "MySQL for/lock"
+    ;; these examples come from:
+    (is (= ["SELECT * FROM t1 WHERE c1 = (SELECT c1 FROM t2) FOR UPDATE"] ; portable
+           (format {:select [:*] :from :t1
+                    :where [:= :c1 {:select [:c1] :from :t2}]
+                    :for [:update]})))
+    (is (= ["SELECT * FROM t1 WHERE c1 = (SELECT c1 FROM t2 FOR UPDATE) FOR UPDATE"]
+           (format {:select [:*] :from :t1
+                    :where [:= :c1 {:select [:c1] :from :t2 :for [:update]}]
+                    :for [:update]})))
+    (is (= ["SELECT * FROM foo WHERE name = 'Jones' LOCK IN SHARE MODE"] ; MySQL-specific
+           (format {:select [:*] :from :foo
+                    :where [:= :name [:inline "Jones"]]
+                    :lock [:in-share-mode]}
+                   {:dialect :mysql :quoted false})))))
+
 (deftest insert-example-tests
   ;; these examples are taken from https://www.postgresql.org/docs/13/sql-insert.html
   (is (= ["

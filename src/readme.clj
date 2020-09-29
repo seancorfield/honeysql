@@ -23,13 +23,15 @@
 
 
 (seancorfield.readme/defreadme readme-25
+(refer-clojure :exclude '[for group-by set update])
 (require '[honey.sql :as sql]
+         ;; caution: this overwrites for, group-by, set, and update
          '[honey.sql.helpers :refer :all :as helpers])
 )
 
 
 
-(seancorfield.readme/defreadme readme-32
+(seancorfield.readme/defreadme readme-34
 (def sqlmap {:select [:a :b :c]
              :from   [:foo]
              :where  [:= :f.a "baz"]})
@@ -41,7 +43,7 @@
 
 
 
-(seancorfield.readme/defreadme readme-44
+(seancorfield.readme/defreadme readme-46
 (sql/format sqlmap)
 => ["SELECT a, b, c FROM foo WHERE f.a = ?" "baz"]
 )
@@ -62,7 +64,7 @@
 
 
 
-(seancorfield.readme/defreadme readme-65
+(seancorfield.readme/defreadme readme-67
 (def q-sqlmap {:select [:foo/a :foo/b :foo/c]
                :from   [:foo]
                :where  [:= :foo/a "baz"]})
@@ -76,7 +78,7 @@
 
 
 
-(seancorfield.readme/defreadme readme-79
+(seancorfield.readme/defreadme readme-81
 (-> (select :a :b :c)
     (from :foo)
     (where [:= :f.a "baz"]))
@@ -84,7 +86,7 @@
 
 
 
-(seancorfield.readme/defreadme readme-87
+(seancorfield.readme/defreadme readme-89
 (= (-> (select :*) (from :foo))
    (-> (from :foo) (select :*)))
 => true
@@ -92,14 +94,14 @@
 
 
 
-(seancorfield.readme/defreadme readme-95
+(seancorfield.readme/defreadme readme-97
 (-> sqlmap (select :d))
 => '{:from [:foo], :where [:= :f.a "baz"], :select [:a :b :c :d]}
 )
 
 
 
-(seancorfield.readme/defreadme readme-102
+(seancorfield.readme/defreadme readme-104
 (-> sqlmap
     (dissoc :select)
     (select :*)
@@ -110,7 +112,7 @@
 
 
 
-(seancorfield.readme/defreadme readme-113
+(seancorfield.readme/defreadme readme-115
 (-> (select :*)
     (from :foo)
     (where [:= :a 1] [:< :b 100])
@@ -121,7 +123,7 @@
 
 
 
-(seancorfield.readme/defreadme readme-124
+(seancorfield.readme/defreadme readme-126
 (-> (select :a [:b :bar] :c [:d :x])
     (from [:foo :quux])
     (where [:= :quux.a 1] [:< :bar 100])
@@ -138,7 +140,7 @@
 
 
 
-(seancorfield.readme/defreadme readme-141
+(seancorfield.readme/defreadme readme-143
 (-> (insert-into :properties)
     (columns :name :surname :age)
     (values
@@ -157,7 +159,7 @@ VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
 
 
 
-(seancorfield.readme/defreadme readme-160
+(seancorfield.readme/defreadme readme-162
 (-> (insert-into :properties)
     (values [{:name "John" :surname "Smith" :age 34}
              {:name "Andrew" :surname "Cooper" :age 12}
@@ -176,7 +178,7 @@ VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
 
 
 
-(seancorfield.readme/defreadme readme-179
+(seancorfield.readme/defreadme readme-181
 (let [user-id 12345
       role-name "user"]
   (-> (insert-into :user_profile_to_role)
@@ -194,7 +196,7 @@ VALUES (?, (SELECT id FROM role WHERE name = ?))
 "user"]
 )
 
-(seancorfield.readme/defreadme readme-197
+(seancorfield.readme/defreadme readme-199
 (-> (select :*)
     (from :foo)
     (where [:in :foo.a (-> (select :a) (from :bar))])
@@ -206,7 +208,7 @@ VALUES (?, (SELECT id FROM role WHERE name = ?))
 
 
 
-(seancorfield.readme/defreadme readme-209
+(seancorfield.readme/defreadme readme-211
 (-> (insert-into :comp_table)
     (columns :name :comp_column)
     (values
@@ -224,7 +226,7 @@ VALUES (?, (?, ?)), (?, (?, ?))
 
 
 
-(seancorfield.readme/defreadme readme-227
+(seancorfield.readme/defreadme readme-229
 (-> (helpers/update :films)
     (set {:kind "dramatic"
            :watched [:+ :watched 1]})
@@ -250,7 +252,7 @@ WHERE kind = ?
 
 
 
-(seancorfield.readme/defreadme readme-253
+(seancorfield.readme/defreadme readme-255
 (-> (delete-from :films)
     (where [:<> :kind "musical"])
     (sql/format))
@@ -259,7 +261,7 @@ WHERE kind = ?
 
 
 
-(seancorfield.readme/defreadme readme-262
+(seancorfield.readme/defreadme readme-264
 (-> (delete [:films :directors])
     (from :films)
     (join :directors [:= :films.director_id :directors.id])
@@ -276,7 +278,7 @@ WHERE kind <> ?
 
 
 
-(seancorfield.readme/defreadme readme-279
+(seancorfield.readme/defreadme readme-281
 (-> (truncate :films)
     (sql/format))
 => ["TRUNCATE films"]
@@ -286,7 +288,7 @@ WHERE kind <> ?
 
 
 
-(seancorfield.readme/defreadme readme-289
+(seancorfield.readme/defreadme readme-291
 (sql/format {:union [(-> (select :*) (from :foo))
                      (-> (select :*) (from :bar))]})
 => ["SELECT * FROM foo UNION SELECT * FROM bar"]
@@ -296,11 +298,11 @@ WHERE kind <> ?
 
 
 
-(seancorfield.readme/defreadme readme-299
+(seancorfield.readme/defreadme readme-301
 (-> (select :%count.*) (from :foo) sql/format)
 => ["SELECT count(*) FROM foo"]
 )
-(seancorfield.readme/defreadme readme-303
+(seancorfield.readme/defreadme readme-305
 (-> (select :%max.id) (from :foo) sql/format)
 => ["SELECT max(id) FROM foo"]
 )
@@ -311,7 +313,7 @@ WHERE kind <> ?
 
 
 
-(seancorfield.readme/defreadme readme-314
+(seancorfield.readme/defreadme readme-316
 (-> (select :id)
     (from :foo)
     (where [:= :a :?baz])
@@ -324,19 +326,19 @@ WHERE kind <> ?
 
 
 
-(seancorfield.readme/defreadme readme-327
+(seancorfield.readme/defreadme readme-329
 (def call-qualify-map
   (-> (select [[:foo :bar]] [[:raw "@var := foo.bar"]])
       (from :foo)
       (where [:= :a [:param :baz]] [:= :b [:inline 42]])))
 )
-(seancorfield.readme/defreadme readme-333
+(seancorfield.readme/defreadme readme-335
 call-qualify-map
 => '{:where [:and [:= :a [:param :baz]] [:= :b [:inline 42]]]
      :from (:foo)
      :select [[[:foo :bar]] [[:raw "@var := foo.bar"]]]}
 )
-(seancorfield.readme/defreadme readme-339
+(seancorfield.readme/defreadme readme-341
 (sql/format call-qualify-map {:params {:baz "BAZ"}})
 => ["SELECT foo(bar), @var := foo.bar FROM foo WHERE (a = ?) AND (b = 42)" "BAZ"]
 )
@@ -346,7 +348,7 @@ call-qualify-map
 
 
 
-(seancorfield.readme/defreadme readme-349
+(seancorfield.readme/defreadme readme-351
 (-> (insert-into :sample)
     (values [{:location [:ST_SetSRID
                          [:ST_MakePoint 0.291 32.621]
@@ -372,7 +374,7 @@ VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))
 
 
 
-(seancorfield.readme/defreadme readme-375
+(seancorfield.readme/defreadme readme-377
 (-> (select :*)
     (from :foo)
     (where [:< :expired_at [:raw ["now() - '" 5 " seconds'"]]])
@@ -380,7 +382,7 @@ VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))
 => ["SELECT * FROM foo WHERE expired_at < now() - '? seconds'" 5]
 )
 
-(seancorfield.readme/defreadme readme-383
+(seancorfield.readme/defreadme readme-385
 (-> (select :*)
     (from :foo)
     (where [:< :expired_at [:raw ["now() - '" [:param :t] " seconds'"]]])
@@ -397,7 +399,7 @@ VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))
 
 
 
-(seancorfield.readme/defreadme readme-400
+(seancorfield.readme/defreadme readme-402
 (-> (select :foo.a)
     (from :foo)
     (where [:= :foo.a "baz"])
@@ -413,25 +415,43 @@ VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))
 
 
 
-(seancorfield.readme/defreadme readme-416
-(-> (select :foo.a)
-    (from :foo)
-    (where [:= :foo.a "baz"])
-    (lock :mode :update)
-    (sql/format))
-=> ["SELECT foo.a FROM foo WHERE foo.a = ? FOR UPDATE" "baz"]
-)
+
+
+
+
+
+
 
 
 
 
 (seancorfield.readme/defreadme readme-428
+(sql/format {:select [:*] :from :foo
+             :where [:= :name [:inline "Jones"]]
+             :lock [:in-share-mode]}
+            {:dialect :mysql :quoted false})
+=> ["SELECT * FROM foo WHERE name = 'Jones' LOCK IN SHARE MODE"]
+)
+
+(seancorfield.readme/defreadme readme-436
+(-> (select :foo.a)
+    (from :foo)
+    (where [:= :foo.a "baz"])
+    (for :update)
+    (format))
+=> ["SELECT foo.a FROM foo WHERE (foo.a = ?) FOR UPDATE" "baz"]
+)
+
+
+
+
+(seancorfield.readme/defreadme readme-448
 (sql/format
   {:select [:f.foo-id :f.foo-name]
    :from [[:foo-bar :f]]
    :where [:= :f.foo-id 12345]}
-  :allow-dashed-names? true
-  :quoting :ansi)
+  {:allow-dashed-names? true ; not implemented yet
+   :quoted true})
 => ["SELECT \"f\".\"foo-id\", \"f\".\"foo-name\" FROM \"foo-bar\" \"f\" WHERE \"f\".\"foo-id\" = ?" 12345]
 )
 
@@ -439,11 +459,11 @@ VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))
 
 
 
-(seancorfield.readme/defreadme readme-442
+(seancorfield.readme/defreadme readme-462
 (def big-complicated-map
   (-> (select :f.* :b.baz :c.quux [:b.bla "bla-bla"]
               [[:now]] [[:raw "@x := 10"]])
-      (modifiers :distinct) ; this is not implemented yet
+      #_(modifiers :distinct) ; this is not implemented yet
       (from [:foo :f] [:baz :b])
       (join :draq [:= :f.b :draq.x])
       (left-join [:clod :c] [:= :f.a :c.d])
@@ -453,13 +473,13 @@ VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))
                [:< 1 2 3]
                [:in :f.e [1 [:param :param2] 3]]
                [:between :f.e 10 20]])
-      (group :f.a :c.e)
+      (group-by :f.a :c.e)
       (having [:< 0 :f.e])
       (order-by [:b.baz :desc] :c.quux [:f.a :nulls-first])
       (limit 50)
       (offset 10)))
 )
-(seancorfield.readme/defreadme readme-462
+(seancorfield.readme/defreadme readme-482
 big-complicated-map
 => {:select [:f.* :b.baz :c.quux [:b.bla "bla-bla"]
              [[:now]] [[:raw "@x := 10"]]]
@@ -479,7 +499,7 @@ big-complicated-map
     :limit 50
     :offset 10}
 )
-(seancorfield.readme/defreadme readme-482
+(seancorfield.readme/defreadme readme-502
 (sql/format big-complicated-map {:param1 "gabba" :param2 2})
 => ["
 SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10
@@ -496,7 +516,7 @@ OFFSET ?
 "
 "bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10]
 )
-(seancorfield.readme/defreadme readme-499
+(seancorfield.readme/defreadme readme-519
 ;; Printable and readable
 (= big-complicated-map (read-string (pr-str big-complicated-map)))
 => true
@@ -508,7 +528,7 @@ OFFSET ?
 
 
 
-(seancorfield.readme/defreadme readme-511
+(seancorfield.readme/defreadme readme-531
 (defmethod fmt/fn-handler "betwixt" [_ field lower upper]
   (str (fmt/to-sql field) " BETWIXT "
        (fmt/to-sql lower) " AND " (fmt/to-sql upper)))
@@ -519,23 +539,23 @@ OFFSET ?
 
 
 
-(seancorfield.readme/defreadme readme-522
+(seancorfield.readme/defreadme readme-542
 ;; Takes a MapEntry of the operator & clause data, plus the entire SQL map
 (defmethod fmt/format-clause :foobar [[op v] sqlmap]
   (str "FOOBAR " (fmt/to-sql v)))
 )
-(seancorfield.readme/defreadme readme-527
+(seancorfield.readme/defreadme readme-547
 (sql/format {:select [:a :b] :foobar :baz})
 => ["SELECT a, b FOOBAR baz"]
 )
-(seancorfield.readme/defreadme readme-531
+(seancorfield.readme/defreadme readme-551
 (require '[honeysql.helpers :refer [defhelper]])
 
 ;; Defines a helper function, and allows 'build' to recognize your clause
 (defhelper foobar [m args]
   (assoc m :foobar (first args)))
 )
-(seancorfield.readme/defreadme readme-538
+(seancorfield.readme/defreadme readme-558
 (-> (select :a :b) (foobar :baz) sql/format)
 => ["SELECT a, b FOOBAR baz"]
 
@@ -543,7 +563,7 @@ OFFSET ?
 
 
 
-(seancorfield.readme/defreadme readme-546
+(seancorfield.readme/defreadme readme-566
 (fmt/register-clause! :foobar 110)
 )
 

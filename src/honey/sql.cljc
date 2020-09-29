@@ -13,6 +13,7 @@
 
 ;; dynamic dialect handling for formatting
 
+(declare clause-format)
 (def ^:private default-clause-order
   "The (default) order for known clauses. Can have items added and removed."
   [:with :with-recursive :intersect :union :union-all :except :except-all
@@ -20,7 +21,7 @@
    :columns :composite :set :from
    :join :left-join :right-join :inner-join :outer-join :full-join
    :cross-join
-   :where :group-by :having :order-by :limit :offset :values
+   :where :group-by :having :order-by :limit :offset :for :values
    :on-conflict :on-constraint :do-nothing :do-update-set
    :returning])
 
@@ -44,10 +45,15 @@
   {:ansi      {:quote #(str \" % \")}
    :sqlserver {:quote #(str \[ % \])}
    :mysql     {:quote #(str \` % \`)
-               :clause-order-fn #(add-clause-before
-                                  (filterv (complement #{:set}) %)
-                                  :set
-                                  :where)}
+               :clause-order-fn (fn [order]
+                                  ;; :lock is like :for
+                                  (swap! clause-format assoc :lock
+                                         (get @clause-format :for))
+                                  ;; MySQL :set has different priority
+                                  ;; and :lock is between :for and :values
+                                  (-> (filterv (complement #{:set}) order)
+                                      (add-clause-before :set :where)
+                                      (add-clause-before :lock :values)))}
    :oracle    {:quote #(str \" % \") :as false}})
 
 ; should become defonce
@@ -256,6 +262,21 @@
                                     sqls
                                     dirs)))] params)))
 
+(defn- format-lock-strength [k xs]
+  (let [[strength tables nowait] (if (sequential? xs) xs [xs])]
+    [(str (sql-kw k) " " (sql-kw strength)
+          (when tables
+            (str
+              (cond (= :nowait tables)
+                    (str " NOWAIT")
+                    (sequential? tables)
+                    (str " OF "
+                         (str/join ", " (map #'format-entity tables)))
+                    :else
+                    (str " OF " (format-entity tables)))
+              (when nowait
+                (str " NOWAIT")))))]))
+
 (defn- format-values [k xs]
   (cond (sequential? (first xs))
         ;; [[1 2 3] [4 5 6]]
@@ -356,6 +377,7 @@
          :order-by       #'format-order-by
          :limit          #'format-on-expr
          :offset         #'format-on-expr
+         :for            #'format-lock-strength
          :values         #'format-values
          :on-conflict    #'format-on-conflict
          :on-constraint  #'format-selector
@@ -381,7 +403,7 @@
    ;:delete-from 80
    ;:truncate 85
    ;:columns 90
-   :composite 95
+   ;:composite 95
    ;; no longer needed/supported :set0 100 ; low-priority set clause
    ;:from 110
    ;:join 120

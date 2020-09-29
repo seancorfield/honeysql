@@ -23,7 +23,9 @@ README readability; honeysql does not generate pretty-printed SQL.
 ## Usage
 
 ```clojure
+(refer-clojure :exclude '[for group-by set update])
 (require '[honey.sql :as sql]
+         ;; caution: this overwrites for, group-by, set, and update
          '[honey.sql.helpers :refer :all :as helpers])
 ```
 
@@ -407,22 +409,38 @@ Valid `:dialect` options are `:ansi` (the default, use this for PostgreSQL),
 
 #### Locking
 
-_This is not implemented yet._
+The ANSI/PostgreSQL/SQLServer dialects support locking selects via a `FOR` clause as follows:
 
-To issue a locking select, add a `:lock` to the query or use the lock helper. The lock value must be a map with a `:mode` value. The built-in
-modes are the standard `:update` (FOR UPDATE) or the vendor-specific `:mysql-share` (LOCK IN SHARE MODE) or `:postresql-share` (FOR SHARE). The
-lock map may also provide a `:wait` value, which if false will append the NOWAIT parameter, supported by PostgreSQL.
+* `:for [<lock-strength> <table(s)> <nowait>]` where `<lock-strength>` is required and may be one of:
+  * `:update`
+  * `:no-key-update`
+  * `:share`
+  * `:key-share`
+* Both `<table(s)>` and `<nowait>` are optional but if present, `<table(s)>` must either be:
+  * a single table name (as a keyword) or
+  * a sequence of table names (as keywords)
+* `<nowait>` must be `:nowait` if it is present.
+
+If `<table(s)>` and `<nowait>` are both omitted, you may also omit the `[`..`]` and just say `:for :update` etc.
 
 ```clojure
 (-> (select :foo.a)
     (from :foo)
     (where [:= :foo.a "baz"])
-    (lock :mode :update)
-    (sql/format))
-=> ["SELECT foo.a FROM foo WHERE foo.a = ? FOR UPDATE" "baz"]
+    (for :update)
+    (format))
+=> ["SELECT foo.a FROM foo WHERE (foo.a = ?) FOR UPDATE" "baz"]
 ```
 
-To support novel lock modes, implement the `format-lock-clause` multimethod.
+If the `:mysql` dialect is selected, an additional locking clause is available:
+`:lock :in-share-mode`.
+```clojure
+(sql/format {:select [:*] :from :foo
+             :where [:= :name [:inline "Jones"]]
+             :lock [:in-share-mode]}
+            {:dialect :mysql :quoted false})
+=> ["SELECT * FROM foo WHERE name = 'Jones' LOCK IN SHARE MODE"]
+```
 
 To be able to use dashes in quoted names, you can pass ```:allow-dashed-names true``` as an argument to the ```format``` function.
 ```clojure
@@ -430,8 +448,8 @@ To be able to use dashes in quoted names, you can pass ```:allow-dashed-names tr
   {:select [:f.foo-id :f.foo-name]
    :from [[:foo-bar :f]]
    :where [:= :f.foo-id 12345]}
-  :allow-dashed-names? true
-  :quoting :ansi)
+  {:allow-dashed-names? true ; not implemented yet
+   :quoted true})
 => ["SELECT \"f\".\"foo-id\", \"f\".\"foo-name\" FROM \"foo-bar\" \"f\" WHERE \"f\".\"foo-id\" = ?" 12345]
 ```
 
@@ -443,7 +461,7 @@ Here's a big, complicated query. Note that Honey SQL makes no attempt to verify 
 (def big-complicated-map
   (-> (select :f.* :b.baz :c.quux [:b.bla "bla-bla"]
               [[:now]] [[:raw "@x := 10"]])
-      (modifiers :distinct) ; this is not implemented yet
+      #_(modifiers :distinct) ; this is not implemented yet
       (from [:foo :f] [:baz :b])
       (join :draq [:= :f.b :draq.x])
       (left-join [:clod :c] [:= :f.a :c.d])
@@ -453,7 +471,7 @@ Here's a big, complicated query. Note that Honey SQL makes no attempt to verify 
                [:< 1 2 3]
                [:in :f.e [1 [:param :param2] 3]]
                [:between :f.e 10 20]])
-      (group :f.a :c.e)
+      (group-by :f.a :c.e)
       (having [:< 0 :f.e])
       (order-by [:b.baz :desc] :c.quux [:f.a :nulls-first])
       (limit 50)
