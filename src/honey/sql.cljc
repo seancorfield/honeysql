@@ -471,7 +471,11 @@
       (into (map str "+-*/%|&^=<>"))
       (into (keys infix-aliases))
       (into (vals infix-aliases))
-      (->> (into #{} (map keyword)))))
+      (->> (into #{} (map keyword)))
+      (atom)))
+
+(def ^:private op-ignore-nil (atom #{:and :or}))
+(def ^:private op-variadic   (atom #{:and :or :+ :* :||}))
 
 (defn- sqlize-value [x]
   (cond
@@ -482,37 +486,38 @@
     :else        (str x)))
 
 (def ^:private special-syntax
-  {:array
-   (fn [k [arr]]
-     (let [[sqls params] (format-expr-list arr)]
-       (into [(str "ARRAY[" (str/join ", " sqls) "]")] params)))
-   :between
-   (fn [k [x a b]]
-     (let [[sql-x & params-x] (format-expr x {:nested? true})
-           [sql-a & params-a] (format-expr a {:nested? true})
-           [sql-b & params-b] (format-expr b {:nested? true})]
-       (-> [(str sql-x " BETWEEN " sql-a " AND " sql-b)]
-           (into params-x)
-           (into params-a)
-           (into params-b))))
-   :cast
-   (fn [k [x type]]
-     (let [[sql & params] (format-expr x)]
-       (into [(str "CAST(" sql " AS " (sql-kw type) ")")] params)))
-   :default
-   (fn [k []]
-     ["DEFAULT"])
-   :inline
-   (fn [k [x]]
-     [(sqlize-value x)])
-   :interval
-   (fn [k [n units]]
-     (let [[sql & params] (format-expr n)]
-       (into [(str "INTERVAL " sql " " (sql-kw units))] params)))
-   :not
-   (fn [k [x]]
-     (let [[sql & params] (format-expr x)]
-       (into [(str "NOT " sql)] params)))})
+  (atom
+   {:array
+    (fn [_ [arr]]
+      (let [[sqls params] (format-expr-list arr)]
+        (into [(str "ARRAY[" (str/join ", " sqls) "]")] params)))
+    :between
+    (fn [_ [x a b]]
+      (let [[sql-x & params-x] (format-expr x {:nested? true})
+            [sql-a & params-a] (format-expr a {:nested? true})
+            [sql-b & params-b] (format-expr b {:nested? true})]
+        (-> [(str sql-x " BETWEEN " sql-a " AND " sql-b)]
+            (into params-x)
+            (into params-a)
+            (into params-b))))
+    :cast
+    (fn [_ [x type]]
+      (let [[sql & params] (format-expr x)]
+        (into [(str "CAST(" sql " AS " (sql-kw type) ")")] params)))
+    :default
+    (fn [_ []]
+      ["DEFAULT"])
+    :inline
+    (fn [_ [x]]
+      [(sqlize-value x)])
+    :interval
+    (fn [_ [n units]]
+      (let [[sql & params] (format-expr n)]
+        (into [(str "INTERVAL " sql " " (sql-kw units))] params)))
+    :not
+    (fn [_ [x]]
+      (let [[sql & params] (format-expr x)]
+        (into [(str "NOT " sql)] params)))}))
 
 (defn format-expr [x & [{:keys [nested?] :as opts}]]
   (cond (or (keyword? x) (symbol? x))
@@ -525,13 +530,11 @@
         (let [op (first x)
               ;; normalize symbols to keywords here -- makes the subsequent
               ;; logic easier since we use op to lookup things in hash maps:
-              op (if (symbol? op) (keyword (name op)) op)
-              op-ignore-nil #{:and :or}
-              op-variadic   #{:and :or :+ :* :||}]
+              op (if (symbol? op) (keyword (name op)) op)]
           (if (keyword? op)
-            (cond (infix-ops op)
-                  (if (op-variadic op) ; no aliases here, no special semantics
-                    (let [x (if (op-ignore-nil op) (remove nil? x) x)
+            (cond (contains? @infix-ops op)
+                  (if (contains? @op-variadic op) ; no aliases here, no special semantics
+                    (let [x (if (contains? @op-ignore-nil op) (remove nil? x) x)
                           [sqls params]
                           (reduce (fn [[sql params] [sql' & params']]
                                     [(conj sql sql')
@@ -566,8 +569,8 @@
                               (vector)
                               (into p1)
                               (into p2)))))
-                  (special-syntax op)
-                  (let [formatter (special-syntax op)]
+                  (contains? @special-syntax op)
+                  (let [formatter (get @special-syntax op)]
                     (formatter op (rest x)))
                   :else
                   (let [args          (rest x)
@@ -641,12 +644,13 @@
 
   New clauses are registered in the base order and the current order so
   that any dialect selections are able to include them while still working
-  predictably from the base order. Caveat: that means if you are a new
+  predictably from the base order. Caveat: that means if you register a new
   clause `before` a clause that is ordered differently in different
   dialects, your new clause may also end up in a different place. The
   only clause so far where that would matter is `:set` which differs in
-  MySQL..."
+  MySQL."
   [clause formatter before]
+  (assert (keyword? clause))
   (let [f (if (keyword? formatter)
             (get @clause-format formatter)
             formatter)]
@@ -656,6 +660,35 @@
     (swap! base-clause-order add-clause-before clause before)
     (swap! current-clause-order add-clause-before clause before)
     (swap! clause-format assoc clause f)))
+
+(defn register-fn!
+  "Register a new function (as special syntax). The `formatter` is either
+  a keyword, meaning that this new function should use the same syntax as
+  an existing function, or a function of two arguments that generates a
+  SQL string and parameters (as a vector). The two arguments are the name
+  of the function (as a keyword) and a sequence of the arguments from the
+  DSL."
+  [function formatter]
+  (assert (keyword? function))
+  (let [f (if (keyword? formatter)
+            (get @special-syntax formatter)
+            formatter)]
+    (when-not (and f (fn? f))
+      (throw (ex-info "The formatter must be a function or existing fn name"
+                      {:type (type formatter)})))
+    (swap! special-syntax assoc function f)))
+
+(defn register-op!
+  "Register a new infix operator. Operators can be defined to be variadic (the
+  default is that they are binary) and may choose to ignore `nil` arguments
+  (this can make it easier to programmatically construct the DSL)."
+  [op & {:keys [variadic? ignore-nil?]}]
+  (assert (keyword? op))
+  (swap! infix-ops conj op)
+  (when variadic?
+    (swap! op-variadic conj op))
+  (when ignore-nil?
+    (swap! op-ignore-nil conj op)))
 
 (comment
   (format {:truncate :foo})
