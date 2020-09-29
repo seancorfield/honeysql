@@ -423,17 +423,7 @@ VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))
 
 
 
-
-
-(seancorfield.readme/defreadme readme-428
-(sql/format {:select [:*] :from :foo
-             :where [:= :name [:inline "Jones"]]
-             :lock [:in-share-mode]}
-            {:dialect :mysql :quoted false})
-=> ["SELECT * FROM foo WHERE name = 'Jones' LOCK IN SHARE MODE"]
-)
-
-(seancorfield.readme/defreadme readme-436
+(seancorfield.readme/defreadme readme-426
 (-> (select :foo.a)
     (from :foo)
     (where [:= :foo.a "baz"])
@@ -444,8 +434,16 @@ VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))
 
 
 
+(seancorfield.readme/defreadme readme-437
+(sql/format {:select [:*] :from :foo
+             :where [:= :name [:inline "Jones"]]
+             :lock [:in-share-mode]}
+            {:dialect :mysql :quoted false})
+=> ["SELECT * FROM foo WHERE name = 'Jones' LOCK IN SHARE MODE"]
+)
 
-(seancorfield.readme/defreadme readme-448
+
+(seancorfield.readme/defreadme readme-446
 (sql/format
   {:select [:f.foo-id :f.foo-name]
    :from [[:foo-bar :f]]
@@ -459,7 +457,7 @@ VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))
 
 
 
-(seancorfield.readme/defreadme readme-462
+(seancorfield.readme/defreadme readme-460
 (def big-complicated-map
   (-> (select :f.* :b.baz :c.quux [:b.bla "bla-bla"]
               [[:now]] [[:raw "@x := 10"]])
@@ -479,7 +477,7 @@ VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))
       (limit 50)
       (offset 10)))
 )
-(seancorfield.readme/defreadme readme-482
+(seancorfield.readme/defreadme readme-480
 big-complicated-map
 => {:select [:f.* :b.baz :c.quux [:b.bla "bla-bla"]
              [[:now]] [[:raw "@x := 10"]]]
@@ -499,7 +497,7 @@ big-complicated-map
     :limit 50
     :offset 10}
 )
-(seancorfield.readme/defreadme readme-502
+(seancorfield.readme/defreadme readme-500
 (sql/format big-complicated-map {:param1 "gabba" :param2 2})
 => ["
 SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10
@@ -516,7 +514,7 @@ OFFSET ?
 "
 "bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10]
 )
-(seancorfield.readme/defreadme readme-519
+(seancorfield.readme/defreadme readme-517
 ;; Printable and readable
 (= big-complicated-map (read-string (pr-str big-complicated-map)))
 => true
@@ -528,7 +526,7 @@ OFFSET ?
 
 
 
-(seancorfield.readme/defreadme readme-531
+(seancorfield.readme/defreadme readme-529
 (defmethod fmt/fn-handler "betwixt" [_ field lower upper]
   (str (fmt/to-sql field) " BETWIXT "
        (fmt/to-sql lower) " AND " (fmt/to-sql upper)))
@@ -539,23 +537,23 @@ OFFSET ?
 
 
 
-(seancorfield.readme/defreadme readme-542
+(seancorfield.readme/defreadme readme-540
 ;; Takes a MapEntry of the operator & clause data, plus the entire SQL map
 (defmethod fmt/format-clause :foobar [[op v] sqlmap]
   (str "FOOBAR " (fmt/to-sql v)))
 )
-(seancorfield.readme/defreadme readme-547
+(seancorfield.readme/defreadme readme-545
 (sql/format {:select [:a :b] :foobar :baz})
 => ["SELECT a, b FOOBAR baz"]
 )
-(seancorfield.readme/defreadme readme-551
+(seancorfield.readme/defreadme readme-549
 (require '[honeysql.helpers :refer [defhelper]])
 
 ;; Defines a helper function, and allows 'build' to recognize your clause
 (defhelper foobar [m args]
   (assoc m :foobar (first args)))
 )
-(seancorfield.readme/defreadme readme-558
+(seancorfield.readme/defreadme readme-556
 (-> (select :a :b) (foobar :baz) sql/format)
 => ["SELECT a, b FOOBAR baz"]
 
@@ -563,7 +561,7 @@ OFFSET ?
 
 
 
-(seancorfield.readme/defreadme readme-566
+(seancorfield.readme/defreadme readme-564
 (fmt/register-clause! :foobar 110)
 )
 

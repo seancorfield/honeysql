@@ -321,13 +321,13 @@
     (into [(str (sql-kw k) " " (str/join ", " sqls))] params)))
 
 (defn- format-on-conflict [k x]
-  (if (keyword? x)
+  (if (or (keyword? x) (symbol? x))
     [(str (sql-kw k) " (" (format-entity x) ")")]
     (let [[sql & params] (format-dsl x)]
       (into [(str (sql-kw k) " " sql)] params))))
 
 (defn- format-do-update-set [k x]
-  (if (keyword? x)
+  (if (or (keyword? x) (symbol? x))
     (let [e (format-entity x {:drop-ns? true})]
       [(str (sql-kw k) " " e " = EXCLUDED." e)])
     (format-set-exprs k x)))
@@ -523,6 +523,9 @@
 
         (sequential? x)
         (let [op (first x)
+              ;; normalize symbols to keywords here -- makes the subsequent
+              ;; logic easier since we use op to lookup things in hash maps:
+              op (if (symbol? op) (keyword (name op)) op)
               op-ignore-nil #{:and :or}
               op-variadic   #{:and :or :+ :* :||}]
           (if (keyword? op)
