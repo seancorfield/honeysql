@@ -431,12 +431,12 @@
 (defn- format-dsl [x & [{:keys [aliased? nested? pretty?]}]]
   (let [[sqls params leftover]
         (reduce (fn [[sql params leftover] k]
-                  (if-let [xs (k x)]
+                  (if-let [xs (or (k x) (let [s (symbol (name k))] (get x s)))]
                     (let [formatter (k @clause-format)
                           [sql' & params'] (formatter k xs)]
                       [(conj sql sql')
                        (if params' (into params params') params)
-                       (dissoc leftover k)])
+                       (dissoc leftover k (symbol (name k)))])
                     [sql params leftover]))
                 [[] [] x]
                 *clause-order*)]
