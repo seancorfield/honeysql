@@ -26,6 +26,7 @@
       (helper-merge data k args))
     (helper-merge {} k args)))
 
+(defn nest [& args] (generic :nest args))
 (defn with [& args] (generic :with args))
 (defn with-recursive [& args] (generic :with-recursive args))
 (defn intersect [& args] (generic :intersect args))

@@ -16,7 +16,7 @@
 (declare clause-format)
 (def ^:private default-clause-order
   "The (default) order for known clauses. Can have items added and removed."
-  [:with :with-recursive :intersect :union :union-all :except :except-all
+  [:nest :with :with-recursive :intersect :union :union-all :except :except-all
    :select :insert-into :update :delete :delete-from :truncate
    :columns :composite :set :from
    :join :left-join :right-join :inner-join :outer-join :full-join
@@ -361,7 +361,8 @@
 (def ^:private clause-format
   "The (default) behavior for each known clause. Can also have items added
   and removed."
-  (atom {:with           #'format-with
+  (atom {:nest           (fn [_ x] (format-expr x))
+         :with           #'format-with
          :with-recursive #'format-with
          :intersect      #'format-on-set-op
          :union          #'format-on-set-op
@@ -516,8 +517,11 @@
             (into params-b))))
     :cast
     (fn [_ [x type]]
-      (let [[sql & params] (format-expr x)]
-        (into [(str "CAST(" sql " AS " (sql-kw type) ")")] params)))
+      (let [[sql & params]   (format-expr x)
+            [sql' & params'] (format-expr type)]
+        (-> [(str "CAST(" sql " AS " sql' ")")]
+            (into params)
+            (into params'))))
     :default
     (fn [_ []]
       ["DEFAULT"])
@@ -528,6 +532,9 @@
     (fn [_ [n units]]
       (let [[sql & params] (format-expr n)]
         (into [(str "INTERVAL " sql " " (sql-kw units))] params)))
+    :nest
+    (fn [_ [x]]
+      (format-expr x {:nested? true}))
     :not
     (fn [_ [x]]
       (let [[sql & params] (format-expr x)]
