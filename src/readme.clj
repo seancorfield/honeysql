@@ -317,8 +317,8 @@ WHERE kind <> ?
 (-> (select :id)
     (from :foo)
     (where [:= :a :?baz])
-    (sql/format :params {:baz "BAZ"}))
-=> ["SELECT id FROM foo WHERE a = ?" "BAZ"]
+    (sql/format {:params {:baz "BAZ"}}))
+=> ["SELECT id FROM foo WHERE (a = ?)" "BAZ"]
 )
 
 

@@ -85,28 +85,40 @@
   (-> k (name) (upper-case) (str/replace "-" " ")))
 
 (defn- format-entity [x & [{:keys [aliased? drop-ns?]}]]
-  (let [q       (if *quoted* (:quote *dialect*) identity)
-        call    (fn [f x] (str f "(" x ")"))
-        [f t c] (if-let [n (when-not (or drop-ns? (string? x))
-                             (namespace x))]
-                  [nil n (name x)]
-                  (let [[t c] (if aliased?
-                                [(name x)]
-                                (str/split (name x) #"\."))]
-                    ;; I really dislike like %func.arg shorthand syntax!
-                    (cond (= \% (first t))
-                          [(subs t 1) nil c]
-                          c
-                          [nil t c]
-                          :else
-                          [nil nil t])))]
+  (let [q     (if *quoted* (:quote *dialect*) identity)
+        [t c] (if-let [n (when-not (or drop-ns? (string? x))
+                           (namespace x))]
+                [n (name x)]
+                (if aliased?
+                  [nil (name x)]
+                  (let [[t c] (str/split (name x) #"\.")]
+                    (if c [t c] [nil t]))))]
     (cond->> c
       (not= "*" c)
       (q)
       t
-      (str (q t) ".")
-      f
-      (call f))))
+      (str (q t) "."))))
+
+(defn- ->param [k]
+  (with-meta (constantly k)
+    {::wrapper
+     (fn [fk {:keys [params]}]
+       (let [k (fk)]
+         (if (contains? params k)
+           (get params k)
+           (throw (ex-info (str "missing parameter value for " k)
+                           {:params (keys params)})))))}))
+
+(defn- format-var [x & [opts]]
+  (let [c (name x)]
+    (cond (= \% (first c))
+          (let [[f & args] (str/split (subs c 1) #"\.")]
+            ;; TODO: this does not quote arguments -- does that matter?
+            [(str f "(" (str/join "," args) ")")])
+          (= \? (first c))
+          ["?" (->param (keyword (subs c 1)))]
+          :else
+          [(format-entity x opts)])))
 
 (defn- format-entity-alias [x]
   (cond (sequential? x)
@@ -151,7 +163,9 @@
               (into params')))
 
         (or (keyword? x) (symbol? x))
-        [(format-entity x opts)]
+        (if aliased?
+          [(format-entity x opts)]
+          (format-var x opts))
 
         (and aliased? (string? x))
         [(format-entity x opts)]
@@ -419,7 +433,7 @@
    ;:order-by 190
    ;:limit 200
    ;:offset 210
-   :lock 215
+   ;:lock 215
    ;:values 220
    :query-values 230})
 ;; :on-conflict -- https://www.postgresqltutorial.com/postgresql-upsert/
@@ -517,11 +531,18 @@
     :not
     (fn [_ [x]]
       (let [[sql & params] (format-expr x)]
-        (into [(str "NOT " sql)] params)))}))
+        (into [(str "NOT " sql)] params)))
+    :param
+    (fn [_ [k]]
+      ["?" (->param k)])
+    :raw
+    ;; TODO: only supports single raw string right now
+    (fn [_ [s]]
+      [s])}))
 
 (defn format-expr [x & [{:keys [nested?] :as opts}]]
   (cond (or (keyword? x) (symbol? x))
-        [(format-entity x opts)]
+        (format-var x opts)
 
         (map? x)
         (format-dsl x (assoc opts :nested? true))
