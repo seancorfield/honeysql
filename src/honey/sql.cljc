@@ -86,7 +86,9 @@
   (-> k (name) (upper-case) (str/replace "-" " ")))
 
 (defn- format-entity [x & [{:keys [aliased? drop-ns?]}]]
-  (let [q     (if *quoted* (:quote *dialect*) identity)
+  (let [q     (if (or *quoted* (string? x))
+                (:quote *dialect*)
+                identity)
         [t c] (if-let [n (when-not (or drop-ns? (string? x))
                            (namespace x))]
                 [n (name x)]
