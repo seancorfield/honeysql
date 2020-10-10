@@ -522,58 +522,81 @@ OFFSET ?
 
 ## Extensibility
 
-_This needs a rewrite!_
+Any keyword (or symbol) that appears as the first element of a vector will be treated as a generic function unless it is declared to be an operator or "special syntax". Any keyword (or symbol) that appears as a key in a hash map will be treated as a SQL clause -- and must either be built-in or must be registered as new clauses.
 
-You can define your own function handlers for use in `where`:
+If your database supports `<=>` as an operator, you can tell HoneySQL about it using the `register-op!` function (which should be called before the first call to `honey.sql/format`):
 
 ```clojure
-(defmethod fmt/fn-handler "betwixt" [_ field lower upper]
-  (str (fmt/to-sql field) " BETWIXT "
-       (fmt/to-sql lower) " AND " (fmt/to-sql upper)))
+(sql/register-op! :<=>)
+;; default is a binary operator:
+(-> (select :a) (where [:<=> :a "foo"]) sql/format)
+=> ["SELECT a WHERE a <=> ?" "foo"]
+;; you can declare that an operator is variadic:
+(sql/register-op! :<=> :variadic? true)
+(-> (select :a) (where [:<=> "food" :a "fool"]) sql/format)
+=> ["SELECT a WHERE ? <=> a <=> ?" "food" "fool"]
+```
 
+Sometimes you want an operator to ignore `nil` clauses (`:and` and `:or` are declared that way):
+
+```clojure
+(sql/register-op! :<=> :ignore-nil? true)
+```
+
+Or perhaps your database supports syntax like `a BETWIXT b AND c`, in which case you can use `register-fn!` to tell HoneySQL about it (again, called before the first call to `honey.sql/format`):
+
+```clojure
+;; the formatter will be passed your new operator (function) and a
+;; sequence of the arguments provided to it (so you can write any arity ops):
+(sql/register-fn! :betwixt
+                  (fn [op [a b c]]
+                    (let [[sql-a & params-a] (sql/format-expr a)
+                          [sql-b & params-b] (sql/format-expr b)
+                          [sql-c & params-c] (sql/format-expr c)]
+                      (-> [(str sql-a " " (sql/sql-kw op) " "
+                                sql-b " AND " sql-c)]
+                          (into params-a)
+                          (into params-b)
+                          (into params-c)))))
+;; example usage:
 (-> (select :a) (where [:betwixt :a 1 10]) sql/format)
 => ["SELECT a WHERE a BETWIXT ? AND ?" 1 10]
 ```
 
-You can also define your own clauses:
+You can also register SQL clauses, specifying the keyword, the formatting function, and an existing clause that this new clause should be processed before:
 
 ```clojure
-;; Takes a MapEntry of the operator & clause data, plus the entire SQL map
-(defmethod fmt/format-clause :foobar [[op v] sqlmap]
-  (str "FOOBAR " (fmt/to-sql v)))
-```
-```clojure
+;; the formatter will be passed your new clause and the value associated
+;; with that clause in the DSL (which is often a sequence but does not
+;; need to be -- it can be whatever syntax you desire in the DSL):
+(sql/register-clause! :foobar
+                      (fn [clause x]
+                        (let [[sql & params]
+                              (if (keyword? x)
+                                (sql/format-expr x)
+                                (sql/format-dsl x))]
+                          (into [(str (sql/sql-kw clause) " " sql)] params)))
+                      :from) ; SELECT ... FOOBAR ... FROM ...
+;; example usage:
 (sql/format {:select [:a :b] :foobar :baz})
 => ["SELECT a, b FOOBAR baz"]
-```
-```clojure
-(require '[honeysql.helpers :refer [defhelper]])
-
-;; Defines a helper function, and allows 'build' to recognize your clause
-(defhelper foobar [m args]
-  (assoc m :foobar (first args)))
-```
-```clojure
-(-> (select :a :b) (foobar :baz) sql/format)
-=> ["SELECT a, b FOOBAR baz"]
-
+(sql/format {:select [:a :b] :foobar {:where [:= :id 1]}})
+=> ["SELECT a, b FOOBAR WHERE id = ?" 1]
 ```
 
-When adding a new clause, you may also need to register it with a specific priority so that it formats correctly, for example:
-
-```clojure
-(fmt/register-clause! :foobar 110)
-```
-
-If you do implement a clause or function handler for an ANSI SQL, consider submitting a pull request so others can use it, too. For non-standard clauses and/or functions, look for a library that extends `honeysql` for that specific database or create one, if no such library exists.
+If you find yourself registering an operator, a function (syntax), or a new clause, consider submitting a [pull request to HoneySQL](https://github.com/seancorfield/honeysql/pulls) so others can use it, too. If it is dialect-specific, let me know in the pull request.
 
 ## Why does my parameter get emitted as `()`?
 
+_Need to investigate whether this is still true in 2.0!_
+
 If you want to use your own datatype as a parameter then the idiomatic approach of implementing
 `next.jdbc`'s [`SettableParameter`](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.prepare#SettableParameter)
-or `clojure.java.jdbc`'s [`ISQLValue`](https://clojure.github.io/java.jdbc/#clojure.java.jdbc/ISQLValue) protocol isn't enough as `honeysql` won't correct pass through your datatype, rather it will interpret it incorrectly.
+or `clojure.java.jdbc`'s [`ISQLValue`](https://clojure.github.io/java.jdbc/#clojure.java.jdbc/ISQLValue) protocol isn't enough as HoneySQL won't correct pass through your datatype, rather it will interpret it incorrectly.
 
-To teach `honeysql` how to handle your datatype you need to implement [`honeysql.format/ToSql`](https://github.com/seancorfield/honeysql/blob/a9dffec632be62c961be7d9e695d0b2b85732c53/src/honeysql/format.cljc#L94). For example:
+_This bit no longer exists:_
+
+To teach HoneySQL how to handle your datatype you need to implement [`honeysql.format/ToSql`](https://github.com/seancorfield/honeysql/blob/a9dffec632be62c961be7d9e695d0b2b85732c53/src/honeysql/format.cljc#L94). For example:
 ``` clojure
 ;; given:
 (defrecord MyDateWrapper [...]
@@ -599,7 +622,7 @@ To teach `honeysql` how to handle your datatype you need to implement [`honeysql
 
 ## Extensions
 
-* [For PostgreSQL-specific extensions falling outside of ANSI SQL](https://github.com/nilenso/honeysql-postgres)
+* [For PostgreSQL-specific extensions falling outside of ANSI SQL](https://github.com/nilenso/honeysql-postgres) -- these will all be core in 2.0!
 
 ## License
 

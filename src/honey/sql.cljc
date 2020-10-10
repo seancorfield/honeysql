@@ -82,7 +82,7 @@
   #?(:clj (fn [^String s] (.. s toString (toUpperCase (java.util.Locale/US))))
      :cljs str/upper-case))
 
-(defn- sql-kw [k]
+(defn sql-kw [k]
   (-> k (name) (upper-case) (str/replace "-" " ")))
 
 (defn- format-entity [x & [{:keys [aliased? drop-ns?]}]]
@@ -444,7 +444,7 @@
 ;; ;do-nothing
    ;:returning
 
-(defn- format-dsl [x & [{:keys [aliased? nested? pretty?]}]]
+(defn format-dsl [x & [{:keys [aliased? nested? pretty?]}]]
   (let [[sqls params leftover]
         (reduce (fn [[sql params leftover] k]
                   (if-let [xs (or (k x) (let [s (symbol (name k))] (get x s)))]
