@@ -180,7 +180,7 @@
         (reduce (fn [[sql params] [sql' & params']]
                   [(conj sql sql') (if params' (into params params') params)])
                 [[] []]
-                (map #'format-dsl xs))]
+                (map #(format-dsl % {:nested? true}) xs))]
     (into [(str/join (str " " (sql-kw k) " ") sqls)] params)))
 
 (defn- format-expr-list [xs & [opts]]
