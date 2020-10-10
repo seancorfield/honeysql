@@ -248,11 +248,11 @@
          ["WITH bar (spam, eggs) AS (VALUES (?, ?), (?, ?), (?, ?)) (SELECT foo FROM bar1) UNION ALL (SELECT foo FROM bar2)" 1 2 3 4 5 6])))
 
 (deftest parameterizer-none
-  (testing "array parameter -- fail: parameterizer"
+  (testing "array parameter"
     (is (= (format {:insert-into :foo
                     :columns [:baz]
                     :values [[[:array [1 2 3 4]]]]}
-                   {:parameterizer :none})
+                   {:inline true})
            ["INSERT INTO foo (baz) VALUES (ARRAY[1, 2, 3, 4])"])))
 
   (testing "union complex values -- fail: parameterizer"
@@ -260,7 +260,7 @@
                             {:select [:foo] :from [:bar2]}]
                     :with [[[:bar {:columns [:spam :eggs]}]
                             {:values [[1 2] [3 4] [5 6]]}]]}
-                   {:parameterizer :none})
+                   {:inline true})
            ["WITH bar (spam, eggs) AS (VALUES (1, 2), (3, 4), (5, 6)) (SELECT foo FROM bar1) UNION (SELECT foo FROM bar2)"]))))
 
 (deftest inline-was-parameterizer-none
@@ -280,27 +280,25 @@
                                            [[1 2] [3 4] [5 6]])}]]})
            ["WITH bar (spam, eggs) AS (VALUES (1, 2), (3, 4), (5, 6)) (SELECT foo FROM bar1) UNION (SELECT foo FROM bar2)"]))))
 
-#_(defmethod parameterize :single-quote [_ value pname] (str \' value \'))
-#_(defmethod parameterize :mysql-fill [_ value pname] "?")
-
 (deftest former-parameterizer-tests-where-and
-  (testing "should ignore a nil predicate -- fail: postgresql parameterizer"
-    (is (= (format {:where [:and
-                            [:= :foo "foo"]
-                            [:= :bar "bar"]
-                            nil
-                            [:= :quux "quux"]]}
-                   {:parameterizer :postgresql})
-           ["WHERE (foo = ?) AND (bar = $2) AND (quux = $3)" "foo" "bar" "quux"])))
-  ;; this is _almost_ what :inline should be doing:
-  #_(testing "should fill param with single quote"
+  ;; I have no plans for positional parameters -- I just don't see the point
+  #_(testing "should ignore a nil predicate -- fail: postgresql parameterizer"
       (is (= (format {:where [:and
                               [:= :foo "foo"]
                               [:= :bar "bar"]
                               nil
                               [:= :quux "quux"]]}
-                     {:parameterizer :single-quote})
-             ["WHERE (foo = 'foo') AND (bar = 'bar') AND (quux = 'quux')" "foo" "bar" "quux"])))
+                     {:parameterizer :postgresql})
+             ["WHERE (foo = ?) AND (bar = $2) AND (quux = $3)" "foo" "bar" "quux"])))
+  ;; new :inline option is similar to :parameterizer :none in 1.0
+  (testing "should fill param with single quote"
+    (is (= (format {:where [:and
+                            [:= :foo "foo"]
+                            [:= :bar "bar"]
+                            nil
+                            [:= :quux "quux"]]}
+                   {:inline true})
+           ["WHERE (foo = 'foo') AND (bar = 'bar') AND (quux = 'quux')"])))
   (testing "should inline params with single quote"
     (is (= (format {:where [:and
                             [:= :foo [:inline "foo"]]

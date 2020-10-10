@@ -64,6 +64,7 @@
 ;; functions harder than necessary:
 (def ^:private ^:dynamic *clause-order* default-clause-order)
 (def ^:private ^:dynamic *quoted* nil)
+(def ^:private ^:dynamic *inline* nil)
 
 ;; clause helpers
 
@@ -613,9 +614,9 @@
                                   (str " " (first sqls))
                                   (str "(" (str/join ", " sqls) ")")))]
                           params)))
-            (into [(str "(" (str/join ", "
-                                      (repeat (count x) "?")) ")")]
-                  x)))
+            (if *inline*
+              [(str "(" (str/join ", " (map #'sqlize-value x)) ")")]
+              (into [(str "(" (str/join ", " (repeat (count x) "?")) ")")] x))))
 
         (or (true? x) (false? x)) ; because (boolean? x) requires Clojure 1.9+
         [(upper-case (str x))]
@@ -624,7 +625,9 @@
         ["NULL"]
 
         :else
-        ["?" x]))
+        (if *inline*
+          [(sqlize-value x)]
+          ["?" x])))
 
 (defn- check-dialect [dialect]
   (when-not (contains? dialects dialect)
@@ -652,6 +655,8 @@
                                   (f @base-clause-order)
                                   @current-clause-order)
                                 @current-clause-order)
+               *inline*  (when (contains? opts :inline)
+                           (:inline opts))
                *quoted*  (if (contains? opts :quoted)
                            (:quoted opts)
                            dialect?)]
@@ -736,11 +741,18 @@
   (format {:select [:*] :from [:table] :group-by [:foo :bar]} {})
   (format {:select [:*] :from [:table] :group-by [[:date :bar]]} {})
   (format {:select [:*] :from [:table] :order-by [[:foo :desc] :bar]} {})
-  (format {:select [:*] :from [:table] :order-by [[[:date :expiry] :desc] :bar]} {})
-  (println (format {:select [:*] :from [:table] :order-by [[[:date :expiry] :desc] :bar]} {:pretty? true}))
-  (format {:select [:*] :from [:table] :where [:< [:date_add :expiry [:interval 30 :days]] [:now]]} {})
+  (format {:select [:*] :from [:table]
+           :order-by [[[:date :expiry] :desc] :bar]} {})
+  (println (format {:select [:*] :from [:table]
+                    :order-by [[[:date :expiry] :desc] :bar]} {:pretty? true}))
+  (format {:select [:*] :from [:table]
+           :where [:< [:date_add :expiry [:interval 30 :days]] [:now]]} {})
   (format-expr [:interval 30 :days])
-  (format {:select [:*] :from [:table] :where [:= :id (int 1)]} {:dialect :mysql})
-  (map fn? (format {:select [:*] :from [:table] :where [:= :id (with-meta (constantly 42) {:foo true})]} {:dialect :mysql}))
-  (println (format {:select [:*] :from [:table] :where [:in :id [1 2 3 4]]} {:pretty? true}))
+  (format {:select [:*] :from [:table]
+           :where [:= :id (int 1)]} {:dialect :mysql})
+  (map fn? (format {:select [:*] :from [:table]
+                    :where [:= :id (with-meta (constantly 42) {:foo true})]}
+                   {:dialect :mysql}))
+  (println (format {:select [:*] :from [:table]
+                    :where [:in :id [1 2 3 4]]} {:pretty? true}))
   ,)
