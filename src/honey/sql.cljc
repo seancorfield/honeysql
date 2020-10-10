@@ -310,7 +310,7 @@
         (let [cols (keys (first xs))
               [sqls params]
               (reduce (fn [[sql params] [sqls' params']]
-                        [(conj sql (str/join ", " sqls'))
+                        [(conj sql (str "(" (str/join ", " sqls') ")"))
                          (if params' (into params params') params')])
                       [[] []]
                       (map (fn [m]
@@ -320,7 +320,9 @@
                       (str/join ", "
                                 (map #(format-entity % {:drop-ns? true}) cols))
                       ") "
-                      (sql-kw k) " (" (str/join ", " sqls) ")")]
+                      (sql-kw k)
+                      " "
+                      (str/join ", " sqls))]
                 params))
 
         :else
