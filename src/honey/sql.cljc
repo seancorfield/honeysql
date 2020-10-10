@@ -587,7 +587,7 @@
                           _           (when (seq y)
                                         (throw (ex-info (str "only binary "
                                                              op
-                                                             "is supported")
+                                                             " is supported")
                                                         {:expr x})))
                           [s1 & p1]   (format-expr a {:nested? true})
                           [s2 & p2]   (format-expr b {:nested? true})

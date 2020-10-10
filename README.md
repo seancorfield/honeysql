@@ -96,7 +96,7 @@ When using the vanilla helper functions, repeated clauses will be merged into ex
 
 ```clojure
 (-> sqlmap (select :d))
-=> '{:from [:foo], :where [:= :f.a "baz"], :select [:a :b :c :d]}
+=> {:from [:foo], :where [:= :f.a "baz"], :select [:a :b :c :d]}
 ```
 
 If you want to replace a clause, you can `dissoc` the existing clause first, since this is all data:
@@ -128,7 +128,7 @@ name and the desired alias:
     (from [:foo :quux])
     (where [:= :quux.a 1] [:< :bar 100])
     sql/format)
-=> ["SELECT a, b AS bar, c, d AS x FROM foo quux WHERE (quux.a = ?) AND (bar < ?)" 1 100]
+=> ["SELECT a, b AS bar, c, d AS x FROM foo AS quux WHERE (quux.a = ?) AND (bar < ?)" 1 100]
 ```
 
 In particular, note that `(select [:a :b])` means `SELECT a AS b` rather than
@@ -149,7 +149,8 @@ then provide a collection of rows, each a collection of column values:
       ["Jane" "Daniels" 56]])
     (sql/format {:pretty? true}))
 => ["
-INSERT INTO properties (name, surname, age)
+INSERT INTO properties
+(name, surname, age)
 VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
 "
 "Jon" "Smith" 34 "Andrew" "Cooper" 12 "Jane" "Daniels" 56]
@@ -166,8 +167,8 @@ and the remaining maps *must* have the same set of keys and values:
              {:name "Jane" :surname "Daniels" :age 56}])
     (sql/format {:pretty? true}))
 => ["
-INSERT INTO properties (name, surname, age)
-VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
+INSERT INTO properties
+(name, surname, age) VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
 "
 "John" "Smith" 34
 "Andrew" "Cooper"  12
@@ -189,8 +190,8 @@ The column values do not have to be literals, they can be nested queries:
       (sql/format {:pretty? true})))
 
 => ["
-INSERT INTO user_profile_to_role (user_profile_id, role_id)
-VALUES (?, (SELECT id FROM role WHERE name = ?))
+INSERT INTO user_profile_to_role
+(user_profile_id, role_id) VALUES (?, (SELECT id FROM role WHERE name = ?))
 "
 12345
 "user"]
@@ -201,7 +202,7 @@ VALUES (?, (SELECT id FROM role WHERE name = ?))
     (from :foo)
     (where [:in :foo.a (-> (select :a) (from :bar))])
     sql/format)
-=> ["SELECT * FROM foo WHERE (foo.a in (SELECT a FROM bar))"]
+=> ["SELECT * FROM foo WHERE foo.a IN (SELECT a FROM bar)"]
 ```
 
 ### Composite types
@@ -216,7 +217,8 @@ Composite types are supported:
       ["large" (composite 10 "feet")]])
     (sql/format {:pretty? true}))
 => ["
-INSERT INTO comp_table (name, comp_column)
+INSERT INTO comp_table
+(name, comp_column)
 VALUES (?, (?, ?)), (?, (?, ?))
 "
 "small" 1 "inch" "large" 10 "feet"]
@@ -233,7 +235,8 @@ Updates are possible too:
     (where [:= :kind "drama"])
     (sql/format {:pretty? true}))
 => ["
-UPDATE films SET kind = ?, watched = (watched + ?)
+UPDATE films
+SET kind = ?, watched = watched + ?
 WHERE kind = ?
 "
 "dramatic"
@@ -291,7 +294,7 @@ Queries may be combined within a :union, :union-all, :intersect or :except keywo
 ```clojure
 (sql/format {:union [(-> (select :*) (from :foo))
                      (-> (select :*) (from :bar))]})
-=> ["SELECT * FROM foo UNION SELECT * FROM bar"]
+=> ["(SELECT * FROM foo) UNION (SELECT * FROM bar)"]
 ```
 
 ### Functions
@@ -318,7 +321,7 @@ Keywords that begin with `?` are interpreted as bindable parameters:
     (from :foo)
     (where [:= :a :?baz])
     (sql/format {:params {:baz "BAZ"}}))
-=> ["SELECT id FROM foo WHERE (a = ?)" "BAZ"]
+=> ["SELECT id FROM foo WHERE a = ?" "BAZ"]
 ```
 
 ### Miscellaneous
@@ -340,7 +343,7 @@ call-qualify-map
 ```
 ```clojure
 (sql/format call-qualify-map {:params {:baz "BAZ"}})
-=> ["SELECT foo(bar), @var := foo.bar FROM foo WHERE (a = ?) AND (b = 42)" "BAZ"]
+=> ["SELECT FOO(bar), @var := foo.bar FROM foo WHERE (a = ?) AND (b = 42)" "BAZ"]
 ```
 
 #### PostGIS
@@ -355,10 +358,10 @@ have a lot of function calls needed in code:
                          [:cast 4325 :integer]]}])
     (sql/format {:pretty? true}))
 => ["
-INSERT INTO sample (location)
-VALUES (ST_SetSRID(ST_MakePoint(?, ?), CAST(? AS integer)))
+INSERT INTO sample
+(location) VALUES (ST_SETSRID(ST_MAKEPOINT(?, ?), CAST(? AS integer)))
 "
-0.291 32.621 4326]
+0.291 32.621 4325]
 ```
 
 #### Raw SQL fragments
@@ -428,8 +431,8 @@ If `<table(s)>` and `<nowait>` are both omitted, you may also omit the `[`..`]` 
     (from :foo)
     (where [:= :foo.a "baz"])
     (for :update)
-    (format))
-=> ["SELECT foo.a FROM foo WHERE (foo.a = ?) FOR UPDATE" "baz"]
+    (sql/format))
+=> ["SELECT foo.a FROM foo WHERE foo.a = ? FOR UPDATE" "baz"]
 ```
 
 If the `:mysql` dialect is selected, an additional locking clause is available:
@@ -450,7 +453,7 @@ To be able to use dashes in quoted names, you can pass ```:allow-dashed-names tr
    :where [:= :f.foo-id 12345]}
   {:allow-dashed-names? true ; not implemented yet
    :quoted true})
-=> ["SELECT \"f\".\"foo-id\", \"f\".\"foo-name\" FROM \"foo-bar\" \"f\" WHERE \"f\".\"foo-id\" = ?" 12345]
+=> ["SELECT \"f\".\"foo-id\", \"f\".\"foo-name\" FROM \"foo-bar\" AS \"f\" WHERE \"f\".\"foo-id\" = ?" 12345]
 ```
 
 ### Big, complicated example
@@ -467,7 +470,7 @@ Here's a big, complicated query. Note that Honey SQL makes no attempt to verify 
       (right-join :bock [:= :bock.z :c.e])
       (where [:or
                [:and [:= :f.a "bort"] [:not= :b.baz [:param :param1]]]
-               [:< 1 2 3]
+               [:and [:< 1 2] [:< 2 3]]
                [:in :f.e [1 [:param :param2] 3]]
                [:between :f.e 10 20]])
       (group-by :f.a :c.e)
@@ -486,7 +489,7 @@ big-complicated-map
     :right-join [:bock [:= :bock.z :c.e]]
     :where [:or
              [:and [:= :f.a "bort"] [:not= :b.baz [:param :param1]]]
-             [:< 1 2 3]
+             [:and [:< 1 2] [:< 2 3]]
              [:in :f.e [1 [:param :param2] 3]]
              [:between :f.e 10 20]]
     :group-by [:f.a :c.e]
@@ -496,14 +499,16 @@ big-complicated-map
     :offset 10}
 ```
 ```clojure
-(sql/format big-complicated-map {:param1 "gabba" :param2 2})
+(sql/format big-complicated-map
+            {:params {:param1 "gabba" :param2 2}
+             :pretty? true})
 => ["
-SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10
-FROM foo f, baz b
+SELECT DISTINCT f.*, b.baz, c.quux, b.bla \"bla-bla\", NOW(), @x := 10
+FROM foo AS f, baz AS b
 INNER JOIN draq ON f.b = draq.x
-LEFT JOIN clod c ON f.a = c.d
+LEFT JOIN clod AS c ON f.a = c.d
 RIGHT JOIN bock ON bock.z = c.e
-WHERE ((f.a = ? AND b.baz <> ?) OR (? < ? AND ? < ?) OR (f.e in (?, ?, ?)) OR f.e BETWEEN ? AND ?)
+WHERE ((f.a = ?) AND (b.baz <> ?)) OR ((? < ?) AND (? < ?)) OR (f.e IN (?, ?, ?)) OR f.e BETWEEN ? AND ?
 GROUP BY f.a, c.e
 HAVING ? < f.e
 ORDER BY b.baz DESC, c.quux, f.a NULLS FIRST
