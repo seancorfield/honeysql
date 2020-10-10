@@ -8,13 +8,19 @@
 (defn- default-merge [current args]
   (into (vec current) args))
 
+(defn- and-merge
+  [current args]
+  (let [merged (default-merge current args)]
+    (cond (= 1 (count merged))
+          (vec (first merged))
+          (= :and (first merged))
+          merged
+          :else
+          (into [:and] merged))))
+
 (def ^:private special-merges
-  {:where (fn [current args]
-            (if (= :and (first (first args)))
-              (default-merge current args)
-              (-> [:and]
-                  (into current)
-                  (into args))))})
+  {:where  #'and-merge
+   :having #'and-merge})
 
 (defn- helper-merge [data k args]
   (let [merge-fn (special-merges k default-merge)]
@@ -26,6 +32,11 @@
       (helper-merge data k args))
     (helper-merge {} k args)))
 
+(defn- generic-1 [k [data arg]]
+  (if (map? data)
+    (assoc data k arg)
+    (assoc {} k data)))
+
 (defn nest [& args] (generic :nest args))
 (defn with [& args] (generic :with args))
 (defn with-recursive [& args] (generic :with-recursive args))
@@ -35,6 +46,7 @@
 (defn except [& args] (generic :except args))
 (defn except-all [& args] (generic :except-all args))
 (defn select [& args] (generic :select args))
+(defn select-distinct [& args] (generic :select-distinct args))
 (defn insert-into [& args] (generic :insert-into args))
 (defn update [& args] (generic :update args))
 (defn delete [& args] (generic :delete args))
@@ -55,8 +67,8 @@
 (defn group-by [& args] (generic :group-by args))
 (defn having [& args] (generic :having args))
 (defn order-by [& args] (generic :order-by args))
-(defn limit [& args] (generic :limit args))
-(defn offset [& args] (generic :offset args))
+(defn limit [& args] (generic-1 :limit args))
+(defn offset [& args] (generic-1 :offset args))
 (defn for [& args] (generic :for args))
 (defn values [& args] (generic :values args))
 (defn on-conflict [& args] (generic :on-conflict args))

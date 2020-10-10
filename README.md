@@ -459,9 +459,8 @@ Here's a big, complicated query. Note that Honey SQL makes no attempt to verify 
 
 ```clojure
 (def big-complicated-map
-  (-> (select :f.* :b.baz :c.quux [:b.bla "bla-bla"]
-              [[:now]] [[:raw "@x := 10"]])
-      #_(modifiers :distinct) ; this is not implemented yet
+  (-> (select-distinct :f.* :b.baz :c.quux [:b.bla "bla-bla"]
+                       [[:now]] [[:raw "@x := 10"]])
       (from [:foo :f] [:baz :b])
       (join :draq [:= :f.b :draq.x])
       (left-join [:clod :c] [:= :f.a :c.d])
@@ -479,9 +478,8 @@ Here's a big, complicated query. Note that Honey SQL makes no attempt to verify 
 ```
 ```clojure
 big-complicated-map
-=> {:select [:f.* :b.baz :c.quux [:b.bla "bla-bla"]
-             [[:now]] [[:raw "@x := 10"]]]
-    :modifiers [:distinct]
+=> {:select-distinct [:f.* :b.baz :c.quux [:b.bla "bla-bla"]
+                     [[:now]] [[:raw "@x := 10"]]]
     :from [[:foo :f] [:baz :b]]
     :join [:draq [:= :f.b :draq.x]]
     :left-join [[:clod :c] [:= :f.a :c.d]]

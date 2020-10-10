@@ -17,7 +17,7 @@
 (def ^:private default-clause-order
   "The (default) order for known clauses. Can have items added and removed."
   [:nest :with :with-recursive :intersect :union :union-all :except :except-all
-   :select :insert-into :update :delete :delete-from :truncate
+   :select :select-distinct :insert-into :update :delete :delete-from :truncate
    :columns :composite :set :from
    :join :left-join :right-join :inner-join :outer-join :full-join
    :cross-join
@@ -362,44 +362,45 @@
 (def ^:private clause-format
   "The (default) behavior for each known clause. Can also have items added
   and removed."
-  (atom {:nest           (fn [_ x] (format-expr x))
-         :with           #'format-with
-         :with-recursive #'format-with
-         :intersect      #'format-on-set-op
-         :union          #'format-on-set-op
-         :union-all      #'format-on-set-op
-         :except         #'format-on-set-op
-         :except-all     #'format-on-set-op
-         :select         #'format-selects
-         :insert-into    #'format-insert
-         :update         #'format-selector
-         :delete         #'format-selects
-         :delete-from    #'format-selector
-         :truncate       #'format-selector
-         :columns        #'format-columns
-         :composite      #'format-columns
-         :set            #'format-set-exprs
-         :from           #'format-selects
-         :join           #'format-join
-         :left-join      #'format-join
-         :right-join     #'format-join
-         :inner-join     #'format-join
-         :outer-join     #'format-join
-         :full-join      #'format-join
-         :cross-join     #'format-selects
-         :where          #'format-on-expr
-         :group-by       #'format-group-by
-         :having         #'format-on-expr
-         :order-by       #'format-order-by
-         :limit          #'format-on-expr
-         :offset         #'format-on-expr
-         :for            #'format-lock-strength
-         :values         #'format-values
-         :on-conflict    #'format-on-conflict
-         :on-constraint  #'format-selector
-         :do-nothing     (fn [k _] (vector (sql-kw k)))
-         :do-update-set  #'format-do-update-set
-         :returning      #'format-selects}))
+  (atom {:nest            (fn [_ x] (format-expr x))
+         :with            #'format-with
+         :with-recursive  #'format-with
+         :intersect       #'format-on-set-op
+         :union           #'format-on-set-op
+         :union-all       #'format-on-set-op
+         :except          #'format-on-set-op
+         :except-all      #'format-on-set-op
+         :select          #'format-selects
+         :select-distinct #'format-selects
+         :insert-into     #'format-insert
+         :update          #'format-selector
+         :delete          #'format-selects
+         :delete-from     #'format-selector
+         :truncate        #'format-selector
+         :columns         #'format-columns
+         :composite       #'format-columns
+         :set             #'format-set-exprs
+         :from            #'format-selects
+         :join            #'format-join
+         :left-join       #'format-join
+         :right-join      #'format-join
+         :inner-join      #'format-join
+         :outer-join      #'format-join
+         :full-join       #'format-join
+         :cross-join      #'format-selects
+         :where           #'format-on-expr
+         :group-by        #'format-group-by
+         :having          #'format-on-expr
+         :order-by        #'format-order-by
+         :limit           #'format-on-expr
+         :offset          #'format-on-expr
+         :for             #'format-lock-strength
+         :values          #'format-values
+         :on-conflict     #'format-on-conflict
+         :on-constraint   #'format-selector
+         :do-nothing      (fn [k _] (vector (sql-kw k)))
+         :do-update-set   #'format-do-update-set
+         :returning       #'format-selects}))
 
 (assert (= (set @base-clause-order)
            (set @current-clause-order)
