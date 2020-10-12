@@ -409,44 +409,6 @@
            (set @current-clause-order)
            (set (keys @clause-format))))
 
-(comment :target
-  {;:with 20
-   ;:with-recursive 30
-   ;:intersect 35
-   ;:union 40
-   ;:union-all 45
-   ;:except 47
-   ;:select 50
-   ;:insert-into 60
-   ;:update 70
-   ;:delete 75
-   ;:delete-from 80
-   ;:truncate 85
-   ;:columns 90
-   ;; no longer needed/supported :set0 100 ; low-priority set clause
-   ;:from 110
-   ;:join 120
-   ;:left-join 130
-   ;:right-join 140
-   ;:full-join 150
-   ;:cross-join 152 ; doesn't have on clauses
-   ;:set 155
-   ;; no longer needed/supported :set1 156 ; high-priority set clause (synonym for :set)
-   ;:where 160
-   ;:group-by 170
-   ;:having 180
-   ;:order-by 190
-   ;:limit 200
-   ;:offset 210
-   ;:lock 215
-   ;:values 220
-   :query-values 230})
-;; :on-conflict -- https://www.postgresqltutorial.com/postgresql-upsert/
-;; :on-constraint (part of :on-conflict)
-;; :do-update-set
-;; ;do-nothing
-   ;:returning
-
 (defn format-dsl [x & [{:keys [aliased? nested? pretty?]}]]
   (let [[sqls params leftover]
         (reduce (fn [[sql params leftover] k]
