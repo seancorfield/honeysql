@@ -619,9 +619,8 @@
                                   (str " " (first sqls))
                                   (str "(" (str/join ", " sqls) ")")))]
                           params)))
-            (if *inline*
-              [(str "(" (str/join ", " (map #'sqlize-value x)) ")")]
-              (into [(str "(" (str/join ", " (repeat (count x) "?")) ")")] x))))
+            (let [[sqls params] (format-expr-list x)]
+              (into [(str "(" (str/join ", " sqls) ")")] params))))
 
         (or (true? x) (false? x)) ; because (boolean? x) requires Clojure 1.9+
         [(upper-case (str x))]
@@ -760,4 +759,9 @@
                    {:dialect :mysql}))
   (println (format {:select [:*] :from [:table]
                     :where [:in :id [1 2 3 4]]} {:pretty? true}))
+  (println (format {:select [:*] :from [:table]
+                    :where [:and [:in :id [1 [:param :foo]]]
+                            [:= :bar [:param :quux]]]}
+                   {:params {:foo 42 :quux 13}
+                    :pretty? true}))
   ,)

@@ -511,7 +511,7 @@ RIGHT JOIN bock ON bock.z = c.e
 WHERE ((f.a = ?) AND (b.baz <> ?)) OR ((? < ?) AND (? < ?)) OR (f.e IN (?, ?, ?)) OR f.e BETWEEN ? AND ?
 GROUP BY f.a, c.e
 HAVING ? < f.e
-ORDER BY b.baz DESC, c.quux, f.a NULLS FIRST
+ORDER BY b.baz DESC, c.quux ASC, f.a NULLS FIRST
 LIMIT ?
 OFFSET ?
 "
