@@ -18,7 +18,7 @@
   "The (default) order for known clauses. Can have items added and removed."
   [:nest :with :with-recursive :intersect :union :union-all :except :except-all
    :select :select-distinct :insert-into :update :delete :delete-from :truncate
-   :columns :composite :set :from
+   :columns :set :from
    :join :left-join :right-join :inner-join :outer-join :full-join
    :cross-join
    :where :group-by :having :order-by :limit :offset :for :values
@@ -382,7 +382,6 @@
          :delete-from     #'format-selector
          :truncate        #'format-selector
          :columns         #'format-columns
-         :composite       #'format-columns
          :set             #'format-set-exprs
          :from            #'format-selects
          :join            #'format-join
@@ -424,7 +423,6 @@
    ;:delete-from 80
    ;:truncate 85
    ;:columns 90
-   ;:composite 95
    ;; no longer needed/supported :set0 100 ; low-priority set clause
    ;:from 110
    ;:join 120
@@ -528,6 +526,10 @@
         (-> [(str "CAST(" sql " AS " sql' ")")]
             (into params)
             (into params'))))
+    :composite
+    (fn [_ [& args]]
+      (let [[sqls params] (format-expr-list args)]
+        (into [(str "(" (str/join ", " sqls) ")")] params)))
     :default
     (fn [_ []]
       ["DEFAULT"])

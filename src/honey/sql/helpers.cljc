@@ -54,7 +54,6 @@
 (defn delete-from [& args] (generic :delete-from args))
 (defn truncate [& args] (generic :truncate args))
 (defn columns [& args] (generic :columns args))
-(defn composite [& args] (generic :composite args))
 (defn set [& args] (generic-1 :set args))
 (defn from [& args] (generic :from args))
 (defn join [& args] (generic :join args))
@@ -78,6 +77,10 @@
 (defn do-update-set [& args] (generic :do-update-set args))
 (defn returning [& args] (generic :returning args))
 
+;; helpers that produce non-clause expressions -- must be listed below:
+(defn composite [& args] (into [:composite] args))
+
 #?(:clj
-    (assert (= (clojure.core/set @@#'h/base-clause-order)
+    (assert (= (clojure.core/set (conj @@#'h/base-clause-order
+                                       :composite))
                (clojure.core/set (map keyword (keys (ns-publics *ns*)))))))
