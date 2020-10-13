@@ -256,13 +256,19 @@
           [(str (sql-kw k) " " (format-entity-alias table))])
     [(str (sql-kw k) " " (format-entity-alias table))]))
 
-(defn- format-join [k [j e]]
-  (let [[sql & params] (format-expr e)]
-    ;; for backward compatibility, treat plain JOIN as INNER JOIN:
-    (into [(str (sql-kw (if (= :join k) :inner-join k)) " "
-                (format-entity-alias j) " ON "
-                sql)]
-          params)))
+(defn- format-join [k clauses]
+  (let [[sqls params]
+        (reduce (fn [[sqls params] [j e]]
+                  ;; TODO: join using!
+                  (let [[sql & params'] (when e (format-expr e))]
+                    [(cond-> (conj sqls
+                                   (sql-kw (if (= :join k) :inner-join k))
+                                   (format-entity-alias j))
+                       e (conj "ON" sql))
+                     (into params params')]))
+                [[] []]
+                (partition 2 clauses))]
+    (into [(str/join " " sqls)] params)))
 
 (defn- format-on-expr [k e]
   (if (or (not (sequential? e)) (seq e))
