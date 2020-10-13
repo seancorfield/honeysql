@@ -85,16 +85,18 @@
 (defn sql-kw [k]
   (-> k (name) (upper-case) (str/replace "-" " ")))
 
+(defn- namespace-_ [x] (some-> (namespace x) (str/replace "-" "_")))
+(defn- name-_      [x] (str/replace (name x) "-" "_"))
+
 (defn- format-entity [x & [{:keys [aliased? drop-ns?]}]]
-  (let [q     (if (or *quoted* (string? x))
-                (:quote *dialect*)
-                identity)
+  (let [nn    (if (or *quoted* (string? x)) name               name-_)
+        q     (if (or *quoted* (string? x)) (:quote *dialect*) identity)
         [t c] (if-let [n (when-not (or drop-ns? (string? x))
-                           (namespace x))]
-                [n (name x)]
+                           (namespace-_ x))]
+                [n (nn x)]
                 (if aliased?
-                  [nil (name x)]
-                  (let [[t c] (str/split (name x) #"\.")]
+                  [nil (nn x)]
+                  (let [[t c] (str/split (nn x) #"\.")]
                     (if c [t c] [nil t]))))]
     (cond->> c
       (not= "*" c)
@@ -113,7 +115,7 @@
                            {:params (keys params)})))))}))
 
 (defn- format-var [x & [opts]]
-  (let [c (name x)]
+  (let [c (name-_ x)]
     (cond (= \% (first c))
           (let [[f & args] (str/split (subs c 1) #"\.")]
             ;; TODO: this does not quote arguments -- does that matter?
@@ -464,8 +466,8 @@
   (cond
     (nil? x)     "NULL"
     (string? x)  (str \' (str/replace x "'" "''") \')
-    (symbol? x)  (name x)
-    (keyword? x) (name x)
+    (symbol? x)  (name-_ x)
+    (keyword? x) (name-_ x)
     :else        (str x)))
 
 (def ^:private special-syntax
