@@ -483,6 +483,23 @@
             (into params-x)
             (into params-a)
             (into params-b))))
+    :case
+    (fn [_ clauses]
+      (let [[sqls params]
+            (reduce (fn [[sqls params] [condition value]]
+                      (let [[sqlc & paramsc] (when-not (= :else condition)
+                                               (format-expr condition))
+                            [sqlv & paramsv] (format-expr value)]
+                        [(if (= :else condition)
+                           (conj sqls (sql-kw :else) sqlv)
+                           (conj sqls (sql-kw :when) sqlc (sql-kw :then) sqlv))
+                         (-> params (into paramsc) (into paramsv))]))
+                    [[] []]
+                    (partition 2 clauses))]
+        (into [(str (sql-kw :case) " "
+                    (str/join " " sqls)
+                    " " (sql-kw :end))]
+              params)))
     :cast
     (fn [_ [x type]]
       (let [[sql & params]   (format-expr x)
