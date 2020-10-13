@@ -11,8 +11,8 @@
   (let [m1 (-> (with [:cte (-> (select :*)
                                (from :example)
                                (where [:= :example-column 0]))])
-               (select-distinct :f.* :b.baz :c.quux [:b.bla :bla-bla]
-                                :%now [:raw "@x := 10"])
+               (select-distinct :f.* :b.baz :c.quux [:b.bla "bla-bla"]
+                                :%now [[:raw "@x := 10"]])
                (from [:foo :f] [:baz :b])
                (join :draq [:= :f.b :draq.x])
                (left-join [:clod :c] [:= :f.a :c.d])
@@ -20,7 +20,7 @@
                (full-join :beck [:= :beck.x :c.y])
                (where [:or
                        [:and [:= :f.a "bort"] [:not= :b.baz :?param1]]
-                       [:< 1 2 3]
+                       [:and [:< 1 2] [:< 2 3]]
                        [:in :f.e [1 [:param :param2] 3]]
                        [:between :f.e 10 20]])
                (group-by :f.a)
@@ -31,10 +31,8 @@
         m2 {:with [[:cte {:select [:*]
                           :from [:example]
                           :where [:= :example-column 0]}]]
-            :select [:f.* :b.baz :c.quux [:b.bla :bla-bla]
-                     :%now [:raw "@x := 10"]]
-            ;;:un-select :c.quux
-            :modifiers :distinct
+            :select-distinct [:f.* :b.baz :c.quux [:b.bla "bla-bla"]
+                              :%now [[:raw "@x := 10"]]]
             :from [[:foo :f] [:baz :b]]
             :join [:draq [:= :f.b :draq.x]]
             :left-join [[:clod :c] [:= :f.a :c.d]]
@@ -42,10 +40,10 @@
             :full-join [:beck [:= :beck.x :c.y]]
             :where [:or
                     [:and [:= :f.a "bort"] [:not= :b.baz :?param1]]
-                    [:< 1 2 3]
+                    [:and [:< 1 2] [:< 2 3]]
                     [:in :f.e [1 [:param :param2] 3]]
                     [:between :f.e 10 20]]
-            :group-by :f.a
+            :group-by [:f.a]
             :having [:< 0 :f.e]
             :order-by [[:b.baz :desc] :c.quux [:f.a :nulls-first]]
             :limit 50
@@ -53,22 +51,22 @@
     (testing "Various construction methods are consistent"
       (is (= m1 m2)))
     (testing "SQL data formats correctly"
-      (is (= ["WITH cte AS (SELECT * FROM example WHERE example_column = ?) SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10 FROM foo f, baz b INNER JOIN draq ON f.b = draq.x LEFT JOIN clod c ON f.a = c.d RIGHT JOIN bock ON bock.z = c.e FULL JOIN beck ON beck.x = c.y WHERE ((f.a = ? AND b.baz <> ?) OR (? < ? AND ? < ?) OR (f.e in (?, ?, ?)) OR f.e BETWEEN ? AND ?) GROUP BY f.a HAVING ? < f.e ORDER BY b.baz DESC, c.quux, f.a NULLS FIRST LIMIT ? OFFSET ? "
+      (is (= ["WITH cte AS (SELECT * FROM example WHERE example_column = ?) SELECT DISTINCT f.*, b.baz, c.quux, b.bla \"bla-bla\", now(), @x := 10 FROM foo AS f, baz AS b INNER JOIN draq ON f.b = draq.x LEFT JOIN clod AS c ON f.a = c.d RIGHT JOIN bock ON bock.z = c.e FULL JOIN beck ON beck.x = c.y WHERE ((f.a = ?) AND (b.baz <> ?)) OR ((? < ?) AND (? < ?)) OR (f.e IN (?, ?, ?)) OR f.e BETWEEN ? AND ? GROUP BY f.a HAVING ? < f.e ORDER BY b.baz DESC, c.quux ASC, f.a NULLS FIRST LIMIT ? OFFSET ?"
               0 "bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10]
              (sql/format m1 {:params {:param1 "gabba" :param2 2}}))))
     #?(:clj (testing "SQL data prints and reads correctly"
               (is (= m1 (read-string (pr-str m1))))))
     #_(testing "SQL data formats correctly with alternate param naming"
         (is (= (sql/format m1 {:params {:param1 "gabba" :param2 2}})
-               ["WITH cte AS (SELECT * FROM example WHERE example_column = $1) SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10 FROM foo f, baz b INNER JOIN draq ON f.b = draq.x LEFT JOIN clod c ON f.a = c.d RIGHT JOIN bock ON bock.z = c.e FULL JOIN beck ON beck.x = c.y WHERE ((f.a = $2 AND b.baz <> $3) OR ($4 < $5 AND $6 < $7) OR (f.e in ($8, $9, $10)) OR f.e BETWEEN $11 AND $12) GROUP BY f.a HAVING $13 < f.e ORDER BY b.baz DESC, c.quux, f.a NULLS FIRST LIMIT $14 OFFSET $15 "
+               ["WITH cte AS (SELECT * FROM example WHERE example_column = $1) SELECT DISTINCT f.*, b.baz, c.quux, b.bla \"bla-bla\", now(), @x := 10 FROM foo AS f, baz AS b INNER JOIN draq ON f.b = draq.x LEFT JOIN clod AS c ON f.a = c.d RIGHT JOIN bock ON bock.z = c.e FULL JOIN beck ON beck.x = c.y WHERE ((f.a = $2) AND (b.baz <> $3)) OR (($4 < $5) AND ($6 < $7)) OR (f.e IN ($8, $9, $10)) OR f.e BETWEEN $11 AND $12 GROUP BY f.a HAVING $13 < f.e ORDER BY b.baz DESC, c.quux ASC, f.a NULLS FIRST LIMIT $14 OFFSET $15"
                 0 "bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10])))
     (testing "Locking"
-      (is (= ["WITH cte AS (SELECT * FROM example WHERE example_column = ?) SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS bla_bla, now(), @x := 10 FROM foo f, baz b INNER JOIN draq ON f.b = draq.x LEFT JOIN clod c ON f.a = c.d RIGHT JOIN bock ON bock.z = c.e FULL JOIN beck ON beck.x = c.y WHERE ((f.a = ? AND b.baz <> ?) OR (? < ? AND ? < ?) OR (f.e in (?, ?, ?)) OR f.e BETWEEN ? AND ?) GROUP BY f.a HAVING ? < f.e ORDER BY b.baz DESC, c.quux, f.a NULLS FIRST LIMIT ? OFFSET ? FOR UPDATE "
+      (is (= ["WITH cte AS (SELECT * FROM example WHERE example_column = ?) SELECT DISTINCT f.*, b.baz, c.quux, b.bla `bla-bla`, now(), @x := 10 FROM foo AS f, baz AS b INNER JOIN draq ON f.b = draq.x LEFT JOIN clod AS c ON f.a = c.d RIGHT JOIN bock ON bock.z = c.e FULL JOIN beck ON beck.x = c.y WHERE ((f.a = ?) AND (b.baz <> ?)) OR ((? < ?) AND (? < ?)) OR (f.e IN (?, ?, ?)) OR f.e BETWEEN ? AND ? GROUP BY f.a HAVING ? < f.e ORDER BY b.baz DESC, c.quux ASC, f.a NULLS FIRST LIMIT ? OFFSET ? LOCK IN SHARE MODE"
               0 "bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10]
-             (sql/format (assoc m1 :lock [:for-update])
+             (sql/format (assoc m1 :lock [:in-share-mode])
                          {:params {:param1 "gabba" :param2 2}
                           ;; to enable :lock
-                          :dialect :mysql}))))))
+                          :dialect :mysql :quoted false}))))))
 
 (deftest test-cast
   (is (= ["SELECT foo, CAST(bar AS integer)"]
@@ -101,7 +99,7 @@
              (sql/format {:select [:*]
                           :from [:customers]
                           :where [:= :name :?name]}
-                         {:name nil})))))
+                         {:params {:name nil}})))))
   (testing "in"
     (doseq [[cname coll] [[:vector []] [:set #{}] [:list '()]]]
       (testing (str "with values from a " (name cname))
@@ -165,7 +163,7 @@
 
 (deftest test-raw
   (is (= ["SELECT 1 + 1 FROM foo"]
-         (-> (select [:raw "1 + 1"])
+         (-> (select [[:raw "1 + 1"]])
              (from :foo)
              sql/format))))
 
