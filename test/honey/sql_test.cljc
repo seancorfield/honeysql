@@ -72,11 +72,11 @@
 ;; issue-based tests
 
 (deftest subquery-alias-263
-  (is (= ["SELECT type FROM (SELECT address AS field-alias FROM Candidate) AS sub-q-alias"]
+  (is (= ["SELECT type FROM (SELECT address AS field_alias FROM Candidate) AS sub_q_alias"]
          (sut/format {:select [:type]
                       :from [[{:select [[:address :field-alias]]
-                               :from [:Candidate]} :sub-q-alias]]})))
-  (is (= ["SELECT type FROM (SELECT address field-alias FROM Candidate) sub-q-alias"]
+                               :from [:Candidate]} :sub_q_alias]]})))
+  (is (= ["SELECT type FROM (SELECT address field_alias FROM Candidate) sub_q_alias"]
          (sut/format {:select [:type]
                       :from [[{:select [[:address :field-alias]]
                                :from [:Candidate]} :sub-q-alias]]}
