@@ -263,8 +263,10 @@
           params)))
 
 (defn- format-on-expr [k e]
-  (let [[sql & params] (format-expr e)]
-    (into [(str (sql-kw k) " " sql)] params)))
+  (if (seq e)
+    (let [[sql & params] (format-expr e)]
+      (into [(str (sql-kw k) " " sql)] params))
+    []))
 
 (defn- format-group-by [k xs]
   (let [[sqls params] (format-expr-list xs)]
