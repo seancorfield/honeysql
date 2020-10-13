@@ -10,14 +10,19 @@
 
 (defn- and-merge
   [current args]
-  (cond (= :and (first current))
-        (default-merge current args)
-        (seq current)
-        (default-merge [:and current] args)
-        (= 1 (count args))
-        (vec (first args))
-        :else
-        (default-merge [:and] args)))
+  (let [args (remove nil? args)]
+    (cond (= :and (first current))
+          (default-merge current args)
+          (seq current)
+          (if (seq args)
+            (default-merge [:and current] args)
+            current)
+          (= 1 (count args))
+          (vec (first args))
+          (seq args)
+          (default-merge [:and] args)
+          :else
+          (vec current))))
 
 (def ^:private special-merges
   {:where  #'and-merge
