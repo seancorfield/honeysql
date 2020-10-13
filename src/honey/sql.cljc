@@ -263,7 +263,7 @@
           params)))
 
 (defn- format-on-expr [k e]
-  (if (seq e)
+  (if (or (not (sequential? e)) (seq e))
     (let [[sql & params] (format-expr e)]
       (into [(str (sql-kw k) " " sql)] params))
     []))
