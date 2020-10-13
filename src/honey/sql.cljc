@@ -432,7 +432,7 @@
                                (str/join ", " (keys leftover)))
                           leftover))
         [(str "<unknown" (str/join (keys leftover)) ">")])
-      (into [(cond-> (str/join (if pretty? "\n" " ") sqls)
+      (into [(cond-> (str/join (if pretty? "\n" " ") (filter seq sqls))
                pretty?
                (as-> s (str "\n" s "\n"))
                (and nested? (not aliased?))
