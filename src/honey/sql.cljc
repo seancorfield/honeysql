@@ -458,7 +458,7 @@
 (def ^:private infix-ops
   (-> #{"mod" "and" "or" "xor" "<>" "<=" ">=" "||"
         "in" "not-in" "like" "not-like" "regexp"
-        "ilike" "not-ilike"
+        "ilike" "not-ilike" "similar-to" "not-similar-to"
         "is" "is-not" "not=" "!=" "regex"}
       (into (map str "+-*/%|&^=<>"))
       (into (keys infix-aliases))
