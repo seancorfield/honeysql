@@ -83,7 +83,8 @@
      :cljs str/upper-case))
 
 (defn sql-kw [k]
-  (-> k (name) (upper-case) (str/replace "-" " ")))
+  (-> k (name) (upper-case)
+      (as-> s (if (= "-" s) s (str/replace s "-" " ")))))
 
 (defn- namespace-_ [x] (some-> (namespace x) (str/replace "-" "_")))
 (defn- name-_      [x] (str/replace (name x) "-" "_"))
