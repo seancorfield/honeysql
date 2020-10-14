@@ -473,8 +473,8 @@
   (cond
     (nil? x)     "NULL"
     (string? x)  (str \' (str/replace x "'" "''") \')
-    (symbol? x)  (name-_ x)
-    (keyword? x) (name-_ x)
+    (symbol? x)  (sql-kw x)
+    (keyword? x) (sql-kw x)
     :else        (str x)))
 
 (def ^:private special-syntax
@@ -525,7 +525,9 @@
       ["DEFAULT"])
     :inline
     (fn [_ [x]]
-      [(sqlize-value x)])
+      (if (sequential? x)
+        [(str/join " " (map #'sqlize-value x))]
+        [(sqlize-value x)]))
     :interval
     (fn [_ [n units]]
       (let [[sql & params] (format-expr n)]
@@ -544,9 +546,10 @@
     (fn [_ [k]]
       ["?" (->param k)])
     :raw
-    ;; TODO: only supports single raw string right now
     (fn [_ [s]]
-      [s])}))
+      (if (sequential? s)
+        [(str/join " " s)]
+        [s]))}))
 
 (defn format-expr [x & [{:keys [nested?] :as opts}]]
   (cond (or (keyword? x) (symbol? x))
