@@ -254,3 +254,20 @@
              (from [:foo :f])
              (cross-join [:bar :b])
              sql/format))))
+
+(defn- stack-overflow-282 [num-ids]
+  (let [ids (range num-ids)]
+    (sql/format (reduce
+                 where
+                 {:select [[:id :id]]
+                  :from   [:collection]
+                  :where  [:= :personal_owner_id nil]}
+                 (clojure.core/for [id ids]
+                                   [:not-like :location [:raw (clojure.core/format "'/%d/%%'" id)]])))))
+
+(deftest issue-282
+  (is (= [(str "SELECT id AS id FROM collection"
+               " WHERE (personal_owner_id IS NULL)"
+               " AND (location NOT LIKE '/0/%')"
+               " AND (location NOT LIKE '/1/%')")]
+         (stack-overflow-282 2))))
