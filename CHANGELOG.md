@@ -1,5 +1,8 @@
 # Changes
 
+* 1.0.next in progress
+  * Fix/Improve `merge-where` (and `merge-having`) behavior. #282 via #283 (@camsaul)
+
 * 1.0.444 -- 2020-05-29
   * Fix #259 so column names are always unqualified in inserts. (@jrdoane)
   * Fix #257 by adding support for `cross-join` / `merge-cross-join` / `:cross-join`. (@dcj)
