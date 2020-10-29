@@ -64,39 +64,87 @@
     m
     (assoc m :where pred)))
 
-(defn- prep-where [args]
-  (let [[m preds] (if (map? (first args))
-                    [(first args) (rest args)]
-                    [{} args])
-        [logic-op preds] (if (keyword? (first preds))
-                           [(first preds) (rest preds)]
-                           [:and preds])
-        preds (remove nil? preds)
-        pred (if (>= 1 (count preds))
-               (first preds)
-               (into [logic-op] preds))]
-    [m pred logic-op]))
+(defn- merge-where-args
+  "Handle optional args passed to `merge-where` or similar functions. Returns tuple of
+
+    [m where-clauses conjunction-operator]"
+  [args]
+  (let [[m & args]              (if (map? (first args))
+                                  args
+                                  (cons {} args))
+        [conjunction & clauses] (if (keyword? (first args))
+                                  args
+                                  (cons :and args))]
+    [m (filter some? clauses) conjunction]))
+
+(defn- where-args
+  "Handle optional args passed to `where` or similar functions. Merges clauses together. Returns tuple of
+
+    [m merged-clause]"
+  [args]
+  (let [[m clauses conjunction] (merge-where-args args)]
+    [m (if (<= (count clauses) 1)
+         (first clauses)
+         (into [conjunction] clauses))]))
+
+(defn- where-like
+  "Create a WHERE-style clause with key `k` (e.g. `:where` or `:having`)"
+  [k args]
+  (let [[m pred] (where-args args)]
+    (if (nil? pred)
+      m
+      (assoc m k pred))))
 
 (defn where [& args]
-  (let [[m pred] (prep-where args)]
-    (if (nil? pred)
-      m
-      (assoc m :where pred))))
+  (where-like :where args))
 
-(defmethod build-clause :merge-where [_ m pred]
-  (if (nil? pred)
-    m
-    (assoc m :where (if (not (nil? (:where m)))
-                      [:and (:where m) pred]
-                      pred))))
+(defn- is-clause? [clause x]
+  (and (sequential? x) (= (first x) clause)))
 
-(defn merge-where [& args]
-  (let [[m pred logic-op] (prep-where args)]
-    (if (nil? pred)
-      m
-      (assoc m :where (if (not (nil? (:where m)))
-                        [logic-op (:where m) pred]
-                        pred)))))
+(defn- merge-where-like
+  "Merge a WHERE-style clause with key `k` (e.g. `:where` or `:having`)"
+  [k args]
+  (let [[m new-clauses conjunction] (merge-where-args args)]
+    (reduce
+     (fn [m new-clause]
+       ;; combine existing clause and new clause if they're both of the specified conjunction type, e.g.
+       ;; [:and a b] + [:and c d] -> [:and a b c d]
+       (update-in m [k] (fn [existing-clause]
+                          (let [existing-subclauses (when (some? existing-clause)
+                                                      (if (is-clause? conjunction existing-clause)
+                                                        (rest existing-clause)
+                                                        [existing-clause]))
+                                new-subclauses      (if (is-clause? conjunction new-clause)
+                                                      (rest new-clause)
+                                                      [new-clause])
+                                subclauses          (concat existing-subclauses new-subclauses)]
+                            (if (> (count subclauses) 1)
+                              (into [conjunction] subclauses)
+                              (first subclauses))))))
+     m
+     new-clauses)))
+
+(defn merge-where
+  "Merge a series of `where-clauses` together. Supports two optional args: a map to merge the results into, and a
+  `conjunction` to use to combine clauses (defaults to `:and`).
+
+    (merge-where [:= :x 1] [:= :y 2])
+    {:where [:and [:= :x 1] [:= :y 2]]}
+
+    (merge-where {:where [:= :x 1]} [:= :y 2])
+    ;; -> {:where [:and [:= :x 1] [:= :y 2]]}
+
+    (merge-where :or [:= :x 1] [:= :y 2])
+    ;; -> {:where [:or [:= :x 1] [:= :y 2]]}"
+  {:arglists '([& where-clauses]
+               [m-or-conjunction & where-clauses]
+               [m conjunction & where-clauses])}
+  [& args]
+  (merge-where-like :where args))
+
+(defmethod build-clause :merge-where
+  [_ m where-clause]
+  (merge-where m where-clause))
 
 (defhelper join [m clauses]
   (assoc m :join clauses))
@@ -146,25 +194,29 @@
     (assoc m :having pred)))
 
 (defn having [& args]
-  (let [[m pred] (prep-where args)]
-    (if (nil? pred)
-      m
-      (assoc m :having pred))))
+  (where-like :having args))
 
-(defmethod build-clause :merge-having [_ m pred]
-  (if (nil? pred)
-    m
-    (assoc m :having (if (not (nil? (:having m)))
-                       [:and (:having m) pred]
-                       pred))))
+(defn merge-having
+  "Merge a series of `having-clauses` together. Supports two optional args: a map to merge the results into, and a
+  `conjunction` to use to combine clauses (defaults to `:and`).
 
-(defn merge-having [& args]
-  (let [[m pred logic-op] (prep-where args)]
-    (if (nil? pred)
-      m
-      (assoc m :having (if (not (nil? (:having m)))
-                         [logic-op (:having m) pred]
-                         pred)))))
+    (merge-having [:= :x 1] [:= :y 2])
+    {:having [:and [:= :x 1] [:= :y 2]]}
+
+    (merge-having {:having [:= :x 1]} [:= :y 2])
+    ;; -> {:having [:and [:= :x 1] [:= :y 2]]}
+
+    (merge-having :or [:= :x 1] [:= :y 2])
+    ;; -> {:having [:or [:= :x 1] [:= :y 2]]}"
+  {:arglists '([& having-clauses]
+               [m-or-conjunction & having-clauses]
+               [m conjunction & having-clauses])}
+  [& args]
+  (merge-where-like :having args))
+
+(defmethod build-clause :merge-having
+  [_ m where-clause]
+  (merge-having m where-clause))
 
 (defhelper order-by [m fields]
   (assoc m :order-by (collify fields)))
