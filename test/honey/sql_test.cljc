@@ -4,7 +4,8 @@
   (:refer-clojure :exclude [format])
   (:require #?(:clj [clojure.test :refer [deftest is testing]]
                :cljs [cljs.test :refer-macros [deftest is testing]])
-            [honey.sql :as sut :refer [format]]))
+            [honey.sql :as sut :refer [format]]
+            [honey.sql.helpers :as h]))
 
 (deftest mysql-tests
   (is (= ["SELECT * FROM `table` WHERE `id` = ?" 1]
@@ -524,4 +525,17 @@ DO UPDATE SET email = EXCLUDED.email || ';' || customers.email
                   :values [[[:inline "Microsoft"], [:inline "hotline@microsoft.com"]]]
                   :on-conflict :name
                   :do-update-set {:email [:|| :EXCLUDED.email [:inline ";"] :customers.email]}}
+                 {:pretty? true}))))
+
+(deftest issue-285
+  (is (= ["
+SELECT *
+FROM processes
+WHERE state = ?
+ORDER BY id = ? DESC
+" 42 123]
+         (format (-> (h/select :*)
+                     (h/from :processes)
+                     (h/where [:= :state 42])
+                     (h/order-by [[:= :id 123] :desc]))
                  {:pretty? true}))))
