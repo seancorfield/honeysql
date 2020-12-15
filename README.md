@@ -66,6 +66,15 @@ to jdbc:
 (jdbc/query conn (sql/format sqlmap))
 ```
 
+If you want to format the query as a string with no parameters (e.g. to use the SQL statement in a SQL console), pass `:parameterizer :none` to the `sql/format`:
+
+```clj
+(sql/format sqlmap :parameterizer :none)
+=> ["SELECT a, b, c FROM foo WHERE f.a = baz"]
+```
+
+Note that HoneySQL 1.0 does not correctly turn string parameters into inline SQL strings -- it will only work with numbers (and Booleans). HoneySQL 2.0 will do this correctly (via the new `:inline` option to `sql/format`
+
 ### `build`
 
 You can build up SQL maps yourself or use helper functions. `build` is the Swiss Army Knife helper. It lets you leave out brackets here and there:
