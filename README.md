@@ -56,6 +56,13 @@ to a JDBC library, such as [`next.jdbc`](https://github.com/seancorfield/next-jd
 (jdbc/execute! conn (sql/format sqlmap))
 ```
 
+If you want to format the query as a string with no parameters (e.g. to use the SQL statement in a SQL console), pass `:inline true` as an option to `sql/format`:
+
+```clj
+(sql/format sqlmap {:inline true})
+=> ["SELECT a, b, c FROM foo WHERE f.a = 'baz'"]
+```
+
 > Note: you'll need to add your preferred JDBC library as a dependency in your project -- HoneySQL deliberately does not make that choice for you.
 
 _The handling of namespace-qualified keywords is under review in 2.x._
