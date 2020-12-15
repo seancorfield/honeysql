@@ -15,8 +15,8 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
       - name: Setup Clojure
-        uses: DeLaGuardo/setup-clojure@2.0
+        uses: DeLaGuardo/setup-clojure@master
         with:
-          tools-deps: '1.10.1.536'
+          tools-deps: '1.10.1.754'
       - name: Run Tests
         run: sh run-tests.sh all
