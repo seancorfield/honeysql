@@ -344,7 +344,7 @@ to identify inline parameter values, and how to add in raw SQL fragments!
 ```
 ```clojure
 call-qualify-map
-=> '{:where [:and [:= :a [:param :baz]] [:= :b [:inline 42]]]
+=>  {:where [:and [:= :a [:param :baz]] [:= :b [:inline 42]]]
      :from (:foo)
      :select [[[:foo :bar]] [[:raw "@var := foo.bar"]]]}
 ```
@@ -607,6 +607,7 @@ or `clojure.java.jdbc`'s [`ISQLValue`](https://clojure.github.io/java.jdbc/#cloj
 _This bit no longer exists:_
 
 To teach HoneySQL how to handle your datatype you need to implement [`honeysql.format/ToSql`](https://github.com/seancorfield/honeysql/blob/a9dffec632be62c961be7d9e695d0b2b85732c53/src/honeysql/format.cljc#L94). For example:
+<!-- :test-doc-blocks/skip -->
 ``` clojure
 ;; given:
 (defrecord MyDateWrapper [...]

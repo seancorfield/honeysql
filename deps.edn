@@ -1,11 +1,11 @@
 {:mvn/repos {"sonatype" {:url "https://oss.sonatype.org/content/repositories/snapshots/"}}
  :paths ["src" "resources"]
- :deps {org.clojure/clojure {:mvn/version "1.10.1"}}
+ :deps {org.clojure/clojure {:mvn/version "1.10.2"}}
  :aliases
  {:1.7 {:override-deps {org.clojure/clojure {:mvn/version "1.7.0"}}}
   :1.8 {:override-deps {org.clojure/clojure {:mvn/version "1.8.0"}}}
   :1.9 {:override-deps {org.clojure/clojure {:mvn/version "1.9.0"}}}
-  :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.1"}}}
+  :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.2"}}}
   :master {:override-deps {org.clojure/clojure {:mvn/version "1.11.0-master-SNAPSHOT"}}}
   :test {:extra-paths ["test"]}
   :runner
@@ -13,6 +13,7 @@
                 {:git/url "https://github.com/cognitect-labs/test-runner"
                  :sha "b6b3193fcc42659d7e46ecd1884a228993441182"}}
    :main-opts ["-m" "cognitect.test-runner"
+               ;"-d" "target/test-doc-blocks/test"
                "-d" "test"]}
   :cljs-runner {:extra-deps {olical/cljs-test-runner {:mvn/version "3.7.0"}}
                 :main-opts ["-m" "cljs-test-runner.main"]}
@@ -20,9 +21,11 @@
            :main-opts ["-m" "seancorfield.readme"]}
   :eastwood {:extra-deps {jonase/eastwood {:mvn/version "RELEASE"}}
              :main-opts ["-m" "eastwood.lint" "{:source-paths,[\"src\"]}"]}
-  :jar {:extra-deps {seancorfield/depstar {:mvn/version "1.1.133"}}
-        :main-opts ["-m" "hf.depstar.jar" "honeysql.jar"]}
-  :install {:extra-deps {slipset/deps-deploy {:mvn/version "0.1.1"}}
-            :main-opts ["-m" "deps-deploy.deps-deploy" "install" "honeysql.jar"]}
-  :deploy {:extra-deps {slipset/deps-deploy {:mvn/version "0.1.1"}}
-           :main-opts ["-m" "deps-deploy.deps-deploy" "deploy" "honeysql.jar"]}}}
+  :jar {:replace-deps {seancorfield/depstar {:mvn/version "2.0.171"}}
+        :exec-fn hf.depstar/jar :exec-args {:jar "honeysql.jar"}}
+  :install {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
+            :exec-fn deps-deploy.deps-deploy/deploy
+            :exec-args {:installer :local :artifact "honeysql.jar"}}
+  :deploy {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
+           :exec-fn deps-deploy.deps-deploy/deploy
+           :exec-args {:installer :remote :artifact "honeysql.jar"}}}}
