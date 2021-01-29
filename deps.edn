@@ -22,7 +22,8 @@
   :eastwood {:extra-deps {jonase/eastwood {:mvn/version "RELEASE"}}
              :main-opts ["-m" "eastwood.lint" "{:source-paths,[\"src\"]}"]}
   :jar {:replace-deps {seancorfield/depstar {:mvn/version "2.0.171"}}
-        :exec-fn hf.depstar/jar :exec-args {:jar "honeysql.jar"}}
+        :exec-fn hf.depstar/jar
+        :exec-args {:jar "honeysql.jar" :sync-pom true}}
   :install {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
             :exec-fn deps-deploy.deps-deploy/deploy
             :exec-args {:installer :local :artifact "honeysql.jar"}}
