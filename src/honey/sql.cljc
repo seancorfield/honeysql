@@ -260,13 +260,19 @@
 (defn- format-join [k clauses]
   (let [[sqls params]
         (reduce (fn [[sqls params] [j e]]
-                  ;; TODO: join using!
-                  (let [[sql & params'] (when e (format-expr e))]
-                    [(cond-> (conj sqls
+                  (let [sqls (conj sqls
                                    (sql-kw (if (= :join k) :inner-join k))
-                                   (format-entity-alias j))
-                       e (conj "ON" sql))
-                     (into params params')]))
+                                   (format-entity-alias j))]
+                    (if (and (sequential? e) (= :using (first e)))
+                      [(conj sqls
+                             "USING"
+                             (str "("
+                                  (str/join ", " (map #'format-entity-alias (rest e)))
+                                  ")"))
+                       params]
+                      (let [[sql & params'] (when e (format-expr e))]
+                        [(cond-> sqls e (conj "ON" sql))
+                         (into params params')]))))
                 [[] []]
                 (partition 2 clauses))]
     (into [(str/join " " sqls)] params)))
