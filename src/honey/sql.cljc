@@ -625,7 +625,7 @@
             (let [[sqls params] (format-expr-list x)]
               (into [(str "(" (str/join ", " sqls) ")")] params))))
 
-        (or (true? x) (false? x)) ; because (boolean? x) requires Clojure 1.9+
+        (boolean? x)
         [(upper-case (str x))]
 
         (nil? x)

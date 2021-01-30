@@ -8,7 +8,7 @@ if test $? -eq 0
 then
   if test "$1" = "all"
   then
-    for v in 1.7 1.8 1.9 1.10 master
+    for v in 1.9 1.10 master
     do
       echo ==== Test Clojure $v ====
       clojure -M:test:runner:$v

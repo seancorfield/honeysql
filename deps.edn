@@ -2,9 +2,7 @@
  :paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.2"}}
  :aliases
- {:1.7 {:override-deps {org.clojure/clojure {:mvn/version "1.7.0"}}}
-  :1.8 {:override-deps {org.clojure/clojure {:mvn/version "1.8.0"}}}
-  :1.9 {:override-deps {org.clojure/clojure {:mvn/version "1.9.0"}}}
+ {:1.9 {:override-deps {org.clojure/clojure {:mvn/version "1.9.0"}}}
   :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.2"}}}
   :master {:override-deps {org.clojure/clojure {:mvn/version "1.11.0-master-SNAPSHOT"}}}
   :test {:extra-paths ["test"]}
