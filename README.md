@@ -381,14 +381,13 @@ will not be lifted out as parameters, so they end up in the SQL string as-is.
 
 Raw SQL can also be supplied as a vector of strings and values. Strings are
 rendered as-is into the formatted SQL string. Non-strings are lifted as
-parameters. If you need a string parameter lifted, you must use `:param`
-or the `param` helper.
+parameters. If you need a string parameter lifted, you must use `:param`.
 
 ```clojure
 (-> (select :*)
     (from :foo)
     (where [:< :expired_at [:raw ["now() - '" 5 " seconds'"]]])
-    (sql/format {:foo 5}))
+    (sql/format))
 => ["SELECT * FROM foo WHERE expired_at < now() - '? seconds'" 5]
 ```
 
