@@ -61,6 +61,7 @@
 (defn columns [& args] (generic :columns args))
 (defn set [& args] (generic-1 :set args))
 (defn from [& args] (generic :from args))
+(defn using [& args] (generic :using args))
 (defn join [& args] (generic :join args))
 (defn left-join [& args] (generic :left-join args))
 (defn right-join [& args] (generic :right-join args))

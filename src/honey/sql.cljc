@@ -18,7 +18,7 @@
   "The (default) order for known clauses. Can have items added and removed."
   [:nest :with :with-recursive :intersect :union :union-all :except :except-all
    :select :select-distinct :insert-into :update :delete :delete-from :truncate
-   :columns :set :from
+   :columns :set :from :using
    :join :left-join :right-join :inner-join :outer-join :full-join
    :cross-join
    :where :group-by :having :order-by :limit :offset :for :values
@@ -401,6 +401,7 @@
          :columns         #'format-columns
          :set             #'format-set-exprs
          :from            #'format-selects
+         :using           #'format-selects
          :join            #'format-join
          :left-join       #'format-join
          :right-join      #'format-join

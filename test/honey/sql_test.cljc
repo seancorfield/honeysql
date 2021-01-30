@@ -354,6 +354,15 @@
               :where [:= :t1.bar 42]}
              (format {:dialect :mysql})))))
 
+(deftest delete-using
+  (is (= ["DELETE FROM films USING producers WHERE (producer_id = producers.id) AND (producers.name = ?)" "foo"]
+         (-> {:delete-from :films
+              :using [:producers]
+              :where [:and
+                      [:= :producer_id :producers.id]
+                      [:= :producers.name "foo"]]}
+             (format)))))
+
 (deftest truncate-test
   (is (= ["TRUNCATE `foo`"]
          (-> {:truncate :foo}
