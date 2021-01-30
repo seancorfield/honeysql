@@ -388,15 +388,23 @@ parameters. If you need a string parameter lifted, you must use `:param`.
     (from :foo)
     (where [:< :expired_at [:raw ["now() - '" 5 " seconds'"]]])
     (sql/format))
-=> ["SELECT * FROM foo WHERE expired_at < now() - '? seconds'" 5]
+=> ["SELECT * FROM foo WHERE expired_at < now() - '5 seconds'"]
 ```
 
 ```clojure
 (-> (select :*)
     (from :foo)
     (where [:< :expired_at [:raw ["now() - '" [:param :t] " seconds'"]]])
-    (sql/format {:t 5}))
+    (sql/format {:params {:t 5}}))
 => ["SELECT * FROM foo WHERE expired_at < now() - '? seconds'" 5]
+```
+
+```clojure
+(-> (select :*)
+    (from :foo)
+    (where [:< :expired_at [:raw ["now() - " [:inline (str 5 " seconds")]]]])
+    (sql/format))
+=> ["SELECT * FROM foo WHERE expired_at < now() - '5 seconds'"]
 ```
 
 #### Identifiers

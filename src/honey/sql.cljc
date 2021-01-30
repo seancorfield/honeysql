@@ -556,7 +556,16 @@
     :raw
     (fn [_ [s]]
       (if (sequential? s)
-        [(str/join " " s)]
+        (let [[sqls params]
+              (reduce (fn [[sqls params] s]
+                        (if (vector? s)
+                          (let [[sql & params'] (format-expr s)]
+                            [(conj sqls sql)
+                             (into params params')])
+                          [(conj sqls s) params]))
+                      [[] []]
+                      s)]
+          (into [(str/join sqls)] params))
         [s]))}))
 
 (defn format-expr [x & [{:keys [nested?] :as opts}]]

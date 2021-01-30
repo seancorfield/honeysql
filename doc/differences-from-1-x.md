@@ -96,10 +96,9 @@ The following new syntax has been added:
 * `:array` -- used as a function to replace the `sql/array` / `#sql/array` machinery,
 * `:inline` -- used as a function to replace the `sql/inline` / `#sql/inline` machinery,
 * `:interval` -- used as a function to support `INTERVAL <n> <units>`, e.g., `[:interval 30 :days]`.
+* `:raw` -- used as a function to replace the `sql/raw` / `#sql/raw` machinery. Vector subexpressions inside a `[:raw ..]` expression are formatted to SQL and parameters. Other subexpressions are just turned into strings and concatenated. This is different to the v1 behavior but should be more flexible.
 
 > Note 1: in 1.x, inlining a string `"foo"` produced `foo` but in 2.x it produces `'foo'`, i.e., string literals become SQL strings without needing internal quotes (1.x required `"'foo'"`).
-
-> Note 2: expect `:raw` to be added in some form before release.
 
 ## Extensibility
 
