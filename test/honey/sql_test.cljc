@@ -432,6 +432,14 @@
            (format {:select [:*] :from :foo :for [:update :nowait]})))
     (is (= ["SELECT * FROM foo FOR UPDATE OF bar NOWAIT"]
            (format {:select [:*] :from :foo :for [:update :bar :nowait]})))
+    (is (= ["SELECT * FROM foo FOR UPDATE WAIT"]
+           (format {:select [:*] :from :foo :for [:update :wait]})))
+    (is (= ["SELECT * FROM foo FOR UPDATE OF bar WAIT"]
+           (format {:select [:*] :from :foo :for [:update :bar :wait]})))
+    (is (= ["SELECT * FROM foo FOR UPDATE SKIP LOCKED"]
+           (format {:select [:*] :from :foo :for [:update :skip-locked]})))
+    (is (= ["SELECT * FROM foo FOR UPDATE OF bar SKIP LOCKED"]
+           (format {:select [:*] :from :foo :for [:update :bar :skip-locked]})))
     (is (= ["SELECT * FROM foo FOR UPDATE OF bar, quux"]
            (format {:select [:*] :from :foo :for [:update [:bar :quux]]}))))
   (testing "MySQL for/lock"

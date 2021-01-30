@@ -301,15 +301,15 @@
     [(str (sql-kw k) " " (sql-kw strength)
           (when tables
             (str
-              (cond (= :nowait tables)
-                    (str " NOWAIT")
+              (cond (#{:nowait :skip-locked :wait} tables)
+                    (str " " (sql-kw tables))
                     (sequential? tables)
                     (str " OF "
                          (str/join ", " (map #'format-entity tables)))
                     :else
                     (str " OF " (format-entity tables)))
               (when nowait
-                (str " NOWAIT")))))]))
+                (str " " (sql-kw nowait))))))]))
 
 (defn- format-values [k xs]
   (cond (sequential? (first xs))
