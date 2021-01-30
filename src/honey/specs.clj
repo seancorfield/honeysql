@@ -1,4 +1,4 @@
-;; copyright (c) 2020 sean corfield, all rights reserved
+;; copyright (c) 2020-2021 sean corfield, all rights reserved
 
 (ns honey.specs
   "Optional namespace containing `clojure.spec` representations of

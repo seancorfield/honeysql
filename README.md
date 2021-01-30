@@ -637,6 +637,6 @@ To teach HoneySQL how to handle your datatype you need to implement [`honeysql.f
 
 ## License
 
-Copyright (c) 2020 Sean Corfield. HoneySQL 1.x was copyright (c) 2012-2020 Justin Kramer and Sean Corfield.
+Copyright (c) 2020-2021 Sean Corfield. HoneySQL 1.x was copyright (c) 2012-2020 Justin Kramer and Sean Corfield.
 
 Distributed under the Eclipse Public License, the same as Clojure.
