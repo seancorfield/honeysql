@@ -16,7 +16,7 @@ jobs:
           command: sudo ln -s /usr/bin/js /usr/bin/node
       - run:
           name: Download Dependencies
-          command: clojure -Spath -R:test:runner:cljs-runner:eastwood:readme && clojure -Spath -A:1.7 && clojure -Spath -A:1.8 && clojure -Spath -A:1.9
+          command: clojure -Spath -R:test:runner:cljs-runner:eastwood:readme && clojure -Spath -A:1.9
       - save_cache:
           paths:
             - ~/.m2
