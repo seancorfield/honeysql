@@ -65,6 +65,7 @@
 (def ^:private ^:dynamic *clause-order* default-clause-order)
 (def ^:private ^:dynamic *quoted* nil)
 (def ^:private ^:dynamic *inline* nil)
+(def ^:private ^:dynamic *params* nil)
 
 ;; clause helpers
 
@@ -108,12 +109,12 @@
 (defn- ->param [k]
   (with-meta (constantly k)
     {::wrapper
-     (fn [fk {:keys [params]}]
+     (fn [fk _]
        (let [k (fk)]
-         (if (contains? params k)
-           (get params k)
+         (if (contains? *params* k)
+           (get *params* k)
            (throw (ex-info (str "missing parameter value for " k)
-                           {:params (keys params)})))))}))
+                           {:params (keys *params*)})))))}))
 
 (defn- format-var [x & [opts]]
   (let [c (name-_ x)]
@@ -464,7 +465,7 @@
 
 (def ^:private infix-ops
   (-> #{"mod" "and" "or" "xor" "<>" "<=" ">=" "||"
-        "in" "not-in" "like" "not-like" "regexp"
+        "like" "not-like" "regexp"
         "ilike" "not-ilike" "similar-to" "not-similar-to"
         "is" "is-not" "not=" "!=" "regex"}
       (into (map str "+-*%|&^=<>"))
@@ -484,6 +485,26 @@
     (symbol? x)  (sql-kw x)
     (keyword? x) (sql-kw x)
     :else        (str x)))
+
+(defn- unwrap [x opts]
+  (if-let [m (meta x)]
+    (if-let [f (::wrapper m)]
+      (f x opts)
+      x)
+    x))
+
+(defn- format-in [in [x y]]
+  (let [[sql-x & params-x] (format-expr x {:nested? true})
+        [sql-y & params-y] (format-expr y {:nested? true})
+        values             (unwrap (first params-y) {})]
+    (if (and (= "?" sql-y) (= 1 (count params-y)) (coll? values))
+      (let [sql (str "(" (str/join ", " (repeat (count values) "?")) ")")]
+        (-> [(str sql-x " " (sql-kw in) " " sql)]
+            (into params-x)
+            (into values)))
+      (-> [(str sql-x " " (sql-kw in) " " sql-y)]
+          (into params-x)
+          (into params-y)))))
 
 (def ^:private special-syntax
   (atom
@@ -618,6 +639,9 @@
                               (vector)
                               (into p1)
                               (into p2)))))
+                  (contains? #{:in :not-in} op)
+                  (let [[sql & params] (format-in op (rest x))]
+                    (into [(if nested? (str "(" sql ")") sql)] params))
                   (contains? @special-syntax op)
                   (let [formatter (get @special-syntax op)]
                     (formatter op (rest x)))
@@ -651,13 +675,6 @@
                     {:valid-dialects (vec (sort (keys dialects)))})))
   dialect)
 
-(defn- unwrap [x opts]
-  (if-let [m (meta x)]
-    (if-let [f (::wrapper m)]
-      (f x opts)
-      x)
-    x))
-
 (defn format
   "Turn the data DSL into a vector containing a SQL string followed by
   any parameter values that were encountered in the DSL structure."
@@ -675,7 +692,8 @@
                            (:inline opts))
                *quoted*  (if (contains? opts :quoted)
                            (:quoted opts)
-                           dialect?)]
+                           dialect?)
+               *params* (:params opts)]
        (mapv #(unwrap % opts) (format-dsl data opts))))))
 
 (defn set-dialect!
