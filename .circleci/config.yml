@@ -15,9 +15,6 @@ jobs:
           name: Install Node
           command: sudo apt-get update && sudo apt-get install -y nodejs
       - run:
-          name: Add Node symlink
-          command: sudo ln -s /usr/bin/js /usr/bin/node
-      - run:
           name: Download Dependencies
           command: clojure -Spath -R:test:runner:cljs-runner:eastwood:readme && clojure -Spath -A:1.9
       - save_cache:
