@@ -12,9 +12,9 @@
 .clj-kondo/.cache
 .eastwood
 .nrepl-port
-.socket-repl-port
+/.rebel_readline_history
+/.socket-repl-port
 .classpath
 .project
-.nrepl-port
 bin
 /cljs-test-runner-out
