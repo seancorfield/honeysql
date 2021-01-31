@@ -16,7 +16,7 @@ jobs:
           command: sudo apt-get update && sudo apt-get install -y nodejs
       - run:
           name: Download Dependencies
-          command: clojure -Spath -R:test:runner:cljs-runner:eastwood:readme && clojure -Spath -A:1.9
+          command: clojure -P -A:test:runner:cljs-runner:eastwood:readme && clojure -P -A:1.9
       - save_cache:
           paths:
             - ~/.m2
