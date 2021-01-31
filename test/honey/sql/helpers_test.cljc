@@ -82,7 +82,7 @@
          (->
            (insert-into :foo)
            (columns :bar)
-           (values [[:lift {:baz "my-val"}]])
+           (values [[[:lift {:baz "my-val"}]]])
            sql/format)))
   (is (= ["INSERT INTO foo (a, b, c) VALUES (?, ?, ?), (?, ?, ?)"
           "a" "b" "c" "a" "b" "c"]

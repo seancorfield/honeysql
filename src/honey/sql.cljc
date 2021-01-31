@@ -563,7 +563,8 @@
         (into [(str "INTERVAL " sql " " (sql-kw units))] params)))
     :lift
     (fn [_ [x]]
-      ["?" x])
+      ["?" (with-meta (constantly x)
+             {::wrapper (fn [fx _] (fx))})])
     :nest
     (fn [_ [x]]
       (format-expr x {:nested? true}))
