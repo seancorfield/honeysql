@@ -3,11 +3,11 @@ jobs:
   build:
     working_directory: ~/honeysql
     docker:
-      - image: circleci/clojure:openjdk-11-tools-deps-1.10.0.442
+      - image: circleci/clojure:openjdk-11-tools-deps-1.10.1.754
     steps:
       - checkout
       - restore_cache:
-          key: honeysql-v2-{{ checksum "deps.edn" }}
+          key: honeysql-{{ checksum "deps.edn" }}
       - run:
           name: Get rid of erroneous git config
           command: rm -rf ~/.gitconfig
@@ -25,7 +25,7 @@ jobs:
             - ~/.m2
             - ~/.gitlibs
             - ~/node_modules
-          key: honeysql-v2-{{ checksum "deps.edn" }}
+          key: honeysql-{{ checksum "deps.edn" }}
       - run:
           name: Run all the tests
           command: sh run-tests.sh all
