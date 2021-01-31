@@ -9,6 +9,9 @@ jobs:
       - restore_cache:
           key: honeysql-{{ checksum "deps.edn" }}
       - run:
+          name: Get rid of erroneous git config
+          command: rm -rf ~/.gitconfig
+      - run:
           name: Install Node
           command: sudo apt-get update && sudo apt-get install -y nodejs
       - run:
