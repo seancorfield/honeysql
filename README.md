@@ -344,7 +344,7 @@ to identify inline parameter values, and how to add in raw SQL fragments!
 ```
 ```clojure
 call-qualify-map
-=>  {:where [:and [:= :a [:param :baz]] [:= :b [:inline 42]]]
+=> '{:where [:and [:= :a [:param :baz]] [:= :b [:inline 42]]]
      :from (:foo)
      :select [[[:foo :bar]] [[:raw "@var := foo.bar"]]]}
 ```

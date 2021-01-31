@@ -460,10 +460,11 @@
         "in" "not-in" "like" "not-like" "regexp"
         "ilike" "not-ilike" "similar-to" "not-similar-to"
         "is" "is-not" "not=" "!=" "regex"}
-      (into (map str "+-*/%|&^=<>"))
+      (into (map str "+-*%|&^=<>"))
       (into (keys infix-aliases))
       (into (vals infix-aliases))
       (->> (into #{} (map keyword)))
+      (conj :/) ; because (keyword "/") does not work in cljs
       (atom)))
 
 (def ^:private op-ignore-nil (atom #{:and :or}))

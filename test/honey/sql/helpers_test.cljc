@@ -5,7 +5,10 @@
   (:require #?(:clj [clojure.test :refer [deftest is testing]]
                :cljs [cljs.test :refer-macros [deftest is testing]])
             [honey.sql :as sql]
-            [honey.sql.helpers :refer :all]))
+            [honey.sql.helpers
+             :refer [columns cross-join from full-join group-by having insert-into
+                     join left-join limit offset order-by right-join
+                     select select-distinct values where with]]))
 
 (deftest test-select
   (let [m1 (-> (with [:cte (-> (select :*)
@@ -263,7 +266,7 @@
                   :from   [:collection]
                   :where  [:= :personal_owner_id nil]}
                  (clojure.core/for [id ids]
-                                   [:not-like :location [:raw (clojure.core/format "'/%d/%%'" id)]])))))
+                                   [:not-like :location [:raw (str "'/" id "/%'")]])))))
 
 (deftest issue-282
   (is (= [(str "SELECT id AS id FROM collection"
