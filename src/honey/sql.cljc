@@ -146,7 +146,7 @@
     (cond (= \% (first c))
           (let [[f & args] (str/split (subs c 1) #"\.")]
             ;; TODO: this does not quote arguments -- does that matter?
-            [(str f "(" (str/join "," args) ")")])
+            [(str (upper-case f) "(" (str/join "," args) ")")])
           (= \? (first c))
           ["?" (->param (keyword (subs c 1)))]
           :else

@@ -52,7 +52,6 @@
 (deftest general-tests
   (is (= ["SELECT * FROM \"table\" WHERE \"id\" = ?" 1]
          (sut/format {:select [:*] :from [:table] :where [:= :id 1]} {:quoted true})))
-  ;; temporarily remove AS from alias here
   (is (= ["SELECT \"t\".* FROM \"table\" AS \"t\" WHERE \"id\" = ?" 1]
          (sut/format {:select [:t.*] :from [[:table :t]] :where [:= :id 1]} {:quoted true})))
   (is (= ["SELECT * FROM \"table\" GROUP BY \"foo\", \"bar\""]
@@ -226,18 +225,18 @@
                     :where [:= [:mod :col1 4] [:+ :col2 4]]}))))
 
   (testing "Example from dharrigan"
-    (is (= ["SELECT pg_try_advisory_lock(1)"]
+    (is (= ["SELECT PG_TRY_ADVISORY_LOCK(1)"]
            (format {:select [:%pg_try_advisory_lock.1]}))))
 
   (testing "Value context only applies to sequences in value/comparison spots"
     (let [sub {:select [:%sum.amount]
                :from [:bar]
                :where [:in :id ["id-1" "id-2"]]}]
-      (is (= ["SELECT total FROM foo WHERE (SELECT sum(amount) FROM bar WHERE id IN (?, ?)) = total" "id-1" "id-2"]
+      (is (= ["SELECT total FROM foo WHERE (SELECT SUM(amount) FROM bar WHERE id IN (?, ?)) = total" "id-1" "id-2"]
              (format {:select [:total]
                       :from [:foo]
                       :where [:= sub :total]})))
-      (is (= ["WITH t AS (SELECT sum(amount) FROM bar WHERE id IN (?, ?)) SELECT total FROM foo WHERE total = t" "id-1" "id-2"]
+      (is (= ["WITH t AS (SELECT SUM(amount) FROM bar WHERE id IN (?, ?)) SELECT total FROM foo WHERE total = t" "id-1" "id-2"]
              (format {:with [[:t sub]]
                       :select [:total]
                       :from [:foo]

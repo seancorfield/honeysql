@@ -6,7 +6,7 @@ SQL as Clojure data structures. Build queries programmatically -- even at runtim
 
 The latest stable version (1.0.444) on Clojars and on cljdoc:
 
-[![Clojars Project](https://clojars.org/seancorfield/honeysql/latest-version.svg)](https://clojars.org/seancorfield/honeysql) [![cljdoc badge](https://cljdoc.org/badge/seancorfield/honeysql?2.0.next)](https://cljdoc.org/d/seancorfield/honeysql/CURRENT)
+[![Clojars Project](https://clojars.org/seancorfield/honeysql/latest-version.svg)](https://clojars.org/seancorfield/honeysql) [![cljdoc badge](https://cljdoc.org/badge/seancorfield/honeysql?2.0.0-alpha1)](https://cljdoc.org/d/seancorfield/honeysql/CURRENT)
 
 This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINOR provide some relative indication of the size of the change, but do not follow semantic versioning. In general, all changes endeavor to be non-breaking (by moving to new names rather than by breaking existing names). COMMITS is an ever-increasing counter of commits since the beginning of this repository.
 
@@ -25,7 +25,7 @@ Some of these samples show pretty-printed SQL: HoneySQL 2.x supports `:pretty tr
 (refer-clojure :exclude '[for group-by set update])
 (require '[honey.sql :as sql]
          ;; caution: this overwrites for, group-by, set, and update
-         '[honey.sql.helpers :refer :all :as helpers])
+         '[honey.sql.helpers :refer :all :as h])
 ```
 
 Everything is built on top of maps representing SQL queries:
@@ -57,18 +57,16 @@ to a JDBC library, such as [`next.jdbc`](https://github.com/seancorfield/next-jd
 
 If you want to format the query as a string with no parameters (e.g. to use the SQL statement in a SQL console), pass `:inline true` as an option to `sql/format`:
 
-```clj
+```clojure
 (sql/format sqlmap {:inline true})
 => ["SELECT a, b, c FROM foo WHERE f.a = 'baz'"]
 ```
 
 > Note: you'll need to add your preferred JDBC library as a dependency in your project -- HoneySQL deliberately does not make that choice for you.
 
-_The handling of namespace-qualified keywords is under review in 2.x._
+Namespace-qualified keywords are generally treated as table-qualified columns: `:foo/bar` becomes `foo.bar`, except in contexts where that would be illegal (such as the list of columns in an `INSERT` statement). This approach is likely to be more compatible with code that uses libraries like [`next.jdbc`](https://github.com/seancorfield/next-jdbc) and [`seql`](https://github.com/exoscale/seql), as well as being more convenient in a world of namespace-qualified keywords, following the example of `clojure.spec` etc.
 
-By default, namespace-qualified keywords are treated as simple keywords: their namespace portion is ignored. This was the behavior in HoneySQL prior to the 0.9.0 release and has been restored since the 0.9.7 release as this is considered the least surprising behavior.
-As of version 0.9.7, `format` accepts `:allow-namespaced-names? true` to provide the somewhat unusual behavior of 0.9.0-0.9.6, namely that namespace-qualified keywords were passed through into the SQL "as-is", i.e., with the `/` in them (which generally required a quoting strategy as well).
-As of version 0.9.8, `format` accepts `:namespace-as-table? true` to treat namespace-qualified keywords as if the `/` were `.`, allowing `:table/column` as an alternative to `:table.column`. This approach is likely to be more compatible with code that uses libraries like [`next.jdbc`](https://github.com/seancorfield/next-jdbc) and [`seql`](https://github.com/exoscale/seql), as well as being more convenient in a world of namespace-qualified keywords, following the example of `clojure.spec` etc.
+_[In HoneySQL 1.x, this was the behavior when `:namespace-as-table? true` was specified]_
 
 ```clojure
 (def q-sqlmap {:select [:foo/a :foo/b :foo/c]
@@ -79,8 +77,6 @@ As of version 0.9.8, `format` accepts `:namespace-as-table? true` to treat names
 ```
 
 ### Vanilla SQL clause helpers
-
-_The code behind this section is a work-in-progress._
 
 There are also functions for each clause type in the `honey.sql.helpers` namespace:
 
@@ -98,7 +94,7 @@ Order doesn't matter (for independent clauses):
 => true
 ```
 
-When using the vanilla helper functions, repeated clauses will be merged into existing clauses (where that makes sense):
+When using the vanilla helper functions, repeated clauses will be merged into existing clauses, in the natural evaluation order (where that makes sense):
 
 ```clojure
 (-> sqlmap (select :d))
@@ -138,7 +134,8 @@ name and the desired alias:
 ```
 
 In particular, note that `(select [:a :b])` means `SELECT a AS b` rather than
-`SELECT a, b` -- `select` is variadic and does not take a collection of column names.
+`SELECT a, b` -- helpers like `select` are generally variadic and do not take
+a collection of column names.
 
 ### Inserts
 
@@ -162,9 +159,9 @@ VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
 "Jon" "Smith" 34 "Andrew" "Cooper" 12 "Jane" "Daniels" 56]
 ```
 
+If the rows are of unequal lengths, they will be padded with `NULL` values to make them consistent.
 
-Alternately, you can simply specify the values as maps; the first map defines the columns to insert,
-and the remaining maps *must* have the same set of keys and values:
+Alternately, you can simply specify the values as maps:
 
 ```clojure
 (-> (insert-into :properties)
@@ -180,6 +177,9 @@ INSERT INTO properties
 "Andrew" "Cooper"  12
 "Jane" "Daniels" 56]
 ```
+
+The set of columns used in the insert will be the union of all column names from all
+the hash maps: columns that are missing from any rows will have `NULL` as their value.
 
 ### Nested subqueries
 
@@ -235,7 +235,7 @@ VALUES (?, (?, ?)), (?, (?, ?))
 Updates are possible too:
 
 ```clojure
-(-> (helpers/update :films)
+(-> (h/update :films)
     (set {:kind "dramatic"
            :watched [:+ :watched 1]})
     (where [:= :kind "drama"])
@@ -295,7 +295,7 @@ If you want to delete everything from a table, you can use `truncate`:
 
 ### Set operations
 
-Queries may be combined within a :union, :union-all, :intersect or :except keyword:
+Queries may be combined with a `:union`, `:union-all`, `:intersect` or `:except` keyword:
 
 ```clojure
 (sql/format {:union [(-> (select :*) (from :foo))
@@ -303,22 +303,42 @@ Queries may be combined within a :union, :union-all, :intersect or :except keywo
 => ["(SELECT * FROM foo) UNION (SELECT * FROM bar)"]
 ```
 
+There are also helpers for each of those:
+
+```clojure
+(sql/format (union (-> (select :*) (from :foo))
+                   (-> (select :*) (from :bar))))
+=> ["(SELECT * FROM foo) UNION (SELECT * FROM bar)"]
+```
+
+
 ### Functions
 
 Keywords that begin with `%` are interpreted as SQL function calls:
 
 ```clojure
 (-> (select :%count.*) (from :foo) sql/format)
-=> ["SELECT count(*) FROM foo"]
+=> ["SELECT COUNT(*) FROM foo"]
 ```
 ```clojure
 (-> (select :%max.id) (from :foo) sql/format)
-=> ["SELECT max(id) FROM foo"]
+=> ["SELECT MAX(id) FROM foo"]
+```
+
+Since regular function calls are indicated with vectors and so are aliased pairs,
+this shorthand can be more convenient due to the extra wrapping needed for the
+regular function calls in a select:
+
+```clojure
+(-> (select [[:count :*]]) (from :foo) sql/format)
+=> ["SELECT COUNT(*) FROM foo"]
+```
+```clojure
+(-> (select [[:max :id]]) (from :foo) sql/format)
+=> ["SELECT MAX(id) FROM foo"]
 ```
 
 ### Bindable parameters
-
-_This is not currently supported._
 
 Keywords that begin with `?` are interpreted as bindable parameters:
 
@@ -332,8 +352,29 @@ Keywords that begin with `?` are interpreted as bindable parameters:
 
 ### Miscellaneous
 
-TODO: need to update this section to reflect how to select a function call, how
-to identify inline parameter values, and how to add in raw SQL fragments!
+Sometimes you want to provide SQL fragments directly or have certain values
+placed into the SQL string rather than turned into a parameter.
+
+The `:raw` syntax lets you embed SQL fragments directly into a HoneySQL expression.
+It accepts either a single string to embed or a vector of expressions that will be
+converted to strings and embedded as a single string.
+
+The `:inline` syntax attempts to turn a Clojure value into a SQL value and then
+embeds that string, e.g., `[:inline "foo"]` produces `'foo'` (a SQL string).
+
+The `:param` syntax identifies a named parameter whose value will be supplied
+via the `:params` argument to `format`.
+
+The `:lift` syntax will prevent interpretation of Clojure data structures as
+part of the DSL and instead turn such values into parameters (useful when you
+want to pass a vector or a hash map directly as a positional parameter value,
+for example when you have extended `next.jdbc`'s `SettableParameter` protocol
+to a data structure).
+
+Finally, the `:nest` syntax will cause an extra set of parentheses to be
+wrapped around its argument, after formatting that argument as a SQL expression.
+
+These can be combined to allow more fine-grained control over SQL generation:
 
 ```clojure
 (def call-qualify-map
@@ -351,36 +392,6 @@ call-qualify-map
 (sql/format call-qualify-map {:params {:baz "BAZ"}})
 => ["SELECT FOO(bar), @var := foo.bar FROM foo WHERE (a = ?) AND (b = 42)" "BAZ"]
 ```
-
-#### PostGIS
-
-A common example in the wild is the PostGIS extension to PostgreSQL where you
-have a lot of function calls needed in code:
-
-```clojure
-(-> (insert-into :sample)
-    (values [{:location [:ST_SetSRID
-                         [:ST_MakePoint 0.291 32.621]
-                         [:cast 4325 :integer]]}])
-    (sql/format {:pretty true}))
-=> ["
-INSERT INTO sample
-(location) VALUES (ST_SETSRID(ST_MAKEPOINT(?, ?), CAST(? AS integer)))
-"
-0.291 32.621 4325]
-```
-
-#### Raw SQL fragments
-
-_This functionality is under review._
-
-Raw SQL fragments that are strings are treated exactly as-is when rendered into
-the formatted SQL string (with no parsing or parameterization). Inline values
-will not be lifted out as parameters, so they end up in the SQL string as-is.
-
-Raw SQL can also be supplied as a vector of strings and values. Strings are
-rendered as-is into the formatted SQL string. Non-strings are lifted as
-parameters. If you need a string parameter lifted, you must use `:param`.
 
 ```clojure
 (-> (select :*)
@@ -414,6 +425,24 @@ parameters. If you need a string parameter lifted, you must use `:param`.
 => ["SELECT * FROM foo WHERE expired_at < now() - '5 seconds'"]
 ```
 
+#### PostGIS
+
+A common example in the wild is the PostGIS extension to PostgreSQL where you
+have a lot of function calls needed in code:
+
+```clojure
+(-> (insert-into :sample)
+    (values [{:location [:ST_SetSRID
+                         [:ST_MakePoint 0.291 32.621]
+                         [:cast 4325 :integer]]}])
+    (sql/format {:pretty true}))
+=> ["
+INSERT INTO sample
+(location) VALUES (ST_SETSRID(ST_MAKEPOINT(?, ?), CAST(? AS integer)))
+"
+0.291 32.621 4325]
+```
+
 #### Identifiers
 
 To quote identifiers, pass the `:quoted true` option to `format` and they will
@@ -435,17 +464,17 @@ Valid `:dialect` options are `:ansi` (the default, use this for PostgreSQL),
 
 The ANSI/PostgreSQL/SQLServer dialects support locking selects via a `FOR` clause as follows:
 
-* `:for [<lock-strength> <table(s)> <nowait>]` where `<lock-strength>` is required and may be one of:
+* `:for [<lock-strength> <table(s)> <qualifier>]` where `<lock-strength>` is required and may be one of:
   * `:update`
   * `:no-key-update`
   * `:share`
   * `:key-share`
-* Both `<table(s)>` and `<nowait>` are optional but if present, `<table(s)>` must either be:
+* Both `<table(s)>` and `<qualifier>` are optional but if present, `<table(s)>` must either be:
   * a single table name (as a keyword) or
   * a sequence of table names (as keywords)
-* `<nowait>` must be `:nowait` if it is present.
+* `<qualifier>` can be `:nowait`, `:wait`, `:skip-locked` etc.
 
-If `<table(s)>` and `<nowait>` are both omitted, you may also omit the `[`..`]` and just say `:for :update` etc.
+If `<table(s)>` and `<qualifier>` are both omitted, you may also omit the `[`..`]` and just say `:for :update` etc.
 
 ```clojure
 (-> (select :foo.a)
@@ -466,20 +495,20 @@ If the `:mysql` dialect is selected, an additional locking clause is available:
 => ["SELECT * FROM foo WHERE name = 'Jones' LOCK IN SHARE MODE"]
 ```
 
-To be able to use dashes in quoted names, you can pass ```:allow-dashed-names true``` as an argument to the ```format``` function.
+Dashes are allowed in quoted names:
+
 ```clojure
 (sql/format
   {:select [:f.foo-id :f.foo-name]
    :from [[:foo-bar :f]]
    :where [:= :f.foo-id 12345]}
-  {:allow-dashed-names? true ; not implemented yet
-   :quoted true})
+  {:quoted true})
 => ["SELECT \"f\".\"foo-id\", \"f\".\"foo-name\" FROM \"foo-bar\" AS \"f\" WHERE \"f\".\"foo-id\" = ?" 12345]
 ```
 
 ### Big, complicated example
 
-Here's a big, complicated query. Note that Honey SQL makes no attempt to verify that your queries make any sense. It merely renders surface syntax.
+Here's a big, complicated query. Note that HoneySQL makes no attempt to verify that your queries make any sense. It merely renders surface syntax.
 
 ```clojure
 (def big-complicated-map
@@ -546,7 +575,7 @@ OFFSET ?
 
 ## Extensibility
 
-Any keyword (or symbol) that appears as the first element of a vector will be treated as a generic function unless it is declared to be an operator or "special syntax". Any keyword (or symbol) that appears as a key in a hash map will be treated as a SQL clause -- and must either be built-in or must be registered as new clauses.
+Any keyword (or symbol) that appears as the first element of a vector will be treated as a generic function unless it is declared to be an operator or "special syntax". Any keyword (or symbol) that appears as a key in a hash map will be treated as a SQL clause -- and must either be built-in or must be registered as a new clause.
 
 If your database supports `<=>` as an operator, you can tell HoneySQL about it using the `register-op!` function (which should be called before the first call to `honey.sql/format`):
 
@@ -610,37 +639,6 @@ You can also register SQL clauses, specifying the keyword, the formatting functi
 
 If you find yourself registering an operator, a function (syntax), or a new clause, consider submitting a [pull request to HoneySQL](https://github.com/seancorfield/honeysql/pulls) so others can use it, too. If it is dialect-specific, let me know in the pull request.
 
-## Why does my parameter get emitted as `()`?
-
-_Need to investigate whether this is still true in 2.0!_
-
-If you want to use your own datatype as a parameter then the idiomatic approach of implementing
-`next.jdbc`'s [`SettableParameter`](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.prepare#SettableParameter)
-or `clojure.java.jdbc`'s [`ISQLValue`](https://clojure.github.io/java.jdbc/#clojure.java.jdbc/ISQLValue) protocol isn't enough as HoneySQL won't correct pass through your datatype, rather it will interpret it incorrectly.
-
-_This bit no longer exists:_
-
-To teach HoneySQL how to handle your datatype you need to implement [`honeysql.format/ToSql`](https://github.com/seancorfield/honeysql/blob/a9dffec632be62c961be7d9e695d0b2b85732c53/src/honeysql/format.cljc#L94). For example:
-<!-- :test-doc-blocks/skip -->
-``` clojure
-;; given:
-(defrecord MyDateWrapper [...]
-  (to-sql-timestamp [this]...)
-)
-
-;; executing:
-(hsql/format {:where [:> :some_column (MyDateWrapper. ...)]})
-;; results in => "where :some_column > ()"
-
-;; we can teach honeysql about it:
-(extend-protocol honeysql.format/ToSql
-  MyDateWrapper
-  (to-sql [v] (to-sql (date/to-sql-timestamp v))))
-
-;; allowing us to now:
-(hsql/format {:where [:> :some_column (MyDateWrapper. ...)]})
-;; which correctly results in => "where :some_column>?" and the parameter correctly set
-```
 ## TODO
 
 - [ ] Create table, etc.

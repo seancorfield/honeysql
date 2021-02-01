@@ -46,11 +46,14 @@
 (defn nest [& args] (generic :nest args))
 (defn with [& args] (generic :with args))
 (defn with-recursive [& args] (generic :with-recursive args))
-(defn intersect [& args] (generic :intersect args))
-(defn union [& args] (generic :union args))
-(defn union-all [& args] (generic :union-all args))
-(defn except [& args] (generic :except args))
-(defn except-all [& args] (generic :except-all args))
+;; these five need to supply an empty hash map since they wrap
+;; all of their arguments:
+(defn intersect [& args] (generic :intersect (cons {} args)))
+(defn union [& args] (generic :union (cons {} args)))
+(defn union-all [& args] (generic :union-all (cons {} args)))
+(defn except [& args] (generic :except (cons {} args)))
+(defn except-all [& args] (generic :except-all (cons {} args)))
+
 (defn select [& args] (generic :select args))
 (defn select-distinct [& args] (generic :select-distinct args))
 (defn insert-into [& args] (generic :insert-into args))

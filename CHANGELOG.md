@@ -1,10 +1,12 @@
 # Changes
 
-* 2.0.alpha in progress
+* 2.0.0-alpha1 (for early testing)
   * This is a complete rewrite/simplification of HoneySQL that provides just two namespaces:
     * `honey.sql` -- this is the primary API via the `format` function as well as the various extension points.
     * `honey.sql.helpers` -- provides a helper function for every piece of the DSL that is supported out-of-the-box.
   * The coordinates for HoneySQL 2.0 are `seancorfield/honeysql` so it can be added to a project that already uses HoneySQL 1.0 without any conflicts, making it easier to migrate piecemeal from 1.0 to 2.0.
+
+# HoneySQL pre-2.x Changes
 
 * 1.0.444 -- 2020-05-29
   * Fix #259 so column names are always unqualified in inserts. (@jrdoane)
