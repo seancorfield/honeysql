@@ -477,14 +477,14 @@ VALUES ('UA502', 'Bananas', 105, '1971-07-13', 'Comedy', '82 minutes')
                   :values [[[:inline "UA502"] [:inline "Bananas"] [:inline 105]
                             [:inline "1971-07-13"] [:inline "Comedy"]
                             [:inline "82 minutes"]]]}
-                 {:pretty? true})))
+                 {:pretty true})))
   (is (= ["
 INSERT INTO films
 VALUES (?, ?, ?, ?, ?, ?)
 " "UA502", "Bananas", 105, "1971-07-13", "Comedy", "82 minutes"]
          (format {:insert-into :films
                   :values [["UA502" "Bananas" 105 "1971-07-13" "Comedy" "82 minutes"]]}
-                 {:pretty? true})))
+                 {:pretty true})))
   (is (= ["
 INSERT INTO films
 (code, title, did, date_prod, kind)
@@ -493,14 +493,14 @@ VALUES (?, ?, ?, ?, ?)
          (format {:insert-into :films
                   :columns [:code :title :did :date_prod :kind]
                   :values [["T_601", "Yojimo", 106, "1961-06-16", "Drama"]]}
-                 {:pretty? true})))
+                 {:pretty true})))
   (is (= ["
 INSERT INTO films
 VALUES (?, ?, ?, DEFAULT, ?, ?)
 " "UA502", "Bananas", 105, "Comedy", "82 minutes"]
          (format {:insert-into :films
                   :values [["UA502" "Bananas" 105 [:default] "Comedy" "82 minutes"]]}
-                 {:pretty? true})))
+                 {:pretty true})))
   (is (= ["
 INSERT INTO films
 (code, title, did, date_prod, kind)
@@ -509,7 +509,7 @@ VALUES (?, ?, ?, DEFAULT, ?)
          (format {:insert-into :films
                   :columns [:code :title :did :date_prod :kind]
                   :values [["T_601", "Yojimo", 106, [:default], "Drama"]]}
-                 {:pretty? true}))))
+                 {:pretty true}))))
 
 (deftest on-conflict-tests
   ;; these examples are taken from https://www.postgresqltutorial.com/postgresql-upsert/
@@ -525,7 +525,7 @@ DO NOTHING
                   :values [[[:inline "Microsoft"], [:inline "hotline@microsoft.com"]]]
                   :on-conflict {:on-constraint :customers_name_key}
                   :do-nothing true}
-                 {:pretty? true})))
+                 {:pretty true})))
   (is (= ["
 INSERT INTO customers
 (name, email)
@@ -538,7 +538,7 @@ DO NOTHING
                   :values [[[:inline "Microsoft"], [:inline "hotline@microsoft.com"]]]
                   :on-conflict :name
                   :do-nothing true}
-                 {:pretty? true})))
+                 {:pretty true})))
   (is (= ["
 INSERT INTO customers
 (name, email)
@@ -551,7 +551,7 @@ DO UPDATE SET email = EXCLUDED.email || ';' || customers.email
                   :values [[[:inline "Microsoft"], [:inline "hotline@microsoft.com"]]]
                   :on-conflict :name
                   :do-update-set {:email [:|| :EXCLUDED.email [:inline ";"] :customers.email]}}
-                 {:pretty? true}))))
+                 {:pretty true}))))
 
 (deftest issue-285
   (is (= ["
@@ -564,4 +564,4 @@ ORDER BY id = ? DESC
                      (h/from :processes)
                      (h/where [:= :state 42])
                      (h/order-by [[:= :id 123] :desc]))
-                 {:pretty? true}))))
+                 {:pretty true}))))

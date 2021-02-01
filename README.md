@@ -17,8 +17,7 @@ This is the README for the upcoming 2.x version of HoneySQL which provides a str
 All sample code in this README is automatically run as a unit test using
 [seancorfield/readme](https://github.com/seancorfield/readme).
 
-Note that while some of these samples show pretty-printed SQL, this is just for
-README readability; honeysql does not generate pretty-printed SQL.
+Some of these samples show pretty-printed SQL: HoneySQL 2.x supports `:pretty true` which inserts newlines between clauses in the generated SQL strings.
 
 ## Usage
 
@@ -154,7 +153,7 @@ then provide a collection of rows, each a collection of column values:
      [["Jon" "Smith" 34]
       ["Andrew" "Cooper" 12]
       ["Jane" "Daniels" 56]])
-    (sql/format {:pretty? true}))
+    (sql/format {:pretty true}))
 => ["
 INSERT INTO properties
 (name, surname, age)
@@ -172,7 +171,7 @@ and the remaining maps *must* have the same set of keys and values:
     (values [{:name "John" :surname "Smith" :age 34}
              {:name "Andrew" :surname "Cooper" :age 12}
              {:name "Jane" :surname "Daniels" :age 56}])
-    (sql/format {:pretty? true}))
+    (sql/format {:pretty true}))
 => ["
 INSERT INTO properties
 (name, surname, age) VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
@@ -194,7 +193,7 @@ The column values do not have to be literals, they can be nested queries:
                 :role_id         (-> (select :id)
                                      (from :role)
                                      (where [:= :name role-name]))}])
-      (sql/format {:pretty? true})))
+      (sql/format {:pretty true})))
 
 => ["
 INSERT INTO user_profile_to_role
@@ -222,7 +221,7 @@ Composite types are supported:
     (values
      [["small" (composite 1 "inch")]
       ["large" (composite 10 "feet")]])
-    (sql/format {:pretty? true}))
+    (sql/format {:pretty true}))
 => ["
 INSERT INTO comp_table
 (name, comp_column)
@@ -240,7 +239,7 @@ Updates are possible too:
     (set {:kind "dramatic"
            :watched [:+ :watched 1]})
     (where [:= :kind "drama"])
-    (sql/format {:pretty? true}))
+    (sql/format {:pretty true}))
 => ["
 UPDATE films
 SET kind = ?, watched = watched + ?
@@ -276,7 +275,7 @@ If your database supports it, you can also delete from multiple tables:
     (from :films)
     (join :directors [:= :films.director_id :directors.id])
     (where [:<> :kind "musical"])
-    (sql/format {:pretty? true}))
+    (sql/format {:pretty true}))
 => ["
 DELETE films, directors
 FROM films
@@ -363,7 +362,7 @@ have a lot of function calls needed in code:
     (values [{:location [:ST_SetSRID
                          [:ST_MakePoint 0.291 32.621]
                          [:cast 4325 :integer]]}])
-    (sql/format {:pretty? true}))
+    (sql/format {:pretty true}))
 => ["
 INSERT INTO sample
 (location) VALUES (ST_SETSRID(ST_MAKEPOINT(?, ?), CAST(? AS integer)))
@@ -523,7 +522,7 @@ big-complicated-map
 ```clojure
 (sql/format big-complicated-map
             {:params {:param1 "gabba" :param2 2}
-             :pretty? true})
+             :pretty true})
 => ["
 SELECT DISTINCT f.*, b.baz, c.quux, b.bla \"bla-bla\", NOW(), @x := 10
 FROM foo AS f, baz AS b

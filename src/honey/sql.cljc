@@ -115,13 +115,13 @@
 (defn- namespace-_ [x] (some-> (namespace x) (str/replace "-" "_")))
 (defn- name-_      [x] (str/replace (name x) "-" "_"))
 
-(defn- format-entity [x & [{:keys [aliased? drop-ns?]}]]
+(defn- format-entity [x & [{:keys [aliased drop-ns]}]]
   (let [nn    (if (or *quoted* (string? x)) name               name-_)
         q     (if (or *quoted* (string? x)) (:quote *dialect*) identity)
-        [t c] (if-let [n (when-not (or drop-ns? (string? x))
+        [t c] (if-let [n (when-not (or drop-ns (string? x))
                            (namespace-_ x))]
                 [n (nn x)]
-                (if aliased?
+                (if aliased
                   [nil (nn x)]
                   (let [[t c] (str/split (nn x) #"\.")]
                     (if c [t c] [nil t]))))]
@@ -162,30 +162,30 @@
           (cond-> (format-entity s)
             pair?
             (str (if (and (contains? *dialect* :as) (not (:as *dialect*))) " " " AS ")
-                 (format-entity (second x) {:aliased? true}))))
+                 (format-entity (second x) {:aliased true}))))
 
         :else
         (format-entity x)))
 
-(defn- format-selectable-dsl [x & [{:keys [as? aliased?] :as opts}]]
+(defn- format-selectable-dsl [x & [{:keys [as aliased] :as opts}]]
   (cond (map? x)
-        (format-dsl x {:nested? true})
+        (format-dsl x {:nested true})
 
         (sequential? x)
         (let [s     (first x)
               pair? (< 1 (count x))
               a     (second x)
               [sql & params] (if (map? s)
-                               (format-dsl s {:nested? true})
+                               (format-dsl s {:nested true})
                                (format-expr s))
               [sql' & params'] (when pair?
                                  (if (sequential? a)
-                                   (let [[sql params] (format-expr-list a {:aliased? true})]
+                                   (let [[sql params] (format-expr-list a {:aliased true})]
                                      (into [(str/join " " sql)] params))
-                                   (format-selectable-dsl a {:aliased? true})))]
+                                   (format-selectable-dsl a {:aliased true})))]
           (-> [(cond-> sql
                  pair?
-                 (str (if as?
+                 (str (if as
                         (if (and (contains? *dialect* :as)
                                  (not (:as *dialect*)))
                           " "
@@ -195,11 +195,11 @@
               (into params')))
 
         (or (keyword? x) (symbol? x))
-        (if aliased?
+        (if aliased
           [(format-entity x opts)]
           (format-var x opts))
 
-        (and aliased? (string? x))
+        (and aliased (string? x))
         [(format-entity x opts)]
 
         :else
@@ -212,7 +212,7 @@
         (reduce (fn [[sql params] [sql' & params']]
                   [(conj sql sql') (if params' (into params params') params)])
                 [[] []]
-                (map #(format-dsl % {:nested? true}) xs))]
+                (map #(format-dsl % {:nested true}) xs))]
     (into [(str/join (str " " (sql-kw k) " ") sqls)] params)))
 
 (defn format-expr-list
@@ -235,7 +235,7 @@
           (map #(format-expr % opts) exprs)))
 
 (defn- format-columns [k xs]
-  (let [[sqls params] (format-expr-list xs {:drop-ns? (= :columns k)})]
+  (let [[sqls params] (format-expr-list xs {:drop-ns (= :columns k)})]
     (into [(str "(" (str/join ", " sqls) ")")] params)))
 
 (defn- format-selects [k xs]
@@ -244,9 +244,9 @@
           (reduce (fn [[sql params] [sql' & params']]
                     [(conj sql sql') (if params' (into params params') params)])
                   [[] []]
-                  (map #(format-selectable-dsl % {:as? (#{:select :from} k)}) xs))]
+                  (map #(format-selectable-dsl % {:as (#{:select :from} k)}) xs))]
       (into [(str (sql-kw k) " " (str/join ", " sqls))] params))
-    (let [[sql & params] (format-selectable-dsl xs {:as? (#{:select :from} k)})]
+    (let [[sql & params] (format-selectable-dsl xs {:as (#{:select :from} k)})]
       (into [(str (sql-kw k) " " sql)] params))))
 
 (defn- format-with-part [x]
@@ -386,7 +386,7 @@
                            xs))]
           (into [(str "("
                       (str/join ", "
-                                (map #(format-entity % {:drop-ns? true}) cols))
+                                (map #(format-entity % {:drop-ns true}) cols))
                       ") "
                       (sql-kw k)
                       " "
@@ -419,7 +419,7 @@
 
 (defn- format-do-update-set [k x]
   (if (or (keyword? x) (symbol? x))
-    (let [e (format-entity x {:drop-ns? true})]
+    (let [e (format-entity x {:drop-ns true})]
       [(str (sql-kw k) " " e " = EXCLUDED." e)])
     (format-set-exprs k x)))
 
@@ -489,7 +489,7 @@
 
   This is intended to be used when writing your own formatters to
   extend the DSL supported by HoneySQL."
-  [statement-map & [{:keys [aliased? nested? pretty?]}]]
+  [statement-map & [{:keys [aliased nested pretty]}]]
   (let [[sqls params leftover]
         (reduce (fn [[sql params leftover] k]
                   (if-let [xs (or (k statement-map)
@@ -507,10 +507,10 @@
       (throw (ex-info (str "Unknown SQL clauses: "
                             (str/join ", " (keys leftover)))
                       leftover))
-      (into [(cond-> (str/join (if pretty? "\n" " ") (filter seq sqls))
-               pretty?
+      (into [(cond-> (str/join (if pretty "\n" " ") (filter seq sqls))
+               pretty
                (as-> s (str "\n" s "\n"))
-               (and nested? (not aliased?))
+               (and nested (not aliased))
                (as-> s (str "(" s ")")))] params))))
 
 (def ^:private infix-aliases
@@ -552,8 +552,8 @@
     x))
 
 (defn- format-in [in [x y]]
-  (let [[sql-x & params-x] (format-expr x {:nested? true})
-        [sql-y & params-y] (format-expr y {:nested? true})
+  (let [[sql-x & params-x] (format-expr x {:nested true})
+        [sql-y & params-y] (format-expr y {:nested true})
         values             (unwrap (first params-y) {})]
     (if (and (= "?" sql-y) (= 1 (count params-y)) (coll? values))
       (let [sql (str "(" (str/join ", " (repeat (count values) "?")) ")")]
@@ -572,9 +572,9 @@
         (into [(str "ARRAY[" (str/join ", " sqls) "]")] params)))
     :between
     (fn [_ [x a b]]
-      (let [[sql-x & params-x] (format-expr x {:nested? true})
-            [sql-a & params-a] (format-expr a {:nested? true})
-            [sql-b & params-b] (format-expr b {:nested? true})]
+      (let [[sql-x & params-x] (format-expr x {:nested true})
+            [sql-a & params-a] (format-expr a {:nested true})
+            [sql-b & params-b] (format-expr b {:nested true})]
         (-> [(str sql-x " BETWEEN " sql-a " AND " sql-b)]
             (into params-x)
             (into params-a)
@@ -625,7 +625,7 @@
              {::wrapper (fn [fx _] (fx))})])
     :nest
     (fn [_ [x]]
-      (format-expr x {:nested? true}))
+      (format-expr x {:nested true}))
     :not
     (fn [_ [x]]
       (let [[sql & params] (format-expr x)]
@@ -655,12 +655,12 @@
 
   This is intended to be used when writing your own formatters to
   extend the DSL supported by HoneySQL."
-  [expr & [{:keys [nested?] :as opts}]]
+  [expr & [{:keys [nested] :as opts}]]
   (cond (or (keyword? expr) (symbol? expr))
         (format-var expr opts)
 
         (map? expr)
-        (format-dsl expr (assoc opts :nested? true))
+        (format-dsl expr (assoc opts :nested true))
 
         (sequential? expr)
         (let [op (first expr)
@@ -678,10 +678,10 @@
                                     [(conj sql sql')
                                      (if params' (into params params') params)])
                                   [[] []]
-                                  (map #(format-expr % {:nested? true})
+                                  (map #(format-expr % {:nested true})
                                        (rest x)))]
                       (into [(cond-> (str/join (str " " (sql-kw op) " ") sqls)
-                               nested?
+                               nested
                                (as-> s (str "(" s ")")))]
                             params))
                     (let [[_ a b & y] expr
@@ -690,26 +690,26 @@
                                                              op
                                                              " is supported")
                                                         {:expr expr})))
-                          [s1 & p1]   (format-expr a {:nested? true})
-                          [s2 & p2]   (format-expr b {:nested? true})
+                          [s1 & p1]   (format-expr a {:nested true})
+                          [s2 & p2]   (format-expr b {:nested true})
                           op          (get infix-aliases op op)]
                         (if (and (#{:= :<>} op) (or (nil? a) (nil? b)))
                           (-> (str (if (nil? a)
                                      (if (nil? b) "NULL" s2)
                                      s1)
                                    (if (= := op) " IS NULL" " IS NOT NULL"))
-                              (cond-> nested?
+                              (cond-> nested
                                 (as-> s (str "(" s ")")))
                               (vector))
                           (-> (str s1 " " (sql-kw op) " " s2)
-                              (cond-> nested?
+                              (cond-> nested
                                 (as-> s (str "(" s ")")))
                               (vector)
                               (into p1)
                               (into p2)))))
                   (contains? #{:in :not-in} op)
                   (let [[sql & params] (format-in op (rest expr))]
-                    (into [(if nested? (str "(" sql ")") sql)] params))
+                    (into [(if nested (str "(" sql ")") sql)] params))
                   (contains? @special-syntax op)
                   (let [formatter (get @special-syntax op)]
                     (formatter op (rest expr)))
@@ -849,7 +849,7 @@
   (format {:select [:*] :from [:table]
            :order-by [[[:date :expiry] :desc] :bar]} {})
   (println (format {:select [:*] :from [:table]
-                    :order-by [[[:date :expiry] :desc] :bar]} {:pretty? true}))
+                    :order-by [[[:date :expiry] :desc] :bar]} {:pretty true}))
   (format {:select [:*] :from [:table]
            :where [:< [:date_add :expiry [:interval 30 :days]] [:now]]} {})
   (format-expr [:interval 30 :days])
@@ -859,10 +859,10 @@
                     :where [:= :id (with-meta (constantly 42) {:foo true})]}
                    {:dialect :mysql}))
   (println (format {:select [:*] :from [:table]
-                    :where [:in :id [1 2 3 4]]} {:pretty? true}))
+                    :where [:in :id [1 2 3 4]]} {:pretty true}))
   (println (format {:select [:*] :from [:table]
                     :where [:and [:in :id [1 [:param :foo]]]
                             [:= :bar [:param :quux]]]}
                    {:params {:foo 42 :quux 13}
-                    :pretty? true}))
+                    :pretty true}))
   ,)
