@@ -4,13 +4,19 @@ SQL as Clojure data structures. Build queries programmatically -- even at runtim
 
 ## Build
 
-The latest stable version (1.0.444) on Clojars and on cljdoc:
+The latest stable version (1.0.444) on Clojars and on cljdoc (note: `honeysql/honeysql`):
 
-[![Clojars Project](https://clojars.org/seancorfield/honeysql/latest-version.svg)](https://clojars.org/seancorfield/honeysql) [![cljdoc badge](https://cljdoc.org/badge/seancorfield/honeysql?2.0.0-alpha1)](https://cljdoc.org/d/seancorfield/honeysql/CURRENT)
+[![Clojars Project](https://clojars.org/honeysql/honeysql/latest-version.svg)](https://clojars.org/honeysql/honeysql) [![cljdoc badge](https://cljdoc.org/badge/honeysql/honeysql?1.0.444)](https://cljdoc.org/d/honeysql/honeysql/CURRENT)
 
 This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINOR provide some relative indication of the size of the change, but do not follow semantic versioning. In general, all changes endeavor to be non-breaking (by moving to new names rather than by breaking existing names). COMMITS is an ever-increasing counter of commits since the beginning of this repository.
 
+Prerelease builds of the upcoming 2.x version of HoneySQL will soon be available:
+
+[![Clojars Project](https://clojars.org/seancorfield/honeysql/latest-version.svg)](https://clojars.org/seancorfield/honeysql) [![cljdoc badge](https://cljdoc.org/badge/seancorfield/honeysql?2.0.0-alpha1)](https://cljdoc.org/d/seancorfield/honeysql/CURRENT)
+
 This is the README for the upcoming 2.x version of HoneySQL which provides a streamlined codebase and a simpler method for extending the DSL. It also supports SQL dialects out-of-the-box and will be extended to support vendor-specific language features over time (unlike the 1.x version).
+
+See this [summary of differences between v1 and v2](https://github.com/seancorfield/honeysql/blob/v2/doc/differences-from-1-x.md) if you want to help test v2!
 
 ## Note on code samples
 
