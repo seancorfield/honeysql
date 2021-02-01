@@ -315,17 +315,29 @@
 (defn- format-values [k xs]
   (cond (sequential? (first xs))
         ;; [[1 2 3] [4 5 6]]
-        (let [[sqls params]
+        (let [n-1 (map count xs)
+              ;; issue #291: ensure all value sequences are the same length
+              xs' (if (apply = n-1)
+                    xs
+                    (let [n-n (apply max n-1)]
+                      (map (fn [x] (take n-n (concat x (repeat nil)))) xs)))
+              [sqls params]
               (reduce (fn [[sql params] [sqls' params']]
                         [(conj sql (str "(" (str/join ", " sqls') ")"))
                          (into params params')])
                       [[] []]
-                      (map #'format-expr-list xs))]
+                      (map #'format-expr-list xs'))]
           (into [(str (sql-kw k) " " (str/join ", " sqls))] params))
 
         (map? (first xs))
         ;; [{:a 1 :b 2 :c 3}]
-        (let [cols (keys (first xs))
+        (let [cols-1 (keys (first xs))
+              ;; issue #291: check for all keys in all maps but still
+              ;; use the keys from the first map if they match so that
+              ;; users can rely on the key ordering if they want to,
+              ;; e.g., see test that uses array-map for the first row
+              cols-n (into #{} (mapcat keys) xs)
+              cols   (if (= (set cols-1) cols-n) cols-1 cols-n)
               [sqls params]
               (reduce (fn [[sql params] [sqls' params']]
                         [(conj sql (str "(" (str/join ", " sqls') ")"))
@@ -346,6 +358,10 @@
         :else
         (throw (ex-info ":values expects sequences or maps"
                         {:first (first xs)}))))
+
+(comment
+  (into #{} (mapcat keys) [{:a 1 :b 2} {:b 3 :c 4}])
+  ,)
 
 (defn- format-set-exprs [k xs]
   (let [[sqls params]

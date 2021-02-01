@@ -102,14 +102,14 @@
          ["WITH query AS (SELECT foo FROM bar)"]))
   (is (= (format {:with-recursive [[:query {:select [:foo] :from [:bar]}]]})
          ["WITH RECURSIVE query AS (SELECT foo FROM bar)"]))
-  (is (= (format {:with [[[:static {:columns [:a :b :c]}] {:values [[1 2 3] [4 5 6]]}]]})
-         ["WITH static (a, b, c) AS (VALUES (?, ?, ?), (?, ?, ?))" 1 2 3 4 5 6]))
+  (is (= (format {:with [[[:static {:columns [:a :b :c]}] {:values [[1 2 3] [4 5]]}]]})
+         ["WITH static (a, b, c) AS (VALUES (?, ?, ?), (?, ?, NULL))" 1 2 3 4 5]))
   (is (= (format
            {:with [[[:static {:columns [:a :b :c]}]
-                    {:values [[1 2 3] [4 5 6]]}]]
+                    {:values [[1 2] [4 5 6]]}]]
             :select [:*]
             :from [:static]})
-         ["WITH static (a, b, c) AS (VALUES (?, ?, ?), (?, ?, ?)) SELECT * FROM static" 1 2 3 4 5 6])))
+         ["WITH static (a, b, c) AS (VALUES (?, ?, NULL), (?, ?, ?)) SELECT * FROM static" 1 2 4 5 6])))
 
 (deftest insert-into
   (is (= (format {:insert-into :foo})
@@ -133,6 +133,15 @@
   (is (= (format {:insert-into :foo :columns [:foo/id] :values [[2]]}
                  {:namespace-as-table? true})
          ["INSERT INTO foo (id) VALUES (?)" 2])))
+
+(deftest insert-into-uneven-maps
+  ;; we can't rely on ordering when the set of keys differs between maps:
+  (let [res (format {:insert-into :foo :values [{:id 1} {:id 2, :bar "quux"}]})]
+    (is (or (= res ["INSERT INTO foo (id, bar) VALUES (?, NULL), (?, ?)" 1 2 "quux"])
+            (= res ["INSERT INTO foo (bar, id) VALUES (NULL, ?), (?, ?)" 1 "quux" 2]))))
+  (let [res (format {:insert-into :foo :values [{:id 1, :bar "quux"} {:id 2}]})]
+    (is (or (= res ["INSERT INTO foo (id, bar) VALUES (?, ?), (?, NULL)" 1 "quux" 2])
+            (= res ["INSERT INTO foo (bar, id) VALUES (?, ?), (NULL, ?)" "quux" 1 2])))))
 
 (deftest exists-test
   ;; EXISTS should never have been implemented as SQL syntax: it's an operator!
