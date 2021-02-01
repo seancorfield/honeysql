@@ -1,7 +1,27 @@
 ;; copyright (c) 2020-2021 sean corfield, all rights reserved
 
 (ns honey.sql
-  "Primary API for HoneySQL 2.x."
+  "Primary API for HoneySQL 2.x.
+
+  This includes the `format` function -- the primary entry point -- as well
+  as several public formatters that are intended to help users extend the
+  supported syntax.
+
+  In addition, functions to extend HoneySQL are also provided here:
+  * `sql-kw` -- turns a Clojure keyword into SQL code (makes it uppercase
+        and replaces - with space).
+  * `format-dsl` -- intended to format SQL statements; returns a vector
+        containing a SQL string followed by parameter values.
+  * `format-expr` -- intended to format SQL expressions; returns a vector
+        containing a SQL string followed by parameter values.
+  * `format-expr-list` -- intended to format a list of SQL expressions;
+        returns a pair comprising: a sequence of SQL expressions (to be
+        join with a delimiter) and a sequence of parameter values.
+  * `set-dialect!` -- set the default dialect to be used for formatting.
+  * `register-clause!` -- register a new statement/clause formatter.
+  * `register-fn!` -- register a new function call (or special syntax)
+        formatter.
+  * `register-op!` -- register a new operator formatter."
   (:refer-clojure :exclude [format])
   (:require [clojure.string :as str]))
 
@@ -83,7 +103,12 @@
   #?(:clj (fn [^String s] (.. s toString (toUpperCase (java.util.Locale/US))))
      :cljs str/upper-case))
 
-(defn sql-kw [k]
+(defn sql-kw
+  "Given a keyword, return a SQL representation of it as a string.
+
+  A `:kebab-case` keyword becomes a `KEBAB CASE` (uppercase) string
+  with hyphens replaced by spaces, e.g., `:insert-into` => `INSERT INTO`."
+  [k]
   (-> k (name) (upper-case)
       (as-> s (if (= "-" s) s (str/replace s "-" " ")))))
 
@@ -190,11 +215,24 @@
                 (map #(format-dsl % {:nested? true}) xs))]
     (into [(str/join (str " " (sql-kw k) " ") sqls)] params)))
 
-(defn- format-expr-list [xs & [opts]]
+(defn format-expr-list
+  "Given a sequence of expressions represented as data, return a pair
+  where the first element is a sequence of SQL fragments and the second
+  element is a sequence of parameters. The caller should join the SQL
+  fragments with whatever appropriate delimiter is needed and then
+  return a vector whose first element is the complete SQL string and
+  whose subsequent elements are the parameters:
+
+  (let [[sqls params] (format-expr-list data opts)]
+    (into [(str/join delim sqls)] params))
+
+  This is intended to be used when writing your own formatters to
+  extend the DSL supported by HoneySQL."
+  [exprs & [opts]]
   (reduce (fn [[sql params] [sql' & params']]
             [(conj sql sql') (if params' (into params params') params)])
           [[] []]
-          (map #(format-expr % opts) xs)))
+          (map #(format-expr % opts) exprs)))
 
 (defn- format-columns [k xs]
   (let [[sqls params] (format-expr-list xs {:drop-ns? (= :columns k)})]
@@ -444,27 +482,31 @@
            (set @current-clause-order)
            (set (keys @clause-format))))
 
-(defn format-dsl [x & [{:keys [aliased? nested? pretty?]}]]
+(defn format-dsl
+  "Given a hash map representing a SQL statement and a hash map
+  of options, return a vector containing a string -- the formatted
+  SQL statement -- followed by any parameter values that SQL needs.
+
+  This is intended to be used when writing your own formatters to
+  extend the DSL supported by HoneySQL."
+  [statement-map & [{:keys [aliased? nested? pretty?]}]]
   (let [[sqls params leftover]
         (reduce (fn [[sql params leftover] k]
-                  (if-let [xs (or (k x) (let [s (symbol (name k))] (get x s)))]
+                  (if-let [xs (or (k statement-map)
+                                  (let [s (symbol (name k))]
+                                    (get statement-map s)))]
                     (let [formatter (k @clause-format)
                           [sql' & params'] (formatter k xs)]
                       [(conj sql sql')
                        (if params' (into params params') params)
                        (dissoc leftover k (symbol (name k)))])
                     [sql params leftover]))
-                [[] [] x]
+                [[] [] statement-map]
                 *clause-order*)]
     (if (seq leftover)
-      (do
-        ;; TODO: for testing purposes, make this less noisy
-        (println (str "\n-------------------\nUnknown SQL clauses: "
-                      (str/join ", " (keys leftover))))
-        #_(throw (ex-info (str "Unknown SQL clauses: "
-                               (str/join ", " (keys leftover)))
-                          leftover))
-        [(str "<unknown" (str/join (keys leftover)) ">")])
+      (throw (ex-info (str "Unknown SQL clauses: "
+                            (str/join ", " (keys leftover)))
+                      leftover))
       (into [(cond-> (str/join (if pretty? "\n" " ") (filter seq sqls))
                pretty?
                (as-> s (str "\n" s "\n"))
@@ -606,22 +648,31 @@
           (into [(str/join sqls)] params))
         [s]))}))
 
-(defn format-expr [x & [{:keys [nested?] :as opts}]]
-  (cond (or (keyword? x) (symbol? x))
-        (format-var x opts)
+(defn format-expr
+  "Given a data structure that represents a SQL expression and a hash
+  map of options, return a vector containing a string -- the formatted
+  SQL statement -- followed by any parameter values that SQL needs.
 
-        (map? x)
-        (format-dsl x (assoc opts :nested? true))
+  This is intended to be used when writing your own formatters to
+  extend the DSL supported by HoneySQL."
+  [expr & [{:keys [nested?] :as opts}]]
+  (cond (or (keyword? expr) (symbol? expr))
+        (format-var expr opts)
 
-        (sequential? x)
-        (let [op (first x)
+        (map? expr)
+        (format-dsl expr (assoc opts :nested? true))
+
+        (sequential? expr)
+        (let [op (first expr)
               ;; normalize symbols to keywords here -- makes the subsequent
               ;; logic easier since we use op to lookup things in hash maps:
               op (if (symbol? op) (keyword (name op)) op)]
           (if (keyword? op)
             (cond (contains? @infix-ops op)
                   (if (contains? @op-variadic op) ; no aliases here, no special semantics
-                    (let [x (if (contains? @op-ignore-nil op) (remove nil? x) x)
+                    (let [x (if (contains? @op-ignore-nil op)
+                              (remove nil? expr)
+                              expr)
                           [sqls params]
                           (reduce (fn [[sql params] [sql' & params']]
                                     [(conj sql sql')
@@ -633,12 +684,12 @@
                                nested?
                                (as-> s (str "(" s ")")))]
                             params))
-                    (let [[_ a b & y] x
+                    (let [[_ a b & y] expr
                           _           (when (seq y)
                                         (throw (ex-info (str "only binary "
                                                              op
                                                              " is supported")
-                                                        {:expr x})))
+                                                        {:expr expr})))
                           [s1 & p1]   (format-expr a {:nested? true})
                           [s2 & p2]   (format-expr b {:nested? true})
                           op          (get infix-aliases op op)]
@@ -657,13 +708,13 @@
                               (into p1)
                               (into p2)))))
                   (contains? #{:in :not-in} op)
-                  (let [[sql & params] (format-in op (rest x))]
+                  (let [[sql & params] (format-in op (rest expr))]
                     (into [(if nested? (str "(" sql ")") sql)] params))
                   (contains? @special-syntax op)
                   (let [formatter (get @special-syntax op)]
-                    (formatter op (rest x)))
+                    (formatter op (rest expr)))
                   :else
-                  (let [args          (rest x)
+                  (let [args          (rest expr)
                         [sqls params] (format-expr-list args)]
                     (into [(str (sql-kw op)
                                 (if (and (= 1 (count args))
@@ -672,19 +723,19 @@
                                   (str " " (first sqls))
                                   (str "(" (str/join ", " sqls) ")")))]
                           params)))
-            (let [[sqls params] (format-expr-list x)]
+            (let [[sqls params] (format-expr-list expr)]
               (into [(str "(" (str/join ", " sqls) ")")] params))))
 
-        (boolean? x)
-        [(upper-case (str x))]
+        (boolean? expr)
+        [(upper-case (str expr))]
 
-        (nil? x)
+        (nil? expr)
         ["NULL"]
 
         :else
         (if *inline*
-          [(sqlize-value x)]
-          ["?" x])))
+          [(sqlize-value expr)]
+          ["?" expr])))
 
 (defn- check-dialect [dialect]
   (when-not (contains? dialects dialect)
@@ -694,7 +745,10 @@
 
 (defn format
   "Turn the data DSL into a vector containing a SQL string followed by
-  any parameter values that were encountered in the DSL structure."
+  any parameter values that were encountered in the DSL structure.
+
+  This is the primary API for HoneySQL and handles dialects, quoting,
+  and named parameters."
   ([data] (format data {}))
   ([data opts]
    (let [dialect? (contains? opts :dialect)
