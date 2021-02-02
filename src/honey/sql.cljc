@@ -823,12 +823,12 @@
   "Register a new infix operator. Operators can be defined to be variadic (the
   default is that they are binary) and may choose to ignore `nil` arguments
   (this can make it easier to programmatically construct the DSL)."
-  [op & {:keys [variadic? ignore-nil?]}]
+  [op & {:keys [variadic ignore-nil]}]
   (assert (keyword? op))
   (swap! infix-ops conj op)
-  (when variadic?
+  (when variadic
     (swap! op-variadic conj op))
-  (when ignore-nil?
+  (when ignore-nil
     (swap! op-ignore-nil conj op)))
 
 (comment
@@ -865,4 +865,10 @@
                             [:= :bar [:param :quux]]]}
                    {:params {:foo 42 :quux 13}
                     :pretty true}))
+  ;; while working on the docs
+  (require '[honey.sql :as sql])
+  (sql/format {:select [:*] :from [:table] :where [:= :id 1]})
+  (sql/format {:select [:*] :from [:table] :where [:= :id 1]} {:dialect :mysql})
+  (sql/format {:select [:foo/bar] :from [:q-u-u-x]} {:quoted true})
+  (sql/format {:select ["foo/bar"] :from [:q-u-u-x]} {:quoted true})
   ,)
