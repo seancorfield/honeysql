@@ -107,10 +107,32 @@
   "Given a keyword, return a SQL representation of it as a string.
 
   A `:kebab-case` keyword becomes a `KEBAB CASE` (uppercase) string
-  with hyphens replaced by spaces, e.g., `:insert-into` => `INSERT INTO`."
+  with hyphens replaced by spaces, e.g., `:insert-into` => `INSERT INTO`.
+
+  Any namespace qualifier is ignored."
   [k]
   (-> k (name) (upper-case)
       (as-> s (if (= "-" s) s (str/replace s "-" " ")))))
+
+(defn- sym->kw
+  "Given a symbol, produce a keyword, retaining the namespace
+  qualifier, if any."
+  [s]
+  (if (symbol? s)
+    (if-let [n (namespace s)]
+      (keyword n (name s))
+      (keyword (name s)))
+    s))
+
+(defn- kw->sym
+  "Given a keyword, produce a symbol, retaining the namespace
+  qualifier, if any."
+  [k]
+  (if (keyword? k)
+    (if-let [n (namespace k)]
+      (symbol n (name k))
+      (symbol (name k)))
+    k))
 
 (defn- namespace-_ [x] (some-> (namespace x) (str/replace "-" "_")))
 (defn- name-_      [x] (str/replace (name x) "-" "_"))
@@ -493,13 +515,13 @@
   (let [[sqls params leftover]
         (reduce (fn [[sql params leftover] k]
                   (if-let [xs (or (k statement-map)
-                                  (let [s (symbol (name k))]
+                                  (let [s (kw->sym k)]
                                     (get statement-map s)))]
                     (let [formatter (k @clause-format)
                           [sql' & params'] (formatter k xs)]
                       [(conj sql sql')
                        (if params' (into params params') params)
-                       (dissoc leftover k (symbol (name k)))])
+                       (dissoc leftover k (kw->sym k))])
                     [sql params leftover]))
                 [[] [] statement-map]
                 *clause-order*)]
@@ -638,7 +660,7 @@
       (if (sequential? s)
         (let [[sqls params]
               (reduce (fn [[sqls params] s]
-                        (if (coll? s)
+                        (if (sequential? s)
                           (let [[sql & params'] (format-expr s)]
                             [(conj sqls sql)
                              (into params params')])
@@ -663,10 +685,7 @@
         (format-dsl expr (assoc opts :nested true))
 
         (sequential? expr)
-        (let [op (first expr)
-              ;; normalize symbols to keywords here -- makes the subsequent
-              ;; logic easier since we use op to lookup things in hash maps:
-              op (if (symbol? op) (keyword (name op)) op)]
+        (let [op (sym->kw (first expr))]
           (if (keyword? op)
             (cond (contains? @infix-ops op)
                   (if (contains? @op-variadic op) ; no aliases here, no special semantics
@@ -791,16 +810,18 @@
   only clause so far where that would matter is `:set` which differs in
   MySQL."
   [clause formatter before]
-  (assert (keyword? clause))
-  (let [f (if (keyword? formatter)
-            (get @clause-format formatter)
-            formatter)]
-    (when-not (and f (fn? f))
-      (throw (ex-info "The formatter must be a function or existing clause"
-                      {:type (type formatter)})))
-    (swap! base-clause-order add-clause-before clause before)
-    (swap! current-clause-order add-clause-before clause before)
-    (swap! clause-format assoc clause f)))
+  (let [clause (sym->kw clause)]
+    (assert (keyword? clause))
+    (let [k (sym->kw formatter)
+          f (if (keyword? k)
+              (get @clause-format k)
+              formatter)]
+      (when-not (and f (fn? f))
+        (throw (ex-info "The formatter must be a function or existing clause"
+                        {:type (type formatter)})))
+      (swap! base-clause-order add-clause-before clause before)
+      (swap! current-clause-order add-clause-before clause before)
+      (swap! clause-format assoc clause f))))
 
 (defn register-fn!
   "Register a new function (as special syntax). The `formatter` is either
@@ -810,26 +831,29 @@
   of the function (as a keyword) and a sequence of the arguments from the
   DSL."
   [function formatter]
-  (assert (keyword? function))
-  (let [f (if (keyword? formatter)
-            (get @special-syntax formatter)
-            formatter)]
-    (when-not (and f (fn? f))
-      (throw (ex-info "The formatter must be a function or existing fn name"
-                      {:type (type formatter)})))
-    (swap! special-syntax assoc function f)))
+  (let [function (sym->kw function)]
+    (assert (keyword? function))
+    (let [k (sym->kw formatter)
+          f (if (keyword? k)
+              (get @special-syntax k)
+              formatter)]
+      (when-not (and f (fn? f))
+        (throw (ex-info "The formatter must be a function or existing fn name"
+                        {:type (type formatter)})))
+      (swap! special-syntax assoc function f))))
 
 (defn register-op!
   "Register a new infix operator. Operators can be defined to be variadic (the
   default is that they are binary) and may choose to ignore `nil` arguments
   (this can make it easier to programmatically construct the DSL)."
   [op & {:keys [variadic ignore-nil]}]
-  (assert (keyword? op))
-  (swap! infix-ops conj op)
-  (when variadic
-    (swap! op-variadic conj op))
-  (when ignore-nil
-    (swap! op-ignore-nil conj op)))
+  (let [op (sym->kw op)]
+    (assert (keyword? op))
+    (swap! infix-ops conj op)
+    (when variadic
+      (swap! op-variadic conj op))
+    (when ignore-nil
+      (swap! op-ignore-nil conj op))))
 
 (comment
   (format {:truncate :foo})
@@ -868,7 +892,35 @@
   ;; while working on the docs
   (require '[honey.sql :as sql])
   (sql/format {:select [:*] :from [:table] :where [:= :id 1]})
+  (sql/format {:select [:t/id [:name :item]], :from [[:table :t]], :where [:= :id 1]})
+  (sql/format '{select [t/id [name item]], from [[table t]], where [= id 1]})
+  (sql/format '{select * from table where (= id 1)})
+  (require '[honey.sql.helpers :refer [select from where]])
+  (-> (select :t/id [:name :item])
+      (from [:table :t])
+      (where [:= :id 1])
+      (sql/format))
+  (-> (select :t/id)
+      (from [:table :t])
+      (where [:= :id 1])
+      (select [:name :item])
+      (sql/format))
   (sql/format {:select [:*] :from [:table] :where [:= :id 1]} {:dialect :mysql})
   (sql/format {:select [:foo/bar] :from [:q-u-u-x]} {:quoted true})
   (sql/format {:select ["foo/bar"] :from [:q-u-u-x]} {:quoted true})
+  (sql/format-expr [:primary-key])
+  (sql/register-op! 'y)
+  (sql/format {:where '[y 2 3]})
+  (sql/register-op! :<=> :variadic true :ignore-nil true)
+  ;; and then use the new operator:
+  (sql/format {:select [:*], :from [:table], :where [:<=> nil :x 42]})
+  (sql/register-fn! :foo (fn [f args] ["FOO(?)" (first args)]))
+  (sql/format {:select [:*], :from [:table], :where [:foo 1 2 3]})
+  (defn- foo-formatter [f [x]]
+    (let [[sql & params] (sql/format-expr x)]
+      (into [(str (sql/sql-kw f) "(" sql ")")] params)))
+
+  (sql/register-fn! :foo foo-formatter)
+
+  (sql/format {:select [:*], :from [:table], :where [:foo [:+ :a 1]]})
   ,)
