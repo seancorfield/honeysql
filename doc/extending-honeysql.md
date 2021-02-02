@@ -16,6 +16,30 @@ Built in functions (special syntax) include: `:array`, `:case`,
 
 ## Registering a New Clause Formatter
 
+`honey.sql/register-clause!` accepts a keyword (or a symbol)
+that should be treated as a new clause in a SQL statement,
+a "formatter", and a keyword (or a symbol) that identifies
+an existing clause that this new one should be ordered before.
+
+The formatter can either be a function
+of two arguments or a previously registered clause (so
+that you can easily reuse formatters).
+
+The formatter function will be called with:
+* The function name (always as a keyword),
+* The sequence of arguments provided.
+
+The third argument to `register-clause!` allows you to
+insert your new clause formatter so that clauses are
+formatted in the correct order for your SQL dialect.
+For example, `:select` comes before `:from` which comes
+before `:where`. This is the most implementation-specific
+part of extending HoneySQL because you'll need to look at
+the (private) Var `default-clause-order` in `honey.sql`
+for guidance. _[I plan to add a section in the documentation
+somewhere that lists built-in clauses in order which this
+can link to...]_
+
 ## Registering a New Operator
 
 `honey.sql/register-op!` accepts a keyword (or a symbol) that
@@ -58,7 +82,7 @@ and a "formatter". The formatter can either be a function
 of two arguments or a previously registered "function" (so
 that you can easily reuse formatters).
 
-The formatter will be called with:
+The formatter function will be called with:
 * The function name (always as a keyword),
 * The sequence of arguments provided.
 

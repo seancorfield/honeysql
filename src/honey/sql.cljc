@@ -810,7 +810,8 @@
   only clause so far where that would matter is `:set` which differs in
   MySQL."
   [clause formatter before]
-  (let [clause (sym->kw clause)]
+  (let [clause (sym->kw clause)
+        before (sym->kw before)]
     (assert (keyword? clause))
     (let [k (sym->kw formatter)
           f (if (keyword? k)
@@ -891,6 +892,8 @@
                     :pretty true}))
   ;; while working on the docs
   (require '[honey.sql :as sql])
+  (sql/format {:where [:and [:= :id 42] [:= :type "match"]]})
+  (sql/format {:where [:and [:= :type "match"] (when false [:in :status [1 5]])]})
   (sql/format {:select [:*] :from [:table] :where [:= :id 1]})
   (sql/format {:select [:t/id [:name :item]], :from [[:table :t]], :where [:= :id 1]})
   (sql/format '{select [t/id [name item]], from [[table t]], where [= id 1]})

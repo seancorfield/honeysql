@@ -1,5 +1,9 @@
-{:cljdoc.doc/tree [["Readme" {:file "README.md"}]
-                   ["Changes" {:file "CHANGELOG.md"}]
-                   ["Getting Started" {:file "doc/getting-started.md"}
-                    ["Extending HoneySQL" {:file "doc/extending-honeysql.md"}]]
-                   ["Differences from 1.x" {:file "doc/difference-from-1-x.md"}]]}
+{:cljdoc.doc/tree
+ [["Readme" {:file "README.md"}]
+  ["Changes" {:file "CHANGELOG.md"}]
+  ["Getting Started" {:file "doc/getting-started.md"}
+   ["SQL Clause Reference" {:file "doc/clause-reference.md"}]
+   ["SQL Operator Reference" {:file "doc/operator-reference.md"}]
+   ["SQL 'Special Syntax'" {:file "doc/special-syntax.md"}]
+   ["Extending HoneySQL" {:file "doc/extending-honeysql.md"}]]
+  ["Differences from 1.x" {:file "doc/difference-from-1-x.md"}]]}
