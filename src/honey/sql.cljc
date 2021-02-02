@@ -638,7 +638,7 @@
       (if (sequential? s)
         (let [[sqls params]
               (reduce (fn [[sqls params] s]
-                        (if (vector? s)
+                        (if (coll? s)
                           (let [[sql & params'] (format-expr s)]
                             [(conj sqls sql)
                              (into params params')])
