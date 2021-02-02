@@ -134,6 +134,8 @@ You can also register new "functions" that can implement special syntax (such as
 
 And, finally, you can register new operators that will be recognized in expressions via `honey.sql/register-op!`. This accepts an operator name as a keyword and optional named parameters to indicate whether the operator is `:variadic` (the default is strictly binary) and whether it should ignore operands that evaluate to `nil` (via `:ignore-nil`). The latter can make it easier to construct complex expressions programmatically without having to worry about conditionally removing "optional" (`nil`) values.
 
+> Note: because of the changes in the extension machinery between v1 and v2, it is not possible to use the https://github.com/nilenso/honeysql-postgres library with HoneySQL v2 but the goal is to incorporate all of the syntax from that library into the core of HoneySQL.
+
 ## Helpers
 
 The `honey.sql.helpers` namespace includes a helper function that corresponds to every supported piece of the data DSL understood by HoneySQL (v1 only had a limited set of helper functions). Unlike v1 helpers which sometimes had both a regular helper and a `merge-` helper, v2 helpers will all merge clauses by default (if that makes sense for the underlying DSL): use `:dissoc` if you want to force an overwrite.
