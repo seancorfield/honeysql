@@ -13,7 +13,7 @@
    :main-opts ["-m" "cognitect.test-runner"
                ;"-d" "target/test-doc-blocks/test"
                "-d" "test"]}
-  :cljs-runner {:extra-deps {olical/cljs-test-runner {:mvn/version "3.7.0"}}
+  :cljs-runner {:extra-deps {olical/cljs-test-runner {:mvn/version "3.8.0"}}
                 :main-opts ["-m" "cljs-test-runner.main"]}
   :readme {:extra-deps {seancorfield/readme {:mvn/version "1.0.16"}}
            :main-opts ["-m" "seancorfield.readme"]}
