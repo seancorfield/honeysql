@@ -591,7 +591,7 @@ If your database supports `<=>` as an operator, you can tell HoneySQL about it u
 (-> (select :a) (where [:<=> :a "foo"]) sql/format)
 => ["SELECT a WHERE a <=> ?" "foo"]
 ;; you can declare that an operator is variadic:
-(sql/register-op! :<=> :variadic? true)
+(sql/register-op! :<=> :variadic true)
 (-> (select :a) (where [:<=> "food" :a "fool"]) sql/format)
 => ["SELECT a WHERE ? <=> a <=> ?" "food" "fool"]
 ```
@@ -599,7 +599,7 @@ If your database supports `<=>` as an operator, you can tell HoneySQL about it u
 Sometimes you want an operator to ignore `nil` clauses (`:and` and `:or` are declared that way):
 
 ```clojure
-(sql/register-op! :<=> :ignore-nil? true)
+(sql/register-op! :<=> :ignore-nil true)
 ```
 
 Or perhaps your database supports syntax like `a BETWIXT b AND c`, in which case you can use `register-fn!` to tell HoneySQL about it (again, called before the first call to `honey.sql/format`):

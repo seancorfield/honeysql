@@ -68,3 +68,9 @@
        base
        (apply build (apply concat base)))
      (partition 2 clauses))))
+
+(comment
+  (require '[honeysql.core :as sql])
+  (sql/format {:select [:*] :from [:table] :where [:= :id 1]})
+  (sql/format {:select [:*] :from [:table] :where [:= :id 1]} :quoting :mysql)
+  ,)
