@@ -608,7 +608,8 @@
                       (let [[sqlc & paramsc] (when-not (= :else condition)
                                                (format-expr condition))
                             [sqlv & paramsv] (format-expr value)]
-                        [(if (= :else condition)
+                        [(if (or (= :else condition)
+                                 (= 'else condition))
                            (conj sqls (sql-kw :else) sqlv)
                            (conj sqls (sql-kw :when) sqlc (sql-kw :then) sqlv))
                          (-> params (into paramsc) (into paramsv))]))
@@ -892,6 +893,7 @@
                     :pretty true}))
   ;; while working on the docs
   (require '[honey.sql :as sql])
+  (sql/format-expr [:array (range 5)])
   (sql/format {:where [:and [:= :id 42] [:= :type "match"]]})
   (sql/format {:where [:and [:= :type "match"] (when false [:in :status [1 5]])]})
   (sql/format {:select [:*] :from [:table] :where [:= :id 1]})

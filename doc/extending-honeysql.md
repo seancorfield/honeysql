@@ -26,7 +26,7 @@ of two arguments or a previously registered clause (so
 that you can easily reuse formatters).
 
 The formatter function will be called with:
-* The function name (always as a keyword),
+* The clause name (always as a keyword),
 * The sequence of arguments provided.
 
 The third argument to `register-clause!` allows you to
