@@ -97,6 +97,7 @@
          (format {:select [:vals.a]
                   :from [[{:values [[1 2 3]]} [:vals {:columns [:a :b :c]}]]]}))))
 (deftest test-cte
+  ;; 1.x and earlier with the extra sequence wrapping:
   (is (= (format {:with [[:query {:select [:foo] :from [:bar]}]]})
          ["WITH query AS (SELECT foo FROM bar)"]))
   (is (= (format {:with-recursive [[:query {:select [:foo] :from [:bar]}]]})
@@ -106,6 +107,19 @@
   (is (= (format
            {:with [[[:static {:columns [:a :b :c]}]
                     {:values [[1 2] [4 5 6]]}]]
+            :select [:*]
+            :from [:static]})
+         ["WITH static (a, b, c) AS (VALUES (?, ?, NULL), (?, ?, ?)) SELECT * FROM static" 1 2 4 5 6]))
+  ;; 2.x should allow just a pair:
+  (is (= (format {:with [:query {:select [:foo] :from [:bar]}]})
+         ["WITH query AS (SELECT foo FROM bar)"]))
+  (is (= (format {:with-recursive [:query {:select [:foo] :from [:bar]}]})
+         ["WITH RECURSIVE query AS (SELECT foo FROM bar)"]))
+  (is (= (format {:with [[:static {:columns [:a :b :c]}] {:values [[1 2 3] [4 5]]}]})
+         ["WITH static (a, b, c) AS (VALUES (?, ?, ?), (?, ?, NULL))" 1 2 3 4 5]))
+  (is (= (format
+           {:with [[:static {:columns [:a :b :c]}]
+                   {:values [[1 2] [4 5 6]]}]
             :select [:*]
             :from [:static]})
          ["WITH static (a, b, c) AS (VALUES (?, ?, NULL), (?, ?, ?)) SELECT * FROM static" 1 2 4 5 6])))
