@@ -95,6 +95,9 @@ user=> (sql/format {:select [:id, [[:* :cost 2] :total], [:event :status]]
 
 `:select-distinct` works the same way but produces `SELECT DISTINCT`.
 
+HoneySQL does not yet support `SELECT .. INTO ..`
+or `SELECT .. BULK COLLECT INTO ..`.
+
 ## insert-into
 
 There are two use cases with `:insert-into`. The first case
@@ -247,6 +250,13 @@ user=> (sql/format {:select [:t.ref :pp.code]
 
 ## cross-join
 
+`:cross-join` accepts a single sequence argument that lists
+one or more SQL entities. Each entity can either be a
+simple table name (keyword or symbol) or a pair of a
+table name and an alias.
+
+> Note: the actual formatting of a `:cross-join` clause is currently identical to the formatting of a `:select` clause.
+
 ## set (MySQL)
 
 This is the precedence of the `:set` clause for the MySQL dialect.
@@ -312,6 +322,33 @@ user=> (sql/format {:select [:*] :from :table
 
 ## values
 
+`:values` accepts either a sequence of hash maps representing
+row values or a sequence of sequences, also representing row
+values.
+
+In the former case, all of the rows are augmented to have
+`nil` values for any missing keys (columns). In the latter,
+all of the rows are padded to the same length by adding `nil`
+values if needed.
+
+```clojure
+user=> (sql/format {:insert-into :table
+                    :values [[1 2] [2 3 4 5] [3 4 5]]})
+["INSERT INTO table VALUES (?, ?, NULL, NULL), (?, ?, ?, ?), (?, ?, ?, NULL)" 1 2 2 3 4 5 3 4 5]
+user=> (sql/format '{insert-into table
+                     values ({id 1 name "Sean"}
+                             {id 2}
+                             {name "Extra"})})
+["INSERT INTO table (id, name) VALUES (?, ?), (?, NULL), (NULL, ?)" 1 "Sean" 2 "Extra"]
+```
+
 ## on-conflict, on-constraint, do-nothing, do-update-set
 
 ## returning
+
+`:returning` accepts a single sequence argument that lists
+one or more SQL entities. Each entity can either be a
+simple table name (keyword or symbol) or a pair of a
+table name and an alias.
+
+> Note: the actual formatting of a `:returning` clause is currently identical to the formatting of a `:select` clause.
