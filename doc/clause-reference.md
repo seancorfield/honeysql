@@ -208,6 +208,30 @@ user=> (sql/format {:select [:u.username :s.name]
 
 ## join, left-join, right-join, inner-join, outer-join, full-join
 
+All these join clauses have the same structure: they accept a sequence
+of alternating SQL entities (table names) and conditions that specify
+how to perform the join. The table names can either be simple names
+or a pair of a table name and an alias:
+
+```clojure
+user=> (sql/format {:select [:u.username :s.name]
+                    :from [[:user :u]]
+                    :join [[:status :s] [:= :u.statusid :s.id]]
+                    :where [:= :s.id 2]})
+["SELECT u.username, s.name FROM user AS u INNER JOIN status AS s ON u.statusid = s.id WHERE s.id = ?" 2]
+```
+
+An alternative to a join condition is a `USING` expression:
+
+```clojure
+user=> (sql/format {:select [:t.ref :pp.code]
+                    :from [[:transaction :t]]
+                    :left-join [[:paypal-tx :pp]
+                                [:using :id]]
+                    :where [:= "settled" :pp.status]})
+["SELECT t.ref, pp.code FROM transaction AS t LEFT JOIN paypal_tx AS pp USING (id) WHERE ? = pp.status" "settled"]
+```
+
 ## cross-join
 
 ## set (MySQL)
