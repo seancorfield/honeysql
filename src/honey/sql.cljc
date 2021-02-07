@@ -352,11 +352,12 @@
     (into [(str (sql-kw k) " " (str/join ", " sqls))] params)))
 
 (defn- format-order-by [k xs]
-  (let [dirs (map #(if (sequential? %) (second %) :asc) xs)
+  (let [dirs (map #(when (sequential? %) (second %)) xs)
         [sqls params]
         (format-expr-list (map #(if (sequential? %) (first %) %) xs))]
     (into [(str (sql-kw k) " "
-                (str/join ", " (map (fn [sql dir] (str sql " " (sql-kw dir)))
+                (str/join ", " (map (fn [sql dir]
+                                      (str sql " " (sql-kw (or dir :asc))))
                                     sqls
                                     dirs)))] params)))
 
