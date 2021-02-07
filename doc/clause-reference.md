@@ -212,13 +212,60 @@ user=> (sql/format {:select [:u.username :s.name]
 
 ## set (MySQL)
 
+This is the precedence of the `:set` clause for the MySQL dialect.
+It is otherwise identical to the `:set` clause described above.
+
 ## where
+
+The `:where` clause can have a single SQL expression, or
+a sequence of SQL expressions prefixed by either `:and`
+or `:or`. See examples of `:where` in various clauses above.
 
 ## group-by
 
+`:group-by` accepts a sequence of one or more SQL expressions.
+
+```clojure
+user=> (sql/format '{select (*) from (table)
+                     group-by (status, (year created-date))})
+["SELECT * FROM table GROUP BY status, YEAR(created_date)"]
+```
+
 ## having
 
+The `:having` clause works identically to `:where` above
+but is rendered into the SQL later in precedence order.
+
 ## order-by
+
+`:order-by` accepts a sequence of one or more ordering
+expressions. Each ordering expression is either a simple
+SQL entity or a pair of a SQL expression and a direction
+(which can be `:asc` or `:desc` -- or the symbol equivalent).
+
+If you want to order by an expression, you should wrap it
+as a pair with a direction:
+
+```clojure
+user=> (sql/format '{select (*) from table
+                     ;; simple orderings:
+                     order-by (status, created-date)})
+["SELECT * FROM table ORDER BY status ASC, created_date ASC"]
+user=> (sql/format '{select (*) from table
+                     ;; explicit direction provided:
+                     order-by ((status asc), ((year created-date) asc))})
+["SELECT * FROM table ORDER BY status ASC, YEAR(created_date) ASC"]
+```
+
+The default direction is ascending and if you provide a wrapped
+expression you _can_ omit the direction if you want:
+
+```clojure
+user=> (sql/format {:select [:*] :from :table
+                    ;; expression without direction is still wrapped:
+                    :order-by [:status, [[:year :created-date]]]})
+["SELECT * FROM table ORDER BY status ASC, YEAR(created_date) ASC"]
+```
 
 ## limit, offset (MySQL)
 
