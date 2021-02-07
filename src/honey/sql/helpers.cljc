@@ -44,8 +44,8 @@
     (assoc {} k data)))
 
 (defn nest [& args] (generic :nest args))
-(defn with [& args] (generic :with args))
-(defn with-recursive [& args] (generic :with-recursive args))
+(defn with [& args] (generic-1 :with args))
+(defn with-recursive [& args] (generic-1 :with-recursive args))
 ;; these five need to supply an empty hash map since they wrap
 ;; all of their arguments:
 (defn intersect [& args] (generic :intersect (cons {} args)))
