@@ -31,9 +31,13 @@
                (order-by [:b.baz :desc] :c.quux [:f.a :nulls-first])
                (limit 50)
                (offset 10))
-        m2 {:with [[:cte {:select [:*]
-                          :from [:example]
-                          :where [:= :example-column 0]}]]
+        ;; 2.0 allows :with to have a single pair instead
+        ;; of requiring a sequence of pairs and the `with`
+        ;; helper now creates just a pair so this test no
+        ;; longer wraps the CTE for comparison with m1:
+        m2 {:with [:cte {:select [:*]
+                         :from [:example]
+                         :where [:= :example-column 0]}]
             :select-distinct [:f.* :b.baz :c.quux [:b.bla "bla-bla"]
                               :%now [[:raw "@x := 10"]]]
             :from [[:foo :f] [:baz :b]]
@@ -52,11 +56,22 @@
             :limit 50
             :offset 10}]
     (testing "Various construction methods are consistent"
+      (is (= (clojure.core/set (keys m1)) (clojure.core/set (keys m2))))
+      (doseq [k (keys m1)]
+        (is (= (get m1 k) (get m2 k))))
       (is (= m1 m2)))
     (testing "SQL data formats correctly"
       (is (= ["WITH cte AS (SELECT * FROM example WHERE example_column = ?) SELECT DISTINCT f.*, b.baz, c.quux, b.bla \"bla-bla\", NOW(), @x := 10 FROM foo AS f, baz AS b INNER JOIN draq ON f.b = draq.x LEFT JOIN clod AS c ON f.a = c.d RIGHT JOIN bock ON bock.z = c.e FULL JOIN beck ON beck.x = c.y WHERE ((f.a = ?) AND (b.baz <> ?)) OR ((? < ?) AND (? < ?)) OR (f.e IN (?, ?, ?)) OR f.e BETWEEN ? AND ? GROUP BY f.a HAVING ? < f.e ORDER BY b.baz DESC, c.quux ASC, f.a NULLS FIRST LIMIT ? OFFSET ?"
               0 "bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10]
-             (sql/format m1 {:params {:param1 "gabba" :param2 2}}))))
+             (sql/format m1 {:params {:param1 "gabba" :param2 2}})))
+      (is (= ["WITH cte AS (SELECT * FROM example WHERE example_column = ?) SELECT DISTINCT f.*, b.baz, c.quux, b.bla \"bla-bla\", NOW(), @x := 10 FROM foo AS f, baz AS b INNER JOIN draq ON f.b = draq.x LEFT JOIN clod AS c ON f.a = c.d RIGHT JOIN bock ON bock.z = c.e FULL JOIN beck ON beck.x = c.y WHERE ((f.a = ?) AND (b.baz <> ?)) OR ((? < ?) AND (? < ?)) OR (f.e IN (?, ?, ?)) OR f.e BETWEEN ? AND ? GROUP BY f.a HAVING ? < f.e ORDER BY b.baz DESC, c.quux ASC, f.a NULLS FIRST LIMIT ? OFFSET ?"
+              0 "bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10]
+             (sql/format m2 {:params {:param1 "gabba" :param2 2}})))
+      ;; also test that m2 formats the same way with nested CTE like 2.x:
+      (is (= ["WITH cte AS (SELECT * FROM example WHERE example_column = ?) SELECT DISTINCT f.*, b.baz, c.quux, b.bla \"bla-bla\", NOW(), @x := 10 FROM foo AS f, baz AS b INNER JOIN draq ON f.b = draq.x LEFT JOIN clod AS c ON f.a = c.d RIGHT JOIN bock ON bock.z = c.e FULL JOIN beck ON beck.x = c.y WHERE ((f.a = ?) AND (b.baz <> ?)) OR ((? < ?) AND (? < ?)) OR (f.e IN (?, ?, ?)) OR f.e BETWEEN ? AND ? GROUP BY f.a HAVING ? < f.e ORDER BY b.baz DESC, c.quux ASC, f.a NULLS FIRST LIMIT ? OFFSET ?"
+              0 "bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10]
+             (sql/format (clojure.core/update m2 :with vector)
+                         {:params {:param1 "gabba" :param2 2}}))))
     #?(:clj (testing "SQL data prints and reads correctly"
               (is (= m1 (read-string (pr-str m1))))))
     #_(testing "SQL data formats correctly with alternate param naming"
