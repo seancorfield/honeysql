@@ -366,7 +366,11 @@
     [(str (sql-kw k) " " (sql-kw strength)
           (when tables
             (str
-              (cond (#{:nowait :skip-locked :wait} tables)
+              (cond (and (keyword? tables)
+                         (#{:nowait :skip-locked :wait} tables))
+                    (str " " (sql-kw tables))
+                    (and (symbol? tables)
+                         ('#{nowait skip-locked wait} tables))
                     (str " " (sql-kw tables))
                     (sequential? tables)
                     (str " OF "
