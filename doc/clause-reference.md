@@ -316,9 +316,62 @@ user=> (sql/format {:select [:*] :from :table
 
 ## limit, offset (MySQL)
 
+Both `:limit` and `:offset` expect a single SQL expression:
+
+```clojure
+user=> (sql/format {:select [:id :name]
+                    :from [:table]
+                    :limit 20 :offset 20})
+["SELECT id, name FROM table LIMIT ? OFFSET ?" 20 20]
+```
+
+> Note: In the prerelease, these MySQL-specific clauses are in the default dialect but these will be moved to the `:mysql` dialect.
+
 ## for
 
+The `:for` clause accepts either a single item -- the lock
+strength -- or a sequence of up to three items of which the
+first is the lock strength, followed by an optional table
+name (or sequence of table names), followed by how to deal
+with the lock:
+
+```clojure
+user=> (sql/format '{select (*) from (table)
+                     for update})
+["SELECT * FROM table FOR UPDATE"]
+user=> (sql/format '{select (*) from (table)
+                     for no-key-update})
+["SELECT * FROM table FOR NO KEY UPDATE"]
+user=> (sql/format '{select (*) from (table)
+                     for (key-share wait)})
+["SELECT * FROM table FOR KEY SHARE WAIT"]
+user=> (sql/format '{select (*) from (table)
+                     for (update bar wait)})
+["SELECT * FROM table FOR UPDATE OF bar WAIT"]
+user=> (sql/format '{select (*) from (table)
+                     for (update (bar quux) wait)})
+["SELECT * FROM table FOR UPDATE OF bar, quux WAIT"]
+```
+
+The lock strength can be any SQL keyword or phrase
+represented as a Clojure keyword (or symbol), with
+spaces represented by `-`.
+
+The three SQL keywords/phrases that are recognized
+as not being a table name in the second slot are
+`NOWAIT`, `SKIP LOCKED`, and `WAIT`.
+
+However, in the case where a table name (or sequence
+of table names) is present, no check is made on the
+keyword or phrase in that third slot (although it is
+expected to be just one of those three mentioned above).
+
 ## lock (MySQL)
+
+The syntax accepted for MySQL's `:lock` is exactly the
+same as the `:for` clause above.
+
+> Note: In the prerelease, this MySQL-specific clauses is in the default dialect but this will be moved to the `:mysql` dialect.
 
 ## values
 
@@ -343,6 +396,42 @@ user=> (sql/format '{insert-into table
 ```
 
 ## on-conflict, on-constraint, do-nothing, do-update-set
+
+These are grouped together because they are handled
+as if they are separate clauses but they will appear
+in pairs: `ON ... DO ...`.
+
+`:on-conflict` accepts either a single SQL entity
+(a keyword or symbol) or a SQL clause. That's either
+a column name or an `:on-constraint` clause or a
+`:where` clause.
+
+`:on-constraint` accepts a single SQL entity that
+identifies a constraint name.
+
+Since `:do-nothing` is a SQL clause but has no
+associated data, it still has to have an arbitrary
+value because clauses are hash maps and that value
+will be ignored so `:do-nothing true` is a
+reasonable choices.
+
+`:do-update-set` accepts either a single SQL entity
+(a keyword or symbol) or hash map of columns and
+values, like `:set` (above). The former produces
+a `SET` clause using `EXCLUDED`:
+
+```clojure
+user=> (sql/format {:insert-into :companies
+                    :values [{:name "Microsoft"}]
+                    :on-conflict :name
+                    :do-update-set :name})
+["INSERT INTO companies (name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name" "Microsoft"]
+user=> (sql/format {:insert-into :companies
+                    :values [{:name "Microsoft"}]
+                    :on-conflict {:on-constraint :name-idx}
+                    :do-nothing true})
+["INSERT INTO companies (name) VALUES (?) ON CONFLICT ON CONSTRAINT name_idx DO NOTHING" "Microsoft"]
+```
 
 ## returning
 
