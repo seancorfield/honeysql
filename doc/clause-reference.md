@@ -204,7 +204,20 @@ user=> (sql/format {:select [:u.username :s.name]
 ["SELECT u.username, s.name FROM user AS u, status AS s WHERE (u.statusid = s.id) AND (u.id = ?)" 9]
 ```
 
+> Note: the actual formatting of a `:from` clause is currently identical to the formatting of a `:select` clause.
+
 ## using
+
+`:using` accepts a single sequence argument that lists
+one or more SQL entities. Each entity can either be a
+simple table name (keyword or symbol) or a pair of a
+table name and an alias.
+
+`:using` is intended to be used as a simple join with a `:delete-from`
+clause (see [PostgreSQL DELETE statement](https://www.postgresql.org/docs/12/sql-delete.html)
+for more detail).
+
+> Note: the actual formatting of a `:using` clause is currently identical to the formatting of a `:select` clause.
 
 ## join, left-join, right-join, inner-join, outer-join, full-join
 
