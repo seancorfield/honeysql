@@ -47,7 +47,7 @@ values identified in the SQL expressions:
 ;;=> ["SELECT * FROM table WHERE id = ?" 1]
 ```
 
-By default, any values found in the data structure, that are not keywords
+Any values found in the data structure, that are not keywords
 or symbols, are treated as positional parameters and replaced
 by `?` in the SQL string and lifted out into the vector that
 is returned from `format`.

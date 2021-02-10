@@ -278,24 +278,21 @@
     [(format-entity x)]))
 
 (defn- format-with [k xs]
-  ;; 1.x and earlier required a sequence of pairs -- X AS expr -- where
-  ;; X is either [entity expr] or just entity; but a CTE can only contain
-  ;; one result set definition so 2.x allows this to be just a pair instead
-  (let [[result-set query]
-        (case (count xs)
-          1 (if (= 2 (count (first xs)))
-              (first xs)
-              (throw (ex-info (str k " expects a sequence with just a single pair")
-                              {:elements (count xs)})))
-          2 xs
-          (throw (ex-info (str k " expects a pair (result set, query)")
-                          {:elements (count xs)})))
-        [sql & params]   (format-with-part result-set)
-        [sql' & params'] (format-dsl query)]
-    ;; according to docs, CTE should _always_ be wrapped:
-    (cond-> [(str (sql-kw k) " " sql " AS " (str "(" sql' ")"))]
-      params  (into params)
-      params' (into params'))))
+  ;; TODO: a sequence of pairs -- X AS expr -- where X is either [entity expr]
+  ;; or just entity, as far as I can tell...
+  (let [[sqls params]
+        (reduce (fn [[sql params] [sql' & params']]
+                  [(conj sql sql') (if params' (into params params') params)])
+                [[] []]
+                (map (fn [[x expr]]
+                       (let [[sql & params]   (format-with-part x)
+                             [sql' & params'] (format-dsl expr)]
+                         ;; according to docs, CTE should _always_ be wrapped:
+                         (cond-> [(str sql " AS " (str "(" sql' ")"))]
+                           params  (into params)
+                           params' (into params'))))
+                     xs))]
+    (into [(str (sql-kw k) " " (str/join ", " sqls))] params)))
 
 (defn- format-selector [k xs]
   (format-selects k [xs]))
