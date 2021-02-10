@@ -99,16 +99,24 @@ or `SELECT .. BULK COLLECT INTO ..`.
 
 ## insert-into
 
-There are two use cases with `:insert-into`. The first case
-takes just a simple SQL entity (the table name). The more
-complex case takes a pair of a SQL entity and a SQL query.
-In that second case, you can specify the columns by using
-a pair of the table name and a sequence of column names.
+There are three use cases with `:insert-into`.
 
-For the first case, you'll use the `:values` clause and you
-may use the `:columns` clause as well.
+The first case takes just a table specifier (either a
+table name or a table/alias pair),
+and then you can optionally specify the columns (via a `:columns` clause).
+
+The second case takes a pair of a table specifier (either a
+table name or table/alias pair) and a sequence of column
+names (so you do not need to also use `:columns`).
+
+The third case takes a pair of either a table specifier
+or a table/column specifier and a SQL query.
+
+For the first and second cases, you'll use the `:values` clause
+to specify rows of values to insert.
 
 ```clojure
+;; first case -- table specifier:
 user=> (sql/format {:insert-into :transport
                     :values [[1 "Car"] [2 "Boat"] [3 "Bike"]]})
 ["INSERT INTO transport VALUES (?, ?), (?, ?), (?, ?)" 1 "Car" 2 "Boat" 3 "Bike"]
@@ -116,15 +124,37 @@ user=> (sql/format {:insert-into :transport
                     :columns [:id :name]
                     :values [[1 "Car"] [2 "Boat"] [3 "Bike"]]})
 ["INSERT INTO transport (id, name) VALUES (?, ?), (?, ?), (?, ?)" 1 "Car" 2 "Boat" 3 "Bike"]
-```
-
-The second case:
-
-```clojure
+;; with an alias:
+user=> (sql/format {:insert-into [:transport :t]
+                    :values [[1 "Car"] [2 "Boat"] [3 "Bike"]]})
+["INSERT INTO transport AS t VALUES (?, ?), (?, ?), (?, ?)" 1 "Car" 2 "Boat" 3 "Bike"]
+user=> (sql/format {:insert-into [:transport :t]
+                    :columns [:id :name]
+                    :values [[1 "Car"] [2 "Boat"] [3 "Bike"]]})
+["INSERT INTO transport AS t (id, name) VALUES (?, ?), (?, ?), (?, ?)" 1 "Car" 2 "Boat" 3 "Bike"]
+;; second case -- table specifier and columns:
+user=> (sql/format {:insert-into [:transport [:id :name]]
+                    :values [[1 "Car"] [2 "Boat"] [3 "Bike"]]})
+["INSERT INTO transport (id, name) VALUES (?, ?), (?, ?), (?, ?)" 1 "Car" 2 "Boat" 3 "Bike"]
+;; with an alias:
+user=> (sql/format {:insert-into [[:transport :t] [:id :name]]
+                    :values [[1 "Car"] [2 "Boat"] [3 "Bike"]]})
+["INSERT INTO transport AS t (id, name) VALUES (?, ?), (?, ?), (?, ?)" 1 "Car" 2 "Boat" 3 "Bike"]
+;; third case -- table/column specifier and query:
 user=> (sql/format '{insert-into (transport {select (id, name) from (cars)})})
 ["INSERT INTO transport SELECT id, name FROM cars"]
+;; with columns:
 user=> (sql/format '{insert-into ((transport (id, name)) {select (*) from (cars)})})
 ["INSERT INTO transport (id, name) SELECT * FROM cars"]
+;; with an alias:
+user=> (sql/format '{insert-into ((transport t) {select (id, name) from (cars)})})
+["INSERT INTO transport AS t SELECT id, name FROM cars"]
+;; with columns:
+user=> (sql/format '{insert-into ((transport (id, name)) {select (*) from (cars)})})
+["INSERT INTO transport (id, name) SELECT * FROM cars"]
+;; with an alias and columns:
+user=> (sql/format '{insert-into (((transport t) (id, name)) {select (*) from (cars)})})
+["INSERT INTO transport AS t (id, name) SELECT * FROM cars"]
 ```
 
 ## update

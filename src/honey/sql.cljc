@@ -299,21 +299,27 @@
 
 (defn- format-insert [k table]
   (if (sequential? table)
-    (cond (sequential? (first table))
-          (let [[[table cols] statement] table
+    (cond (map? (second table))
+          (let [[table statement] table
+                [table cols]
+                (if (and (sequential? table) (sequential? (second table)))
+                  table
+                  [table])
                 [sql & params] (format-dsl statement)]
             (into [(str (sql-kw k) " " (format-entity-alias table)
-                        " ("
-                        (str/join ", " (map #'format-entity-alias cols))
-                        ") "
+                        " "
+                        (when (seq cols)
+                          (str "("
+                               (str/join ", " (map #'format-entity-alias cols))
+                               ") "))
                         sql)]
                   params))
-          (map? (second table))
-          (let [[table statement] table
-                [sql & params] (format-dsl statement)]
-            (into [(str (sql-kw k) " " (format-entity-alias table)
-                        " " sql)]
-                  params))
+          (sequential? (second table))
+          (let [[table cols] table]
+            [(str (sql-kw k) " " (format-entity-alias table)
+                  " ("
+                  (str/join ", " (map #'format-entity-alias cols))
+                  ")")])
           :else
           [(str (sql-kw k) " " (format-entity-alias table))])
     [(str (sql-kw k) " " (format-entity-alias table))]))

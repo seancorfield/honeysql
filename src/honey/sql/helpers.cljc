@@ -80,10 +80,10 @@
 (defn offset [& args] (generic-1 :offset args))
 (defn for [& args] (generic-1 :for args))
 (defn values [& args] (generic-1 :values args))
-(defn on-conflict [& args] (generic :on-conflict args))
+(defn on-conflict [& args] (generic-1 :on-conflict args))
 (defn on-constraint [& args] (generic :on-constraint args))
 (defn do-nothing [& args] (generic :do-nothing args))
-(defn do-update-set [& args] (generic :do-update-set args))
+(defn do-update-set [& args] (generic-1 :do-update-set args))
 (defn returning [& args] (generic :returning args))
 
 ;; helpers that produce non-clause expressions -- must be listed below:

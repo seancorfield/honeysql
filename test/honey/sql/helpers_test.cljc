@@ -6,8 +6,10 @@
                :cljs [cljs.test :refer-macros [deftest is testing]])
             [honey.sql :as sql]
             [honey.sql.helpers
-             :refer [columns cross-join from full-join group-by having insert-into
-                     join left-join limit offset order-by right-join
+             :refer [columns cross-join do-update-set from full-join
+                     group-by having insert-into
+                     join left-join limit offset on-conflict order-by
+                     returning right-join
                      select select-distinct values where with]]))
 
 (deftest test-select
@@ -274,3 +276,117 @@
                " AND (location NOT LIKE '/0/%')"
                " AND (location NOT LIKE '/1/%')")]
          (stack-overflow-282 2))))
+
+(deftest issue-293
+  ;; these tests are based on the README at https://github.com/nilenso/honeysql-postgres
+  (is (= (-> (insert-into :distributors)
+             (values [{:did 5 :dname "Gizmo Transglobal"}
+                      {:did 6 :dname "Associated Computing, Inc"}])
+             (-> (on-conflict :did)
+                 (do-update-set :dname))
+             (returning :*)
+             sql/format)
+         [(str "INSERT INTO distributors (did, dname)"
+               " VALUES (?, ?), (?, ?)"
+               " ON CONFLICT (did)"
+               " DO UPDATE SET dname = EXCLUDED.dname"
+               " RETURNING *")
+          5 "Gizmo Transglobal"
+          6 "Associated Computing, Inc"]))
+  (is (= (-> (insert-into :distributors)
+             (values [{:did 23 :dname "Foo Distributors"}])
+             (on-conflict :did)
+             ;; instead of do-update-set!
+             (do-update-set {:dname [:|| :EXCLUDED.dname " (formerly " :distributors.dname ")"]
+                             :downer :EXCLUDED.downer})
+             sql/format)
+         [(str "INSERT INTO distributors (did, dname)"
+               " VALUES (?, ?)"
+               " ON CONFLICT (did)"
+               " DO UPDATE SET dname = EXCLUDED.dname || ? || distributors.dname || ?,"
+               " downer = EXCLUDED.downer")
+          23 "Foo Distributors" " (formerly " ")"])))
+
+(deftest issue-293-insert-into-data
+  ;; insert into as (and other tests) based on :insert-into
+  ;; examples in the clause reference docs:
+  ;; first case -- table specifier:
+  (is (= (sql/format {:insert-into :transport
+                      :values [[1 "Car"] [2 "Boat"] [3 "Bike"]]})
+         ["INSERT INTO transport VALUES (?, ?), (?, ?), (?, ?)" 1 "Car" 2 "Boat" 3 "Bike"]))
+  (is (= (sql/format {:insert-into :transport
+                      :columns [:id :name]
+                      :values [[1 "Car"] [2 "Boat"] [3 "Bike"]]})
+         ["INSERT INTO transport (id, name) VALUES (?, ?), (?, ?), (?, ?)" 1 "Car" 2 "Boat" 3 "Bike"]))
+  ;; with an alias:
+  (is (= (sql/format {:insert-into [:transport :t]
+                      :values [[1 "Car"] [2 "Boat"] [3 "Bike"]]})
+         ["INSERT INTO transport AS t VALUES (?, ?), (?, ?), (?, ?)" 1 "Car" 2 "Boat" 3 "Bike"]))
+  (is (= (sql/format {:insert-into [:transport :t]
+                      :columns [:id :name]
+                      :values [[1 "Car"] [2 "Boat"] [3 "Bike"]]})
+         ["INSERT INTO transport AS t (id, name) VALUES (?, ?), (?, ?), (?, ?)" 1 "Car" 2 "Boat" 3 "Bike"]))
+  ;; second case -- table specifier and columns:
+  (is (= (sql/format {:insert-into [:transport [:id :name]]
+                      :values [[1 "Car"] [2 "Boat"] [3 "Bike"]]})
+         ["INSERT INTO transport (id, name) VALUES (?, ?), (?, ?), (?, ?)" 1 "Car" 2 "Boat" 3 "Bike"]))
+  ;; with an alias:
+  (is (= (sql/format {:insert-into [[:transport :t] [:id :name]]
+                      :values [[1 "Car"] [2 "Boat"] [3 "Bike"]]})
+         ["INSERT INTO transport AS t (id, name) VALUES (?, ?), (?, ?), (?, ?)" 1 "Car" 2 "Boat" 3 "Bike"]))
+  ;; third case -- table/column specifier and query:
+  (is (= (sql/format '{insert-into (transport {select (id, name) from (cars)})})
+         ["INSERT INTO transport SELECT id, name FROM cars"]))
+  ;; with columns:
+  (is (= (sql/format '{insert-into ((transport (id, name)) {select (*) from (cars)})})
+         ["INSERT INTO transport (id, name) SELECT * FROM cars"]))
+  ;; with an alias:
+  (is (= (sql/format '{insert-into ((transport t) {select (id, name) from (cars)})})
+         ["INSERT INTO transport AS t SELECT id, name FROM cars"]))
+  ;; with columns:
+  (is (= (sql/format '{insert-into ((transport (id, name)) {select (*) from (cars)})})
+         ["INSERT INTO transport (id, name) SELECT * FROM cars"]))
+  ;; with an alias and columns:
+  (is (= (sql/format '{insert-into (((transport t) (id, name)) {select (*) from (cars)})})
+         ["INSERT INTO transport AS t (id, name) SELECT * FROM cars"])))
+
+(deftest issue-293-insert-into-helpers
+  ;; and the same set of tests using the helper functions instead:
+  (is (= (sql/format (-> (insert-into :transport)
+                         (values [[1 "Car"] [2 "Boat"] [3 "Bike"]])))
+         ["INSERT INTO transport VALUES (?, ?), (?, ?), (?, ?)" 1 "Car" 2 "Boat" 3 "Bike"]))
+  (is (= (sql/format (-> (insert-into :transport)
+                         (columns :id :name)
+                         (values [[1 "Car"] [2 "Boat"] [3 "Bike"]])))
+         ["INSERT INTO transport (id, name) VALUES (?, ?), (?, ?), (?, ?)" 1 "Car" 2 "Boat" 3 "Bike"]))
+  ;; with an alias:
+  (is (= (sql/format (-> (insert-into :transport :t)
+                         (values [[1 "Car"] [2 "Boat"] [3 "Bike"]])))
+         ["INSERT INTO transport AS t VALUES (?, ?), (?, ?), (?, ?)" 1 "Car" 2 "Boat" 3 "Bike"]))
+  (is (= (sql/format (-> (insert-into :transport :t)
+                         (columns :id :name)
+                         (values [[1 "Car"] [2 "Boat"] [3 "Bike"]])))
+         ["INSERT INTO transport AS t (id, name) VALUES (?, ?), (?, ?), (?, ?)" 1 "Car" 2 "Boat" 3 "Bike"]))
+  ;; second case -- table specifier and columns:
+  (is (= (sql/format (-> (insert-into :transport [:id :name])
+                         (values [[1 "Car"] [2 "Boat"] [3 "Bike"]])))
+         ["INSERT INTO transport (id, name) VALUES (?, ?), (?, ?), (?, ?)" 1 "Car" 2 "Boat" 3 "Bike"]))
+  ;; with an alias:
+  (is (= (sql/format (-> (insert-into [:transport :t] [:id :name])
+                         (values [[1 "Car"] [2 "Boat"] [3 "Bike"]])))
+         ["INSERT INTO transport AS t (id, name) VALUES (?, ?), (?, ?), (?, ?)" 1 "Car" 2 "Boat" 3 "Bike"]))
+  ;; third case -- table/column specifier and query:
+  (is (= (sql/format (insert-into :transport '{select (id, name) from (cars)}))
+         ["INSERT INTO transport SELECT id, name FROM cars"]))
+  ;; with columns:
+  (is (= (sql/format (insert-into [:transport [:id :name]] '{select (*) from (cars)}))
+         ["INSERT INTO transport (id, name) SELECT * FROM cars"]))
+  ;; with an alias:
+  (is (= (sql/format (insert-into '(transport t) '{select (id, name) from (cars)}))
+         ["INSERT INTO transport AS t SELECT id, name FROM cars"]))
+  ;; with columns:
+  (is (= (sql/format (insert-into '(transport (id, name)) '{select (*) from (cars)}))
+         ["INSERT INTO transport (id, name) SELECT * FROM cars"]))
+  ;; with an alias and columns:
+  (is (= (sql/format (insert-into ['(transport t) '(id, name)] '{select (*) from (cars)}))
+         ["INSERT INTO transport AS t (id, name) SELECT * FROM cars"])))
