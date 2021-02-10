@@ -99,6 +99,11 @@
 (deftest test-cte
   (is (= (format {:with [[:query {:select [:foo] :from [:bar]}]]})
          ["WITH query AS (SELECT foo FROM bar)"]))
+  (is (= (format {:with [[:query1 {:select [:foo] :from [:bar]}]
+                         [:query2 {:select [:bar] :from [:quux]}]]
+                  :select [:query1.id :query2.name]
+                  :from [:query1 :query2]})
+         ["WITH query1 AS (SELECT foo FROM bar), query2 AS (SELECT bar FROM quux) SELECT query1.id, query2.name FROM query1, query2"]))
   (is (= (format {:with-recursive [[:query {:select [:foo] :from [:bar]}]]})
          ["WITH RECURSIVE query AS (SELECT foo FROM bar)"]))
   (is (= (format {:with [[[:static {:columns [:a :b :c]}] {:values [[1 2 3] [4 5]]}]]})
