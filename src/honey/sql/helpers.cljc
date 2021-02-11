@@ -2,7 +2,7 @@
 
 (ns honey.sql.helpers
   "Helper functions for the built-in clauses in honey.sql."
-  (:refer-clojure :exclude [update set group-by for])
+  (:refer-clojure :exclude [update set group-by for partition-by])
   (:require [honey.sql :as h]))
 
 (defn- default-merge [current args]
@@ -75,6 +75,8 @@
 (defn where [& args] (generic :where args))
 (defn group-by [& args] (generic :group-by args))
 (defn having [& args] (generic :having args))
+(defn window [& args] (generic :window args))
+(defn partition-by [& args] (generic :partition-by args))
 (defn order-by [& args] (generic :order-by args))
 (defn limit [& args] (generic-1 :limit args))
 (defn offset [& args] (generic-1 :offset args))
@@ -88,8 +90,10 @@
 
 ;; helpers that produce non-clause expressions -- must be listed below:
 (defn composite [& args] (into [:composite] args))
+;; to make this easy to use in a select, wrap it so it becomes a function:
+(defn over [& args] [(into [:over] args)])
 
 #?(:clj
     (assert (= (clojure.core/set (conj @@#'h/base-clause-order
-                                       :composite))
+                                       :composite :over))
                (clojure.core/set (map keyword (keys (ns-publics *ns*)))))))

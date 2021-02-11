@@ -41,7 +41,9 @@
    :columns :set :from :using
    :join :left-join :right-join :inner-join :outer-join :full-join
    :cross-join
-   :where :group-by :having :order-by :limit :offset :for :values
+   :where :group-by :having
+   :window :partition-by
+   :order-by :limit :offset :for :values
    :on-conflict :on-constraint :do-nothing :do-update-set
    :returning])
 
@@ -266,7 +268,7 @@
           (reduce (fn [[sql params] [sql' & params']]
                     [(conj sql sql') (if params' (into params params') params)])
                   [[] []]
-                  (map #(format-selectable-dsl % {:as (#{:select :from} k)}) xs))]
+                  (map #(format-selectable-dsl % {:as (#{:select :from :window} k)}) xs))]
       (into [(str (sql-kw k) " " (str/join ", " sqls))] params))
     (let [[sql & params] (format-selectable-dsl xs {:as (#{:select :from} k)})]
       (into [(str (sql-kw k) " " sql)] params))))
@@ -500,6 +502,8 @@
          :where           #'format-on-expr
          :group-by        #'format-group-by
          :having          #'format-on-expr
+         :window          #'format-selector
+         :partition-by    #'format-selects
          :order-by        #'format-order-by
          :limit           #'format-on-expr
          :offset          #'format-on-expr
@@ -664,6 +668,20 @@
     (fn [_ [x]]
       (let [[sql & params] (format-expr x)]
         (into [(str "NOT " sql)] params)))
+    :over
+    (fn [_ [& args]]
+      (let [[sqls params]
+            (reduce (fn [[sqls params] [e p a]]
+                      (let [[sql-e & params-e] (format-expr e)
+                            [sql-p & params-p] (if (or (nil? p) (map? p))
+                                                 (format-dsl p {:nested true})
+                                                 [(format-entity p)])]
+                        [(conj sqls (str sql-e " OVER " sql-p
+                                         (when a (str " AS " (format-entity a)))))
+                         (-> params (into params-e) (into params-p))]))
+                    [[] []]
+                    args)]
+        (into [(str/join ", " sqls)] params)))
     :param
     (fn [_ [k]]
       ["?" (->param k)])

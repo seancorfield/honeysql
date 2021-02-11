@@ -128,6 +128,20 @@ in front of it:
 ;;=> ["NOT x = ?" 42]
 ```
 
+## over
+
+This is intended to be used with the `:window` and `:partition-by` clauses.
+
+`:over` takes any number of window expressions which are either pairs or triples
+that have an aggregation expression, a window function, and an optional alias.
+
+The window function may either be a SQL entity (named in a `:window` clause)
+or a SQL clause that describes the window (e.g., using `:partition-by` and/or `:order-by`).
+
+Since a function call (using `:over`) needs to be wrapped in a sequence for a
+`:select` clause, it is usually easier to use the `over` helper function
+to construct this expression.
+
 ## param
 
 Used to identify a named parameter in a SQL expression

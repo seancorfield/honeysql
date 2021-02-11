@@ -312,6 +312,59 @@ user=> (sql/format '{select (*) from (table)
 The `:having` clause works identically to `:where` above
 but is rendered into the SQL later in precedence order.
 
+## window, partition-by (and over)
+
+`:window` accepts a pair of SQL entity (the window name)
+and the window "function" as a SQL clause (a hash map).
+
+`:partition-by` accepts the same arguments as `:select` above
+(even though the allowable SQL generated is much more restrictive).
+
+These are expected to be used with the `:over` expression (special syntax).
+
+```clojure
+user=> (sql/format {:select [:id
+                             [[:over
+                               [[:avg :salary]
+                                {:partition-by [:department]
+                                 :order-by [:designation]}
+                                :Average]
+                               [[:max :salary]
+                                :w
+                                :MaxSalary]]]]
+                    :from [:employee]
+                    :window [:w {:partition-by [:department]}]})
+["SELECT id, AVG(salary) OVER (PARTITION BY department ORDER BY designation ASC) AS Average, MAX(salary) OVER w AS MaxSalary FROM employee WINDOW w AS (PARTITION BY department)"]
+;; easier to write with helpers (and easier to read!):
+user=> (sql/format (-> (select :id
+                               (over [[:avg :salary] (-> (partition-by :department) (order-by :designation)) :Average]
+                                     [[:max :salary] :w :MaxSalary]))
+                       (from :employee)
+                       (window :w (partition-by :department))))
+["SELECT id, AVG(salary) OVER (PARTITION BY department ORDER BY designation ASC) AS Average, MAX(salary) OVER w AS MaxSalary FROM employee WINDOW w AS (PARTITION BY department)"]
+```
+
+The window function in the `:over` expression may be `{}` or `nil`:
+
+```clojure
+user=> (sql/format {:select [:id
+                             [[:over
+                               [[:avg :salary]
+                                {}
+                                :Average]
+                               [[:max :salary]
+                                nil
+                                :MaxSalary]]]]
+                    :from [:employee]})
+["SELECT id, AVG(salary) OVER () AS Average, MAX(salary) OVER () AS MaxSalary FROM employee"]
+;; easier to write with helpers (and easier to read!):
+user=> (sql/format (-> (select :id
+                               (over [[:avg :salary] {} :Average]
+                                     [[:max :salary] nil :MaxSalary]))
+                       (from :employee)))
+["SELECT id, AVG(salary) OVER () AS Average, MAX(salary) OVER () AS MaxSalary FROM employee"]
+```
+
 ## order-by
 
 `:order-by` accepts a sequence of one or more ordering

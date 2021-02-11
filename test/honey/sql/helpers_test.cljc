@@ -1,7 +1,7 @@
 ;; copyright (c) 2020-2021 sean corfield, all rights reserved
 
 (ns honey.sql.helpers-test
-  (:refer-clojure :exclude [update set group-by for])
+  (:refer-clojure :exclude [update set group-by for partition-by])
   (:require #?(:clj [clojure.test :refer [deftest is testing]]
                :cljs [cljs.test :refer-macros [deftest is testing]])
             [honey.sql :as sql]
@@ -9,8 +9,9 @@
              :refer [columns cross-join do-update-set from full-join
                      group-by having insert-into
                      join left-join limit offset on-conflict order-by
+                     over partition-by
                      returning right-join
-                     select select-distinct values where with]]))
+                     select select-distinct values where window with]]))
 
 (deftest test-select
   (let [m1 (-> (with [:cte (-> (select :*)
@@ -305,7 +306,30 @@
                " ON CONFLICT (did)"
                " DO UPDATE SET dname = EXCLUDED.dname || ? || distributors.dname || ?,"
                " downer = EXCLUDED.downer")
-          23 "Foo Distributors" " (formerly " ")"])))
+          23 "Foo Distributors" " (formerly " ")"]))
+  ;; insert into / insert into as tests are below
+  (is (= (-> (select :id
+                     (over [[:avg :salary] (-> (partition-by :department) (order-by :designation)) :Average]
+                           [[:max :salary] :w :MaxSalary]))
+             (from :employee)
+             (window :w (partition-by :department))
+             sql/format)
+         [(str "SELECT id,"
+               " AVG(salary) OVER (PARTITION BY department ORDER BY designation ASC) AS Average,"
+               " MAX(salary) OVER w AS MaxSalary"
+               " FROM employee"
+               " WINDOW w AS (PARTITION BY department)")]))
+  ;; test nil / empty window function clause:
+  (is (= (-> (select :id
+                     (over [[:avg :salary] {} :Average]
+                           [[:max :salary] nil :MaxSalary]))
+             (from :employee)
+             sql/format)
+         [(str "SELECT id,"
+               " AVG(salary) OVER () AS Average,"
+               " MAX(salary) OVER () AS MaxSalary"
+               " FROM employee")]))
+  )
 
 (deftest issue-293-insert-into-data
   ;; insert into as (and other tests) based on :insert-into
