@@ -11,6 +11,26 @@ a space (e.g., `:left-join` is formatted as `LEFT JOIN`).
 Except as noted, these clauses apply to all the SQL
 dialects that HoneySQL supports.
 
+## alter-table
+
+## create-table
+
+## create-view
+
+## drop-table
+
+`:drop-table` can accept a single table name or a sequence of
+table names. If a sequence is provided and the first element
+is `:if-exists` (or the symbol `if-exists`) then that conditional
+clause is added before the table names:
+
+```clojure
+user=> (sql/format '{drop-table (if-exists foo bar)})
+["DROP TABLE IF EXISTS foo, bar"]
+user=> (sql/format {:drop-table [:foo :bar]})
+["DROP TABLE foo, bar"]
+```
+
 ## nest
 
 This is pseudo-syntax that lets you wrap a substatement

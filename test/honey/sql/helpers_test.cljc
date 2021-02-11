@@ -6,7 +6,8 @@
                :cljs [cljs.test :refer-macros [deftest is testing]])
             [honey.sql :as sql]
             [honey.sql.helpers
-             :refer [columns cross-join do-update-set from full-join
+             :refer [columns create-view
+                     cross-join do-update-set from full-join
                      group-by having insert-into
                      join left-join limit offset on-conflict order-by
                      over partition-by
@@ -278,7 +279,7 @@
                " AND (location NOT LIKE '/1/%')")]
          (stack-overflow-282 2))))
 
-(deftest issue-293
+(deftest issue-293-sql
   ;; these tests are based on the README at https://github.com/nilenso/honeysql-postgres
   (is (= (-> (insert-into :distributors)
              (values [{:did 5 :dname "Gizmo Transglobal"}
@@ -328,8 +329,24 @@
          [(str "SELECT id,"
                " AVG(salary) OVER () AS Average,"
                " MAX(salary) OVER () AS MaxSalary"
-               " FROM employee")]))
-  )
+               " FROM employee")])))
+
+(deftest issue-293-ddl
+  (is (= (sql/format {:create-view :metro :select [:*] :from [:cities] :where [:= :metroflag "y"]})
+         ["CREATE VIEW metro AS SELECT * FROM cities WHERE metroflag = ?" "y"]))
+  (is (= (sql/format {:create-table :films
+                      :with-columns []})
+         ["CREATE TABLE films ()"]))
+  (is (= (sql/format {:drop-table :foo})
+         ["DROP TABLE foo"]))
+  (is (= (sql/format {:drop-table [:if-exists :foo]})
+         ["DROP TABLE IF EXISTS foo"]))
+  (is (= (sql/format '{drop-table (if-exists foo)})
+         ["DROP TABLE IF EXISTS foo"]))
+  (is (= (sql/format {:drop-table [:foo :bar]})
+         ["DROP TABLE foo, bar"]))
+  (is (= (sql/format {:drop-table [:if-exists :foo :bar]})
+         ["DROP TABLE IF EXISTS foo, bar"])))
 
 (deftest issue-293-insert-into-data
   ;; insert into as (and other tests) based on :insert-into

@@ -43,6 +43,11 @@
     (assoc data k arg)
     (assoc {} k data)))
 
+(defn alter-table [& args] (generic :nest args))
+(defn create-table [& args] (generic :nest args))
+(defn with-columns [& args] (generic :nest args))
+(defn create-view [& args] (generic :nest args))
+(defn drop-table [& args] (generic :nest args))
 (defn nest [& args] (generic :nest args))
 (defn with [& args] (generic :with args))
 (defn with-recursive [& args] (generic :with-recursive args))

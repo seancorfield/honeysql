@@ -36,7 +36,10 @@
 (declare clause-format)
 (def ^:private default-clause-order
   "The (default) order for known clauses. Can have items added and removed."
-  [:nest :with :with-recursive :intersect :union :union-all :except :except-all
+  [;; DDL comes first (these don't really have a precedence):
+   :alter-table :create-table :with-columns :create-view :drop-table
+   ;; then SQL clauses in priority order:
+   :nest :with :with-recursive :intersect :union :union-all :except :except-all
    :select :select-distinct :insert-into :update :delete :delete-from :truncate
    :columns :set :from :using
    :join :left-join :right-join :inner-join :outer-join :full-join
@@ -139,7 +142,12 @@
 (defn- namespace-_ [x] (some-> (namespace x) (str/replace "-" "_")))
 (defn- name-_      [x] (str/replace (name x) "-" "_"))
 
-(defn- format-entity [x & [{:keys [aliased drop-ns]}]]
+(defn format-entity
+  "Given a simple SQL entity (a keyword or symbol -- or string),
+  return the equivalent SQL fragment (as a string -- no parameters).
+
+  Handles quoting, splitting at / or ., replacing - with _ etc."
+  [x & [{:keys [aliased drop-ns]}]]
   (let [nn    (if (or *quoted* (string? x)) name               name-_)
         q     (if (or *quoted* (string? x)) (:quote *dialect*) identity)
         [t c] (if-let [n (when-not (or drop-ns (string? x))
@@ -458,6 +466,27 @@
       [(str (sql-kw k) " " e " = EXCLUDED." e)])
     (format-set-exprs k x)))
 
+(defn- format-alter-table [k [x]] ["ALTER TABLE"])
+
+(defn- format-create-table [k table]
+  (let [[table if-not-exists] (if (sequential? table) table [table])]
+   [(str (sql-kw k) " "
+         (when if-not-exists (str (sql-kw :if-not-exists) " "))
+         (format-entity table))]))
+
+(defn- format-create-view [k x]
+  [(str (sql-kw k) " " (format-entity x) " AS")])
+
+(defn- format-drop-table
+  [k params]
+  (let [tables (if (sequential? params) params [params])
+        [if-exists & tables] (if (#{:if-exists 'if-exists} (first tables)) tables (cons nil tables))]
+   [(str (sql-kw k) " "
+         (when if-exists (str (sql-kw :if-exists) " "))
+         (str/join ", " (map #'format-entity tables)))]))
+
+(defn- format-table-columns [k [x]] ["()"])
+
 (def ^:private base-clause-order
   "The (base) order for known clauses. Can have items added and removed.
 
@@ -473,7 +502,12 @@
 (def ^:private clause-format
   "The (default) behavior for each known clause. Can also have items added
   and removed."
-  (atom {:nest            (fn [_ x] (format-expr x))
+  (atom {:alter-table     #'format-alter-table
+         :create-table    #'format-create-table
+         :with-columns    #'format-table-columns
+         :create-view     #'format-create-view
+         :drop-table      #'format-drop-table
+         :nest            (fn [_ x] (format-expr x))
          :with            #'format-with
          :with-recursive  #'format-with
          :intersect       #'format-on-set-op
