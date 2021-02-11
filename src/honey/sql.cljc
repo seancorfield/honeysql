@@ -485,7 +485,21 @@
          (when if-exists (str (sql-kw :if-exists) " "))
          (str/join ", " (map #'format-entity tables)))]))
 
-(defn- format-table-columns [k [x]] ["()"])
+(defn- format-table-columns [k xs]
+  (let [simple-expr (fn [e]
+                      (let [[x & y] (format-expr e)]
+                        (when (seq y)
+                          (throw (ex-info "column elements must be simple expressions"
+                                          {:expr e :params y})))
+                        x))]
+    (binding [*inline* true]
+      [(str "(\n  "
+            (str/join ",\n  "
+                      (map #(str/join " "
+                                      (let [[id & spec] (map simple-expr %)]
+                                        (cons id (map upper-case spec))))
+                           xs))
+            "\n)")])))
 
 (def ^:private base-clause-order
   "The (base) order for known clauses. Can have items added and removed.

@@ -335,8 +335,9 @@
   (is (= (sql/format {:create-view :metro :select [:*] :from [:cities] :where [:= :metroflag "y"]})
          ["CREATE VIEW metro AS SELECT * FROM cities WHERE metroflag = ?" "y"]))
   (is (= (sql/format {:create-table :films
-                      :with-columns []})
-         ["CREATE TABLE films ()"]))
+                      :with-columns [[:id :int :unsigned :auto-increment]
+                                     [:name [:varchar 50] [:not nil]]]})
+         ["CREATE TABLE films (\n  id INT UNSIGNED AUTO_INCREMENT,\n  name VARCHAR(50) NOT NULL\n)"]))
   (is (= (sql/format {:drop-table :foo})
          ["DROP TABLE foo"]))
   (is (= (sql/format {:drop-table [:if-exists :foo]})
