@@ -76,6 +76,7 @@
 
 (defn select [& args] (generic :select args))
 (defn select-distinct [& args] (generic :select-distinct args))
+(defn select-distinct-on [& args] (generic :select-distinct-on args))
 (defn insert-into [& args] (generic :insert-into args))
 (defn update [& args] (generic :update args))
 (defn delete [& args] (generic-1 :delete args))

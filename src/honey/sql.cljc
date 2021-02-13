@@ -42,7 +42,8 @@
    :create-table :with-columns :create-view :drop-table
    ;; then SQL clauses in priority order:
    :nest :with :with-recursive :intersect :union :union-all :except :except-all
-   :select :select-distinct :insert-into :update :delete :delete-from :truncate
+   :select :select-distinct :select-distinct-on
+   :insert-into :update :delete :delete-from :truncate
    :columns :set :from :using
    :join :left-join :right-join :inner-join :outer-join :full-join
    :cross-join
@@ -272,16 +273,35 @@
   (let [[sqls params] (format-expr-list xs {:drop-ns (= :columns k)})]
     (into [(str "(" (str/join ", " sqls) ")")] params)))
 
-(defn- format-selects [k xs]
+(defn- format-selects-common [prefix as xs]
   (if (sequential? xs)
     (let [[sqls params]
           (reduce (fn [[sql params] [sql' & params']]
                     [(conj sql sql') (if params' (into params params') params)])
                   [[] []]
-                  (map #(format-selectable-dsl % {:as (#{:select :from :window} k)}) xs))]
-      (into [(str (sql-kw k) " " (str/join ", " sqls))] params))
-    (let [[sql & params] (format-selectable-dsl xs {:as (#{:select :from} k)})]
-      (into [(str (sql-kw k) " " sql)] params))))
+                  (map #(format-selectable-dsl % {:as as}) xs))]
+      (into [(str prefix " " (str/join ", " sqls))] params))
+    (let [[sql & params] (format-selectable-dsl xs {:as as})]
+      (into [(str prefix " " sql)] params))))
+
+(defn- format-selects [k xs]
+  (format-selects-common
+   (sql-kw k)
+   (#{:select :select-distinct :from :window
+      'select 'select-distinct 'from 'window}
+    k)
+   xs))
+
+(defn- format-selects-on [k xs]
+  (let [[on & cols] xs
+        [sql & params]
+        (format-expr (into [:distinct-on] on))
+        [sql' & params']
+        (format-selects-common
+         (str (sql-kw :select) " " sql)
+         true
+         cols)]
+    (-> [sql'] (into params) (into params'))))
 
 (defn- format-with-part [x]
   (if (sequential? x)
@@ -457,16 +477,46 @@
     (into [(str (sql-kw k) " " (str/join ", " sqls))] params)))
 
 (defn- format-on-conflict [k x]
-  (if (or (keyword? x) (symbol? x))
-    [(str (sql-kw k) " (" (format-entity x) ")")]
-    (let [[sql & params] (format-dsl x)]
-      (into [(str (sql-kw k) " " sql)] params))))
+  (cond (or (keyword? x) (symbol? x))
+        [(str (sql-kw k) " (" (format-entity x) ")")]
+        (map? x)
+        (let [[sql & params] (format-dsl x)]
+          (into [(str (sql-kw k) " " sql)] params))
+        (and (sequential? x)
+             (or (keyword? (first x)) (symbol? (first x)))
+             (map? (second x)))
+        (let [[sql & params] (format-dsl (second x))]
+          (into [(str (sql-kw k)
+                      " (" (format-entity (first x)) ") "
+                      sql)]
+                params))
+        :else
+        (throw (ex-info "unsupported :on-conflict format"
+                        {:clause x}))))
+(comment
+  keyword/symbol -> e = excluded.e
+  [k/s] -> join , e = excluded.e
+  {e v} -> join , e = v
+  {:fields f :where w} -> join , e = excluded.e (from f) where w
 
+  ,)
 (defn- format-do-update-set [k x]
-  (if (or (keyword? x) (symbol? x))
+  (if (map? x)
+    (if (and (or (contains? x :fields) (contains? x 'fields))
+             (or (contains? x :where)  (contains? x 'where)))
+      (let [sets (str/join ", "
+                           (map (fn [e]
+                                  (let [e (format-entity e {:drop-ns true})]
+                                    (str e " = EXCLUDED." e)))
+                                (or (:fields x)
+                                    ('fields x))))
+            [sql & params] (format-dsl {:where
+                                        (or (:where x)
+                                            ('where x))})]
+        (into [(str (sql-kw k) " " sets " " sql)] params))
+      (format-set-exprs k x))
     (let [e (format-entity x {:drop-ns true})]
-      [(str (sql-kw k) " " e " = EXCLUDED." e)])
-    (format-set-exprs k x)))
+      [(str (sql-kw k) " " e " = EXCLUDED." e)])))
 
 (defn- format-simple-clause [c]
   (binding [*inline* true]
@@ -561,6 +611,7 @@
          :except-all      #'format-on-set-op
          :select          #'format-selects
          :select-distinct #'format-selects
+         :select-distinct-on #'format-selects-on
          :insert-into     #'format-insert
          :update          #'format-selector
          :delete          #'format-selects

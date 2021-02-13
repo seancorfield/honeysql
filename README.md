@@ -559,7 +559,7 @@ big-complicated-map
             {:params {:param1 "gabba" :param2 2}
              :pretty true})
 => ["
-SELECT DISTINCT f.*, b.baz, c.quux, b.bla \"bla-bla\", NOW(), @x := 10
+SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS \"bla-bla\", NOW(), @x := 10
 FROM foo AS f, baz AS b
 INNER JOIN draq ON f.b = draq.x
 LEFT JOIN clod AS c ON f.a = c.d
