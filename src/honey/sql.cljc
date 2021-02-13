@@ -37,7 +37,7 @@
 (def ^:private default-clause-order
   "The (default) order for known clauses. Can have items added and removed."
   [;; DDL comes first (these don't really have a precedence):
-   :alter-table :add-column :drop-column :rename-column
+   :alter-table :add-column :drop-column :modify-column :rename-column
    :add-index :drop-index :rename-table
    :create-table :with-columns :create-view :drop-table
    ;; then SQL clauses in priority order:
@@ -469,11 +469,12 @@
     (format-set-exprs k x)))
 
 (defn- format-simple-clause [c]
-  (let [[x & y] (format-dsl c)]
-    (when (seq y)
-      (throw (ex-info "column/index operations must be simple clauses"
-                      {:clause c :params y})))
-    x))
+  (binding [*inline* true]
+    (let [[x & y] (format-dsl c)]
+      (when (seq y)
+        (throw (ex-info "column/index operations must be simple clauses"
+                        {:clause c :params y})))
+      x)))
 
 (defn- format-alter-table [k x]
   (if (sequential? x)
@@ -500,16 +501,16 @@
          (str/join ", " (map #'format-entity tables)))]))
 
 (defn- format-simple-expr [e]
-  (let [[x & y] (format-expr e)]
-    (when (seq y)
-      (throw (ex-info "column elements must be simple expressions"
-                      {:expr e :params y})))
-    x))
+  (binding [*inline* true]
+    (let [[x & y] (format-expr e)]
+      (when (seq y)
+        (throw (ex-info "column elements must be simple expressions"
+                        {:expr e :params y})))
+      x)))
 
 (defn- format-single-column [xs]
-  (binding [*inline* true]
-    (str/join " " (let [[id & spec] (map #'format-simple-expr xs)]
-                    (cons id (map upper-case spec))))))
+  (str/join " " (let [[id & spec] (map #'format-simple-expr xs)]
+                  (cons id (map upper-case spec)))))
 
 (defn- format-table-columns [k xs]
   [(str "(\n  "
@@ -540,8 +541,10 @@
   (atom {:alter-table     #'format-alter-table
          :add-column      #'format-add-item
          :drop-column     #'format-selector
+         :modify-column   #'format-add-item
          :rename-column   #'format-rename-item
-         :add-index       #'format-add-item
+         ;; so :add-index works with both [:index] and [:unique]
+         :add-index       (fn [_ x] (format-on-expr :add x))
          :drop-index      #'format-selector
          :rename-table    #'format-rename-item
          :create-table    #'format-create-table
@@ -676,9 +679,46 @@
           (into params-x)
           (into params-y)))))
 
+(defn- function-0 [k xs]
+  [(str (sql-kw k)
+        (when (seq xs)
+          (str "(" (str/join "," (map #'format-simple-expr xs)) ")")))])
+
+(defn- function-1 [k xs]
+  [(str (sql-kw k)
+        (when (seq xs)
+          (str " " (format-simple-expr (first xs))
+               (when-let [args (next xs)]
+                 (str "(" (str/join "," (map #'format-simple-expr args)) ")")))))])
+
+(defn- function-1-opt [k xs]
+  [(str (sql-kw k)
+        (when (seq xs)
+          (str (when-let [e (first xs)]
+                 (str " " (format-simple-expr e)))
+               (when-let [args (next xs)]
+                 (str "(" (str/join "," (map #'format-simple-expr args)) ")")))))])
+
 (def ^:private special-syntax
   (atom
-   {:array
+   {;; these "functions" are mostly used in column
+    ;; descriptions so they generally have one of two forms:
+    ;; function-0 - with zero arguments, renders as a keyword,
+    ;;     otherwise renders as a function call
+    ;; function-1 - with zero arguments, renders as a keyword,
+    ;;     with one argument, as a keyword followed by an entity,
+    ;;     otherwise renders as a keyword followed by a function
+    ;;     call using the first entity as the function
+    ;; function-1-opt - like function-1 except if the first
+    ;;     argument is nil, it is omitted
+    :constraint  #'function-1
+    :default     #'function-1
+    :foreign-key #'function-0
+    :index       #'function-1-opt
+    :primary-key #'function-0
+    :references  #'function-1
+    :unique      #'function-1-opt
+    :array
     (fn [_ [arr]]
       (let [[sqls params] (format-expr-list arr)]
         (into [(str "ARRAY[" (str/join ", " sqls) "]")] params)))
@@ -720,9 +760,6 @@
     (fn [_ [& args]]
       (let [[sqls params] (format-expr-list args)]
         (into [(str "(" (str/join ", " sqls) ")")] params)))
-    :default
-    (fn [_ []]
-      ["DEFAULT"])
     :inline
     (fn [_ [x]]
       (if (sequential? x)

@@ -13,7 +13,61 @@ dialects that HoneySQL supports.
 
 ## alter-table, add-column, drop-column, modify-column, rename-column
 
+`:alter-table` can accept either a single table name or
+a sequence that begins with a table name and is followed
+by clauses that manipulate columns (or indices, see below).
+
+If a single table name is provided, a single column
+(or index) operation can provided in the hash map DSL:
+
+```clojure
+user=> (sql/format {:alter-table :fruit
+                    :add-column [:id :int [:not nil]]})
+["ALTER TABLE fruit ADD COLUMN id INT NOT NULL"]
+user=> (sql/format {:alter-table :fruit
+                    :drop-column :ident})
+["ALTER TABLE fruit DROP COLUMN ident"]
+user=> (sql/format {:alter-table :fruit
+                    :modify-column [:id :int :unsigned nil]})
+["ALTER TABLE fruit MODIFY COLUMN id INT UNSIGNED NULL"]
+user=> (sql/format {:alter-table :fruit
+                    :rename-column [:look :appearance]})
+["ALTER TABLE fruit RENAME COLUMN look TO appearance"]
+```
+
+If a sequence of a table name and various clauses is
+provided, the generated `ALTER` statement will have
+comma-separated clauses:
+
+```clojure
+user=> (sql/format {:alter-table [:fruit
+                                  {:add-column [:id :int [:not nil]]}
+                                  {:drop-column :ident}]})
+["ALTER TABLE fruit ADD COLUMN id INT NOT NULL, DROP COLUMN ident"]
+```
+
+As can be seen above, `:add-column` and `:modify-column`
+both accept a column description (as a sequence of simple
+expressions); `:drop-column` accepts a single column name,
+and `:rename-column` accepts a sequence with two column
+names: the "from" and the "to" names.
+
 ## add-index, drop-index
+
+`:add-index` accepts a single (function) expression
+that describes an index, and `:drop-index` accepts a
+single index name:
+
+```clojure
+user=> (sql/format {:alter-table :fruit
+                    :add-index [:index :look :appearance]})
+["ALTER TABLE fruit ADD INDEX look(appearance)"]
+user=> (sql/format {:alter-table :fruit
+                    :add-index [:unique nil :color :appearance]})
+["ALTER TABLE fruit ADD UNIQUE(color,appearance)"]
+user=> (sql/format {:alter-table :fruit :drop-index :look})
+["ALTER TABLE fruit DROP INDEX look"]
+```
 
 ## create-table, with-columns
 
@@ -37,6 +91,17 @@ user=> (sql/format {:create-table :fruit
   cost FLOAT NULL
 )"]
 ```
+
+The `:with-columns` clause is formatted as if `{:inline true}`
+was specified so nothing is parameterized. In addition,
+everything except the first element of a column description
+will be uppercased (mostly to give the appearance of separating
+the column name from the SQL keywords).
+
+Various function-like expressions can be specified, as shown
+in the example above, but allow things like `CHECK` for a
+constraint, `FOREIGN KEY` (with a column name), `REFERENCES`
+(with a pair of column names). See [special-syntax.md#clause-descriptors](Clause Descriptors in Special Syntax) for more details.
 
 ## create-view
 
@@ -65,6 +130,14 @@ user=> (sql/format {:drop-table [:foo :bar]})
 ```
 
 ## rename-table
+
+`:rename-table` accepts a pair of the "from" table name
+and the "to" table names:
+
+```clojure
+user=> (sql/format {:rename-table [:fruit :vegetable]})
+["RENAME TABLE fruit TO vegetable"]
+```
 
 ## nest
 

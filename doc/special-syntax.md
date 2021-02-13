@@ -4,6 +4,8 @@ This section lists the function-like expressions that
 HoneySQL supports out of the box which are formatted
 as special syntactic forms.
 
+The first group are used for SQL expressions. The second (last group) are used primarily in column definitions (as part of `:with-columns` and `:add-column` / `:modify-column`).
+
 ## array
 
 Accepts a single argument, which is expected to evaluate to
@@ -57,12 +59,6 @@ expression (comma-separated, wrapped in parentheses):
 (sql/format-expr [:composite :a :b "red" [:+ :x 1]])
 ;;=> ["(a, b, ?, x + ?)" "red" 1]
 ```
-
-## default
-
-Takes no arguments and produces the SQL keyword `DEFAULT`.
-
-_[I expect this to be expanded for PostgreSQL]_
 
 ## inline
 
@@ -185,4 +181,59 @@ parameters from them:
 ;;=> ["SELECT a, @var := 'foo'"]
 (sql/format {:select [:a [[:raw ["@var := " ["foo"]]]]]})
 ;;=> ["SELECT a, @var := ?" "foo"]
+```
+
+## Column Descriptors
+
+There are three types of descriptors that vary
+in how they treat their first argument. All three
+descriptors automatically try to inline any parameters
+(and will throw an exception if they can't, since these
+descriptors are meant to be used in column or index
+specifications).
+
+### foreign-key, primary-key
+
+If no arguments are provided, these render as just SQL
+keywords (uppercase):
+
+```clojure
+[:foreign-key] ;=> FOREIGN KEY
+[:primary-key] ;=> PRIMARY KEY
+```
+
+Otherwise, these render as regular function calls:
+
+```clojure
+[:foreign-key :a]    ;=> FOREIGN KEY(a)
+[:primary-key :x :y] ;=> PRIMARY KEY(x,y)
+```
+
+## constraint, default, references
+
+Although these are grouped together, they are generally
+used differently. This group renders as SQL keywords if
+no arguments are provided. If a single argument is
+provided, this renders as a SQL keyword followed by the
+argument. If two or more arguments are provided, this
+renders as a SQL keyword followed by the first argument,
+followed by the rest as a regular argument list:
+
+```clojure
+[:default]              ;=> DEFAULT
+[:default 42]           ;=> DEFAULT 42
+[:default "str"]        ;=> DEFAULT 'str'
+[:constraint :name]     ;=> CONSTRAINT name
+[:references :foo :bar] ;=> REFERENCES foo(bar)
+```
+
+## index, unique
+
+These behave like the group above except that if the
+first argument is `nil`, it is omitted:
+
+```clojure
+[:index :foo :bar :quux] ;=> INDEX foo(bar,quux)
+[:index nil :bar :quux]  ;=> INDEX(bar,quux)
+[:unique :a :b]          ;=> UNIQUE a(b)
 ```

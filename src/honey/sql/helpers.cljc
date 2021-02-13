@@ -46,6 +46,7 @@
 (defn alter-table [& args] (generic :alter-table args))
 (defn add-column [& args] (generic :add-column args))
 (defn drop-column [& args] (generic-1 :drop-column args))
+(defn modify-column [& args] (generic :modify-column args))
 (defn rename-column [& args] (generic :rename-column args))
 (defn add-index [& args] (generic :add-index args))
 (defn drop-index [& args] (generic-1 :drop-index args))
