@@ -6,13 +6,13 @@
                :cljs [cljs.test :refer-macros [deftest is testing]])
             [honey.sql :as sql]
             [honey.sql.helpers
-             :refer [columns create-view
-                     cross-join do-update-set from full-join
+             :refer [add-column add-index alter-table columns create-table create-view
+                     cross-join do-update-set drop-column drop-index drop-table from full-join
                      group-by having insert-into
                      join left-join limit offset on-conflict order-by
                      over partition-by
-                     returning right-join
-                     select select-distinct values where window with]]))
+                     rename-column rename-table returning right-join
+                     select select-distinct values where window with with-columns]]))
 
 (deftest test-select
   (let [m1 (-> (with [:cte (-> (select :*)
@@ -331,13 +331,38 @@
                " MAX(salary) OVER () AS MaxSalary"
                " FROM employee")])))
 
-(deftest issue-293-ddl
+(deftest issue-293-basic-ddl
   (is (= (sql/format {:create-view :metro :select [:*] :from [:cities] :where [:= :metroflag "y"]})
          ["CREATE VIEW metro AS SELECT * FROM cities WHERE metroflag = ?" "y"]))
   (is (= (sql/format {:create-table :films
                       :with-columns [[:id :int :unsigned :auto-increment]
                                      [:name [:varchar 50] [:not nil]]]})
          ["CREATE TABLE films (\n  id INT UNSIGNED AUTO_INCREMENT,\n  name VARCHAR(50) NOT NULL\n)"]))
+  (is (= (sql/format (-> (create-view :metro)
+                         (select :*)
+                         (from :cities)
+                         (where [:= :metroflag "y"])))
+         ["CREATE VIEW metro AS SELECT * FROM cities WHERE metroflag = ?" "y"]))
+  (is (= (sql/format (-> (create-table :films)
+                         (with-columns
+                           [:id :int :unsigned :auto-increment]
+                           [:name [:varchar 50] [:not nil]])))
+         ["CREATE TABLE films (\n  id INT UNSIGNED AUTO_INCREMENT,\n  name VARCHAR(50) NOT NULL\n)"]))
+  (is (= (sql/format (-> (create-table :films :if-not-exists)
+                         (with-columns
+                           [:id :int :unsigned :auto-increment]
+                           [:name [:varchar 50] [:not nil]])))
+         ["CREATE TABLE IF NOT EXISTS films (\n  id INT UNSIGNED AUTO_INCREMENT,\n  name VARCHAR(50) NOT NULL\n)"]))
+  (is (= (sql/format (-> {:create-table :films
+                          :with-columns
+                          [[:id :int :unsigned :auto-increment]
+                           [:name [:varchar 50] [:not nil]]]}))
+         ["CREATE TABLE films (\n  id INT UNSIGNED AUTO_INCREMENT,\n  name VARCHAR(50) NOT NULL\n)"]))
+  (is (= (sql/format (-> {:create-table [:films :if-not-exists]
+                          :with-columns
+                          [[:id :int :unsigned :auto-increment]
+                           [:name [:varchar 50] [:not nil]]]}))
+         ["CREATE TABLE IF NOT EXISTS films (\n  id INT UNSIGNED AUTO_INCREMENT,\n  name VARCHAR(50) NOT NULL\n)"]))
   (is (= (sql/format {:drop-table :foo})
          ["DROP TABLE foo"]))
   (is (= (sql/format {:drop-table [:if-exists :foo]})
@@ -347,7 +372,24 @@
   (is (= (sql/format {:drop-table [:foo :bar]})
          ["DROP TABLE foo, bar"]))
   (is (= (sql/format {:drop-table [:if-exists :foo :bar]})
+         ["DROP TABLE IF EXISTS foo, bar"]))
+  (is (= (sql/format (drop-table :foo))
+         ["DROP TABLE foo"]))
+  (is (= (sql/format (drop-table :if-exists :foo))
+         ["DROP TABLE IF EXISTS foo"]))
+  (is (= (sql/format (drop-table :foo :bar))
+         ["DROP TABLE foo, bar"]))
+  (is (= (sql/format (drop-table :if-exists :foo :bar))
          ["DROP TABLE IF EXISTS foo, bar"])))
+
+(deftest issue-293-alter-table
+  (is (= (sql/format (-> (alter-table :fruit)
+                         (add-column :id :int [:not nil])))
+         ["ALTER TABLE fruit ADD COLUMN id INT NOT NULL"]))
+  (is (= (sql/format (alter-table :fruit
+                                  (add-column :id :int [:not nil])
+                                  (drop-column :ident)))
+         ["ALTER TABLE fruit ADD COLUMN id INT NOT NULL, DROP COLUMN ident"])))
 
 (deftest issue-293-insert-into-data
   ;; insert into as (and other tests) based on :insert-into

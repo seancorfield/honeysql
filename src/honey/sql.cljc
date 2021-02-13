@@ -37,7 +37,9 @@
 (def ^:private default-clause-order
   "The (default) order for known clauses. Can have items added and removed."
   [;; DDL comes first (these don't really have a precedence):
-   :alter-table :create-table :with-columns :create-view :drop-table
+   :alter-table :add-column :drop-column :rename-column
+   :add-index :drop-index :rename-table
+   :create-table :with-columns :create-view :drop-table
    ;; then SQL clauses in priority order:
    :nest :with :with-recursive :intersect :union :union-all :except :except-all
    :select :select-distinct :insert-into :update :delete :delete-from :truncate
@@ -466,7 +468,19 @@
       [(str (sql-kw k) " " e " = EXCLUDED." e)])
     (format-set-exprs k x)))
 
-(defn- format-alter-table [k [x]] ["ALTER TABLE"])
+(defn- format-simple-clause [c]
+  (let [[x & y] (format-dsl c)]
+    (when (seq y)
+      (throw (ex-info "column/index operations must be simple clauses"
+                      {:clause c :params y})))
+    x))
+
+(defn- format-alter-table [k x]
+  (if (sequential? x)
+    [(str (sql-kw k) " " (format-entity (first x))
+          (when-let [clauses (next x)]
+            (str " " (str/join ", " (map #'format-simple-clause clauses)))))]
+    [(str (sql-kw k) " " (format-entity x))]))
 
 (defn- format-create-table [k table]
   (let [[table if-not-exists] (if (sequential? table) table [table])]
@@ -485,21 +499,28 @@
          (when if-exists (str (sql-kw :if-exists) " "))
          (str/join ", " (map #'format-entity tables)))]))
 
+(defn- format-simple-expr [e]
+  (let [[x & y] (format-expr e)]
+    (when (seq y)
+      (throw (ex-info "column elements must be simple expressions"
+                      {:expr e :params y})))
+    x))
+
+(defn- format-single-column [xs]
+  (binding [*inline* true]
+    (str/join " " (let [[id & spec] (map #'format-simple-expr xs)]
+                    (cons id (map upper-case spec))))))
+
 (defn- format-table-columns [k xs]
-  (let [simple-expr (fn [e]
-                      (let [[x & y] (format-expr e)]
-                        (when (seq y)
-                          (throw (ex-info "column elements must be simple expressions"
-                                          {:expr e :params y})))
-                        x))]
-    (binding [*inline* true]
-      [(str "(\n  "
-            (str/join ",\n  "
-                      (map #(str/join " "
-                                      (let [[id & spec] (map simple-expr %)]
-                                        (cons id (map upper-case spec))))
-                           xs))
-            "\n)")])))
+  [(str "(\n  "
+        (str/join ",\n  " (map #'format-single-column xs))
+        "\n)")])
+
+(defn- format-add-item [k spec]
+  [(str (sql-kw k) " " (format-single-column spec))])
+
+(defn- format-rename-item [k [x y]]
+  [(str (sql-kw k) " " (format-entity x) " TO " (format-entity y))])
 
 (def ^:private base-clause-order
   "The (base) order for known clauses. Can have items added and removed.
@@ -517,6 +538,12 @@
   "The (default) behavior for each known clause. Can also have items added
   and removed."
   (atom {:alter-table     #'format-alter-table
+         :add-column      #'format-add-item
+         :drop-column     #'format-selector
+         :rename-column   #'format-rename-item
+         :add-index       #'format-add-item
+         :drop-index      #'format-selector
+         :rename-table    #'format-rename-item
          :create-table    #'format-create-table
          :with-columns    #'format-table-columns
          :create-view     #'format-create-view

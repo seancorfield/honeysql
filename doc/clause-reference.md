@@ -11,11 +11,44 @@ a space (e.g., `:left-join` is formatted as `LEFT JOIN`).
 Except as noted, these clauses apply to all the SQL
 dialects that HoneySQL supports.
 
-## alter-table
+## alter-table, add-column, drop-column, modify-column, rename-column
 
-## create-table
+## add-index, drop-index
+
+## create-table, with-columns
+
+`:create-table` can accept a single table name or a pair
+containing a table name and a flag indicating the creation
+should be conditional (`:if-not-exists` or the symbol `if-not-exists`,
+although any truthy value will work). `:create-table` should
+be used with `:with-columns` to specify the actual columns
+in the table:
+
+```clojure
+user=> (sql/format {:create-table :fruit
+                    :with-columns
+                    [[:id :int [:not nil]]
+                     [:name [:varchar 32] [:not nil]]
+                     [:cost :float :null]]})
+;; \n has been replaced by an actual newline here for clarity:
+["CREATE TABLE fruit (
+  id INT NOT NULL,
+  name VARCHAR(32) NOT NULL,
+  cost FLOAT NULL
+)"]
+```
 
 ## create-view
+
+`:create-view` accepts a single view name:
+
+```clojure
+user=> (sql/format {:create-view :products
+                    :select [:*]
+                    :from [:items]
+                    :where [:= :category "product"]})
+["CREATE VIEW products AS SELECT * FROM items WHERE category = ?" "product"]
+```
 
 ## drop-table
 
@@ -30,6 +63,8 @@ user=> (sql/format '{drop-table (if-exists foo bar)})
 user=> (sql/format {:drop-table [:foo :bar]})
 ["DROP TABLE foo, bar"]
 ```
+
+## rename-table
 
 ## nest
 
