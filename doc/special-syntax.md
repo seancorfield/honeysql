@@ -206,7 +206,7 @@ Otherwise, these render as regular function calls:
 
 ```clojure
 [:foreign-key :a]    ;=> FOREIGN KEY(a)
-[:primary-key :x :y] ;=> PRIMARY KEY(x,y)
+[:primary-key :x :y] ;=> PRIMARY KEY(x, y)
 ```
 
 ## constraint, default, references
@@ -233,7 +233,7 @@ These behave like the group above except that if the
 first argument is `nil`, it is omitted:
 
 ```clojure
-[:index :foo :bar :quux] ;=> INDEX foo(bar,quux)
-[:index nil :bar :quux]  ;=> INDEX(bar,quux)
+[:index :foo :bar :quux] ;=> INDEX foo(bar, quux)
+[:index nil :bar :quux]  ;=> INDEX(bar, quux)
 [:unique :a :b]          ;=> UNIQUE a(b)
 ```

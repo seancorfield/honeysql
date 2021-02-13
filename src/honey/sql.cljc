@@ -513,9 +513,9 @@
                   (cons id (map upper-case spec)))))
 
 (defn- format-table-columns [k xs]
-  [(str "(\n  "
-        (str/join ",\n  " (map #'format-single-column xs))
-        "\n)")])
+  [(str "("
+        (str/join ", " (map #'format-single-column xs))
+        ")")])
 
 (defn- format-add-item [k spec]
   [(str (sql-kw k) " " (format-single-column spec))])
@@ -682,14 +682,14 @@
 (defn- function-0 [k xs]
   [(str (sql-kw k)
         (when (seq xs)
-          (str "(" (str/join "," (map #'format-simple-expr xs)) ")")))])
+          (str "(" (str/join ", " (map #'format-simple-expr xs)) ")")))])
 
 (defn- function-1 [k xs]
   [(str (sql-kw k)
         (when (seq xs)
           (str " " (format-simple-expr (first xs))
                (when-let [args (next xs)]
-                 (str "(" (str/join "," (map #'format-simple-expr args)) ")")))))])
+                 (str "(" (str/join ", " (map #'format-simple-expr args)) ")")))))])
 
 (defn- function-1-opt [k xs]
   [(str (sql-kw k)
@@ -697,7 +697,7 @@
           (str (when-let [e (first xs)]
                  (str " " (format-simple-expr e)))
                (when-let [args (next xs)]
-                 (str "(" (str/join "," (map #'format-simple-expr args)) ")")))))])
+                 (str "(" (str/join ", " (map #'format-simple-expr args)) ")")))))])
 
 (def ^:private special-syntax
   (atom
@@ -1007,6 +1007,7 @@
   (format-expr :id)
   (format-expr 1)
   (format {:select [:a [:b :c] [[:d :e]] [[:f :g] :h]]})
+  (format {:select [[[:d :e]] :a [:b :c]]})
   (format-on-expr :where [:= :id 1])
   (format-dsl {:select [:*] :from [:table] :where [:= :id 1]})
   (format {:select [:t.*] :from [[:table :t]] :where [:= :id 1]} {})

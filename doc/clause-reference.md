@@ -84,7 +84,7 @@ user=> (sql/format {:create-table :fruit
                     [[:id :int [:not nil]]
                      [:name [:varchar 32] [:not nil]]
                      [:cost :float :null]]})
-;; \n has been replaced by an actual newline here for clarity:
+;; reformatted for clarity:
 ["CREATE TABLE fruit (
   id INT NOT NULL,
   name VARCHAR(32) NOT NULL,

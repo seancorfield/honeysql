@@ -52,7 +52,15 @@
 (defn drop-index [& args] (generic-1 :drop-index args))
 (defn rename-table [& args] (generic :alter-table args))
 (defn create-table [& args] (generic :create-table args))
-(defn with-columns [& args] (generic :with-columns args))
+(defn with-columns [& args]
+  ;; special case so (with-columns [[:col-1 :definition] [:col-2 :definition]])
+  ;; also works in addition to (with-columns [:col-1 :definition] [:col-2 :definition])
+  (cond (and (= 1 (count args)) (sequential? (first args)) (sequential? (ffirst args)))
+        (generic-1 :with-columns args)
+        (and (= 2 (count args)) (sequential? (second args)) (sequential? (fnext args)))
+        (generic-1 :with-columns args)
+        :else
+        (generic :with-columns args)))
 (defn create-view [& args] (generic-1 :create-view args))
 (defn drop-table [& args] (generic :drop-table args))
 (defn nest [& args] (generic :nest args))
@@ -105,7 +113,10 @@
 ;; to make this easy to use in a select, wrap it so it becomes a function:
 (defn over [& args] [(into [:over] args)])
 
+;; helper to ease compatibility with former nilenso/honeysql-postgres code:
+(defn upsert [data & clauses] (default-merge data clauses))
+
 #?(:clj
     (assert (= (clojure.core/set (conj @@#'h/base-clause-order
-                                       :composite :over))
+                                       :composite :over :upsert))
                (clojure.core/set (map keyword (keys (ns-publics *ns*)))))))
