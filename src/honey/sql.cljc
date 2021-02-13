@@ -546,7 +546,7 @@
          ;; so :add-index works with both [:index] and [:unique]
          :add-index       (fn [_ x] (format-on-expr :add x))
          :drop-index      #'format-selector
-         :rename-table    #'format-rename-item
+         :rename-table    (fn [_ x] (format-selector :rename-to x))
          :create-table    #'format-create-table
          :with-columns    #'format-table-columns
          :create-view     #'format-create-view

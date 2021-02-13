@@ -50,7 +50,7 @@
 (defn rename-column [& args] (generic :rename-column args))
 (defn add-index [& args] (generic :add-index args))
 (defn drop-index [& args] (generic-1 :drop-index args))
-(defn rename-table [& args] (generic :alter-table args))
+(defn rename-table [& args] (generic-1 :rename-table args))
 (defn create-table [& args] (generic :create-table args))
 (defn with-columns [& args]
   ;; special case so (with-columns [[:col-1 :definition] [:col-2 :definition]])

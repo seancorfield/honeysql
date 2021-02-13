@@ -54,6 +54,7 @@ names: the "from" and the "to" names.
 
 ## add-index, drop-index
 
+Used with `:alter-table`,
 `:add-index` accepts a single (function) expression
 that describes an index, and `:drop-index` accepts a
 single index name:
@@ -68,6 +69,18 @@ user=> (sql/format {:alter-table :fruit
 user=> (sql/format {:alter-table :fruit :drop-index :look})
 ["ALTER TABLE fruit DROP INDEX look"]
 ```
+
+## rename-table
+
+Used with `:alter-table`,
+`:rename-table` accepts a single table name:
+
+```clojure
+user=> (sql/format {:alter-table :fruit :rename-table :vegetable})
+["ALTER TABLE fruit RENAME TO vegetable"]
+```
+
+> Note: this would be better as `:rename-to` since there is a `RENAME TABLE old_name TO new_name` SQL statement. _[I may yet add a variant to support that specifically]_
 
 ## create-table, with-columns
 
@@ -127,16 +140,6 @@ user=> (sql/format '{drop-table (if-exists foo bar)})
 ["DROP TABLE IF EXISTS foo, bar"]
 user=> (sql/format {:drop-table [:foo :bar]})
 ["DROP TABLE foo, bar"]
-```
-
-## rename-table
-
-`:rename-table` accepts a pair of the "from" table name
-and the "to" table names:
-
-```clojure
-user=> (sql/format {:rename-table [:fruit :vegetable]})
-["RENAME TABLE fruit TO vegetable"]
 ```
 
 ## nest
