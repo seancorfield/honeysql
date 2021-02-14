@@ -204,7 +204,7 @@ user=> (sql/format '{union [{select (id,status) from (table-a)}
 
 ## select, select-distinct
 
-`:select` expects a sequence of SQL entities (column names
+`:select` and `:select-distinct` expect a sequence of SQL entities (column names
 or expressions). Any of the SQL entities can be a pair of entity and alias. If you are selecting an expression, you would most
 often provide an alias for the expression, but it can be omitted
 as in the following:
@@ -227,6 +227,19 @@ user=> (sql/format {:select [:id, [[:* :cost 2] :total], [:event :status]]
 
 HoneySQL does not yet support `SELECT .. INTO ..`
 or `SELECT .. BULK COLLECT INTO ..`.
+
+## select-distinct-on
+
+Similar to `:select-distinct` above but the first element
+in the sequence should be a sequence of columns for the
+`DISTINCT ON` clause and the remaining elements are the
+columns to be selected:
+
+```clojure
+user=> (sql/format '{select-distinct-on [[a b] c d]
+                     from [table]})
+["SELECT DISTINCT ON(a, b) c, d FROM table"]
+```
 
 ## insert-into
 
@@ -615,9 +628,10 @@ as if they are separate clauses but they will appear
 in pairs: `ON ... DO ...`.
 
 `:on-conflict` accepts either a single SQL entity
-(a keyword or symbol) or a SQL clause. That's either
-a column name or an `:on-constraint` clause or a
-`:where` clause.
+(a keyword or symbol), or a SQL clause, or a pair
+of a SQL entity and a SQL clause. The SQL entity is
+a column name and the SQL clause can be an
+`:on-constraint` clause or a`:where` clause.
 
 `:on-constraint` accepts a single SQL entity that
 identifies a constraint name.
@@ -629,9 +643,11 @@ will be ignored so `:do-nothing true` is a
 reasonable choices.
 
 `:do-update-set` accepts either a single SQL entity
-(a keyword or symbol) or hash map of columns and
-values, like `:set` (above). The former produces
-a `SET` clause using `EXCLUDED`:
+(a keyword or symbol), or hash map of columns and
+values, like `:set` (above), or a hash map of fields
+(a sequence of SQL entities) and a where clause.
+The single SQL entity and the list of fields produce
+`SET` clauses using `EXCLUDED`:
 
 ```clojure
 user=> (sql/format {:insert-into :companies
@@ -639,6 +655,17 @@ user=> (sql/format {:insert-into :companies
                     :on-conflict :name
                     :do-update-set :name})
 ["INSERT INTO companies (name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name" "Microsoft"]
+user=> (sql/format {:insert-into :companies
+                    :values [{:name "Microsoft"}]
+                    :on-conflict :name
+                    :do-update-set {:name [:|| "was: " :EXCLUDED.name]}})
+["INSERT INTO companies (name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name = ? || EXCLUDED.name" "Microsoft" "was: "]
+user=> (sql/format {:insert-into :companies
+                    :values [{:name "Microsoft"}]
+                    :on-conflict :name
+                    :do-update-set {:fields [:name]
+                                    :where [:<> :name nil]}})
+["INSERT INTO companies (name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name WHERE name IS NOT NULL" "Microsoft"]
 user=> (sql/format {:insert-into :companies
                     :values [{:name "Microsoft"}]
                     :on-conflict {:on-constraint :name-idx}

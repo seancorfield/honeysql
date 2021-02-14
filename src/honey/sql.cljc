@@ -493,13 +493,7 @@
         :else
         (throw (ex-info "unsupported :on-conflict format"
                         {:clause x}))))
-(comment
-  keyword/symbol -> e = excluded.e
-  [k/s] -> join , e = excluded.e
-  {e v} -> join , e = v
-  {:fields f :where w} -> join , e = excluded.e (from f) where w
 
-  ,)
 (defn- format-do-update-set [k x]
   (if (map? x)
     (if (and (or (contains? x :fields) (contains? x 'fields))
