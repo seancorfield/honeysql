@@ -145,6 +145,14 @@
 (defn- namespace-_ [x] (some-> (namespace x) (str/replace "-" "_")))
 (defn- name-_      [x] (str/replace (name x) "-" "_"))
 
+(defn- sqlize-value [x]
+  (cond
+    (nil? x)     "NULL"
+    (string? x)  (str \' (str/replace x "'" "''") \')
+    (symbol? x)  (sql-kw x)
+    (keyword? x) (sql-kw x)
+    :else        (str x)))
+
 (defn format-entity
   "Given a simple SQL entity (a keyword or symbol -- or string),
   return the equivalent SQL fragment (as a string -- no parameters).
@@ -166,15 +174,16 @@
       t
       (str (q t) "."))))
 
+(defn- param-value [k]
+  (if (contains? *params* k)
+    (get *params* k)
+    (throw (ex-info (str "missing parameter value for " k)
+                    {:params (keys *params*)}))))
+
 (defn- ->param [k]
   (with-meta (constantly k)
     {::wrapper
-     (fn [fk _]
-       (let [k (fk)]
-         (if (contains? *params* k)
-           (get *params* k)
-           (throw (ex-info (str "missing parameter value for " k)
-                           {:params (keys *params*)})))))}))
+     (fn [fk _] (param-value (fk)))}))
 
 (defn- format-var [x & [opts]]
   (let [c (name-_ x)]
@@ -183,7 +192,10 @@
             ;; TODO: this does not quote arguments -- does that matter?
             [(str (upper-case f) "(" (str/join "," args) ")")])
           (= \? (first c))
-          ["?" (->param (keyword (subs c 1)))]
+          (let [k (keyword (subs c 1))]
+           (if *inline*
+             [(sqlize-value (param-value k))]
+             ["?" (->param k)]))
           :else
           [(format-entity x opts)])))
 
@@ -701,14 +713,6 @@
 (def ^:private op-ignore-nil (atom #{:and :or}))
 (def ^:private op-variadic   (atom #{:and :or :+ :* :||}))
 
-(defn- sqlize-value [x]
-  (cond
-    (nil? x)     "NULL"
-    (string? x)  (str \' (str/replace x "'" "''") \')
-    (symbol? x)  (sql-kw x)
-    (keyword? x) (sql-kw x)
-    :else        (str x)))
-
 (defn- unwrap [x opts]
   (if-let [m (meta x)]
     (if-let [f (::wrapper m)]
@@ -821,8 +825,13 @@
         (into [(str "INTERVAL " sql " " (sql-kw units))] params)))
     :lift
     (fn [_ [x]]
-      ["?" (with-meta (constantly x)
-             {::wrapper (fn [fx _] (fx))})])
+      (if *inline*
+        ;; this is pretty much always going to be wrong,
+        ;; but it could produce a valid result so we just
+        ;; assume that the user knows what they are doing:
+        [(sqlize-value x)]
+        ["?" (with-meta (constantly x)
+               {::wrapper (fn [fx _] (fx))})]))
     :nest
     (fn [_ [x]]
       (format-expr x {:nested true}))
@@ -846,7 +855,9 @@
         (into [(str/join ", " sqls)] params)))
     :param
     (fn [_ [k]]
-      ["?" (->param k)])
+      (if *inline*
+        [(sqlize-value (param-value k))]
+        ["?" (->param k)]))
     :raw
     (fn [_ [s]]
       (if (sequential? s)
