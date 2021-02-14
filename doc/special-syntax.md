@@ -98,6 +98,8 @@ This can be useful when dealing with JSON types:
 ;;=> ["WHERE json_col = ?" {:a 1 :b "two"}]
 ```
 
+> Note: HoneySQL 1.x used `honeysql.format/value` for this.
+
 ## nest
 
 Used to wrap an expression when you want an extra

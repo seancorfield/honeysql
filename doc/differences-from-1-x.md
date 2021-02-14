@@ -105,7 +105,7 @@ The following new syntax has been added:
 * `:default` -- for `DEFAULT` values (in inserts) and for declaring column defaults in table definitions,
 * `:inline` -- used as a function to replace the `sql/inline` / `#sql/inline` machinery,
 * `:interval` -- used as a function to support `INTERVAL <n> <units>`, e.g., `[:interval 30 :days]`.
-* `:lift` -- used as a function to prevent interpretation of a Clojure data structure as DSL syntax (e.g., when passing a vector or hash map as a parameter value),
+* `:lift` -- used as a function to prevent interpretation of a Clojure data structure as DSL syntax (e.g., when passing a vector or hash map as a parameter value) -- this should mostly be a replacement for `honeysql.format/value`,
 * `:nest` -- used as a function to add an extra level of nesting (parentheses) around an expression,
 * `:not` -- this is now explicit syntax,
 * `:param` -- used as a function to replace the `sql/param` / `#sql/param` machinery,
