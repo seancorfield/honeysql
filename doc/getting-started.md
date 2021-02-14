@@ -18,8 +18,6 @@ For Leiningen, add the following dependency to your `project.clj` file:
     [seancorfield/honeysql "2.0.0-alpha1"]
 ```
 
-> Note: 2.0.0-alpha1 will be released shortly!
-
 HoneySQL produces SQL statements but does not execute them.
 To execute SQL statements, you will also need a JDBC wrapper like
 [`seancorfield/next.jdbc`](https://github.com/seancorfield/next-jdbc) and a JDBC driver for the database you use.
