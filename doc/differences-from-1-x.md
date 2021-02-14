@@ -121,15 +121,27 @@ construction: `:constraint`, `:foreign-key`, `:index`, `:primary-key`,
 You can now `SELECT` a function call more easily, using `[[...]]`. This was previously an error -- missing an alias -- but it was a commonly requested change, to avoid using `(sql/call ...)`:
 
 ```clojure
-  (sql/format {:select [:a [:b :c] [[:d :e]] [[:f :g] :h]]})
-  ;; select a (column), b (aliased to c), d (fn call), f (fn call, aliased to h):
-  ;;=> ["SELECT a, b AS c, D(e), F(g) AS h"]
-
+user=> (sql/format {:select [:a [:b :c] [[:d :e]] [[:f :g] :h]]})
+;; select a (column), b (aliased to c), d (fn call), f (fn call, aliased to h):
+["SELECT a, b AS c, D(e), F(g) AS h"]
 ```
 
 On a related note, `sql/call` has been removed because it should never be needed now: `[:foo ...]` should always be treated as a function call, consistently, avoiding the special cases in v1 that necessitated the explicit `sql/call` syntax.
 
 The `:set` clause is dialect-dependent. In `:mysql`, it is ranked just before the `:where` clause. In all other dialects, it is ranked just before the `:from` clause. Accordingly, the `:set0` and `:set1` clauses are no longer supported (because they were workarounds in 1.x for this conflict).
+
+HoneySQL 1.x implemented `:exists` as part of the DSL, which was incorrect:
+it should have been a function, and in 2.x it is:
+
+```clojure
+;; 1.x: EXISTS should never have been implemented as SQL syntax: it's an operator!
+;; (sq/format {:exists {:select [:a] :from [:foo]}})
+;;=> ["EXISTS (SELECT a FROM foo)"]))
+
+;; 2.x: select function call with an alias:
+user=> (sql/format {:select [[[:exists {:select [:a] :from [:foo]}] :x]]})
+["SELECT EXISTS (SELECT a FROM foo) AS x"]))
+```
 
 ## Extensibility
 
