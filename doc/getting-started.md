@@ -108,7 +108,7 @@ Some "functions" are considered to be operators. In general,
 
 Operators can be strictly binary or variadic (most are strictly binary).
 Special syntax can have zero or more arguments and each form is
-described in the [Special Syntax](docs/special-syntax.md) section.
+described in the [Special Syntax](special-syntax.md) section.
 
 Some examples:
 
@@ -276,7 +276,7 @@ specify a dialect in the `format` call, you can specify
 ```
 
 Out of the box, as part of the extended ANSI SQL support,
-HoneySQL supports quite a few [PostgreSQL extensions](docs/postgresql.md)
+HoneySQL supports quite a few [PostgreSQL extensions](postgresql.md)
 
 ## Format Options
 
@@ -299,13 +299,13 @@ was wrapped in `[:inline `..`]`:
 ## Reference Documentation
 
 The full list of supported SQL clauses is documented in the
-[docs/clause-reference.md](Clause Reference). The full list
+[Clause Reference](clause-reference.md). The full list
 of operators supported (as prefix-form "functions") is
-documented in the [Operator Reference](docs/operator-reference.md)
+documented in the [Operator Reference](operator-reference.md)
 section. The full list
 of "special syntax" functions is documented in the
-[Special Syntax](docs/special-syntax.md) section. The best
+[Special Syntax](special-syntax.md) section. The best
 documentation for the helper functions is the
 [https://cljdoc.org/d/seancorfield/honeysql/CURRENT/api/honey.sql.helpers](honey.sql.helpers).
 If you're migrating to HoneySQL 2.0, this [overview of differences
-between 1.0 and 2.0](docs/differences-from-1-x.md) should help.
+between 1.0 and 2.0](differences-from-1-x.md) should help.
