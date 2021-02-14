@@ -14,7 +14,9 @@
             ;; pull in all the PostgreSQL helpers that the nilenso
             ;; library provided (as well as the regular HoneySQL ones):
             [honey.sql.helpers :as sqlh :refer
-            [upsert on-conflict do-nothing on-constraint
+            [;; not needed because on-conflict accepts clauses
+             #_upsert
+             on-conflict do-nothing on-constraint
              returning do-update-set
              ;; not needed because do-update-set can do this directly
              #_do-update-set!
@@ -26,8 +28,9 @@
              window create-view over with-columns
              ;; temporarily disable until these are also implemented:
              #_#_create-extension drop-extension
+             select-distinct-on
              ;; already part of HoneySQL
-             insert-into values where select columns
+             insert-into values where select
              from order-by update set]]
             [honey.sql :as sql]))
 
@@ -37,43 +40,41 @@
            (-> (insert-into :distributors)
                (values [{:did 5 :dname "Gizmo Transglobal"}
                         {:did 6 :dname "Associated Computing, Inc"}])
-               (upsert (-> (on-conflict :did)
-                           (do-update-set :dname)))
+               (on-conflict :did)
+               (do-update-set :dname)
                (returning :*)
                sql/format)))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT (did) DO NOTHING" 7 "Redline GmbH"]
            (-> (insert-into :distributors)
                (values [{:did 7 :dname "Redline GmbH"}])
-               (upsert (-> (on-conflict :did)
-                           do-nothing))
+               (on-conflict :did)
+               do-nothing
                sql/format)))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT ON CONSTRAINT distributors_pkey DO NOTHING" 9 "Antwerp Design"]
            (-> (insert-into :distributors)
                (values [{:did 9 :dname "Antwerp Design"}])
-               (upsert (-> #_(on-conflict-constraint :distributors_pkey)
-                           (on-conflict (on-constraint :distributors_pkey))
-                           do-nothing))
+               (on-conflict (on-constraint :distributors_pkey))
+               do-nothing
                sql/format)))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?), (?, ?) ON CONFLICT (did) DO UPDATE SET dname = EXCLUDED.dname" 10 "Pinp Design" 11 "Foo Bar Works"]
            (sql/format {:insert-into :distributors
                         :values [{:did 10 :dname "Pinp Design"}
                                  {:did 11 :dname "Foo Bar Works"}]
-                        :upsert {:on-conflict [:did]
-                                 :do-update-set [:dname]}})))
-    (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT (did) DO UPDATE SET dname = ?" 23 "Foo Distributors" " (formerly " ")"]
+                        :on-conflict :did
+                        :do-update-set :dname})))
+    (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT (did) DO UPDATE SET dname = EXCLUDED.dname || ? || d.dname || ?" 23 "Foo Distributors" " (formerly " ")"]
            (-> (insert-into :distributors)
                (values [{:did 23 :dname "Foo Distributors"}])
                (on-conflict :did)
                #_(do-update-set! [:dname "EXCLUDED.dname || ' (formerly ' || d.dname || ')'"])
                (do-update-set {:dname [:|| :EXCLUDED.dname " (formerly " :d.dname ")"]})
                sql/format)))
-    (is (= ["INSERT INTO distributors (did, dname) (SELECT ?, ?) ON CONFLICT ON CONSTRAINT distributors_pkey DO NOTHING" 1 "whatever"]
-           (-> (insert-into :distributors)
-               (columns :did :dname)
-               (select 1 "whatever")
+    (is (= ["INSERT INTO distributors (did, dname) SELECT ?, ? ON CONFLICT ON CONSTRAINT distributors_pkey DO NOTHING" 1 "whatever"]
+           (-> (insert-into [:distributors [:did :dname]]
+                            (select 1 "whatever"))
                #_(query-values (select 1 "whatever"))
-               (upsert (-> (on-conflict (on-constraint :distributors_pkey))
-                           do-nothing))
+               (on-conflict (on-constraint :distributors_pkey))
+               do-nothing
                sql/format)))))
 
 (deftest upsert-where-test
@@ -81,10 +82,10 @@
          (sql/format
           {:insert-into :user
            :values      [{:phone "5555555" :name "John"}]
-           :upsert      {:on-conflict   [:phone]
-                         :where         [:<> :phone nil]
-                         :do-update-set {:fields [:phone :name]
-                                         :where  [:= :user.active false]}}}))))
+           :on-conflict   [:phone
+                           {:where [:<> :phone nil]}]
+           :do-update-set {:fields [:phone :name]
+                           :where  [:= :user.active false]}}))))
 
 (deftest returning-test
   (testing "returning clause in sql generation for postgresql"
@@ -143,7 +144,7 @@
                               [[:constraint :code_title] [:primary-key :code :title]]])
                sql/format))))
   (testing "creating table with column level constraint"
-    (is (= ["CREATE TABLE films (code CHAR(5) CONSTRAINT firstkey PRIMARY KEY, title VARCHAR(40) NOT NULL, did INTEGER NOT NULL, date_prod DATE, kind VARCHAR(10))"]
+    (is (= ["CREATE TABLE films (code CHAR(5) CONSTRAINT FIRSTKEY PRIMARY KEY, title VARCHAR(40) NOT NULL, did INTEGER NOT NULL, date_prod DATE, kind VARCHAR(10))"]
            (-> (create-table :films)
                (with-columns [[:code [:char 5] [:constraint :firstkey] [:primary-key]]
                               [:title [:varchar 40] [:not nil]]
@@ -169,18 +170,26 @@
 
 (deftest over-test
   (testing "window function over on select statemt"
-    (is (= ["SELECT id, AVG(salary) OVER (PARTITION BY department ORDER BY designation) AS Average, max(salary) OVER w AS MaxSalary FROM employee WINDOW w AS (PARTITION BY department)"]
-           (-> (select :id)
-               (over
-                [[:avg :salary] (-> (partition-by :department) (order-by [:designation])) :Average]
-                [[:max :salary] :w :MaxSalary])
+    (is (= ["SELECT id, AVG(salary) OVER (PARTITION BY department ORDER BY designation ASC) AS Average, MAX(salary) OVER w AS MaxSalary FROM employee WINDOW w AS (PARTITION BY department)"]
+           (-> (select :id
+                       ;; honeysql treats over as a function:
+                       (over
+                        [[:avg :salary] (-> (partition-by :department) (order-by [:designation])) :Average]
+                        [[:max :salary] :w :MaxSalary]))
                (from :employee)
                (window :w (partition-by :department))
-               sql/format)))))
+               sql/format)
+           #_(-> (select :id)
+                 (over
+                  [[:avg :salary] (-> (partition-by :department) (order-by [:designation])) :Average]
+                  [[:max :salary] :w :MaxSalary])
+                 (from :employee)
+                 (window :w (partition-by :department))
+                 sql/format)))))
 
 (deftest alter-table-test
   (testing "alter table add column generates the required sql"
-    (is (= ["ALTER TABLE employees ADD COLUMN address text"]
+    (is (= ["ALTER TABLE employees ADD COLUMN address TEXT"]
            (-> (alter-table :employees)
                (add-column :address :text)
                sql/format))))
@@ -207,9 +216,12 @@
                (insert-into :distributors :d)
                (values [{:did 5 :dname "Gizmo Transglobal"}
                         {:did 6 :dname "Associated Computing, Inc"}])
-               (upsert (-> (on-conflict :did)
-                           (do-update-set :dname)
-                           (where [:<> :d.zipcode "21201"])))
+               (on-conflict :did)
+               (do-update-set (-> {:fields [:dname]}
+                                  (where [:<> :d.zipcode "21201"])))
+               #_(upsert (-> (on-conflict :did)
+                             (do-update-set :dname)
+                             (where [:<> :d.zipcode "21201"])))
                (returning :d.*)
                sql/format)))))
 
@@ -243,7 +255,7 @@
 
 (deftest values-except-select
   (testing "select which values are not not present in a table"
-    (is (= ["VALUES (?), (?), (?) EXCEPT SELECT id FROM images" 4 5 6]
+    (is (= ["(VALUES (?), (?), (?)) EXCEPT (SELECT id FROM images)" 4 5 6]
            (sql/format
             {:except
              [{:values [[4] [5] [6]]}
@@ -251,7 +263,7 @@
 
 (deftest select-except-select
   (testing "select which rows are not present in another table"
-    (is (= ["SELECT ip EXCEPT SELECT ip FROM ip_location"]
+    (is (= ["(SELECT ip) EXCEPT (SELECT ip FROM ip_location)"]
            (sql/format
             {:except
              [{:select [:ip]}
@@ -259,7 +271,7 @@
 
 (deftest values-except-all-select
   (testing "select which values are not not present in a table"
-    (is (= ["VALUES (?), (?), (?) EXCEPT ALL SELECT id FROM images" 4 5 6]
+    (is (= ["(VALUES (?), (?), (?)) EXCEPT ALL (SELECT id FROM images)" 4 5 6]
            (sql/format
             {:except-all
              [{:values [[4] [5] [6]]}
@@ -267,16 +279,16 @@
 
 (deftest select-except-all-select
   (testing "select which rows are not present in another table"
-    (is (= ["SELECT ip EXCEPT ALL SELECT ip FROM ip_location"]
+    (is (= ["(SELECT ip) EXCEPT ALL (SELECT ip FROM ip_location)"]
            (sql/format
             {:except-all
              [{:select [:ip]}
               {:select [:ip] :from [:ip_location]}]})))))
 
-(deftest select-distinct-on
+(deftest select-distinct-on-test
   (testing "select distinct on"
     (is (= ["SELECT DISTINCT ON(\"a\", \"b\") \"c\" FROM \"products\""]
-           (-> (select [[:distinct-on :a :b]] :c)
+           (-> (select-distinct-on [:a :b] :c)
                (from :products)
                (sql/format {:quoted true}))
            #_(-> (select :c)
