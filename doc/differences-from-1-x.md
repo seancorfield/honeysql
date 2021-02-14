@@ -136,11 +136,11 @@ it should have been a function, and in 2.x it is:
 ```clojure
 ;; 1.x: EXISTS should never have been implemented as SQL syntax: it's an operator!
 ;; (sq/format {:exists {:select [:a] :from [:foo]}})
-;;=> ["EXISTS (SELECT a FROM foo)"]))
+;;=> ["EXISTS (SELECT a FROM foo)"]
 
 ;; 2.x: select function call with an alias:
 user=> (sql/format {:select [[[:exists {:select [:a] :from [:foo]}] :x]]})
-["SELECT EXISTS (SELECT a FROM foo) AS x"]))
+["SELECT EXISTS (SELECT a FROM foo) AS x"]
 ```
 
 ## Extensibility
