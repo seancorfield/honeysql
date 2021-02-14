@@ -12,7 +12,7 @@ This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINO
 
 Prerelease builds of the upcoming 2.x version of HoneySQL will soon be available:
 
-[![Clojars Project](https://clojars.org/seancorfield/honeysql/latest-version.svg)](https://clojars.org/seancorfield/honeysql) [![cljdoc badge](https://cljdoc.org/badge/seancorfield/honeysql?2.0.0-alpha1)](https://cljdoc.org/d/seancorfield/honeysql/CURRENT)
+[![Clojars Project](https://clojars.org/seancorfield/honeysql/latest-version.svg)](https://clojars.org/seancorfield/honeysql) [![cljdoc badge](https://cljdoc.org/badge/seancorfield/honeysql?2.0.0-alpha1)](https://cljdoc.org/d/seancorfield/honeysql/v2.0.0-alpha1)
 
 This is the README for the upcoming 2.x version of HoneySQL which provides a streamlined codebase and a simpler method for extending the DSL. It also supports SQL dialects out-of-the-box and will be extended to support vendor-specific language features over time (unlike the 1.x version).
 
