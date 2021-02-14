@@ -52,6 +52,7 @@
 (defn drop-index [& args] (generic-1 :drop-index args))
 (defn rename-table [& args] (generic-1 :rename-table args))
 (defn create-table [& args] (generic :create-table args))
+(defn create-extension [& args] (generic :create-extension args))
 (defn with-columns [& args]
   ;; special case so (with-columns [[:col-1 :definition] [:col-2 :definition]])
   ;; also works in addition to (with-columns [:col-1 :definition] [:col-2 :definition])
@@ -63,6 +64,7 @@
         (generic :with-columns args)))
 (defn create-view [& args] (generic-1 :create-view args))
 (defn drop-table [& args] (generic :drop-table args))
+(defn drop-extension [& args] (generic :drop-extension args))
 (defn nest [& args] (generic :nest args))
 (defn with [& args] (generic :with args))
 (defn with-recursive [& args] (generic :with-recursive args))

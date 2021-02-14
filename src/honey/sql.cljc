@@ -40,6 +40,7 @@
    :alter-table :add-column :drop-column :modify-column :rename-column
    :add-index :drop-index :rename-table
    :create-table :with-columns :create-view :drop-table
+   :create-extension :drop-extension
    ;; then SQL clauses in priority order:
    :nest :with :with-recursive :intersect :union :union-all :except :except-all
    :select :select-distinct :select-distinct-on
@@ -609,9 +610,11 @@
          :drop-index      #'format-selector
          :rename-table    (fn [_ x] (format-selector :rename-to x))
          :create-table    #'format-create-table
+         :create-extension #'format-create-table
          :with-columns    #'format-table-columns
          :create-view     #'format-create-view
          :drop-table      #'format-drop-table
+         :drop-extension  #'format-drop-table
          :nest            (fn [_ x] (format-expr x))
          :with            #'format-with
          :with-recursive  #'format-with

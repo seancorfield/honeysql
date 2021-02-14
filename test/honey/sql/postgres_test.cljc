@@ -24,8 +24,7 @@
              #_insert-into-as
              create-table rename-table drop-table
              window create-view over with-columns
-             ;; temporarily disable until these are also implemented:
-             #_#_create-extension drop-extension
+             create-extension drop-extension
              select-distinct-on
              ;; already part of HoneySQL
              insert-into values where select
@@ -314,21 +313,18 @@
                  (modifiers :distinct-on :a :b)
                  (sql/format :quoting :ansi))))))
 
-#_(deftest create-extension-test
-    (testing "create extension"
-      (is (= ["CREATE EXTENSION \"uuid-ossp\""]
-             (-> (create-extension :uuid-ossp)
-                 (sql/format :allow-dashed-names? true
-                             :quoting :ansi)))))
-    (testing "create extension if not exists"
-      (is (= ["CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\""]
-             (-> (create-extension :uuid-ossp :if-not-exists? true)
-                 (sql/format :allow-dashed-names? true
-                             :quoting :ansi))))))
+(deftest create-extension-test
+  (testing "create extension"
+    (is (= ["CREATE EXTENSION \"uuid-ossp\""]
+           (-> (create-extension :uuid-ossp)
+               (sql/format {:quoted true})))))
+  (testing "create extension if not exists"
+    (is (= ["CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\""]
+           (-> (create-extension :uuid-ossp :if-not-exists? true)
+               (sql/format {:quoted true}))))))
 
-#_(deftest drop-extension-test
-    (testing "create extension"
-      (is (= ["DROP EXTENSION \"uuid-ossp\""]
-             (-> (drop-extension :uuid-ossp)
-                 (sql/format :allow-dashed-names? true
-                             :quoting :ansi))))))
+(deftest drop-extension-test
+  (testing "create extension"
+    (is (= ["DROP EXTENSION \"uuid-ossp\""]
+           (-> (drop-extension :uuid-ossp)
+               (sql/format {:quoted true}))))))
