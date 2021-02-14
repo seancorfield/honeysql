@@ -106,7 +106,7 @@
 (defn on-conflict [& args] (generic-1 :on-conflict args))
 (defn on-constraint [& args] (generic :on-constraint args))
 (defn do-nothing [& args] (generic :do-nothing args))
-(defn do-update-set [& args] (generic-1 :do-update-set args))
+(defn do-update-set [& args] (generic :do-update-set args))
 (defn returning [& args] (generic :returning args))
 
 ;; helpers that produce non-clause expressions -- must be listed below:
@@ -114,8 +114,21 @@
 ;; to make this easy to use in a select, wrap it so it becomes a function:
 (defn over [& args] [(into [:over] args)])
 
-;; helper to ease compatibility with former nilenso/honeysql-postgres code:
-(defn upsert [data & clauses] (default-merge data clauses))
+;; this helper is intended to ease the migration from nilenso:
+(defn upsert
+  ([clause] (upsert {} clause))
+  ([data clause]
+   (let [{:keys [on-conflict do-nothing do-update-set where]} clause]
+     (cond-> data
+       on-conflict
+       (assoc :on-conflict on-conflict)
+       do-nothing
+       (assoc :do-nothing do-nothing)
+       do-update-set
+       (assoc :do-update-set (if where
+                               {:fields do-update-set
+                                :where  where}
+                               do-update-set))))))
 
 #?(:clj
     (assert (= (clojure.core/set (conj @@#'h/base-clause-order

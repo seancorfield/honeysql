@@ -14,9 +14,7 @@
             ;; pull in all the PostgreSQL helpers that the nilenso
             ;; library provided (as well as the regular HoneySQL ones):
             [honey.sql.helpers :as sqlh :refer
-            [;; not needed because on-conflict accepts clauses
-             #_upsert
-             on-conflict do-nothing on-constraint
+            [upsert on-conflict do-nothing on-constraint
              returning do-update-set
              ;; not needed because do-update-set can do this directly
              #_do-update-set!
@@ -44,17 +42,37 @@
                (do-update-set :dname)
                (returning :*)
                sql/format)))
+    (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?), (?, ?) ON CONFLICT (did) DO UPDATE SET dname = EXCLUDED.dname RETURNING *" 5 "Gizmo Transglobal" 6 "Associated Computing, Inc"]
+           (-> (insert-into :distributors)
+               (values [{:did 5 :dname "Gizmo Transglobal"}
+                        {:did 6 :dname "Associated Computing, Inc"}])
+               (upsert (-> (on-conflict :did)
+                           (do-update-set :dname)))
+               (returning :*)
+               sql/format)))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT (did) DO NOTHING" 7 "Redline GmbH"]
            (-> (insert-into :distributors)
                (values [{:did 7 :dname "Redline GmbH"}])
                (on-conflict :did)
                do-nothing
                sql/format)))
+    (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT (did) DO NOTHING" 7 "Redline GmbH"]
+           (-> (insert-into :distributors)
+               (values [{:did 7 :dname "Redline GmbH"}])
+               (upsert (-> (on-conflict :did)
+                           do-nothing))
+               sql/format)))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT ON CONSTRAINT distributors_pkey DO NOTHING" 9 "Antwerp Design"]
            (-> (insert-into :distributors)
                (values [{:did 9 :dname "Antwerp Design"}])
                (on-conflict (on-constraint :distributors_pkey))
                do-nothing
+               sql/format)))
+    (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT ON CONSTRAINT distributors_pkey DO NOTHING" 9 "Antwerp Design"]
+           (-> (insert-into :distributors)
+               (values [{:did 9 :dname "Antwerp Design"}])
+               (upsert (-> (on-conflict (on-constraint :distributors_pkey))
+                           do-nothing))
                sql/format)))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?), (?, ?) ON CONFLICT (did) DO UPDATE SET dname = EXCLUDED.dname" 10 "Pinp Design" 11 "Foo Bar Works"]
            (sql/format {:insert-into :distributors
@@ -73,8 +91,8 @@
            (-> (insert-into [:distributors [:did :dname]]
                             (select 1 "whatever"))
                #_(query-values (select 1 "whatever"))
-               (on-conflict (on-constraint :distributors_pkey))
-               do-nothing
+               (upsert (-> (on-conflict (on-constraint :distributors_pkey))
+                           do-nothing))
                sql/format)))))
 
 (deftest upsert-where-test

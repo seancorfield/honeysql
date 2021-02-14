@@ -495,22 +495,27 @@
                         {:clause x}))))
 
 (defn- format-do-update-set [k x]
-  (if (map? x)
-    (if (and (or (contains? x :fields) (contains? x 'fields))
-             (or (contains? x :where)  (contains? x 'where)))
-      (let [sets (str/join ", "
-                           (map (fn [e]
-                                  (let [e (format-entity e {:drop-ns true})]
-                                    (str e " = EXCLUDED." e)))
-                                (or (:fields x)
-                                    ('fields x))))
-            [sql & params] (format-dsl {:where
-                                        (or (:where x)
-                                            ('where x))})]
-        (into [(str (sql-kw k) " " sets " " sql)] params))
-      (format-set-exprs k x))
-    (let [e (format-entity x {:drop-ns true})]
-      [(str (sql-kw k) " " e " = EXCLUDED." e)])))
+  (cond (map? x)
+        (if (or (contains? x :fields) (contains? x 'fields))
+          (let [sets (str/join ", "
+                               (map (fn [e]
+                                      (let [e (format-entity e {:drop-ns true})]
+                                        (str e " = EXCLUDED." e)))
+                                    (or (:fields x)
+                                        ('fields x))))
+                where (or (:where x) ('where x))
+                [sql & params] (when where (format-dsl {:where where}))]
+            (into [(str (sql-kw k) " " sets
+                        (when sql (str " " sql)))] params))
+          (format-set-exprs k x))
+        (sequential? x)
+        (let [[cols clauses] (split-with (complement map?) x)]
+          (if (seq cols)
+            (recur k {:fields cols :where (:where (first clauses))})
+            (recur k (first clauses))))
+        :else
+        (let [e (format-entity x {:drop-ns true})]
+          [(str (sql-kw k) " " e " = EXCLUDED." e)])))
 
 (defn- format-simple-clause [c]
   (binding [*inline* true]

@@ -645,14 +645,6 @@ You can also register SQL clauses, specifying the keyword, the formatting functi
 
 If you find yourself registering an operator, a function (syntax), or a new clause, consider submitting a [pull request to HoneySQL](https://github.com/seancorfield/honeysql/pulls) so others can use it, too. If it is dialect-specific, let me know in the pull request.
 
-## TODO
-
-- [ ] Create table, etc.
-
-## Extensions
-
-* [For PostgreSQL-specific extensions falling outside of ANSI SQL](https://github.com/nilenso/honeysql-postgres) -- these will all be core in 2.0!
-
 ## License
 
 Copyright (c) 2020-2021 Sean Corfield. HoneySQL 1.x was copyright (c) 2012-2020 Justin Kramer and Sean Corfield.

@@ -646,6 +646,11 @@ reasonable choices.
 (a keyword or symbol), or hash map of columns and
 values, like `:set` (above), or a hash map of fields
 (a sequence of SQL entities) and a where clause.
+For convenience of building clauses with helpers,
+it also accepts a sequence of one or more column
+names followed by an optional hash map: this is treated
+as an alternative form of the hash map with fields
+and a where clause.
 The single SQL entity and the list of fields produce
 `SET` clauses using `EXCLUDED`:
 
