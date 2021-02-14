@@ -83,7 +83,7 @@ The `:quoting <dialect>` option has superseded by the new dialect machinery and 
 Identifiers are automatically quoted if you specify a `:dialect` option to `format`, unless you also specify `:quoted false`.
 
 The following options are no longer supported:
-* `:allow-dashed-names?` -- if you provide dashed-names in v2, they will be left as-is if quoting is enabled, else they will be converted to snake_case (so you will either get `"dashed-names"` with quoting or `dashed_names` without); v1 treated names specified as keywords and names specified as strings differently.
+* `:allow-dashed-names?` -- if you provide dashed-names in v2, they will be left as-is if quoting is enabled, else they will be converted to snake_case (so you will either get `"dashed-names"` with quoting or `dashed_names` without).
 * `:allow-namespaced-names?` -- this supported `foo/bar` column names in SQL which I'd like to discourage.
 * `:namespace-as-table?` -- this is the default in v2: `:foo/bar` will be treated as `foo.bar` which is more in keeping with `next.jdbc`.
 * `:parameterizer` -- this would add a lot of complexity to the formatting engine and I do not know how widely it was used (especially in its arbitrarily extensible form).
@@ -102,7 +102,7 @@ The following new syntax has been added:
 * `:case` -- this is now explicit syntax,
 * `:cast` -- `[:cast expr :type]` => `CAST( expr AS type )`,
 * `:composite` -- explicit syntax to produce a comma-separated list of expressions, wrapped in parentheses,
-* `:default` -- for `DEFAULT` values (in inserts),
+* `:default` -- for `DEFAULT` values (in inserts) and for declaring column defaults in table definitions,
 * `:inline` -- used as a function to replace the `sql/inline` / `#sql/inline` machinery,
 * `:interval` -- used as a function to support `INTERVAL <n> <units>`, e.g., `[:interval 30 :days]`.
 * `:lift` -- used as a function to prevent interpretation of a Clojure data structure as DSL syntax (e.g., when passing a vector or hash map as a parameter value),
@@ -112,6 +112,11 @@ The following new syntax has been added:
 * `:raw` -- used as a function to replace the `sql/raw` / `#sql/raw` machinery. Vector subexpressions inside a `[:raw ..]` expression are formatted to SQL and parameters. Other subexpressions are just turned into strings and concatenated. This is different to the v1 behavior but should be more flexible, since you can now embed `:inline`, `:param`, and `:lift` inside a `:raw` expression.
 
 > Note 1: in 1.x, inlining a string `"foo"` produced `foo` but in 2.x it produces `'foo'`, i.e., string literals become SQL strings without needing internal quotes (1.x required `"'foo'"`).
+
+Several additional pieces of syntax have also been added to support column
+definitions in `CREATE TABLE` clauses, now that v2 supports DDL statement
+construction: `:constraint`, `:foreign-key`, `:index`, `:primary-key`,
+`:references`, `:unique`, and -- as noted above -- `:default`.
 
 You can now `SELECT` a function call more easily, using `[[...]]`. This was previously an error -- missing an alias -- but it was a commonly requested change, to avoid using `(sql/call ...)`:
 

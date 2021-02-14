@@ -52,12 +52,14 @@ or symbols, are treated as positional parameters and replaced
 by `?` in the SQL string and lifted out into the vector that
 is returned from `format`.
 
-Nearly all clauses expect a vector as their value, containing
+Most clauses expect a vector as their value, containing
 either a list of SQL entities or the representation of a SQL
-expression.
+expression. Some clauses accept a single SQL entity. A few
+accept a most specialized form (such as `:set` accepting a
+hash map of SQL entities and SQL expressions).
 
 A SQL entity can be a simple keyword (or symbol) or a pair
-that represents a SQL entity and its alias:
+that represents a SQL entity and its alias (where aliases are allowed):
 
 ```clojure
 (sql/format {:select [:t.id [:name :item]], :from [[:table :t]], :where [:= :id 1]})
@@ -76,6 +78,8 @@ avoid evaluation:
 
 ```clojure
 (sql/format '{select [t.id [name item]], from [[table t]], where [= id 1]})
+;; or you can use (..) instead of [..] when quoted:
+(sql/format '{select (t.id (name item)), from ((table t)), where (= id 1)})
 ;; also produces:
 ;;=> ["SELECT t.id, name AS item FROM table AS t WHERE id = ?" 1]
 ```
@@ -110,6 +114,12 @@ generally variadic and threadable:
 ;;=> ["SELECT t.id, name AS item FROM table AS t WHERE id = ?" 1]
 ```
 
+There is a helper function for every single clause that HoneySQL
+supports out of the box. In addition, there are helpers for
+`composite` and `over` that make it easier to construct those
+parts of the SQL DSL (examples of the former appear in the [README.md](README),
+examples of the latter appear in the [docs/clause-reference.md](Clause Reference))
+
 In addition to being variadic -- which often lets you omit one
 level of `[`..`]` -- the helper functions merge clauses, which
 can make it easier to build queries programmatically:
@@ -123,3 +133,36 @@ can make it easier to build queries programmatically:
 ;; produces:
 ;;=> ["SELECT t.id, name AS item FROM table AS t WHERE id = ?" 1]
 ```
+
+If you want to replace a clause with a subsequent helper call,
+you need to explicitly remove the prior value:
+
+```clojure
+(-> (select :t/id)
+    (from [:table :t])
+    (where [:= :id 1])
+    (dissoc :select)
+    (select [:name :item])
+    (sql/format))
+;; produces:
+;;=> ["SELECT name AS item FROM table AS t WHERE id = ?" 1]
+```
+
+Helpers always use keywords when constructing clauses so you
+can rely on using keywords in `dissoc`.
+
+The following helpers shadow functions in `clojure.core` so
+you need to consider this when referring symbols in from the
+`honey.sql.helpers` namespace: `for`, `group-by`, `partition-by`,
+`set`, and `update`.
+
+## Reference Documentation
+
+The full list of supported SQL clauses is documented in the
+[docs/clause-reference.md](Clause Reference). The full list
+of "special syntax" functions is documented in the
+[docs/special-syntax.md](Special Syntax) section. The best
+documentation for the helper functions is the
+[honey.sql.helpers](https://cljdoc.org/d/seancorfield/honeysql/CURRENT/api/honey.sql.helpers).
+If you're migrating to HoneySQL 2.0, this [overview of differences
+between 1.0 and 2.0](docs/differences-from-1-x.md) should help.
