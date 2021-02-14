@@ -110,7 +110,7 @@ Some "functions" are considered to be operators. In general,
 
 Operators can be strictly binary or variadic (most are strictly binary).
 Special syntax can have zero or more arguments and each form is
-described in the [docs/special-syntax.md](Special Syntax) section.
+described in the [Special Syntax](docs/special-syntax.md) section.
 
 Some examples:
 
@@ -191,8 +191,8 @@ generally variadic and threadable:
 There is a helper function for every single clause that HoneySQL
 supports out of the box. In addition, there are helpers for
 `composite` and `over` that make it easier to construct those
-parts of the SQL DSL (examples of the former appear in the [README.md](README),
-examples of the latter appear in the [docs/clause-reference.md](Clause Reference))
+parts of the SQL DSL (examples of the former appear in the [README](README.md),
+examples of the latter appear in the [Clause Reference](docs/clause-reference.md))
 
 In addition to being variadic -- which often lets you omit one
 level of `[`..`]` -- the helper functions merge clauses, which
@@ -277,6 +277,9 @@ specify a dialect in the `format` call, you can specify
 ;;=> ["SELECT [id] FROM [table]"]
 ```
 
+Out of the box, as part of the extended ANSI SQL support,
+HoneySQL supports quite a few [PostgreSQL extensions](docs/postgresql.md)
+
 ## Format Options
 
 In addition to the `:quoted` and `:dialect` options described above,
@@ -300,11 +303,11 @@ was wrapped in `[:inline `..`]`:
 The full list of supported SQL clauses is documented in the
 [docs/clause-reference.md](Clause Reference). The full list
 of operators supported (as prefix-form "functions") is
-documented in the [docs/operator-reference.md](Operator Reference)
+documented in the [Operator Reference](docs/operator-reference.md)
 section. The full list
 of "special syntax" functions is documented in the
-[docs/special-syntax.md](Special Syntax) section. The best
+[Special Syntax](docs/special-syntax.md) section. The best
 documentation for the helper functions is the
-[honey.sql.helpers](https://cljdoc.org/d/seancorfield/honeysql/CURRENT/api/honey.sql.helpers).
+[https://cljdoc.org/d/seancorfield/honeysql/CURRENT/api/honey.sql.helpers](honey.sql.helpers).
 If you're migrating to HoneySQL 2.0, this [overview of differences
 between 1.0 and 2.0](docs/differences-from-1-x.md) should help.

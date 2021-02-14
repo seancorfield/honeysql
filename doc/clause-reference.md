@@ -114,7 +114,7 @@ the column name from the SQL keywords).
 Various function-like expressions can be specified, as shown
 in the example above, but allow things like `CHECK` for a
 constraint, `FOREIGN KEY` (with a column name), `REFERENCES`
-(with a pair of column names). See [special-syntax.md#clause-descriptors](Clause Descriptors in Special Syntax) for more details.
+(with a pair of column names). See [Clause Descriptors in Special Syntax](special-syntax.md#clause-descriptors) for more details.
 
 ## create-view
 
