@@ -245,7 +245,7 @@ The most visible difference between dialects is how SQL entities
 should be quoted (if the `:quoted true` option is provided to `format`).
 Most databases use `"` for quoting (the `:ansi` and `:oracle` dialects).
 The `:sqlserver` dialect uses `[`..`]` and the `:mysql` dialect uses
-```..```.
+```..```. In addition, the `:oracle` dialect disables `AS` in aliases.
 
 Currently, the only dialect that has substantive differences from
 the others is `:mysql` which has a `:lock` clause (that is very
