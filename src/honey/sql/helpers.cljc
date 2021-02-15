@@ -48,46 +48,121 @@
 ;; for every clause, there is a public helper
 
 (defn alter-table
+  "Alter table takes a SQL entity (the name of the
+  table to modify) and any number of optional SQL
+  clauses to be applied in a single statement.
+
+  (alter-table :foo (add-column :id :int nil))
+
+  If only the SQL entity is provided, the result
+  needs to be combined with another SQL clause to
+  modify the table.
+
+  (-> (alter-table :foo) (add-column :id :int nil))"
+  {:arglists '([table & clauses])}
   [& args]
   (generic :alter-table args))
 
 (defn add-column
-  [& args]
-  (generic :add-column args))
+  "Add a single column to a table (see `alter-table`).
+
+  Accepts any number of SQL elements that describe
+  a column:
+
+  (add-column :name [:varchar 32] [:not nil])"
+  [& col-elems]
+  (generic :add-column col-elems))
 
 (defn drop-column
+  "Takes a single column name (use with `alter-table`).
+
+  (alter-table :foo (drop-column :bar))"
+  {:arglists '([col])}
   [& args]
   (generic-1 :drop-column args))
 
 (defn modify-column
-  [& args]
-  (generic :modify-column args))
+  "Like add-column, accepts any number of SQL elements
+  that describe the new column definition:
+
+  (modify-column :name [:varchar 64] [:not nil])"
+  [& col-elems]
+  (generic :modify-column col-elems))
 
 (defn rename-column
+  "Accepts two column names: the original name and the
+  new name to which it should be renamed:
+
+  (rename-column :name :full-name)"
+  {:arglists '([old-col new-col])}
   [& args]
   (generic :rename-column args))
 
 (defn add-index
+  "Like add-column, this accepts any number of SQL
+  elements that describe a new index to be added:
+
+  (add-index :unique :name-key :first-name :last-name)
+
+  Produces: UNIQUE name_key(first_name, last_name)"
+  {:arglist '([& index-elems])}
   [& args]
   (generic :add-index args))
 
 (defn drop-index
+  "Like drop-table, accepts a single index name:
+
+  (drop-index :name-key)"
   [& args]
   (generic-1 :drop-index args))
 
 (defn rename-table
+  "Accepts a single table name and, despite its name,
+  actually means RENAME TO:
+
+  (alter-table :foo (rename-table :bar))
+
+  Produces: ALTER TABLE foo RENAME TO bar"
+  {:arglist '([new-table])}
   [& args]
   (generic-1 :rename-table args))
 
 (defn create-table
+  "Accepts a table name to create and optionally a
+  flag to trigger IF NOT EXISTS in the SQL:
+
+  (create-table :foo)
+  (create-table :foo :if-not-exists)
+
+  That second argument can be truthy value but using
+  that keyword is recommended for clarity."
+  {:arglists '([table] [table if-not-exists])}
   [& args]
   (generic :create-table args))
 
 (defn create-extension
+  "Accepts an extension name to create and optionally a
+  flag to trigger IF NOT EXISTS in the SQL:
+
+  (create-extension :postgis)
+  (create-extension :postgis :if-not-exists)
+
+  That second argument can be truthy value but using
+  that keyword is recommended for clarity."
+  {:arglists '([extension] [extension if-not-exists])}
   [& args]
   (generic :create-extension args))
 
 (defn with-columns
+  "Accepts any number of column descriptions. Each
+  column description is a sequence of SQL elements
+  that specify the name and the attributes.
+
+  Can also accept a single argument which is a
+  collection of column descriptions (mostly for
+  compatibility with nilenso/honeysql-postgres
+  which used to be needed for DDL)."
+  {:arglists '([& col-specs] [col-spec-coll])}
   [& args]
   ;; special case so (with-columns [[:col-1 :definition] [:col-2 :definition]])
   ;; also works in addition to (with-columns [:col-1 :definition] [:col-2 :definition])
@@ -99,16 +174,24 @@
         (generic :with-columns args)))
 
 (defn create-view
+  "Accepts a single view name to create.
+
+  (-> (create-view :cities)
+      (select :*) (from :city))"
   [& args]
   (generic-1 :create-view args))
 
 (defn drop-table
-  [& args]
-  (generic :drop-table args))
+  "Accepts one or more table names to drop.
+
+  (drop-table :foo)"
+  [& tables]
+  (generic :drop-table tables))
 
 (defn drop-extension
-  [& args]
-  (generic :drop-extension args))
+  "Accepts one or more extension names to drop."
+  [& extensions]
+  (generic :drop-extension extensions))
 
 (defn nest
   [& args]
