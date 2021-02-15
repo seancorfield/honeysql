@@ -476,16 +476,64 @@
 
 ;; helpers that produce non-clause expressions -- must be listed below:
 (defn composite
+  "Accepts any number of SQL expressions and produces
+  a composite value from them:
+
+  (composite :a 42)
+
+  Produces: (a, ?)
+  Parameters: 42"
   [& args]
   (into [:composite] args))
 
 ;; to make this easy to use in a select, wrap it so it becomes a function:
 (defn over
+  "Accepts any number of OVER clauses, each of which
+  is a pair of an aggregate function and a window function
+  or a triple of an aggregate function, a window function,
+  and an alias:
+
+  (select :id (over [[:avg :salary] (partition-by :department)]))
+
+  Produces: SELECT id, AVG(salary) OVER ()PARTITION BY department)"
   [& args]
   [(into [:over] args)])
 
 ;; this helper is intended to ease the migration from nilenso:
 (defn upsert
+  "Provided purely to ease migration from nilenso/honeysql-postgres
+  this accepts a single clause, constructed from on-conflict,
+  do-nothing or do-update-set, and where. Any of those are optional.
+
+  This helper unpacks that clause and turns it into what HoneySQL
+  2.x expects, with any where clause being an argument to the
+  do-update-set helper, along with the `:fields`.
+
+  nilenso/honeysql-postgres:
+
+  (-> ...
+      (upsert (-> (on-conflict :col)
+                  do-nothing)))
+  (-> ...
+      (upsert (-> (on-conflict :col)
+                  (do-update-set :x)
+                  (where [:<> :x nil]))))
+
+  HoneySQL 2.x:
+
+  (-> ...
+      (on-conflict :col)
+      do-nothing)
+  (-> ...
+      (on-conflict :col)
+      (do-update-set {:fields [:x]
+                      :where [:<> :x nil]}))
+
+  Alternative structure for that second one:
+
+  (-> ...
+      (on-conflict :col)
+      (do-update-set :x {:where [:<> :x nil]}))"
   ([clause] (upsert {} clause))
   ([data clause]
    (let [{:keys [on-conflict do-nothing do-update-set where]} clause]
