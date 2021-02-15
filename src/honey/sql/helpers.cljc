@@ -158,6 +158,13 @@
   column description is a sequence of SQL elements
   that specify the name and the attributes.
 
+  (with-columns [:id :int [:not nil]]
+                [:name [:varchar 32] [:default \"\"]])
+
+  Produces:
+    id INT NOT NULL,
+    name VARCHAR(32) DEFAULT ''
+
   Can also accept a single argument which is a
   collection of column descriptions (mostly for
   compatibility with nilenso/honeysql-postgres
@@ -208,34 +215,60 @@
 ;; these five need to supply an empty hash map since they wrap
 ;; all of their arguments:
 (defn intersect
-  [& args]
-  (generic :intersect (cons {} args)))
+  "Accepts any number of SQL clauses (queries) on
+  which to perform a set intersection."
+  [& clauses]
+  (generic :intersect (cons {} clauses)))
 
 (defn union
-  [& args]
-  (generic :union (cons {} args)))
+  "Accepts any number of SQL clauses (queries) on
+  which to perform a set union."
+  [& clauses]
+  (generic :union (cons {} clauses)))
 
 (defn union-all
-  [& args]
-  (generic :union-all (cons {} args)))
+  "Accepts any number of SQL clauses (queries) on
+  which to perform a set union all."
+  [& clauses]
+  (generic :union-all (cons {} clauses)))
 
 (defn except
-  [& args]
-  (generic :except (cons {} args)))
+  "Accepts any number of SQL clauses (queries) on
+  which to perform a set except."
+  [& clauses]
+  (generic :except (cons {} clauses)))
 
 (defn except-all
-  [& args]
-  (generic :except-all (cons {} args)))
+  "Accepts any number of SQL clauses (queries) on
+  which to perform a set except all."
+  [& clauses]
+  (generic :except-all (cons {} clauses)))
 
 (defn select
-  [& args]
-  (generic :select args))
+  "Accepts any number of column names, or column/alias
+  pairs, or SQL expressions (optionally aliased):
+
+  (select :id [:foo :bar] [[:max :quux]])
+
+  Produces: SELECT id, foo AS bar, MAX(quux)"
+  [& exprs]
+  (generic :select exprs))
 
 (defn select-distinct
+  "Like `select` but produces SELECT DISTINCT."
   [& args]
   (generic :select-distinct args))
 
 (defn select-distinct-on
+  "Accepts a sequence of one or more columns for the
+  distinct clause, followed by any number of column
+  names, or column/alias pairs, or SQL expressions
+  (optionally aliased), as for `select`:
+
+  (select-distinct-on [:a :b] :c [:d :dd])
+
+  Produces: SELECT DISTINCT ON(a, b) c, d AS dd"
+  {:arglists '([distinct-cols & exprs])}
   [& args]
   (generic :select-distinct-on args))
 
@@ -256,8 +289,10 @@
   (generic :delete-from args))
 
 (defn truncate
+  "Accepts a single table name to truncate."
+  {:arglists '([table])}
   [& args]
-  (generic :truncate args))
+  (generic-1 :truncate args))
 
 (defn columns
   [& args]
