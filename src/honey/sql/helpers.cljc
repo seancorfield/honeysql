@@ -277,18 +277,45 @@
   (generic :select-distinct-on args))
 
 (defn insert-into
+  "Accepts a table name or a table/alias pair. That
+  can optionally be followed by a collection of
+  column names. That can optionally be followed by
+  a (select) statement clause.
+
+  (insert-into :table)
+  (insert-into [:table :t])
+  (insert-into :table [:id :name :cost])
+  (insert-into :table (-> (select :*) (from :other)))
+  (insert-into [:table :t]
+               [:id :name :cost]
+               (-> (select :*) (from :other)))"
+  {:arglists '([table] [table cols] [table statement] [table cols statement])}
   [& args]
-  (generic :insert-into args))
+  (let [[table cols statement] args]
+    (if (and (sequential? cols) (map? statement))
+      (generic :insert-into [[table cols] statement])
+      (generic :insert-into args))))
 
 (defn update
+  "Accepts either a table name or a table/alias pair.
+
+  (-> (update :table) (set {:id 1 :cost 32.1}))"
   [& args]
-  (generic :update args))
+  (generic-1 :update args))
 
 (defn delete
+  "For deleting from multiple tables.
+  Accepts a collection of table names to delete from.
+
+  (-> (delete [:films :directors]) (where [:= :id 1]))"
   [& args]
   (generic-1 :delete args))
 
 (defn delete-from
+  "For deleting from a single table.
+  Accepts a single table name to delete from.
+
+  (-> (delete-from :films) (where [:= :id 1]))"
   [& args]
   (generic :delete-from args))
 

@@ -473,4 +473,10 @@
          ["INSERT INTO transport (id, name) SELECT * FROM cars"]))
   ;; with an alias and columns:
   (is (= (sql/format (insert-into ['(transport t) '(id, name)] '{select (*) from (cars)}))
+         ["INSERT INTO transport AS t (id, name) SELECT * FROM cars"]))
+  ;; three arguments with columns:
+  (is (= (sql/format (insert-into :transport [:id :name] '{select (*) from (cars)}))
+         ["INSERT INTO transport (id, name) SELECT * FROM cars"]))
+  ;; three arguments with an alias and columns:
+  (is (= (sql/format (insert-into '(transport t) '(id, name) '{select (*) from (cars)}))
          ["INSERT INTO transport AS t (id, name) SELECT * FROM cars"])))
