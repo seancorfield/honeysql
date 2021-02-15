@@ -250,7 +250,11 @@
 
   (select :id [:foo :bar] [[:max :quux]])
 
-  Produces: SELECT id, foo AS bar, MAX(quux)"
+  Produces: SELECT id, foo AS bar, MAX(quux)
+
+  The special column name :* produces * for 'all columns'.
+  You can also specify :t.* for 'all columns' from the
+  table (or alias) t."
   [& exprs]
   (generic :select exprs))
 
@@ -295,16 +299,41 @@
   (generic-1 :truncate args))
 
 (defn columns
-  [& args]
-  (generic :columns args))
+  "To be used with `insert-into` to specify the list of
+  column names for the insert operation. Accepts any number
+  of column names:
+
+  (-> (insert-into :foo)
+      (columns :a :b :c)
+      (values [[1 2 3] [2 4 6]]))
+
+  Produces:
+    INSERT INTO foo (a, b, c) VALUES (?, ?, ?), (?, ?, ?)
+  Parameters: 1 2 3 2 4 6"
+  [& cols]
+  (generic :columns cols))
 
 (defn set
+  "Accepts a hash map specifying column names and the
+  values to be assigned to them, as part of `update`:
+
+  (-> (update :foo)
+      (set {:a 1 :b nil}))
+
+  Produces: UPDATE foo SET a = ?, b = NULL"
+  {:arglists '([col-set-map])}
   [& args]
   (generic-1 :set args))
 
 (defn from
-  [& args]
-  (generic :from args))
+  "Accepts one or more table names, or table/alias pairs.
+
+  (-> (select :*)
+      (from [:foo :bar]))
+
+  Produces: SELECT * FROM foo AS bar"
+  [& tables]
+  (generic :from tables))
 
 (defn using
   [& args]
@@ -339,16 +368,30 @@
   (generic :cross-join args))
 
 (defn where
-  [& args]
-  (generic :where args))
+  "Accepts one or more SQL expressions (conditions) and
+  combines them with AND:
+
+  (where [:= :status 0] [:<> :task \"backup\"])
+
+  Produces: WHERE (status = ?) AND (task <> ?)
+  Parameters: 0 \"backup\""
+  [& exprs]
+  (generic :where exprs))
 
 (defn group-by
   [& args]
   (generic :group-by args))
 
 (defn having
-  [& args]
-  (generic :having args))
+  "Like `where`, accepts one or more SQL expressions
+  (conditions) and combines them with AND:
+
+  (having [:> :count 0] [:<> :name nil])
+
+  Produces: HAVING (count > ?) AND (name IS NOT NULL)
+  Parameters: 0"
+  [& exprs]
+  (generic :having exprs))
 
 (defn window
   [& args]
@@ -363,10 +406,24 @@
   (generic :order-by args))
 
 (defn limit
+  "Specific to MySQL, accepts a single SQL expression:
+
+  (limit 40)
+
+  Produces: LIMIT ?
+  Parameters: 40"
+  {:arglists '([limit])}
   [& args]
   (generic-1 :limit args))
 
 (defn offset
+  "Specific to MySQL, accepts a single SQL expression:
+
+  (offset 10)
+
+  Produces: OFFSET ?
+  Parameters: 10"
+  {:arglists '([offset])}
   [& args]
   (generic-1 :offset args))
 
@@ -375,6 +432,19 @@
   (generic-1 :for args))
 
 (defn values
+  "Accepts a single argument: a collection of row values.
+  Each row value can be either a sequence of column values
+  or a hash map of column name/column value pairs.
+
+  Used with `insert-into`.
+
+  (-> (insert-into :foo)
+      (values [{:id 1, :name \"John\"}
+               {:id 2, :name \"Fred\"}]))
+
+  Produces: INSERT INTO foo (id, name) VALUES (?, ?), (?, ?)
+  Parameters: 1 \"John\" 2 \"Fred\""
+  {:arglists '([row-value-coll])}
   [& args]
   (generic-1 :values args))
 
@@ -395,8 +465,14 @@
   (generic :do-update-set args))
 
 (defn returning
-  [& args]
-  (generic :returning args))
+  "Accepts any number of column names to return from an
+  insert operation:
+
+  (returning :*)
+
+  Produces: RETURNING *"
+  [& cols]
+  (generic :returning cols))
 
 ;; helpers that produce non-clause expressions -- must be listed below:
 (defn composite
