@@ -300,6 +300,7 @@
   "Accepts either a table name or a table/alias pair.
 
   (-> (update :table) (set {:id 1 :cost 32.1}))"
+  {:arglists '([table])}
   [& args]
   (generic-1 :update args))
 
@@ -308,6 +309,7 @@
   Accepts a collection of table names to delete from.
 
   (-> (delete [:films :directors]) (where [:= :id 1]))"
+  {:arglists '([table-coll])}
   [& args]
   (generic-1 :delete args))
 
@@ -316,6 +318,7 @@
   Accepts a single table name to delete from.
 
   (-> (delete-from :films) (where [:= :id 1]))"
+  {:arglists '([table])}
   [& args]
   (generic :delete-from args))
 
@@ -480,10 +483,14 @@
   (generic-1 :on-conflict args))
 
 (defn on-constraint
+  "Accepts a single constraint name."
+  {:arglists '([constraint])}
   [& args]
   (generic :on-constraint args))
 
 (defn do-nothing
+  "Called with no arguments, produces DO NOTHING"
+  {:arglists '([])}
   [& args]
   (generic :do-nothing args))
 
