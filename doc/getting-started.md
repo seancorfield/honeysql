@@ -9,13 +9,13 @@ data to a SQL statement (string) and any parameters it needs.
 For the Clojure CLI, add the following dependency to your `deps.edn` file:
 
 ```clojure
-    seancorfield/honeysql {:mvn/version "2.0.0-alpha1"}
+    seancorfield/honeysql {:mvn/version "2.0.0-alpha2"}
 ```
 
 For Leiningen, add the following dependency to your `project.clj` file:
 
 ```clojure
-    [seancorfield/honeysql "2.0.0-alpha1"]
+    [seancorfield/honeysql "2.0.0-alpha2"]
 ```
 
 HoneySQL produces SQL statements but does not execute them.
@@ -235,7 +235,7 @@ common for people to use the [nilenso/honeysql-postgres library](https://github.
 to get DDL support, even if they didn't need the PostgreSQL-specific
 extensions. That library does not work with HoneySQL 2.x but all
 of the functionality from it has been incorporated
-into HoneySQL now and is described in the [PostgreSQL](doc/postgresql.md)
+into HoneySQL now and is described in the [PostgreSQL](postgresql.md)
 section (because that covers all of the things that the nilenso
 library supported and much of it was PostgreSQL-specific!).
 
@@ -319,6 +319,6 @@ section. The full list
 of "special syntax" functions is documented in the
 [Special Syntax](special-syntax.md) section. The best
 documentation for the helper functions is in the
-[honey.sql.helpers](https://cljdoc.org/d/seancorfield/honeysql/2.0.0-alpha1/api/honey.sql.helpers) namespace.
+[honey.sql.helpers](https://cljdoc.org/d/seancorfield/honeysql/2.0.0-alpha2/api/honey.sql.helpers) namespace.
 If you're migrating to HoneySQL 2.0, this [overview of differences
 between 1.0 and 2.0](differences-from-1-x.md) should help.
