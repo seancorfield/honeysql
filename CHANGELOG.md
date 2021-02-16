@@ -1,5 +1,8 @@
 # Changes
 
+* 2.0.0-alpha2 (for early testing)
+  * Since Alpha 1, a lot more documentation has been written and docstrings have been added to most functions in `honey.sql.helpers`.
+  * Numerous small improvements have been made to clauses and helpers around insert/upsert.
 * 2.0.0-alpha1 (for early testing)
   * This is a complete rewrite/simplification of HoneySQL that provides just two namespaces:
     * `honey.sql` -- this is the primary API via the `format` function as well as the various extension points.
