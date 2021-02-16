@@ -276,7 +276,9 @@ specify a dialect in the `format` call, you can specify
 ```
 
 Out of the box, as part of the extended ANSI SQL support,
-HoneySQL supports quite a few [PostgreSQL extensions](postgresql.md)
+HoneySQL supports quite a few [PostgreSQL extensions](postgresql.md).
+
+> Note: the [nilenso/honeysql-postgres library](https://github.com/nilenso/honeysql-postgres) which provided PostgreSQL support for HoneySQL 1.x does not work with HoneySQL 2.x. However, HoneySQL 2.x includes all of the functionality from that library out of the box!
 
 ## Format Options
 
