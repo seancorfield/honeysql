@@ -34,6 +34,7 @@
 (deftest upsert-test
   (testing "upsert sql generation for postgresql"
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?), (?, ?) ON CONFLICT (did) DO UPDATE SET dname = EXCLUDED.dname RETURNING *" 5 "Gizmo Transglobal" 6 "Associated Computing, Inc"]
+           ;; preferred in honeysql:
            (-> (insert-into :distributors)
                (values [{:did 5 :dname "Gizmo Transglobal"}
                         {:did 6 :dname "Associated Computing, Inc"}])
@@ -42,6 +43,7 @@
                (returning :*)
                sql/format)))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?), (?, ?) ON CONFLICT (did) DO UPDATE SET dname = EXCLUDED.dname RETURNING *" 5 "Gizmo Transglobal" 6 "Associated Computing, Inc"]
+           ;; identical to nilenso version:
            (-> (insert-into :distributors)
                (values [{:did 5 :dname "Gizmo Transglobal"}
                         {:did 6 :dname "Associated Computing, Inc"}])
@@ -50,26 +52,31 @@
                (returning :*)
                sql/format)))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT (did) DO NOTHING" 7 "Redline GmbH"]
+           ;; preferred in honeysql:
            (-> (insert-into :distributors)
                (values [{:did 7 :dname "Redline GmbH"}])
                (on-conflict :did)
                do-nothing
                sql/format)))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT (did) DO NOTHING" 7 "Redline GmbH"]
+           ;; identical to nilenso version:
            (-> (insert-into :distributors)
                (values [{:did 7 :dname "Redline GmbH"}])
                (upsert (-> (on-conflict :did)
                            do-nothing))
                sql/format)))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT ON CONSTRAINT distributors_pkey DO NOTHING" 9 "Antwerp Design"]
+           ;; preferred in honeysql:
            (-> (insert-into :distributors)
                (values [{:did 9 :dname "Antwerp Design"}])
                (on-conflict (on-constraint :distributors_pkey))
                do-nothing
                sql/format)))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT ON CONSTRAINT distributors_pkey DO NOTHING" 9 "Antwerp Design"]
+           ;; almost identical to nilenso version:
            (-> (insert-into :distributors)
                (values [{:did 9 :dname "Antwerp Design"}])
+               ;; in nilenso, this was (on-conflict-constraint :distributors_pkey)
                (upsert (-> (on-conflict (on-constraint :distributors_pkey))
                            do-nothing))
                sql/format)))
@@ -77,22 +84,33 @@
            (sql/format {:insert-into :distributors
                         :values [{:did 10 :dname "Pinp Design"}
                                  {:did 11 :dname "Foo Bar Works"}]
+                        ;; in nilenso, these two were a submap under :upsert
                         :on-conflict :did
                         :do-update-set :dname})))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT (did) DO UPDATE SET dname = EXCLUDED.dname || ? || d.dname || ?" 23 "Foo Distributors" " (formerly " ")"]
            (-> (insert-into :distributors)
                (values [{:did 23 :dname "Foo Distributors"}])
                (on-conflict :did)
+               ;; nilenso:
                #_(do-update-set! [:dname "EXCLUDED.dname || ' (formerly ' || d.dname || ')'"])
+               ;; honeysql
                (do-update-set {:dname [:|| :EXCLUDED.dname " (formerly " :d.dname ")"]})
                sql/format)))
     (is (= ["INSERT INTO distributors (did, dname) SELECT ?, ? ON CONFLICT ON CONSTRAINT distributors_pkey DO NOTHING" 1 "whatever"]
-           (-> (insert-into [:distributors [:did :dname]]
+           ;; honeysql version:
+           (-> (insert-into :distributors
+                            [:did :dname]
                             (select 1 "whatever"))
-               #_(query-values (select 1 "whatever"))
-               (upsert (-> (on-conflict (on-constraint :distributors_pkey))
-                           do-nothing))
-               sql/format)))))
+               (on-conflict (on-constraint :distributors_pkey))
+               do-nothing
+               sql/format)
+           ;; nilenso version:
+           #_(-> (insert-into :distributors)
+                 (columns :did :dname)
+                 (query-values (select 1 "whatever"))
+                 (upsert (-> (on-conflict-constraint :distributors_pkey)
+                             do-nothing))
+                 sql/format)))))
 
 (deftest upsert-where-test
   (is (= ["INSERT INTO user (phone, name) VALUES (?, ?) ON CONFLICT (phone) WHERE phone IS NOT NULL DO UPDATE SET phone = EXCLUDED.phone, name = EXCLUDED.name WHERE user.active = FALSE" "5555555" "John"]
@@ -102,7 +120,18 @@
            :on-conflict   [:phone
                            {:where [:<> :phone nil]}]
            :do-update-set {:fields [:phone :name]
-                           :where  [:= :user.active false]}}))))
+                           :where  [:= :user.active false]}})
+         ;; nilenso version
+         #_(sql/format
+            {:insert-into :user
+             :values      [{:phone "5555555" :name "John"}]
+             ;; nested under :upsert
+             :upsert      {:on-conflict   [:phone]
+                           ;; but :where is at the same level as :on-conflict
+                           :where         [:<> :phone nil]
+                           ;; this is the same as in honeysql:
+                           :do-update-set {:fields [:phone :name]
+                                           :where  [:= :user.active false]}}}))))
 
 (deftest returning-test
   (testing "returning clause in sql generation for postgresql"
@@ -135,6 +164,7 @@
            (sql/format (drop-table :cities :towns :vilages))))))
 
 (deftest create-table-test
+  ;; the nilenso versions of these tests required sql/call for function-like syntax
   (testing "create table with two columns"
     (is (= ["CREATE TABLE cities (city VARCHAR(80) PRIMARY KEY, location POINT)"]
            (-> (create-table :cities)
@@ -188,14 +218,15 @@
 (deftest over-test
   (testing "window function over on select statemt"
     (is (= ["SELECT id, AVG(salary) OVER (PARTITION BY department ORDER BY designation ASC) AS Average, MAX(salary) OVER w AS MaxSalary FROM employee WINDOW w AS (PARTITION BY department)"]
+           ;; honeysql treats over as a function:
            (-> (select :id
-                       ;; honeysql treats over as a function:
                        (over
                         [[:avg :salary] (-> (partition-by :department) (order-by [:designation])) :Average]
                         [[:max :salary] :w :MaxSalary]))
                (from :employee)
                (window :w (partition-by :department))
                sql/format)
+           ;; nilenso treated over as a clause
            #_(-> (select :id)
                  (over
                   [[:avg :salary] (-> (partition-by :department) (order-by [:designation])) :Average]
@@ -229,13 +260,16 @@
 (deftest insert-into-with-alias
   (testing "insert into with alias"
     (is (= ["INSERT INTO distributors AS d (did, dname) VALUES (?, ?), (?, ?) ON CONFLICT (did) DO UPDATE SET dname = EXCLUDED.dname WHERE d.zipcode <> ? RETURNING d.*" 5 "Gizmo Transglobal" 6 "Associated Computing, Inc" "21201"]
-           (-> #_(insert-into-as :distributors :d)
-               (insert-into :distributors :d)
+           ;; honeysql supports alias in insert-into:
+           (-> (insert-into :distributors :d)
+               ;; nilensor required insert-into-as:
+               #_(insert-into-as :distributors :d)
                (values [{:did 5 :dname "Gizmo Transglobal"}
                         {:did 6 :dname "Associated Computing, Inc"}])
                (on-conflict :did)
-               (do-update-set (-> {:fields [:dname]}
-                                  (where [:<> :d.zipcode "21201"])))
+               ;; honeysql supports names and a where clause:
+               (do-update-set :dname (where [:<> :d.zipcode "21201"]))
+               ;; nilenso nested those under upsert:
                #_(upsert (-> (on-conflict :did)
                              (do-update-set :dname)
                              (where [:<> :d.zipcode "21201"])))
@@ -305,15 +339,18 @@
 (deftest select-distinct-on-test
   (testing "select distinct on"
     (is (= ["SELECT DISTINCT ON(\"a\", \"b\") \"c\" FROM \"products\""]
+           ;; honeysql has select-distinct-on:
            (-> (select-distinct-on [:a :b] :c)
                (from :products)
                (sql/format {:quoted true}))
+           ;; nilenso handled that via modifiers:
            #_(-> (select :c)
                  (from :products)
                  (modifiers :distinct-on :a :b)
                  (sql/format :quoting :ansi))))))
 
 (deftest create-extension-test
+  ;; previously, honeysql required :allow-dashed-names? true
   (testing "create extension"
     (is (= ["CREATE EXTENSION \"uuid-ossp\""]
            (-> (create-extension :uuid-ossp)
@@ -324,6 +361,7 @@
                (sql/format {:quoted true}))))))
 
 (deftest drop-extension-test
+  ;; previously, honeysql required :allow-dashed-names? true
   (testing "create extension"
     (is (= ["DROP EXTENSION \"uuid-ossp\""]
            (-> (drop-extension :uuid-ossp)
