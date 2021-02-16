@@ -503,6 +503,10 @@
                       " (" (format-entity (first x)) ") "
                       sql)]
                 params))
+        (and (sequential? x) (= 1 (count x)))
+        (format-on-conflict k (first x))
+        (and (sequential? x) (= 0 (count x)))
+        [(sql-kw k)]
         :else
         (throw (ex-info "unsupported :on-conflict format"
                         {:clause x}))))

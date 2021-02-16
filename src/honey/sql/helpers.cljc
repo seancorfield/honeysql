@@ -480,7 +480,7 @@
 
 (defn on-conflict
   [& args]
-  (generic-1 :on-conflict args))
+  (generic :on-conflict args))
 
 (defn on-constraint
   "Accepts a single constraint name."
@@ -570,10 +570,12 @@
       (do-update-set :x {:where [:<> :x nil]}))"
   ([clause] (upsert {} clause))
   ([data clause]
-   (let [{:keys [on-conflict do-nothing do-update-set where]} clause]
+   (let [{:keys [on-conflict on-constraint do-nothing do-update-set where]} clause]
      (cond-> data
        on-conflict
        (assoc :on-conflict on-conflict)
+       on-constraint
+       (assoc :on-constraint on-constraint)
        do-nothing
        (assoc :do-nothing do-nothing)
        do-update-set
