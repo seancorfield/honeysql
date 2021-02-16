@@ -357,7 +357,7 @@
                (sql/format {:quoted true})))))
   (testing "create extension if not exists"
     (is (= ["CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\""]
-           (-> (create-extension :uuid-ossp :if-not-exists? true)
+           (-> (create-extension :uuid-ossp :if-not-exists)
                (sql/format {:quoted true}))))))
 
 (deftest drop-extension-test
