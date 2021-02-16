@@ -486,7 +486,7 @@
   "Accepts a single constraint name."
   {:arglists '([constraint])}
   [& args]
-  (generic :on-constraint args))
+  (generic-1 :on-constraint args))
 
 (defn do-nothing
   "Called with no arguments, produces DO NOTHING"

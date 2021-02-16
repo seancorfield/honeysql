@@ -57,7 +57,7 @@ user=> (-> (insert-into :distributors)
            (values [{:did 7 :dname "Redline GmbH"}])
            (upsert (-> (on-conflict :did)
                        do-nothing))
-           sql/format)))
+           sql/format)
 ;; newlines inserted for readability:
 ["INSERT INTO distributors (did, dname) VALUES (?, ?)
   ON CONFLICT (did) DO NOTHING"
@@ -71,7 +71,7 @@ user=> (-> (insert-into :distributors)
            (values [{:did 7 :dname "Redline GmbH"}])
            (on-conflict :did)
            do-nothing
-           sql/format)))
+           sql/format)
 ;; newlines inserted for readability:
 ["INSERT INTO distributors (did, dname) VALUES (?, ?)
   ON CONFLICT (did) DO NOTHING"
@@ -86,7 +86,18 @@ user=> (-> (insert-into :distributors)
            ;; nilenso used (on-conflict-constraint :distributors_pkey) here:
            (on-conflict (on-constraint :distributors_pkey))
            do-nothing
-           sql/format)))
+           sql/format)
+;; newlines inserted for readability:
+["INSERT INTO distributors (did, dname) VALUES (?, ?)
+  ON CONFLICT ON CONSTRAINT distributors_pkey DO NOTHING"
+ 9 "Antwerp Design"]
+user=> (-> (insert-into :distributors)
+           (values [{:did 9 :dname "Antwerp Design"}])
+           ;; nilenso used (on-conflict-constraint :distributors_pkey) here:
+           on-conflict
+           (on-constraint :distributors_pkey)
+           do-nothing
+           sql/format)
 ;; newlines inserted for readability:
 ["INSERT INTO distributors (did, dname) VALUES (?, ?)
   ON CONFLICT ON CONSTRAINT distributors_pkey DO NOTHING"

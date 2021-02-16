@@ -633,6 +633,8 @@ of a SQL entity and a SQL clause. The SQL entity is
 a column name and the SQL clause can be an
 `:on-constraint` clause or a`:where` clause.
 
+_[For convenience of use with the `on-conflict` helper, this clause can also accept any of those arguments, wrapped in a sequence; it can also accept an empty sequence, and just produce `ON CONFLICT`, so that it can be combined with other clauses directly]_
+
 `:on-constraint` accepts a single SQL entity that
 identifies a constraint name.
 
@@ -674,6 +676,13 @@ user=> (sql/format {:insert-into :companies
 user=> (sql/format {:insert-into :companies
                     :values [{:name "Microsoft"}]
                     :on-conflict {:on-constraint :name-idx}
+                    :do-nothing true})
+["INSERT INTO companies (name) VALUES (?) ON CONFLICT ON CONSTRAINT name_idx DO NOTHING" "Microsoft"]
+;; empty :on-conflict combined with :on-constraint clause:
+user=> (sql/format {:insert-into :companies
+                    :values [{:name "Microsoft"}]
+                    :on-conflict []
+                    :on-constraint :name-idx
                     :do-nothing true})
 ["INSERT INTO companies (name) VALUES (?) ON CONFLICT ON CONSTRAINT name_idx DO NOTHING" "Microsoft"]
 ```

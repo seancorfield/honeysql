@@ -534,6 +534,21 @@ DO NOTHING
 INSERT INTO customers
 (name, email)
 VALUES ('Microsoft', 'hotline@microsoft.com')
+ON CONFLICT
+ON CONSTRAINT customers_name_key
+DO NOTHING
+"]
+         (format {:insert-into :customers
+                  :columns [:name :email]
+                  :values [[[:inline "Microsoft"], [:inline "hotline@microsoft.com"]]]
+                  :on-conflict []
+                  :on-constraint :customers_name_key
+                  :do-nothing true}
+                 {:pretty true})))
+  (is (= ["
+INSERT INTO customers
+(name, email)
+VALUES ('Microsoft', 'hotline@microsoft.com')
 ON CONFLICT (name)
 DO NOTHING
 "]
