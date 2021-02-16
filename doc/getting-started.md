@@ -228,6 +228,17 @@ you need to consider this when referring symbols in from the
 `honey.sql.helpers` namespace: `for`, `group-by`, `partition-by`,
 `set`, and `update`.
 
+## DDL Statements
+
+HoneySQL 1.x did not support any DDL statements. It was fairly
+common for people to use the [nilenso/honeysql-postgres library](https://github.com/nilenso/honeysql-postgres)
+to get DDL support, even if they didn't need the PostgreSQL-specific
+extensions. That library does not work with HoneySQL 2.x but all
+of the functionality from it has been incorporated
+into HoneySQL now and is described in the [PostgreSQL](doc/postgresql.md)
+section (because that covers all of the things that the nilenso
+library supported and much of it was PostgreSQL-specific!).
+
 ## Dialects
 
 By default, HoneySQL operates in ANSI SQL mode but it supports

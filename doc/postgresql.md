@@ -78,12 +78,13 @@ user=> (-> (insert-into :distributors)
  7 "Redline GmbH"]
 ```
 
-`ON CONSTRAINT` is handled slightly differently to the nilenso library:
+`ON CONSTRAINT` is handled slightly differently to the nilenso library,
+with provided a single `on-conflict-constraint` helper (and clause):
 
 ```clojure
 user=> (-> (insert-into :distributors)
            (values [{:did 9 :dname "Antwerp Design"}])
-           ;; nilenso used (on-conflict-constraint :distributors_pkey) here:
+           ;; can specify as a nested clause...
            (on-conflict (on-constraint :distributors_pkey))
            do-nothing
            sql/format)
@@ -93,7 +94,7 @@ user=> (-> (insert-into :distributors)
  9 "Antwerp Design"]
 user=> (-> (insert-into :distributors)
            (values [{:did 9 :dname "Antwerp Design"}])
-           ;; nilenso used (on-conflict-constraint :distributors_pkey) here:
+           ;; ...or as two separate clauses
            on-conflict
            (on-constraint :distributors_pkey)
            do-nothing
@@ -245,15 +246,30 @@ user=> (sql/format (drop-table :cities :towns :vilages))
 user=> (sql/format (drop-table :if-exists :cities :towns :vilages))
 ["DROP TABLE IF EXISTS cities, towns, vilages"]
 ;; alter table add column:
-
+user=> (-> (alter-table :fruit)
+           (add-column :skin [:varchar 16] nil)
+           sql/format)
+["ALTER TABLE fruit ADD COLUMN skin VARCHAR(16) NULL"]
 ;; alter table drop column:
-
+user=> (-> (alter-table :fruit)
+           (drop-column :skin)
+           sql/format)
+["ALTER TABLE fruit DROP COLUMN skin"]
 ;; alter table modify column:
-
+user=> (-> (alter-table :fruit)
+           (modify-column :name [:varchar 64] [:not nil])
+           sql/format)
+["ALTER TABLE fruit MODIFY COLUMN name VARCHAR(64) NOT NULL"]
 ;; alter table rename column:
-
+user=> (-> (alter-table :fruit)
+           (rename-column :cost :price)
+           sql/format)
+["ALTER TABLE fruit RENAME COLUMN cost TO price"]
 ;; rename table:
-
+user=> (-> (alter-table :fruit)
+           (rename-table :vegetable)
+           sql/format)
+["ALTER TABLE fruit RENAME TO vegetable"]
 ```
 
 The following PostgreSQL-specific DDL statements are supported
@@ -289,11 +305,23 @@ not supported by the nilenso library:
 
 ```clojure
 ;; alter table add index:
-
+user=> (-> (alter-table :fruit)
+           (add-index :unique :fruit-name :name)
+           sql/format)
+["ALTER TABLE fruit ADD UNIQUE fruit_name(name)"]
 ;; alter table drop index:
-
+user=> (-> (alter-table :fruit)
+           (drop-index :fruit-name)
+           sql/format)
+["ALTER TABLE fruit DROP INDEX fruit_name"]
 ;; alter table with multiple clauses:
-
+user=> (sql/format (alter-table :fruit
+                                (add-column :skin [:varchar 16] nil)
+                                (add-index :unique :fruit-name :name)))
+;; newlines inserted for readability:
+["ALTER TABLE fruit
+    ADD COLUMN skin VARCHAR(16) NULL,
+    ADD UNIQUE fruit_name(name)"]
 ```
 
 ## Window / Partition Support
