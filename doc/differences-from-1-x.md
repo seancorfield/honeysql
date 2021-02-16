@@ -93,7 +93,7 @@ The following options are no longer supported:
 
 ## DSL Changes
 
-The general intent is that the data structure behind the DSL is unchanged, for the most part. The only deliberate change is the removal of the reader literals (and their associated helper functions) in favor of standardized syntax, e.g., `[:array [1 2 3]]` instead of either `#sql/array [1 2 3]` or `(sql/array [1 2 3])`.
+The general intent is that the data structure behind the DSL is unchanged, for the most part. The main deliberate change is the removal of the reader literals (and their associated helper functions) in favor of standardized syntax, e.g., `[:array [1 2 3]]` instead of either `#sql/array [1 2 3]` or `(sql/array [1 2 3])`.
 
 The following new syntax has been added:
 
@@ -118,6 +118,8 @@ definitions in `CREATE TABLE` clauses, now that v2 supports DDL statement
 construction: `:constraint`, `:foreign-key`, `:index`, `:primary-key`,
 `:references`, `:unique`, and -- as noted above -- `:default`.
 
+### select and function calls
+
 You can now `SELECT` a function call more easily, using `[[...]]`. This was previously an error -- missing an alias -- but it was a commonly requested change, to avoid using `(sql/call ...)`:
 
 ```clojure
@@ -128,7 +130,19 @@ user=> (sql/format {:select [:a [:b :c] [[:d :e]] [[:f :g] :h]]})
 
 On a related note, `sql/call` has been removed because it should never be needed now: `[:foo ...]` should always be treated as a function call, consistently, avoiding the special cases in v1 that necessitated the explicit `sql/call` syntax.
 
-The `:set` clause is dialect-dependent. In `:mysql`, it is ranked just before the `:where` clause. In all other dialects, it is ranked just before the `:from` clause. Accordingly, the `:set0` and `:set1` clauses are no longer supported (because they were workarounds in 1.x for this conflict).
+### select modifiers
+
+HoneySQL 1.x provided a `:modifiers` clause (and a `modifiers`) helper as a way to "modify"
+a `SELECT` to be `DISTINCT`. nilenso/honeysql-helpers extended that to support `:distinct-on`
+a group of columns. In HoneySQL 2.x, you use `:select-distinct` and `:select-distinct-on`
+(and their associated helpers) for that instead.
+
+### set vs sset, set0, set1
+
+The `:set` clause is dialect-dependent. In `:mysql`, it is ranked just before the `:where` clause. In all other dialects, it is ranked just before the `:from` clause. Accordingly, the `:set0` and `:set1` clauses are no longer supported (because they were workarounds in 1.x for this conflict). The helper is now called
+`set` rather than `sset`, `set0`, and `set1` (so be aware of the conflict with `clojure.core/set`).
+
+### exists
 
 HoneySQL 1.x implemented `:exists` as part of the DSL, which was incorrect:
 it should have been a function, and in 2.x it is:
