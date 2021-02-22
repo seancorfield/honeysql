@@ -584,3 +584,13 @@ ORDER BY id = ? DESC
                      (h/where [:= :state 42])
                      (h/order-by [[:= :id 123] :desc]))
                  {:pretty true}))))
+
+
+(deftest issue-299-test
+  (let [name    "test field"
+        ;; this was a bug in v1 -- adding here to prevent regression:
+        enabled [true, "); SELECT case when (SELECT current_setting('is_superuser'))='off' then pg_sleep(0.2) end; -- "]]
+    (is (= ["INSERT INTO table (name, enabled) VALUES (?, (TRUE, ?))" name (second enabled)]
+           (format {:insert-into :table
+                    :values [{:name name
+                              :enabled enabled}]})))))
