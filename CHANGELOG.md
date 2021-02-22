@@ -1,6 +1,7 @@
 # Changes
 
-* 1.0.next in progress
+* 1.0.461 -- 2021-02-22
+  * **Fix #299 potential SQL injection vulnerability.**
   * Fix/Improve `merge-where` (and `merge-having`) behavior. #282 via #283 (@camsaul)
 
 * 1.0.444 -- 2020-05-29
