@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>honeysql</groupId>
   <artifactId>honeysql</artifactId>
-  <version>1.0.444</version>
+  <version>1.0.461</version>
   <name>honeysql</name>
   <description>SQL as Clojure data structures.</description>
   <url>https://github.com/seancorfield/honeysql</url>
@@ -25,7 +25,7 @@
     <url>https://github.com/seancorfield/honeysql</url>
     <connection>scm:git:git://github.com/seancorfield/honeysql.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/seancorfield/honeysql.git</developerConnection>
-    <tag>v1.0.444</tag>
+    <tag>v1.0.461</tag>
   </scm>
   <dependencies>
     <dependency>

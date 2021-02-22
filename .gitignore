@@ -11,7 +11,9 @@
 .cpcache
 .clj-kondo/.cache
 .eastwood
+.lsp
 .nrepl-port
+.socket-repl-port
 .classpath
 .project
 .nrepl-port

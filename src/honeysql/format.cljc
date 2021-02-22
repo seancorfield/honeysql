@@ -635,14 +635,16 @@
 (defmethod format-clause :values [[_ values] _]
   (if (sequential? (first values))
     (str "VALUES " (comma-join (for [x values]
-                                 (str "(" (comma-join (map to-sql x)) ")"))))
+                                 (binding [*fn-context?* true]
+                                   (str "(" (comma-join (map to-sql x)) ")")))))
     (let [cols (keys (first values))]
       (str
        (binding [*namespace-as-table?* false]
          (str "(" (comma-join (map to-sql cols)) ")"))
        " VALUES "
        (comma-join (for [x values]
-                     (str "(" (comma-join (map #(to-sql (get x %)) cols)) ")")))))))
+                     (binding [*fn-context?* true]
+                       (str "(" (comma-join (map #(to-sql (get x %)) cols)) ")"))))))))
 
 (defmethod format-clause :query-values [[_ query-values] _]
   (to-sql query-values))
