@@ -3,6 +3,7 @@
   (:require [#?@(:clj [clojure.test :refer]
                  :cljs [cljs.test :refer-macros]) [deftest testing is]]
             [honeysql.core :as sql]
+            [honeysql.format :as sql-f]
             [honeysql.helpers :refer [select modifiers from join left-join
                                       right-join full-join cross-join
                                       where group having
@@ -90,7 +91,7 @@
          (->
            (insert-into :foo)
            (columns :bar)
-           (values [[(honeysql.format/value {:baz "my-val"})]])
+           (values [[(sql-f/value {:baz "my-val"})]])
            sql/format)))
   (is (= ["INSERT INTO foo (a, b, c) VALUES (?, ?, ?), (?, ?, ?)"
           "a" "b" "c" "a" "b" "c"]
@@ -306,7 +307,7 @@
                     [:x] [:y]))))))))
 
 (deftest where-nil-params-test
-  (doseq [[k sql-keyword f] [[:where "WHERE" where]
+  (doseq [[_ sql-keyword f] [[:where "WHERE" where]
                              [:having "HAVING" having]]]
     (testing (str sql-keyword " called with nil parameters - see #246")
       (is (= [(str "SELECT * FROM table " sql-keyword " (foo = bar AND quuz = xyzzy)")]
