@@ -585,7 +585,6 @@ ORDER BY id = ? DESC
                      (h/order-by [[:= :id 123] :desc]))
                  {:pretty true}))))
 
-
 (deftest issue-299-test
   (let [name    "test field"
         ;; this was a bug in v1 -- adding here to prevent regression:
