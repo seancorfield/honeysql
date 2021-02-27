@@ -483,83 +483,83 @@
 
 ;; these tests are adapted from Cam Saul's PR #283
 
-(deftest merge-where-no-params-test
-  (doseq [[k [f merge-f]] {"WHERE"  [where where]
-                           "HAVING" [having having]}]
-    (testing "merge-where called with just the map as parameter - see #228"
-      (let [sqlmap (-> (select :*)
-                       (from :table)
-                       (f [:= :foo :bar]))]
-        (is (= [(str "SELECT * FROM table " k " foo = bar")]
-               (sql/format (apply merge-f sqlmap []))))))))
+#_(deftest merge-where-no-params-test
+    (doseq [[k [f merge-f]] {"WHERE"  [where where]
+                             "HAVING" [having having]}]
+      (testing "merge-where called with just the map as parameter - see #228"
+        (let [sqlmap (-> (select :*)
+                         (from :table)
+                         (f [:= :foo :bar]))]
+          (is (= [(str "SELECT * FROM table " k " foo = bar")]
+                 (sql/format (apply merge-f sqlmap []))))))))
 
-(deftest merge-where-test
-  (doseq [[k sql-keyword f merge-f] [[:where "WHERE" where where]
-                                     [:having "HAVING" having having]]]
-    (is (= [(str "SELECT * FROM table " sql-keyword " (foo = bar) AND (quuz = xyzzy)")]
-           (-> (select :*)
-               (from :table)
-               (f [:= :foo :bar] [:= :quuz :xyzzy])
-               sql/format)))
-    (is (= [(str "SELECT * FROM table " sql-keyword " (foo = bar) AND (quuz = xyzzy)")]
-           (-> (select :*)
-               (from :table)
-               (f [:= :foo :bar])
-               (merge-f [:= :quuz :xyzzy])
-               sql/format)))
-    (testing "Should work when first arg isn't a map"
-      (is (= {k [:and [:x] [:y]]}
-             (merge-f [:x] [:y]))))
-    (testing "Shouldn't use conjunction if there is only one clause in the result"
-      (is (= {k [:x]}
-             (merge-f {} [:x]))))
-    (testing "Should be able to specify the conjunction type"
-      (is (= {k [:or [:x] [:y]]}
-             (merge-f {}
-                      :or
-                      [:x] [:y]))))
-    (testing "Should ignore nil clauses"
-      (is (= {k [:or [:x] [:y]]}
-             (merge-f {}
-                      :or
-                      [:x] nil [:y]))))))
-
-(deftest merge-where-combine-clauses-test
-  (doseq [[k f] {:where  where
-                 :having having}]
-    (testing (str "Combine new " k " clauses into the existing clause when appropriate. (#282)")
-      (testing "No existing clause"
+#_(deftest merge-where-test
+    (doseq [[k sql-keyword f merge-f] [[:where "WHERE" where where]
+                                       [:having "HAVING" having having]]]
+      (is (= [(str "SELECT * FROM table " sql-keyword " (foo = bar) AND (quuz = xyzzy)")]
+             (-> (select :*)
+                 (from :table)
+                 (f [:= :foo :bar] [:= :quuz :xyzzy])
+                 sql/format)))
+      (is (= [(str "SELECT * FROM table " sql-keyword " (foo = bar) AND (quuz = xyzzy)")]
+             (-> (select :*)
+                 (from :table)
+                 (f [:= :foo :bar])
+                 (merge-f [:= :quuz :xyzzy])
+                 sql/format)))
+      (testing "Should work when first arg isn't a map"
         (is (= {k [:and [:x] [:y]]}
-               (f {}
-                  [:x] [:y]))))
-      (testing "Existing clause is not a conjunction."
-        (is (= {k [:and [:a] [:x] [:y]]}
-               (f {k [:a]}
-                  [:x] [:y]))))
-      (testing "Existing clause IS a conjunction."
-        (testing "New clause(s) are not conjunctions"
-          (is (= {k [:and [:a] [:b] [:x] [:y]]}
-                 (f {k [:and [:a] [:b]]}
+               (merge-f [:x] [:y]))))
+      (testing "Shouldn't use conjunction if there is only one clause in the result"
+        (is (= {k [:x]}
+               (merge-f {} [:x]))))
+      (testing "Should be able to specify the conjunction type"
+        (is (= {k [:or [:x] [:y]]}
+               (merge-f {}
+                        :or
+                        [:x] [:y]))))
+      (testing "Should ignore nil clauses"
+        (is (= {k [:or [:x] [:y]]}
+               (merge-f {}
+                        :or
+                        [:x] nil [:y]))))))
+
+#_(deftest merge-where-combine-clauses-test
+    (doseq [[k f] {:where  where
+                   :having having}]
+      (testing (str "Combine new " k " clauses into the existing clause when appropriate. (#282)")
+        (testing "No existing clause"
+          (is (= {k [:and [:x] [:y]]}
+                 (f {}
                     [:x] [:y]))))
-        (testing "New clauses(s) ARE conjunction(s)"
-          (is (= {k [:and [:a] [:b] [:x] [:y]]}
-                 (f {k [:and [:a] [:b]]}
-                    [:and [:x] [:y]])))
-          (is (= {k [:and [:a] [:b] [:x] [:y]]}
-                 (f {k [:and [:a] [:b]]}
-                    [:and [:x]]
-                    [:y])))
-          (is (= {k [:and [:a] [:b] [:x] [:y]]}
-                 (f {k [:and [:a] [:b]]}
-                    [:and [:x]]
-                    [:and [:y]])))))
-      (testing "if existing clause isn't the same conjunction, don't merge into it"
-        (testing "existing conjunction is `:or`"
-          (is (= {k [:and [:or [:a] [:b]] [:x] [:y]]}
-                 (f {k [:or [:a] [:b]]}
+        (testing "Existing clause is not a conjunction."
+          (is (= {k [:and [:a] [:x] [:y]]}
+                 (f {k [:a]}
                     [:x] [:y]))))
-        (testing "pass conjunction type as a param (override default of :and)"
-          (is (= {k [:or [:and [:a] [:b]] [:x] [:y]]}
-                 (f {k [:and [:a] [:b]]}
-                    :or
-                    [:x] [:y]))))))))
+        (testing "Existing clause IS a conjunction."
+          (testing "New clause(s) are not conjunctions"
+            (is (= {k [:and [:a] [:b] [:x] [:y]]}
+                   (f {k [:and [:a] [:b]]}
+                      [:x] [:y]))))
+          (testing "New clauses(s) ARE conjunction(s)"
+            (is (= {k [:and [:a] [:b] [:x] [:y]]}
+                   (f {k [:and [:a] [:b]]}
+                      [:and [:x] [:y]])))
+            (is (= {k [:and [:a] [:b] [:x] [:y]]}
+                   (f {k [:and [:a] [:b]]}
+                      [:and [:x]]
+                      [:y])))
+            (is (= {k [:and [:a] [:b] [:x] [:y]]}
+                   (f {k [:and [:a] [:b]]}
+                      [:and [:x]]
+                      [:and [:y]])))))
+        (testing "if existing clause isn't the same conjunction, don't merge into it"
+          (testing "existing conjunction is `:or`"
+            (is (= {k [:and [:or [:a] [:b]] [:x] [:y]]}
+                   (f {k [:or [:a] [:b]]}
+                      [:x] [:y]))))
+          (testing "pass conjunction type as a param (override default of :and)"
+            (is (= {k [:or [:and [:a] [:b]] [:x] [:y]]}
+                   (f {k [:and [:a] [:b]]}
+                      :or
+                      [:x] [:y]))))))))
