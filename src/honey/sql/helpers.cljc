@@ -11,20 +11,39 @@
   (into (vec current) args))
 
 (defn- and-merge
+  "Recursively merge args into the current expression."
   [current args]
   (let [args (remove nil? args)]
-    (cond (= :and (first current))
-          (default-merge current args)
-          (seq current)
-          (if (seq args)
-            (default-merge [:and current] args)
-            current)
-          (= 1 (count args))
-          (vec (first args))
-          (seq args)
-          (default-merge [:and] args)
-          :else
-          (vec current))))
+   (cond (= :and (first args))
+         (recur current [args])
+         (= :or (first args))
+         (recur [:or current] (rest args))
+         :else
+         (let [arg    (first args)
+               conj-1 (#{:and :or} (first current))
+               conj-2 (#{:and :or} (and (sequential? arg) (first arg)))]
+           (cond (empty? args)
+            ;; nothing more to merge:
+                 (vec current)
+                 (and conj-1 conj-2 (= conj-1 conj-2))
+            ;; both conjunctions and they match:
+                 (recur (default-merge current (rest arg)) (rest args))
+                 (and conj-1 conj-2)
+            ;; both conjunctions but they don't match:
+                 (if (= :and conj-1)
+                   (recur (default-merge current [arg]) (rest args))
+                   (recur (default-merge [:and current] (rest arg)) (rest args)))
+                 conj-1
+            ;; current is conjunction; arg is not
+                 (recur (default-merge (if (= :and conj-1) current [:and current]) [arg]) (rest args))
+                 (and conj-2 (seq current))
+            ;; arg is conjunction; current is not
+                 (recur (default-merge [conj-2 current] (rest arg)) (rest args))
+                 (seq current)
+            ;; current non-empty; neither is a conjunction
+                 (recur (default-merge [:and current] [arg]) (rest args))
+                 :else ; current is empty; use arg as current
+                 (recur (if (sequential? arg) arg [arg]) (rest args)))))))
 
 (def ^:private special-merges
   {:where  #'and-merge
