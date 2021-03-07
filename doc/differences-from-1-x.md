@@ -18,9 +18,9 @@ In addition, HoneySQL 2.x contains different namespaces so you can have both ver
 
 ```clojure
 ;; in deps.edn:
-honeysql {:mvn/version "1.0.444"}
+honeysql {:mvn/version "1.0.461"}
 ;; or, more correctly:
-honeysql/honeysql {:mvn/version "1.0.444"}
+honeysql/honeysql {:mvn/version "1.0.461"}
 
 ;; in use:
 (ns my.project

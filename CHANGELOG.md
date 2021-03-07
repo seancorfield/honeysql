@@ -17,6 +17,10 @@
 
 # HoneySQL pre-2.x Changes
 
+* 1.0.461 -- 2021-02-22
+  * **Fix #299 potential SQL injection vulnerability.**
+  * Fix/Improve `merge-where` (and `merge-having`) behavior. #282 via #283 (@camsaul)
+
 * 1.0.444 -- 2020-05-29
   * Fix #259 so column names are always unqualified in inserts. (@jrdoane)
   * Fix #257 by adding support for `cross-join` / `merge-cross-join` / `:cross-join`. (@dcj)
