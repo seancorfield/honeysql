@@ -1,7 +1,9 @@
 # Changes
 
 * 2.0.0-alpha3 in progress
-  * Reconcile `where` behavior with recent 1.0 changes.
+  * Fix #305 by supporting more complex join clauses.
+  * Add tests to confirm #299 does not affect v2.
+  * Reconcile `where` behavior with recent 1.0 changes (porting #283 to v2).
 
 * 2.0.0-alpha2 (for early testing)
   * Since Alpha 1, a lot more documentation has been written and docstrings have been added to most functions in `honey.sql.helpers`.
