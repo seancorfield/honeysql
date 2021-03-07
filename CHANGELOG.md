@@ -1,5 +1,8 @@
 # Changes
 
+* 2.0.0-alpha3 in progress
+  * Reconcile `where` behavior with recent 1.0 changes.
+
 * 2.0.0-alpha2 (for early testing)
   * Since Alpha 1, a lot more documentation has been written and docstrings have been added to most functions in `honey.sql.helpers`.
   * Numerous small improvements have been made to clauses and helpers around insert/upsert.

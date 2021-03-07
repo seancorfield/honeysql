@@ -563,7 +563,3 @@
                  (f {k [:and [:a] [:b]]}
                     :or
                     [:x] [:y]))))))))
-
-(comment
-  (where {:where [:and [:a] [:b]]} [:and [:x] [:y]])
-  .)

@@ -11,47 +11,50 @@
   (into (vec current) args))
 
 (defn- and-merge
-  "Recursively merge args into the current expression."
+  [current arg]
+  (if-let [conj' (and (sequential? arg) (#{:and :or} (first arg)))]
+    (cond (= conj' (first current))
+          (into (vec current) (rest arg))
+          (seq current)
+          (into [conj' current] (rest arg))
+          :else
+          (into [conj'] (rest arg)))
+    (cond (= :and (first current))
+          (conj (vec current) arg)
+          (seq current)
+          (conj [:and current] arg)
+          :else
+          (conj [:and] arg))))
+
+(defn- and-merges
   [current args]
-  (let [args (remove nil? args)]
-   (cond (= :and (first args))
-         (recur current [args])
-         (= :or (first args))
-         (recur [:or current] (rest args))
-         :else
-         (let [arg    (first args)
-               conj-1 (#{:and :or} (first current))
-               conj-2 (#{:and :or} (and (sequential? arg) (first arg)))]
-           (cond (empty? args)
-            ;; nothing more to merge:
-                 (vec current)
-                 (and conj-1 conj-2 (= conj-1 conj-2))
-            ;; both conjunctions and they match:
-                 (recur (default-merge current (rest arg)) (rest args))
-                 (and conj-1 conj-2)
-            ;; both conjunctions but they don't match:
-                 (if (= :and conj-1)
-                   (recur (default-merge current [arg]) (rest args))
-                   (recur (default-merge [:and current] (rest arg)) (rest args)))
-                 conj-1
-            ;; current is conjunction; arg is not
-                 (recur (default-merge (if (= :and conj-1) current [:and current]) [arg]) (rest args))
-                 (and conj-2 (seq current))
-            ;; arg is conjunction; current is not
-                 (recur (default-merge [conj-2 current] (rest arg)) (rest args))
-                 (seq current)
-            ;; current non-empty; neither is a conjunction
-                 (recur (default-merge [:and current] [arg]) (rest args))
-                 :else ; current is empty; use arg as current
-                 (recur (if (sequential? arg) arg [arg]) (rest args)))))))
+  (let [args (remove nil? args)
+        result
+        (cond (keyword? (first args))
+              (and-merges current [args])
+              (seq args)
+              (let [[arg & args] args]
+                (and-merges (and-merge current arg) args))
+              :else
+              current)]
+    (case (count result)
+      0 nil
+      1 (if (sequential? (first result))(first result) result)
+      2 (if (#{:and :or} (first result))
+          (second result)
+          result)
+      result)))
 
 (def ^:private special-merges
-  {:where  #'and-merge
-   :having #'and-merge})
+  {:where  #'and-merges
+   :having #'and-merges})
 
 (defn- helper-merge [data k args]
-  (let [merge-fn (special-merges k default-merge)]
-    (clojure.core/update data k merge-fn args)))
+  (if-let [merge-fn (special-merges k)]
+    (if-let [clause (merge-fn (get data k) args)]
+      (assoc data k clause)
+      data)
+    (clojure.core/update data k default-merge args)))
 
 (defn- generic [k args]
   (if (map? (first args))
