@@ -6,6 +6,8 @@ The goal of HoneySQL 2.x is to provide an easily-extensible DSL for SQL, support
 
 The DSL itself -- the data structures that both versions convert to SQL and parameters via the `format` function -- is almost exactly the same between the two versions so that migration is relatively painless. The primary API -- the `format` function -- is preserved in 2.x, although the variadic options from 1.x have changed to an options hash map in 2.x as this is generally considered more idiomatic. See the **Option Changes** section below for the differences in the options supported.
 
+HoneySQL 1.x supported Clojure 1.7 and later. HoneySQL 2.x requires Clojure 1.9 or later.
+
 ## Group, Artifact, and Namespaces
 
 HoneySQL 2.x uses the group ID `seancorfield` with the original artifact ID of `honeysql`, in line with the recommendations in Inside Clojure's post about the changes in the Clojure CLI: [Deprecated unqualified lib names](https://insideclojure.org/2020/07/28/clj-exec/).

@@ -10,9 +10,11 @@ The latest stable version (1.0.444) on Clojars and on cljdoc (note: `honeysql/ho
 
 This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINOR provide some relative indication of the size of the change, but do not follow semantic versioning. In general, all changes endeavor to be non-breaking (by moving to new names rather than by breaking existing names). COMMITS is an ever-increasing counter of commits since the beginning of this repository.
 
-Prerelease builds of the upcoming 2.x version of HoneySQL will soon be available:
+Prerelease builds of the upcoming 2.x version of HoneySQL are available for testing:
 
 [![Clojars Project](https://clojars.org/seancorfield/honeysql/latest-version.svg)](https://clojars.org/seancorfield/honeysql) [![cljdoc badge](https://cljdoc.org/badge/seancorfield/honeysql?2.0.0-alpha2)](https://cljdoc.org/d/seancorfield/honeysql/2.0.0-alpha2)
+
+HoneySQL 2.x requires Clojure 1.9 or later.
 
 This is the README for the upcoming 2.x version of HoneySQL which provides a streamlined codebase and a simpler method for extending the DSL. It also supports SQL dialects out-of-the-box and will be extended to support vendor-specific language features over time (unlike the 1.x version).
 
@@ -631,7 +633,7 @@ You can also register SQL clauses, specifying the keyword, the formatting functi
 (sql/register-clause! :foobar
                       (fn [clause x]
                         (let [[sql & params]
-                              (if (keyword? x)
+                              (if (ident? x)
                                 (sql/format-expr x)
                                 (sql/format-dsl x))]
                           (into [(str (sql/sql-kw clause) " " sql)] params)))

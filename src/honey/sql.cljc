@@ -133,16 +133,6 @@
       (keyword (name s)))
     s))
 
-(defn- kw->sym
-  "Given a keyword, produce a symbol, retaining the namespace
-  qualifier, if any."
-  [k]
-  (if (keyword? k)
-    (if-let [n (namespace k)]
-      (symbol n (name k))
-      (symbol (name k)))
-    k))
-
 (defn- namespace-_ [x] (some-> (namespace x) (str/replace "-" "_")))
 (defn- name-_      [x] (str/replace (name x) "-" "_"))
 
@@ -150,8 +140,7 @@
   (cond
     (nil? x)     "NULL"
     (string? x)  (str \' (str/replace x "'" "''") \')
-    (symbol? x)  (sql-kw x)
-    (keyword? x) (sql-kw x)
+    (ident? x)   (sql-kw x)
     :else        (str x)))
 
 (defn format-entity
@@ -242,7 +231,7 @@
               (into params)
               (into params')))
 
-        (or (keyword? x) (symbol? x))
+        (ident? x)
         (if aliased
           [(format-entity x opts)]
           (format-var x opts))
@@ -417,11 +406,8 @@
     [(str (sql-kw k) " " (sql-kw strength)
           (when tables
             (str
-              (cond (and (keyword? tables)
-                         (#{:nowait :skip-locked :wait} tables))
-                    (str " " (sql-kw tables))
-                    (and (symbol? tables)
-                         ('#{nowait skip-locked wait} tables))
+              (cond (and (ident? tables)
+                         (#{:nowait :skip-locked :wait} (sym->kw tables)))
                     (str " " (sql-kw tables))
                     (sequential? tables)
                     (str " OF "
@@ -493,13 +479,13 @@
     (into [(str (sql-kw k) " " (str/join ", " sqls))] params)))
 
 (defn- format-on-conflict [k x]
-  (cond (or (keyword? x) (symbol? x))
+  (cond (ident? x)
         [(str (sql-kw k) " (" (format-entity x) ")")]
         (map? x)
         (let [[sql & params] (format-dsl x)]
           (into [(str (sql-kw k) " " sql)] params))
         (and (sequential? x)
-             (or (keyword? (first x)) (symbol? (first x)))
+             (ident? (first x))
              (map? (second x)))
         (let [[sql & params] (format-dsl (second x))]
           (into [(str (sql-kw k)
@@ -668,6 +654,16 @@
 (assert (= (set @base-clause-order)
            (set @current-clause-order)
            (set (keys @clause-format))))
+
+(defn- kw->sym
+  "Given a keyword, produce a symbol, retaining the namespace
+  qualifier, if any."
+  [k]
+  (if (keyword? k)
+    (if-let [n (namespace k)]
+      (symbol n (name k))
+      (symbol (name k)))
+    k))
 
 (defn format-dsl
   "Given a hash map representing a SQL statement and a hash map
@@ -891,7 +887,7 @@
   This is intended to be used when writing your own formatters to
   extend the DSL supported by HoneySQL."
   [expr & [{:keys [nested] :as opts}]]
-  (cond (or (keyword? expr) (symbol? expr))
+  (cond (ident? expr)
         (format-var expr opts)
 
         (map? expr)

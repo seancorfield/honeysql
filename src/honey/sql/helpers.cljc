@@ -12,14 +12,16 @@
 
 (defn- and-merge
   [current arg]
-  (if-let [conj' (and (sequential? arg) (#{:and :or} (first arg)))]
+  (if-let [conj' (and (sequential? arg)
+                      (ident? (first arg))
+                      (#{:and :or} (keyword (first arg))))]
     (cond (= conj' (first current))
           (into (vec current) (rest arg))
           (seq current)
           (into [conj' current] (rest arg))
           :else
           (into [conj'] (rest arg)))
-    (cond (= :and (first current))
+    (cond (#{:and 'and} (first current))
           (conj (vec current) arg)
           (seq current)
           (conj [:and current] arg)
@@ -30,7 +32,7 @@
   [current args]
   (let [args (remove nil? args)
         result
-        (cond (keyword? (first args))
+        (cond (ident? (first args))
               (and-merges current [args])
               (seq args)
               (let [[arg & args] args]

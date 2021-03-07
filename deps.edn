@@ -1,9 +1,9 @@
 {:mvn/repos {"sonatype" {:url "https://oss.sonatype.org/content/repositories/snapshots/"}}
  :paths ["src"]
- :deps {org.clojure/clojure {:mvn/version "1.10.2"}}
+ :deps {org.clojure/clojure {:mvn/version "1.9.0"}}
  :aliases
  {:1.9 {:override-deps {org.clojure/clojure {:mvn/version "1.9.0"}}}
-  :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.2"}}}
+  :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.3"}}}
   :master {:override-deps {org.clojure/clojure {:mvn/version "1.11.0-master-SNAPSHOT"}}}
   :test {:extra-paths ["test"]}
   :runner
