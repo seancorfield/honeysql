@@ -3,6 +3,7 @@
 * 2.0.0-alpha3 in progress
   * Fix #305 by supporting more complex join clauses.
   * Add tests to confirm #299 does not affect v2.
+  * Confirm the whole of the [nilenso/honeysql-postgres](https://github.com/nilenso/honeysql-postgres) is implemented out-of-the-box (#293).
   * Reconcile `where` behavior with recent 1.0 changes (porting #283 to v2).
 
 * 2.0.0-alpha2 (for early testing)
