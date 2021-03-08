@@ -53,6 +53,10 @@ Column names can be provided as keywords or symbols (but not strings -- HoneySQL
 ```clojure
 (sql/format sqlmap)
 => ["SELECT a, b, c FROM foo WHERE f.a = ?" "baz"]
+;; sqlmap as symbols instead of keywords:
+(-> '{select (a, b, c) from (foo) where (= f.a "baz")}
+    (sql/format))
+=> ["SELECT a, b, c FROM foo WHERE f.a = ?" "baz"]
 ```
 
 HoneySQL is a relatively "pure" library, it does not manage your sql connection
@@ -82,16 +86,25 @@ _[In HoneySQL 1.x, this was the behavior when `:namespace-as-table? true` was sp
                :where  [:= :foo/a "baz"]})
 (sql/format q-sqlmap)
 => ["SELECT foo.a, foo.b, foo.c FROM foo WHERE foo.a = ?" "baz"]
+;; this also works with symbols instead of keywords:
+(-> '{select (foo/a, foo/b, foo/c)
+      from   (foo)
+      where  (= foo/a "baz")}
+    (sql/format))
+=> ["SELECT foo.a, foo.b, foo.c FROM foo WHERE foo.a = ?" "baz"]
 ```
 
 ### Vanilla SQL clause helpers
 
-There are also functions for each clause type in the `honey.sql.helpers` namespace:
+For every single SQL clause supported by HoneySQL (as keywords or symbols
+in the data structure that is the DSL), there is also a corresponding
+function in the `honey.sql.helpers` namespace:
 
 ```clojure
 (-> (select :a :b :c)
     (from :foo)
     (where [:= :f.a "baz"]))
+=> {:select [:a :b :c] :from [:foo] :where [:= :f.a "baz"]}
 ```
 
 Order doesn't matter (for independent clauses):
@@ -145,6 +158,11 @@ In particular, note that `(select [:a :b])` means `SELECT a AS b` rather than
 `SELECT a, b` -- helpers like `select` are generally variadic and do not take
 a collection of column names.
 
+The examples in this README use a mixture of data structures and the helper
+functions interchangably. For any example using the helpers, you could evaluate
+it (without the call to `sql/format`) to see what the equivalent data structure
+would be.
+
 ### Inserts
 
 Inserts are supported in two patterns.
@@ -165,6 +183,19 @@ INSERT INTO properties
 VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
 "
 "Jon" "Smith" 34 "Andrew" "Cooper" 12 "Jane" "Daniels" 56]
+;; or as pure data DSL:
+(-> {:insert-into [:properties]
+     :columns [:name :surname :age]
+     :values [["Jon" "Smith" 34]
+              ["Andrew" "Cooper" 12]
+              ["Jane" "Daniels" 56]]}
+    (sql/format {:pretty true}))
+=> ["
+INSERT INTO properties
+(name, surname, age)
+VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
+"
+"Jon" "Smith" 34 "Andrew" "Cooper" 12 "Jane" "Daniels" 56]
 ```
 
 If the rows are of unequal lengths, they will be padded with `NULL` values to make them consistent.
@@ -176,6 +207,19 @@ Alternately, you can simply specify the values as maps:
     (values [{:name "John" :surname "Smith" :age 34}
              {:name "Andrew" :surname "Cooper" :age 12}
              {:name "Jane" :surname "Daniels" :age 56}])
+    (sql/format {:pretty true}))
+=> ["
+INSERT INTO properties
+(name, surname, age) VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
+"
+"John" "Smith" 34
+"Andrew" "Cooper"  12
+"Jane" "Daniels" 56]
+;; or as pure data DSL:
+(-> {:insert-into [:properties]
+     :values [{:name "John", :surname "Smith", :age 34}
+              {:name "Andrew", :surname "Cooper", :age 12}
+              {:name "Jane", :surname "Daniels", :age 56}]}
     (sql/format {:pretty true}))
 => ["
 INSERT INTO properties
@@ -209,13 +253,34 @@ INSERT INTO user_profile_to_role
 "
 12345
 "user"]
+;; or as pure data DSL:
+(let [user-id 12345
+      role-name "user"]
+  (-> {:insert-into [:user_profile_to_role]
+       :values [{:user_profile_id 12345,
+                 :role_id {:select [:id],
+                           :from [:role],
+                           :where [:= :name "user"]}}]}
+      (sql/format {:pretty true})))
+=> ["
+INSERT INTO user_profile_to_role
+(user_profile_id, role_id) VALUES (?, (SELECT id FROM role WHERE name = ?))
+"
+12345
+"user"]
 ```
 
 ```clojure
 (-> (select :*)
     (from :foo)
     (where [:in :foo.a (-> (select :a) (from :bar))])
-    sql/format)
+    (sql/format))
+=> ["SELECT * FROM foo WHERE foo.a IN (SELECT a FROM bar)"]
+;; or as pure data DSL:
+(-> {:select [:*],
+     :from [:foo],
+     :where [:in :foo.a {:select [:a], :from [:bar]}]}
+    (sql/format))
 => ["SELECT * FROM foo WHERE foo.a IN (SELECT a FROM bar)"]
 ```
 
@@ -229,6 +294,18 @@ Composite types are supported:
     (values
      [["small" (composite 1 "inch")]
       ["large" (composite 10 "feet")]])
+    (sql/format {:pretty true}))
+=> ["
+INSERT INTO comp_table
+(name, comp_column)
+VALUES (?, (?, ?)), (?, (?, ?))
+"
+"small" 1 "inch" "large" 10 "feet"]
+;; or as pure data DSL:
+(-> {:insert-into [:comp_table],
+     :columns [:name :comp_column],
+     :values [["small" [:composite 1 "inch"]]
+              ["large" [:composite 10 "feet"]]]}
     (sql/format {:pretty true}))
 => ["
 INSERT INTO comp_table
@@ -256,6 +333,19 @@ WHERE kind = ?
 "dramatic"
 1
 "drama"]
+;; or as pure data DSL:
+(-> {:update :films,
+     :set {:kind "dramatic", :watched [:+ :watched 1]},
+     :where [:= :kind "drama"]}
+    (sql/format {:pretty true}))
+=> ["
+UPDATE films
+SET kind = ?, watched = watched + ?
+WHERE kind = ?
+"
+"dramatic"
+1
+"drama"]
 ```
 
 If you are trying to build a compound update statement (with `from` or `join`),
@@ -272,6 +362,11 @@ Deletes look as you would expect:
 ```clojure
 (-> (delete-from :films)
     (where [:<> :kind "musical"])
+    (sql/format))
+=> ["DELETE FROM films WHERE kind <> ?" "musical"]
+;; or as pure data DSL:
+(-> {:delete-from [:films],
+     :where [:<> :kind "musical"]}
     (sql/format))
 => ["DELETE FROM films WHERE kind <> ?" "musical"]
 ```
@@ -291,12 +386,29 @@ INNER JOIN directors ON films.director_id = directors.id
 WHERE kind <> ?
 "
 "musical"]
+;; or pure data DSL:
+(-> {:delete [:films :directors],
+     :from [:films],
+     :join [:directors [:= :films.director_id :directors.id]],
+     :where [:<> :kind "musical"]}
+    (sql/format {:pretty true}))
+=> ["
+DELETE films, directors
+FROM films
+INNER JOIN directors ON films.director_id = directors.id
+WHERE kind <> ?
+"
+"musical"]
 ```
 
 If you want to delete everything from a table, you can use `truncate`:
 
 ```clojure
 (-> (truncate :films)
+    (sql/format))
+=> ["TRUNCATE films"]
+;; or as pure data DSL:
+(-> {:truncate :films}
     (sql/format))
 => ["TRUNCATE films"]
 ```
@@ -344,6 +456,9 @@ regular function calls in a select:
 ```clojure
 (-> (select [[:max :id]]) (from :foo) sql/format)
 => ["SELECT MAX(id) FROM foo"]
+;; the pure data DSL requires an extra level of brackets:
+(-> {:select [[[:max :id]]], :from [:foo]} sql/format)
+=> ["SELECT MAX(id) FROM foo"]
 ```
 
 ### Bindable parameters
@@ -354,6 +469,10 @@ Keywords that begin with `?` are interpreted as bindable parameters:
 (-> (select :id)
     (from :foo)
     (where [:= :a :?baz])
+    (sql/format {:params {:baz "BAZ"}}))
+=> ["SELECT id FROM foo WHERE a = ?" "BAZ"]
+;; or as pure data DSL:
+(-> {:select [:id], :from [:foo], :where [:= :a :?baz]}
     (sql/format {:params {:baz "BAZ"}}))
 => ["SELECT id FROM foo WHERE a = ?" "BAZ"]
 ```
