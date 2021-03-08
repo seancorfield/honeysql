@@ -575,14 +575,29 @@
             (str " " (str/join ", " (map #'format-simple-clause clauses)))))]
     [(str (sql-kw k) " " (format-entity x))]))
 
-(defn- format-create-table [k table]
-  (let [[table if-not-exists] (if (sequential? table) table [table])]
-   [(str (sql-kw k) " "
-         (when if-not-exists (str (sql-kw :if-not-exists) " "))
-         (format-entity table))]))
+(defn- destructure-create-item [table]
+  (let [coll
+        (if (sequential? table)
+          table
+          [table])
+        ine (last coll)
+        [prequel table ine]
+        (if (= :if-not-exists (sym->kw ine))
+          [(butlast (butlast coll)) (last (butlast coll)) ine]
+          [(butlast coll) (last coll) nil])]
+    [(str/join " " (map sql-kw prequel))
+     (format-entity table)
+     (when ine (sql-kw ine))]))
 
-(defn- format-create-view [k x]
-  [(str (sql-kw k) " " (format-entity x) " AS")])
+(defn- format-create [k item as]
+  (let [[pre i ine] (destructure-create-item item)]
+    [(str/join " " (remove nil?
+                           [(sql-kw :create)
+                            (when (seq pre) pre)
+                            (sql-kw k)
+                            ine
+                            i
+                            (when as (sql-kw as))]))]))
 
 (defn- format-drop-table
   [k params]
@@ -639,10 +654,10 @@
          :add-index       (fn [_ x] (format-on-expr :add x))
          :drop-index      #'format-selector
          :rename-table    (fn [_ x] (format-selector :rename-to x))
-         :create-table    #'format-create-table
-         :create-extension #'format-create-table
+         :create-table    (fn [_ x] (format-create :table x nil))
+         :create-extension (fn [_ x] (format-create :extension x nil))
          :with-columns    #'format-table-columns
-         :create-view     #'format-create-view
+         :create-view     (fn [_ x] (format-create :view x :as))
          :drop-table      #'format-drop-table
          :drop-extension  #'format-drop-table
          :nest            (fn [_ x] (format-expr x))
