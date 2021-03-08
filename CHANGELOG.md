@@ -5,6 +5,7 @@
   * Add tests to confirm #299 does not affect v2.
   * Confirm the whole of the [nilenso/honeysql-postgres](https://github.com/nilenso/honeysql-postgres) is implemented out-of-the-box (#293).
   * Reconcile `where` behavior with recent 1.0 changes (porting #283 to v2).
+  * Fix #277 by adding `:join-by`/`join-by` so that you can have multiple `JOIN`'s in a specific order.
 
 * 2.0.0-alpha2 (for early testing)
   * Since Alpha 1, a lot more documentation has been written and docstrings have been added to most functions in `honey.sql.helpers`.

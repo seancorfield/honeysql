@@ -410,6 +410,8 @@ user=> (sql/format {:select [:u.username :s.name]
 ["SELECT u.username, s.name FROM user AS u INNER JOIN status AS s ON u.statusid = s.id WHERE s.id = ?" 2]
 ```
 
+`:join` is shorthand for `:inner-join`.
+
 An alternative to a join condition is a `USING` expression:
 
 ```clojure
@@ -429,6 +431,28 @@ simple table name (keyword or symbol) or a pair of a
 table name and an alias.
 
 > Note: the actual formatting of a `:cross-join` clause is currently identical to the formatting of a `:select` clause.
+
+## join-by
+
+This is a convenience that allows for an arbitrary sequence of `JOIN`
+operations to be performed in a specific order. It accepts a sequence
+of join operation name (keyword or symbol) and the clause that join
+would take:
+
+```clojure
+user=> (sql/format {:select [:t.ref :pp.code]
+                    :from [[:transaction :t]]
+                    :join-by [:left [[:paypal-tx :pp]
+                                     [:using :id]]
+                              :join [[:logtransaction :log]
+                                     [:= :t.id :log.id]]]
+                    :where [:= "settled" :pp.status]})
+["SELECT t.ref, pp.code FROM transaction AS t LEFT JOIN paypal_tx AS pp USING (id) INNER JOIN logtransaction AS log ON t.id = log.id WHERE ? = pp.status" "settled"]
+```
+
+Without `:join-by`, a `:join` would normally be generated before a `:left-join`.
+To avoid repetition, `:join-by` allows shorthand versions of the join clauses
+using a keyword (or symbol) without the `-join` suffix, as shown in this example.
 
 ## set (MySQL)
 

@@ -393,6 +393,22 @@
   [& args]
   (generic :using args))
 
+(defn join-by
+  "Accepts a sequence of join clauses to be generated
+  in a specific order.
+
+  (-> (select :*)
+      (from :foo)
+      (join-by :left :bar [:= :foo.id :bar.id]
+               :join :quux [:= :bar.qid = :quux.id])
+
+  This produces a LEFT JOIN followed by an INNER JOIN
+  even though the 'natural' order for `left-join` and
+  `join` would be to generate the INNER JOIN first,
+  followed by the LEFT JOIN."
+  [& args]
+  (generic :join-by args))
+
 (defn join
   [& args]
   (generic :join args))

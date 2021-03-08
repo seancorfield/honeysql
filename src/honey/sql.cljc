@@ -46,6 +46,7 @@
    :select :select-distinct :select-distinct-on
    :insert-into :update :delete :delete-from :truncate
    :columns :set :from :using
+   :join-by
    :join :left-join :right-join :inner-join :outer-join :full-join
    :cross-join
    :where :group-by :having
@@ -381,6 +382,42 @@
                 (partition 2 clauses))]
     (into [(str/join " " sqls)] params)))
 
+(def ^:private join-by-aliases
+  "Map of shorthand to longhand join names."
+  {:join  :inner-join
+   :left  :left-join
+   :right :right-join
+   :inner :inner-join
+   :outer :outer-join
+   :full  :full-join
+   :cross :cross-join})
+
+(def ^:private valid-joins
+  (set (vals join-by-aliases)))
+
+(defn- format-join-by
+  "Clauses should be a sequence of join types followed
+  by their table and condition, so that you can construct
+  a series of joins in a specific order."
+  [_ clauses]
+  (let [joins (partition-by ident? clauses)]
+    (when-not (even? (count joins))
+      (throw (ex-info ":join-by expects a sequence of join clauses"
+                      {:clauses clauses})))
+    (let [[sqls params]
+          (reduce (fn [[sqls params] [[j] [clauses]]]
+                    (let [j' (sym->kw j)
+                          j' (sym->kw (join-by-aliases j' j'))]
+                      (when-not (valid-joins j')
+                        (throw (ex-info (str ":join-by found an invalid join type "
+                                             j)
+                                        {})))
+                      (let [[sql' & params'] (format-dsl {j' clauses})]
+                        [(conj sqls sql') (into params params')])))
+                  [[] []]
+                  (partition 2 joins))]
+      (into [(str/join " " sqls)] params))))
+
 (defn- format-on-expr [k e]
   (if (or (not (sequential? e)) (seq e))
     (let [[sql & params] (format-expr e)]
@@ -628,6 +665,7 @@
          :set             #'format-set-exprs
          :from            #'format-selects
          :using           #'format-selects
+         :join-by         #'format-join-by
          :join            #'format-join
          :left-join       #'format-join
          :right-join      #'format-join

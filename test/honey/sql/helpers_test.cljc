@@ -9,7 +9,7 @@
              :refer [add-column add-index alter-table columns create-table create-view
                      cross-join do-update-set drop-column drop-index drop-table from full-join
                      group-by having insert-into
-                     join left-join limit offset on-conflict order-by
+                     join-by join left-join limit offset on-conflict order-by
                      over partition-by
                      rename-column rename-table returning right-join
                      select select-distinct values where window with with-columns]]))
@@ -74,6 +74,30 @@
                          {:params {:param1 "gabba" :param2 2}
                           ;; to enable :lock
                           :dialect :mysql :quoted false}))))))
+
+(deftest join-by-test
+  (testing "Natural JOIN orders"
+    (is (= ["SELECT * FROM foo INNER JOIN draq ON f.b = draq.x LEFT JOIN clod AS c ON f.a = c.d RIGHT JOIN bock ON bock.z = c.e FULL JOIN beck ON beck.x = c.y"]
+           (sql/format {:select [:*] :from [:foo]
+                        :full-join  [:beck [:= :beck.x :c.y]]
+                        :right-join [:bock [:= :bock.z :c.e]]
+                        :left-join  [[:clod :c] [:= :f.a :c.d]]
+                        :join       [:draq [:= :f.b :draq.x]]}))))
+  (testing "Specific JOIN orders"
+    (is (= ["SELECT * FROM foo FULL JOIN beck ON beck.x = c.y RIGHT JOIN bock ON bock.z = c.e LEFT JOIN clod AS c ON f.a = c.d INNER JOIN draq ON f.b = draq.x"]
+           (sql/format {:select [:*] :from [:foo]
+                        :join-by [:full  [:beck [:= :beck.x :c.y]]
+                                  :right [:bock [:= :bock.z :c.e]]
+                                  :left  [[:clod :c] [:= :f.a :c.d]]
+                                  :join  [:draq [:= :f.b :draq.x]]]})))
+    (is (= ["SELECT * FROM foo FULL JOIN beck ON beck.x = c.y RIGHT JOIN bock ON bock.z = c.e LEFT JOIN clod AS c ON f.a = c.d INNER JOIN draq ON f.b = draq.x"]
+           (-> (select :*)
+               (from :foo)
+               (join-by :full-join  [:beck [:= :beck.x :c.y]]
+                        :right-join [:bock [:= :bock.z :c.e]]
+                        :left-join  [[:clod :c] [:= :f.a :c.d]]
+                        :inner-join [:draq [:= :f.b :draq.x]])
+               (sql/format))))))
 
 (deftest test-cast
   (is (= ["SELECT foo, CAST(bar AS integer)"]
