@@ -116,6 +116,10 @@ in the example above, but allow things like `CHECK` for a
 constraint, `FOREIGN KEY` (with a column name), `REFERENCES`
 (with a pair of column names). See [Clause Descriptors in Special Syntax](special-syntax.md#clause-descriptors) for more details.
 
+## create-table-as, create-view, and others
+
+## create-extension
+
 ## create-view
 
 `:create-view` accepts a single view name:

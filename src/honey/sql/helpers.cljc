@@ -156,23 +156,27 @@
   flag to trigger IF NOT EXISTS in the SQL:
 
   (create-table :foo)
-  (create-table :foo :if-not-exists)
-
-  That second argument can be truthy value but using
-  that keyword is recommended for clarity."
+  (create-table :foo :if-not-exists)"
   {:arglists '([table] [table if-not-exists])}
   [& args]
   (generic :create-table args))
+
+(defn create-table-as
+  "Accepts a table name to create and optionally a
+  flag to trigger IF NOT EXISTS in the SQL:
+
+  (create-table-as :foo)
+  (create-table-as :foo :if-not-exists)"
+  {:arglists '([table] [table if-not-exists])}
+  [& args]
+  (generic :create-table-as args))
 
 (defn create-extension
   "Accepts an extension name to create and optionally a
   flag to trigger IF NOT EXISTS in the SQL:
 
   (create-extension :postgis)
-  (create-extension :postgis :if-not-exists)
-
-  That second argument can be truthy value but using
-  that keyword is recommended for clarity."
+  (create-extension :postgis :if-not-exists)"
   {:arglists '([extension] [extension if-not-exists])}
   [& args]
   (generic :create-extension args))
@@ -547,6 +551,12 @@
   Produces: RETURNING *"
   [& cols]
   (generic :returning cols))
+
+(defn with-data
+  "Accepts a Boolean determining WITH DATA vs WITH NO DATA."
+  {:arglists '([data?])}
+  [& args]
+  (generic-1 :with-data args))
 
 ;; helpers that produce non-clause expressions -- must be listed below:
 (defn composite

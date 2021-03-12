@@ -39,7 +39,7 @@
   [;; DDL comes first (these don't really have a precedence):
    :alter-table :add-column :drop-column :modify-column :rename-column
    :add-index :drop-index :rename-table
-   :create-table :with-columns :create-view :drop-table
+   :create-table :create-table-as :with-columns :create-view :drop-table
    :create-extension :drop-extension
    ;; then SQL clauses in priority order:
    :nest :with :with-recursive :intersect :union :union-all :except :except-all
@@ -53,7 +53,8 @@
    :window :partition-by
    :order-by :limit :offset :for :values
    :on-conflict :on-constraint :do-nothing :do-update-set
-   :returning])
+   :returning
+   :with-data])
 
 (defn- add-clause-before
   "Low-level helper just to insert a new clause."
@@ -599,6 +600,12 @@
                             i
                             (when as (sql-kw as))]))]))
 
+(defn- format-with-data [k data]
+  [(str/join " " (remove nil?
+                         [(sql-kw :with)
+                          (when-not data (sql-kw :no))
+                          (sql-kw :data)]))])
+
 (defn- format-drop-table
   [k params]
   (let [tables (if (sequential? params) params [params])
@@ -655,6 +662,7 @@
          :drop-index      #'format-selector
          :rename-table    (fn [_ x] (format-selector :rename-to x))
          :create-table    (fn [_ x] (format-create :table x nil))
+         :create-table-as (fn [_ x] (format-create :table x :as))
          :create-extension (fn [_ x] (format-create :extension x nil))
          :with-columns    #'format-table-columns
          :create-view     (fn [_ x] (format-create :view x :as))
@@ -702,7 +710,8 @@
          :on-constraint   #'format-selector
          :do-nothing      (fn [k _] (vector (sql-kw k)))
          :do-update-set   #'format-do-update-set
-         :returning       #'format-selects}))
+         :returning       #'format-selects
+         :with-data       #'format-with-data}))
 
 (assert (= (set @base-clause-order)
            (set @current-clause-order)
