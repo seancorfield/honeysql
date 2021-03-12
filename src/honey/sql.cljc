@@ -943,6 +943,13 @@
     (fn [_ [& args]]
       (let [[sqls params] (format-expr-list args)]
         (into [(str "(" (str/join ", " sqls) ")")] params)))
+    :escape
+    (fn [_ [pattern escape-chars]]
+      (let [[sql-p & params-p] (format-expr pattern)
+            [sql-e & params-e] (format-expr escape-chars)]
+        (-> [(str sql-p " " (sql-kw :escape) " " sql-e)]
+            (into params-p)
+            (into params-e))))
     :inline
     (fn [_ [x]]
       (if (sequential? x)

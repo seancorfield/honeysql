@@ -1,10 +1,14 @@
 # Changes
 
 * 2.0.0-alpha3 in progress
+  * Support much richer range of syntax on `CREATE`/`DROP` statements in general, including columns, `TABLESPACE`, `CASCADE`, `WITH [NO] DATA`, etc.
+  * Fix #306 by supporting `CREATE TABLE .. AS ..`.
   * Fix #305 by supporting more complex join clauses.
+  * Fix #301 by adding support for `CREATE`/`DROP`/`REFRESH` on `MATERIALIZED VIEW`.
   * Add tests to confirm #299 does not affect v2.
   * Confirm the whole of the [nilenso/honeysql-postgres](https://github.com/nilenso/honeysql-postgres) is implemented out-of-the-box (#293).
   * Reconcile `where` behavior with recent 1.0 changes (porting #283 to v2).
+  * Fix #280 by adding `:escape` as special syntax for regular expression patterns.
   * Fix #277 by adding `:join-by`/`join-by` so that you can have multiple `JOIN`'s in a specific order.
 
 * 2.0.0-alpha2 (for early testing)

@@ -294,6 +294,12 @@
                                            [[1 2] [3 4] [5 6]])}]]})
            ["WITH bar (spam, eggs) AS (VALUES (1, 2), (3, 4), (5, 6)) (SELECT foo FROM bar1) UNION (SELECT foo FROM bar2)"]))))
 
+(deftest similar-regex-tests
+  (testing "basic similar to"
+    (is (= (format {:select :* :from :foo
+                    :where [:similar-to :foo [:escape "bar" [:inline  "*"]]]})
+           ["SELECT * FROM foo WHERE foo SIMILAR TO ? ESCAPE '*'" "bar"]))))
+
 (deftest former-parameterizer-tests-where-and
   ;; I have no plans for positional parameters -- I just don't see the point
   #_(testing "should ignore a nil predicate -- fail: postgresql parameterizer"

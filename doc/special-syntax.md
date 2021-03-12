@@ -67,6 +67,11 @@ SQL entity. This is intended for use in contexts that would
 otherwise produce a sequence of SQL keywords, such as when
 constructing DDL statements.
 
+## escape
+
+Intended to be used with regular expression patterns to
+specify the escape characters (if any).
+
 ## inline
 
 Accepts a single argument and tries to render it as a
