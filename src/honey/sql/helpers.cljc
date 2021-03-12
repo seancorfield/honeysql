@@ -65,7 +65,7 @@
     (helper-merge {} k args)))
 
 (defn- generic-1 [k [data arg]]
-  (if arg
+  (if (some? arg)
     (assoc data k arg)
     (assoc {} k data)))
 
@@ -213,8 +213,19 @@
 
   (-> (create-view :cities)
       (select :*) (from :city))"
+  {:arglists '([view])}
   [& args]
-  (generic-1 :create-view args))
+  (generic :create-view args))
+
+(defn create-materialized-view
+  "Accepts a single view name to create.
+
+  (-> (create-materialized-view :cities)
+      (select :*) (from :city))
+      (with-data true)"
+  {:arglists '([view])}
+  [& args]
+  (generic :create-materialized-view args))
 
 (defn drop-table
   "Accepts one or more table names to drop.
@@ -227,6 +238,22 @@
   "Accepts one or more extension names to drop."
   [& extensions]
   (generic :drop-extension extensions))
+
+(defn drop-view
+  "Accepts one or more view names to drop."
+  [& views]
+  (generic :drop-view views))
+
+(defn drop-materialized-view
+  "Accepts one or more materialied view names to drop."
+  [& views]
+  (generic :drop-materialized-view views))
+
+(defn refresh-materialized-view
+  "Accepts a materialied view name to refresh."
+  {:arglists '([view])}
+  [& views]
+  (generic :refresh-materialized-view views))
 
 (defn nest
   [& args]

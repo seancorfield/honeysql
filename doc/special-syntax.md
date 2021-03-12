@@ -60,6 +60,13 @@ expression (comma-separated, wrapped in parentheses):
 ;;=> ["(a, b, ?, x + ?)" "red" 1]
 ```
 
+## entity
+
+Accepts a single keyword or symbol argument and produces a
+SQL entity. This is intended for use in contexts that would
+otherwise produce a sequence of SQL keywords, such as when
+constructing DDL statements.
+
 ## inline
 
 Accepts a single argument and tries to render it as a

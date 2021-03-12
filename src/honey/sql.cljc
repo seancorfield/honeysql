@@ -39,8 +39,10 @@
   [;; DDL comes first (these don't really have a precedence):
    :alter-table :add-column :drop-column :modify-column :rename-column
    :add-index :drop-index :rename-table
-   :create-table :create-table-as :with-columns :create-view :drop-table
-   :create-extension :drop-extension
+   :create-table :create-table-as :with-columns
+   :create-view :create-materialized-view :create-extension
+   :drop-table :drop-view :drop-materialized-view :drop-extension
+   :refresh-materialized-view
    ;; then SQL clauses in priority order:
    :nest :with :with-recursive :intersect :union :union-all :except :except-all
    :select :select-distinct :select-distinct-on
@@ -561,72 +563,110 @@
         (let [e (format-entity x {:drop-ns true})]
           [(str (sql-kw k) " " e " = EXCLUDED." e)])))
 
-(defn- format-simple-clause [c]
+(defn- format-simple-clause [c context]
   (binding [*inline* true]
-    (let [[x & y] (format-dsl c)]
-      (when (seq y)
-        (throw (ex-info "column/index operations must be simple clauses"
-                        {:clause c :params y})))
-      x)))
+    (let [[sql & params] (format-dsl c)]
+      (when (seq params)
+        (throw (ex-info (str "parameters are not accepted in " context)
+                        {:clause c :params params})))
+      sql)))
+
+(defn- format-simple-expr [e context]
+  (binding [*inline* true]
+    (let [[sql & params] (format-expr e)]
+      (when (seq params)
+        (throw (ex-info (str "parameters are not accepted in " context)
+                        {:expr e :params params})))
+      sql)))
 
 (defn- format-alter-table [k x]
   (if (sequential? x)
     [(str (sql-kw k) " " (format-entity (first x))
           (when-let [clauses (next x)]
-            (str " " (str/join ", " (map #'format-simple-clause clauses)))))]
+            (str " " (str/join ", " (map #(format-simple-clause % "column/index operations") clauses)))))]
     [(str (sql-kw k) " " (format-entity x))]))
 
-(defn- destructure-create-item [table]
-  (let [coll
+(defn- format-ddl-options
+  "Given a sequence of options for a DDL statement (the part that
+  comes between the entity name being created/dropped and the
+  remaining part of the statement), render clauses and sequences
+  of keywords and entity names. Returns a sequence of SQL strings."
+  [opts context]
+  (for [opt opts]
+    (cond (map? opt)
+          (format-simple-clause opt context)
+          (sequential? opt)
+          (str/join " "
+                    (map (fn [e]
+                           (if (ident? e)
+                             (sql-kw e)
+                             (format-simple-expr e context)))
+                         opt))
+          :else
+          (sql-kw opt))))
+
+(defn- destructure-create-item [table context]
+  (let [params
         (if (sequential? table)
           table
           [table])
-        ine (last coll)
+        coll (take-while ident? params)
+        opts (drop-while ident? params)
+        ine  (last coll)
         [prequel table ine]
         (if (= :if-not-exists (sym->kw ine))
           [(butlast (butlast coll)) (last (butlast coll)) ine]
           [(butlast coll) (last coll) nil])]
-    [(str/join " " (map sql-kw prequel))
-     (format-entity table)
-     (when ine (sql-kw ine))]))
+    (into [(str/join " " (map sql-kw prequel))
+           (format-entity table)
+           (when ine (sql-kw ine))]
+          (format-ddl-options opts context))))
 
-(defn- format-create [k item as]
-  (let [[pre i ine] (destructure-create-item item)]
+(defn- format-create [q k item as]
+  (let [[pre entity ine & more]
+        (destructure-create-item item (str (sql-kw q) " options"))]
     [(str/join " " (remove nil?
-                           [(sql-kw :create)
-                            (when (seq pre) pre)
-                            (sql-kw k)
-                            ine
-                            i
-                            (when as (sql-kw as))]))]))
+                           (-> [(sql-kw q)
+                                (when (and (= :create q) (seq pre)) pre)
+                                (sql-kw k)
+                                ine
+                                (when (and (= :refresh q) (seq pre)) pre)
+                                entity]
+                               (into more)
+                               (conj (when as (sql-kw as))))))]))
 
-(defn- format-with-data [k data]
-  [(str/join " " (remove nil?
-                         [(sql-kw :with)
-                          (when-not data (sql-kw :no))
-                          (sql-kw :data)]))])
+(defn- format-with-data [_ data]
+  (let [data (if (sequential? data) (first data) data)]
+    [(str/join " " (remove nil?
+                           [(sql-kw :with)
+                            (when-not data (sql-kw :no))
+                            (sql-kw :data)]))]))
 
-(defn- format-drop-table
+(defn- destructure-drop-items [tables context]
+  (let [params
+        (if (sequential? tables)
+          tables
+          [tables])
+        coll (take-while ident? params)
+        opts (drop-while ident? params)
+        [if-exists & tables]
+        (if (#{:if-exists 'if-exists} (first coll))
+          coll
+          (cons nil coll))]
+    (into [(when if-exists (sql-kw :if-exists))
+           (str/join ", " (map #'format-entity tables))]
+          (format-ddl-options opts context))))
+
+(defn- format-drop-items
   [k params]
-  (let [tables (if (sequential? params) params [params])
-        [if-exists & tables] (if (#{:if-exists 'if-exists} (first tables)) tables (cons nil tables))]
-   [(str (sql-kw k) " "
-         (when if-exists (str (sql-kw :if-exists) " "))
-         (str/join ", " (map #'format-entity tables)))]))
-
-(defn- format-simple-expr [e]
-  (binding [*inline* true]
-    (let [[x & y] (format-expr e)]
-      (when (seq y)
-        (throw (ex-info "column elements must be simple expressions"
-                        {:expr e :params y})))
-      x)))
+  (let [[if-exists tables & more] (destructure-drop-items params "DROP options")]
+    [(str/join " " (remove nil? (into [(sql-kw k) if-exists tables] more)))]))
 
 (defn- format-single-column [xs]
-  (str/join " " (let [[id & spec] (map #'format-simple-expr xs)]
+  (str/join " " (let [[id & spec] (map #(format-simple-expr % "column operation") xs)]
                   (cons id (map upper-case spec)))))
 
-(defn- format-table-columns [k xs]
+(defn- format-table-columns [_ xs]
   [(str "("
         (str/join ", " (map #'format-single-column xs))
         ")")])
@@ -661,13 +701,17 @@
          :add-index       (fn [_ x] (format-on-expr :add x))
          :drop-index      #'format-selector
          :rename-table    (fn [_ x] (format-selector :rename-to x))
-         :create-table    (fn [_ x] (format-create :table x nil))
-         :create-table-as (fn [_ x] (format-create :table x :as))
-         :create-extension (fn [_ x] (format-create :extension x nil))
+         :create-table    (fn [_ x] (format-create :create :table x nil))
+         :create-table-as (fn [_ x] (format-create :create :table x :as))
+         :create-extension (fn [_ x] (format-create :create :extension x nil))
          :with-columns    #'format-table-columns
-         :create-view     (fn [_ x] (format-create :view x :as))
-         :drop-table      #'format-drop-table
-         :drop-extension  #'format-drop-table
+         :create-view     (fn [_ x] (format-create :create :view x :as))
+         :create-materialized-view (fn [_ x] (format-create :create :materialized-view x :as))
+         :drop-table      #'format-drop-items
+         :drop-extension  #'format-drop-items
+         :drop-view       #'format-drop-items
+         :drop-materialized-view #'format-drop-items
+         :refresh-materialized-view (fn [_ x] (format-create :refresh :materialized-view x nil))
          :nest            (fn [_ x] (format-expr x))
          :with            #'format-with
          :with-recursive  #'format-with
@@ -737,9 +781,10 @@
   [statement-map & [{:keys [aliased nested pretty]}]]
   (let [[sqls params leftover]
         (reduce (fn [[sql params leftover] k]
-                  (if-let [xs (or (k statement-map)
-                                  (let [s (kw->sym k)]
-                                    (get statement-map s)))]
+                  (if-some [xs (if-some [xs (k statement-map)]
+                                 xs
+                                 (let [s (kw->sym k)]
+                                   (get statement-map s)))]
                     (let [formatter (k @clause-format)
                           [sql' & params'] (formatter k xs)]
                       [(conj sql sql')
@@ -804,22 +849,35 @@
 (defn- function-0 [k xs]
   [(str (sql-kw k)
         (when (seq xs)
-          (str "(" (str/join ", " (map #'format-simple-expr xs)) ")")))])
+          (str "("
+               (str/join ", "
+                         (map #(format-simple-expr % "column/index operation")
+                              xs))
+               ")")))])
 
 (defn- function-1 [k xs]
   [(str (sql-kw k)
         (when (seq xs)
-          (str " " (format-simple-expr (first xs))
+          (str " " (format-simple-expr (first xs)
+                                       "column/index operation")
                (when-let [args (next xs)]
-                 (str "(" (str/join ", " (map #'format-simple-expr args)) ")")))))])
+                 (str "("
+                      (str/join ", "
+                                 (map #(format-simple-expr % "column/index operation")
+                                      args))
+                      ")")))))])
 
 (defn- function-1-opt [k xs]
   [(str (sql-kw k)
         (when (seq xs)
           (str (when-let [e (first xs)]
-                 (str " " (format-simple-expr e)))
+                 (str " " (format-simple-expr e "column/index operation")))
                (when-let [args (next xs)]
-                 (str "(" (str/join ", " (map #'format-simple-expr args)) ")")))))])
+                 (str "("
+                      (str/join ", "
+                                (map #(format-simple-expr % "column/index operation")
+                                     args))
+                      ")")))))])
 
 (def ^:private special-syntax
   (atom
@@ -840,6 +898,9 @@
     :primary-key #'function-0
     :references  #'function-1
     :unique      #'function-1-opt
+    ;; used in DDL to force rendering as a SQL entity instead
+    ;; of a SQL keyword:
+    :entity      (fn [_ [e]] [(format-entity e)])
     :array
     (fn [_ [arr]]
       (let [[sqls params] (format-expr-list arr)]

@@ -120,7 +120,7 @@ constraint, `FOREIGN KEY` (with a column name), `REFERENCES`
 
 ## create-extension
 
-## create-view
+## create-view, create-materialized-view
 
 `:create-view` accepts a single view name:
 

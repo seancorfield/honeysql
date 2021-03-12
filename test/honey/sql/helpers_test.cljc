@@ -6,13 +6,15 @@
                :cljs [cljs.test :refer-macros [deftest is testing]])
             [honey.sql :as sql]
             [honey.sql.helpers
-             :refer [add-column add-index alter-table columns create-table create-view
+             :refer [add-column add-index alter-table columns create-table create-table-as create-view
+                     create-materialized-view drop-view drop-materialized-view
                      cross-join do-update-set drop-column drop-index drop-table from full-join
                      group-by having insert-into
                      join-by join left-join limit offset on-conflict order-by
-                     over partition-by
+                     over partition-by refresh-materialized-view
                      rename-column rename-table returning right-join
-                     select select-distinct values where window with with-columns]]))
+                     select select-distinct values where window with with-columns
+                     with-data]]))
 
 (deftest test-select
   (let [m1 (-> (with [:cte (-> (select :*)
@@ -367,6 +369,54 @@
                          (from :cities)
                          (where [:= :metroflag "y"])))
          ["CREATE VIEW metro AS SELECT * FROM cities WHERE metroflag = ?" "y"]))
+  (is (= (sql/format (-> (create-table-as :metro :if-not-exists)
+                         (select :*)
+                         (from :cities)
+                         (where [:= :metroflag "y"])
+                         (with-data false)))
+         ["CREATE TABLE IF NOT EXISTS metro AS SELECT * FROM cities WHERE metroflag = ? WITH NO DATA" "y"]))
+  (is (= (sql/format (-> (create-materialized-view :metro :if-not-exists)
+                         (select :*)
+                         (from :cities)
+                         (where [:= :metroflag "y"])
+                         (with-data false)))
+         ["CREATE MATERIALIZED VIEW IF NOT EXISTS metro AS SELECT * FROM cities WHERE metroflag = ? WITH NO DATA" "y"]))
+  (is (= (sql/format (-> (create-table-as :metro :if-not-exists
+                                          (columns :foo :bar :baz)
+                                          [:tablespace [:entity :quux]])
+                         (select :*)
+                         (from :cities)
+                         (where [:= :metroflag "y"])
+                         (with-data false)))
+         [(str "CREATE TABLE IF NOT EXISTS metro"
+               " (foo, bar, baz) TABLESPACE quux"
+               " AS SELECT * FROM cities WHERE metroflag = ? WITH NO DATA") "y"]))
+  (is (= (sql/format (-> (create-materialized-view :metro :if-not-exists
+                                                   (columns :foo :bar :baz)
+                                                   [:tablespace [:entity :quux]])
+                         (select :*)
+                         (from :cities)
+                         (where [:= :metroflag "y"])
+                         (with-data false)))
+         [(str "CREATE MATERIALIZED VIEW IF NOT EXISTS metro"
+               " (foo, bar, baz) TABLESPACE quux"
+               " AS SELECT * FROM cities WHERE metroflag = ? WITH NO DATA") "y"]))
+  (is (= (sql/format {:create-materialized-view [:metro :if-not-exists]
+                      :select [:*]
+                      :from :cities
+                      :where [:= :metroflag "y"]
+                      :with-data true})
+         ["CREATE MATERIALIZED VIEW IF NOT EXISTS metro AS SELECT * FROM cities WHERE metroflag = ? WITH DATA" "y"]))
+  (is (= (sql/format {:create-materialized-view [:metro :if-not-exists
+                                                 (columns :foo :bar :baz)
+                                                 [:tablespace [:entity :quux]]]
+                      :select [:*]
+                      :from :cities
+                      :where [:= :metroflag "y"]
+                      :with-data false})
+         [(str "CREATE MATERIALIZED VIEW IF NOT EXISTS metro"
+               " (foo, bar, baz) TABLESPACE quux"
+               " AS SELECT * FROM cities WHERE metroflag = ? WITH NO DATA") "y"]))
   (is (= (sql/format (-> (create-table :films)
                          (with-columns
                            [:id :int :unsigned :auto-increment]
@@ -391,20 +441,32 @@
          ["DROP TABLE foo"]))
   (is (= (sql/format {:drop-table [:if-exists :foo]})
          ["DROP TABLE IF EXISTS foo"]))
+  (is (= (sql/format {:drop-view [:if-exists :foo]})
+         ["DROP VIEW IF EXISTS foo"]))
+  (is (= (sql/format {:drop-materialized-view [:if-exists :foo]})
+         ["DROP MATERIALIZED VIEW IF EXISTS foo"]))
+  (is (= (sql/format {:refresh-materialized-view [:concurrently :foo]
+                      :with-data true})
+         ["REFRESH MATERIALIZED VIEW CONCURRENTLY foo WITH DATA"]))
   (is (= (sql/format '{drop-table (if-exists foo)})
          ["DROP TABLE IF EXISTS foo"]))
   (is (= (sql/format {:drop-table [:foo :bar]})
          ["DROP TABLE foo, bar"]))
   (is (= (sql/format {:drop-table [:if-exists :foo :bar]})
          ["DROP TABLE IF EXISTS foo, bar"]))
+  (is (= (sql/format {:drop-table [:if-exists :foo :bar [:cascade]]})
+         ["DROP TABLE IF EXISTS foo, bar CASCADE"]))
   (is (= (sql/format (drop-table :foo))
          ["DROP TABLE foo"]))
   (is (= (sql/format (drop-table :if-exists :foo))
          ["DROP TABLE IF EXISTS foo"]))
+  (is (= (sql/format (-> (refresh-materialized-view :concurrently :foo)
+                         (with-data true)))
+         ["REFRESH MATERIALIZED VIEW CONCURRENTLY foo WITH DATA"]))
   (is (= (sql/format (drop-table :foo :bar))
          ["DROP TABLE foo, bar"]))
-  (is (= (sql/format (drop-table :if-exists :foo :bar))
-         ["DROP TABLE IF EXISTS foo, bar"])))
+  (is (= (sql/format (drop-table :if-exists :foo :bar [:cascade]))
+         ["DROP TABLE IF EXISTS foo, bar CASCADE"])))
 
 (deftest issue-293-alter-table
   (is (= (sql/format (-> (alter-table :fruit)
