@@ -30,10 +30,15 @@ Some of these samples show pretty-printed SQL: HoneySQL 2.x supports `:pretty tr
 ## Usage
 
 ```clojure
-(refer-clojure :exclude '[for group-by set update])
+(refer-clojure :exclude '[for group-by into partition-by set update])
 (require '[honey.sql :as sql]
-         ;; caution: this overwrites for, group-by, set, and update
-         '[honey.sql.helpers :refer :all :as h])
+         ;; caution: this overwrites several clojure.core fns:
+         ;; for, group-by, into, partition-by, set, and update
+         ;; you should generally only refer in the specific
+         ;; helpers that you want to use!
+         '[honey.sql.helpers :refer :all :as h]
+         ;; so we can still get at clojure.core functions:
+         '[clojure.core :as c])
 ```
 
 Everything is built on top of maps representing SQL queries:
@@ -735,9 +740,9 @@ Or perhaps your database supports syntax like `a BETWIXT b AND c`, in which case
                           [sql-c & params-c] (sql/format-expr c)]
                       (-> [(str sql-a " " (sql/sql-kw op) " "
                                 sql-b " AND " sql-c)]
-                          (into params-a)
-                          (into params-b)
-                          (into params-c)))))
+                          (c/into params-a)
+                          (c/into params-b)
+                          (c/into params-c)))))
 ;; example usage:
 (-> (select :a) (where [:betwixt :a 1 10]) sql/format)
 => ["SELECT a WHERE a BETWIXT ? AND ?" 1 10]
@@ -755,7 +760,7 @@ You can also register SQL clauses, specifying the keyword, the formatting functi
                               (if (ident? x)
                                 (sql/format-expr x)
                                 (sql/format-dsl x))]
-                          (into [(str (sql/sql-kw clause) " " sql)] params)))
+                          (c/into [(str (sql/sql-kw clause) " " sql)] params)))
                       :from) ; SELECT ... FOOBAR ... FROM ...
 ;; example usage:
 (sql/format {:select [:a :b] :foobar :baz})
