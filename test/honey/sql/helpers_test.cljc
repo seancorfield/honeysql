@@ -5,9 +5,10 @@
   (:require #?(:clj [clojure.test :refer [deftest is testing]]
                :cljs [cljs.test :refer-macros [deftest is testing]])
             [honey.sql :as sql]
-            [honey.sql.helpers
+            [honey.sql.helpers :as h
              :refer [add-column add-index alter-table columns create-table create-table-as create-view
                      create-materialized-view drop-view drop-materialized-view
+                     bulk-collect-into
                      cross-join do-update-set drop-column drop-index drop-table from full-join
                      group-by having insert-into
                      join-by join lateral left-join limit offset on-conflict
@@ -94,6 +95,26 @@
            (sql/format (-> (select-top [10 :percent :with-ties] :foo :baz)
                            (from :bar)
                            (order-by :quux)))))))
+
+(deftest select-into-tests
+  (testing "SELECT INTO"
+    (is (= ["SELECT * INTO foo FROM bar"]
+           (sql/format {:select :* :into :foo :from :bar})))
+    (is (= ["SELECT * INTO foo IN otherdb FROM bar"]
+           (sql/format {:select :* :into [:foo :otherdb] :from :bar})))
+    (is (= ["SELECT * INTO foo FROM bar"]
+           (sql/format (-> (select '*) (h/into 'foo) (from 'bar)))))
+    (is (= ["SELECT * INTO foo IN otherdb FROM bar"]
+           (sql/format (-> (select :*) (h/into :foo :otherdb) (from :bar))))))
+  (testing "SELECT BULK COLLECT INTO"
+    (is (= ["SELECT * BULK COLLECT INTO foo FROM bar"]
+           (sql/format {:select :* :bulk-collect-into :foo :from :bar})))
+    (is (= ["SELECT * BULK COLLECT INTO foo LIMIT ? FROM bar" 100]
+           (sql/format {:select :* :bulk-collect-into [:foo 100] :from :bar})))
+    (is (= ["SELECT * BULK COLLECT INTO foo FROM bar"]
+           (sql/format (-> (select :*) (bulk-collect-into :foo) (from :bar)))))
+    (is (= ["SELECT * BULK COLLECT INTO foo LIMIT ? FROM bar" 100]
+           (sql/format (-> (select :*) (bulk-collect-into :foo 100) (from :bar)))))))
 
 (deftest from-expression-tests
   (testing "FROM can be a function invocation"

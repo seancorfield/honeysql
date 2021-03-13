@@ -46,6 +46,7 @@
    ;; then SQL clauses in priority order:
    :nest :with :with-recursive :intersect :union :union-all :except :except-all
    :select :select-distinct :select-distinct-on :select-top :select-distinct-top
+   :into :bulk-collect-into
    :insert-into :update :delete :delete-from :truncate
    :columns :set :from :using
    :join-by
@@ -335,6 +336,17 @@
          true
          cols)]
     (-> [sql'] (into params) (into params'))))
+
+(defn- format-select-into [k xs]
+  (let [[v e] (if (sequential? xs) xs [xs])
+        [sql & params] (when e (format-expr e))]
+    (into [(str (sql-kw k) " " (format-entity v)
+                (when sql
+                  (str " "
+                       (sql-kw (if (= :into k) :in :limit))
+                       " "
+                       sql)))]
+          params)))
 
 (defn- format-with-part [x]
   (if (sequential? x)
@@ -752,6 +764,8 @@
          :select-distinct-on #'format-selects-on
          :select-top      #'format-select-top
          :select-distinct-top #'format-select-top
+         :into            #'format-select-into
+         :bulk-collect-into #'format-select-into
          :insert-into     #'format-insert
          :update          #'format-selector
          :delete          #'format-selects

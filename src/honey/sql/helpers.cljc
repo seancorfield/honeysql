@@ -2,13 +2,14 @@
 
 (ns honey.sql.helpers
   "Helper functions for the built-in clauses in honey.sql."
-  (:refer-clojure :exclude [update set group-by for partition-by])
-  (:require [honey.sql]))
+  (:refer-clojure :exclude [into update set group-by for partition-by])
+  (:require [clojure.core :as c]
+            [honey.sql]))
 
 ;; implementation helpers:
 
 (defn- default-merge [current args]
-  (into (vec current) args))
+  (c/into (vec current) args))
 
 (defn- and-merge
   [current arg]
@@ -16,11 +17,11 @@
                       (ident? (first arg))
                       (#{:and :or} (keyword (first arg))))]
     (cond (= conj' (first current))
-          (into (vec current) (rest arg))
+          (c/into (vec current) (rest arg))
           (seq current)
-          (into [conj' current] (rest arg))
+          (c/into [conj' current] (rest arg))
           :else
-          (into [conj'] (rest arg)))
+          (c/into [conj'] (rest arg)))
     (cond (#{:and 'and} (first current))
           (conj (vec current) arg)
           (seq current)
@@ -346,6 +347,19 @@
   [& args]
   (generic :select-distinct-top args))
 
+(defn into
+  "Accepts table name, optionally followed a database name."
+  {:arglist '([table] [table dbname])}
+  [& args]
+  (generic :into args))
+
+(defn bulk-collect-into
+  "Accepts a variable name, optionally followed by a limit
+  expression."
+  {:arglist '([varname] [varname n])}
+  [& args]
+  (generic :bulk-collect-into args))
+
 (defn insert-into
   "Accepts a table name or a table/alias pair. That
   can optionally be followed by a collection of
@@ -634,7 +648,7 @@
   Produces: (a, ?)
   Parameters: 42"
   [& args]
-  (into [:composite] args))
+  (c/into [:composite] args))
 
 (defn lateral
   "Accepts a SQL clause or a SQL expression:
@@ -647,7 +661,7 @@
   LATERAL CALC_VALUE(bar)"
   {:arglists '([clause-or-expression])}
   [& args]
-  (into [:lateral] args))
+  (c/into [:lateral] args))
 
 ;; to make this easy to use in a select, wrap it so it becomes a function:
 (defn over
@@ -660,7 +674,7 @@
 
   Produces: SELECT id, AVG(salary) OVER ()PARTITION BY department)"
   [& args]
-  [(into [:over] args)])
+  [(c/into [:over] args)])
 
 ;; this helper is intended to ease the migration from nilenso:
 (defn upsert

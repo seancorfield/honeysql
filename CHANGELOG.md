@@ -7,6 +7,7 @@
   * Fix #303 by supporting MySQL's `ON DUPLICATE KEY UPDATE`.
   * Fix #301 by adding support for `CREATE`/`DROP`/`REFRESH` on `MATERIALIZED VIEW`.
   * Add tests to confirm #299 does not affect v2.
+  * Fix #297 by adding both `SELECT .. INTO ..` and `SELECT .. BULK COLLECT INTO ..`.
   * Confirm the whole of the [nilenso/honeysql-postgres](https://github.com/nilenso/honeysql-postgres) is implemented out-of-the-box (#293).
   * Fix #292 by adding support for `SELECT TOP` and `OFFSET`/`FETCH`.
   * Fix #284 by adding support for `LATERAL` (as special syntax, with a helper).

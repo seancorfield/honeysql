@@ -247,6 +247,28 @@ user=> (sql/format '{select-distinct-on [[a b] c d]
 ["SELECT DISTINCT ON(a, b) c, d FROM table"]
 ```
 
+## into
+
+Used for selecting rows into a new table, optional in another database:
+
+```clojure
+user=> (sql/format '{select * into newtable from mytable})
+["SELECT * INTO newtable FROM mytable"]
+user=> (sql/format '{select * into [newtable otherdb] from mytable})
+["SELECT * INTO newtable IN otherdb FROM mytable"]
+```
+
+## bulk-collect-into
+
+Used for selecting rows into an array variable, with an optional limit:
+
+```clojure
+user=> (sql/format '{select * bulk-collect-into arrv from mytable})
+["SELECT * BULK COLLECT INTO arrv FROM mytable"]
+user=> (sql/format '{select * bulk-collect-into [arrv 100] from mytable})
+["SELECT * BULK COLLECT INTO arrv LIMIT ? FROM mytable" 100]
+```
+
 ## insert-into
 
 There are three use cases with `:insert-into`.
