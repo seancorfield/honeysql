@@ -2,7 +2,7 @@
 
 (ns honey.sql.helpers
   "Helper functions for the built-in clauses in honey.sql."
-  (:refer-clojure :exclude [into update set group-by for partition-by])
+  (:refer-clojure :exclude [for group-by into partition-by set update])
   (:require [clojure.core :as c]
             [honey.sql]))
 
@@ -12,6 +12,8 @@
   (c/into (vec current) args))
 
 (defn- and-merge
+  "Merge a single conjunction expression into an existing one.
+  This merges `AND` to avoid nesting."
   [current arg]
   (if-let [conj' (and (sequential? arg)
                       (ident? (first arg))
@@ -30,6 +32,10 @@
           (conj [:and] arg))))
 
 (defn- and-merges
+  "Merge multiple conjunction expressions into an existing,
+  possibly empty, expression. This ensures AND expressions
+  are merged and that we do not end up with a single AND
+  or OR expression."
   [current args]
   (let [args (remove nil? args)
         result
@@ -49,6 +55,7 @@
       result)))
 
 (def ^:private special-merges
+  "Identify the conjunction merge clauses."
   {:where  #'and-merges
    :having #'and-merges})
 
@@ -257,14 +264,27 @@
   (generic :refresh-materialized-view views))
 
 (defn nest
+  "A pseudo clause that exists purely to cause nesting
+  in parentheses. Should only be needed very rarely in
+  cases where HoneySQL doesn't do the right thing for
+  your specific database dialect.
+
+  Wraps a single clause."
+  {:arglists '([clause])}
   [& args]
   (generic :nest args))
 
 (defn with
+  "Accepts one or more CTE definitions.
+
+  See the documentation for the `:with` clause."
   [& args]
   (generic :with args))
 
 (defn with-recursive
+  "Accepts one or more CTE definitions.
+
+  See the documentation for the `:with` clause."
   [& args]
   (generic :with-recursive args))
 
@@ -450,6 +470,8 @@
   (generic :from tables))
 
 (defn using
+  "Accepts similar arguments to `select` as part of
+  a SQL `USING` clause."
   [& args]
   (generic :using args))
 
@@ -470,30 +492,112 @@
   (generic :join-by args))
 
 (defn join
+  "Accepts one or more (INNER) JOIN expressions. Each
+  join expression is specified as a pair of arguments,
+  where the first one is the table name (or a pair of
+  table and alias) and the second one is the join
+  condition:
+
+  (join :table [:= :foo.id :table.foo_id])
+  (join [:table :t] [:= :foo.id :t.foo_id])
+
+  Produces:
+  INNER JOIN table ON foo.id = table.foo_id
+  INNER JOIN table AS t ON foo.id = t.foo_id"
   [& args]
   (generic :join args))
 
 (defn left-join
+  "Accepts one or more LEFT JOIN expressions. Each
+  join expression is specified as a pair of arguments,
+  where the first one is the table name (or a pair of
+  table and alias) and the second one is the join
+  condition:
+
+  (left-join :table [:= :foo.id :table.foo_id])
+  (left-join [:table :t] [:= :foo.id :t.foo_id])
+
+  Produces:
+  LEFT JOIN table ON foo.id = table.foo_id
+  LEFT JOIN table AS t ON foo.id = t.foo_id"
   [& args]
   (generic :left-join args))
 
 (defn right-join
+  "Accepts one or more RIGHT JOIN expressions. Each
+  join expression is specified as a pair of arguments,
+  where the first one is the table name (or a pair of
+  table and alias) and the second one is the join
+  condition:
+
+  (right-join :table [:= :foo.id :table.foo_id])
+  (right-join [:table :t] [:= :foo.id :t.foo_id])
+
+  Produces:
+  RIGHT JOIN table ON foo.id = table.foo_id
+  RIGHT JOIN table AS t ON foo.id = t.foo_id"
   [& args]
   (generic :right-join args))
 
 (defn inner-join
+  "An alternative name to `join`, this accepts one or
+  more INNER JOIN expressions. Each join expression
+  is specified as a pair of arguments, where the
+  first one is the table name (or a pair of table
+  and alias) and the second one is the join condition:
+
+  (inner-join :table [:= :foo.id :table.foo_id])
+  (inner-join [:table :t] [:= :foo.id :t.foo_id])
+
+  Produces:
+  INNER JOIN table ON foo.id = table.foo_id
+  INNER JOIN table AS t ON foo.id = t.foo_id"
   [& args]
   (generic :inner-join args))
 
 (defn outer-join
+  "Accepts one or more OUTER JOIN expressions. Each
+  join expression is specified as a pair of arguments,
+  where the first one is the table name (or a pair of
+  table and alias) and the second one is the join
+  condition:
+
+  (outer-join :table [:= :foo.id :table.foo_id])
+  (outer-join [:table :t] [:= :foo.id :t.foo_id])
+
+  Produces:
+  OUTER JOIN table ON foo.id = table.foo_id
+  OUTER JOIN table AS t ON foo.id = t.foo_id"
   [& args]
   (generic :outer-join args))
 
 (defn full-join
+  "Accepts one or more FULL JOIN expressions. Each
+  join expression is specified as a pair of arguments,
+  where the first one is the table name (or a pair of
+  table and alias) and the second one is the join
+  condition:
+
+  (full-join :table [:= :foo.id :table.foo_id])
+  (full-join [:table :t] [:= :foo.id :t.foo_id])
+
+  Produces:
+  INNER JOIN table ON foo.id = table.foo_id
+  INNER JOIN table AS t ON foo.id = t.foo_id"
   [& args]
   (generic :full-join args))
 
 (defn cross-join
+  "Accepts one or more CROSS JOIN expressions. Each
+  cross join expression is specified as a table
+  name (or a pair of table and alias):
+
+  (cross-join :table)
+  (cross-join [:table :t])
+
+  Produces:
+  CROSS JOIN table
+  CROSS JOIN table AS t"
   [& args]
   (generic :cross-join args))
 
@@ -509,6 +613,14 @@
   (generic :where exprs))
 
 (defn group-by
+  "Accepts one or more SQL expressions to group by.
+
+  (group-by :foo :bar)
+  (group-by [:date :baz])
+
+  Produces:
+  GROUP BY foo, bar
+  GROUP BY DATE(baz)"
   [& args]
   (generic :group-by args))
 
@@ -524,19 +636,37 @@
   (generic :having exprs))
 
 (defn window
+  "Accepts a window name followed by a partition by clause."
   [& args]
   (generic :window args))
 
 (defn partition-by
+  "Accepts one or more columns or SQL expressions to
+  partition by as part of a `WINDOW` expression."
   [& args]
   (generic :partition-by args))
 
 (defn order-by
+  "Accepts one or more expressions to order by.
+
+  An ordering expression may be a simple column name
+  which is assumed to be ordered `ASC`, or a pair of
+  an expression and a direction (`:asc` or `:desc`):
+
+  (order-by :foo)
+  (order-by [:bar :desc])
+  (order-by [[:date :baz] :asc])
+
+  Produces:
+  ORDER BY foo ASC
+  ORDER BY bar DESC
+  ORDER BY DATE(baz) ASC"
   [& args]
   (generic :order-by args))
 
 (defn limit
-  "Specific to MySQL, accepts a single SQL expression:
+  "Specific to some databases (notabley MySQL),
+  accepts a single SQL expression:
 
   (limit 40)
 
@@ -546,7 +676,9 @@
   The two-argument syntax is not supported: use `offset`
   instead:
 
-  `LIMIT 20,10` is equivalent to `LIMIT 10 OFFSET 20`"
+  `LIMIT 20,10` is equivalent to `LIMIT 10 OFFSET 20`
+
+  (-> (limit 10) (offset 20))"
   {:arglists '([limit])}
   [& args]
   (generic-1 :limit args))
@@ -574,10 +706,18 @@
   (generic-1 :offset args))
 
 (defn for
+  "Accepts a lock strength, optionally followed by one or
+  more table names, optionally followed by a qualifier."
+  {:arglists '([lock-strength table* qualifier*])}
   [& args]
   (generic-1 :for args))
 
 (defn lock
+  "Intended for MySQL, this accepts a lock mode.
+
+  It will accept the same type of syntax as `for` even
+  though MySQL's `lock` clause is less powerful."
+  {:arglists '([lock-mode])}
   [& args]
   (generic-1 :lock args))
 
@@ -599,6 +739,10 @@
   (generic-1 :values args))
 
 (defn on-conflict
+  "Accepts a single column name to detect conflicts
+  during an upsert, optionally followed by a `WHERE`
+  clause."
+  {:arglists '([column] [column where-clause])}
   [& args]
   (generic :on-conflict args))
 
@@ -615,10 +759,19 @@
   (generic :do-nothing args))
 
 (defn do-update-set
+  "Accepts one or more columns to update, or a hash map
+  of column/value pairs (like `set`), optionally followed
+  by a `WHERE` clause. Can also accept a single hash map
+  with a `:fields` entry specifying the columns to update
+  and a `:where` entry specifying the `WHERE` clause."
+  {:arglists '([field-where-map] [column-value-map] [column* opt-where-clause])}
   [& args]
   (generic :do-update-set args))
 
 (defn on-duplicate-key-update
+  "MySQL's upsert facility. Accepts a hash map of
+  column/value pairs to be updated (like `set` does)."
+  {:arglists '([column-value-map])}
   [& args]
   (generic :on-duplicate-key-update args))
 
@@ -728,6 +881,10 @@
                                do-update-set))))))
 
 #?(:clj
-    (assert (= (clojure.core/set (conj @@#'honey.sql/base-clause-order
-                                       :composite :lateral :over :upsert))
-               (clojure.core/set (map keyword (keys (ns-publics *ns*)))))))
+   (do
+     ;; ensure #295 stays true (all public functions have docstring):
+     (assert (empty? (->> (ns-publics *ns*) (vals) (filter (comp not :doc meta)))))
+     ;; ensure all public functions match clauses:
+     (assert (= (clojure.core/set (conj @@#'honey.sql/base-clause-order
+                                        :composite :lateral :over :upsert))
+                (clojure.core/set (map keyword (keys (ns-publics *ns*))))))))

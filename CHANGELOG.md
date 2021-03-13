@@ -8,7 +8,8 @@
   * Fix #301 by adding support for `CREATE`/`DROP`/`REFRESH` on `MATERIALIZED VIEW`.
   * Add tests to confirm #299 does not affect v2.
   * Fix #297 by adding both `SELECT .. INTO ..` and `SELECT .. BULK COLLECT INTO ..`.
-  * Confirm the whole of the [nilenso/honeysql-postgres](https://github.com/nilenso/honeysql-postgres) is implemented out-of-the-box (#293).
+  * Fix #295 by adding docstrings to all helper functions (and adding an assert to ensure it stays that way as more are added in future).
+  * Confirm the whole of the [nilenso/honeysql-postgres](https://github.com/nilenso/honeysql-postgres) is implemented out-of-the-box (#293, but see #310 for recent additions not yet incorporated).
   * Fix #292 by adding support for `SELECT TOP` and `OFFSET`/`FETCH`.
   * Fix #284 by adding support for `LATERAL` (as special syntax, with a helper).
   * Reconcile `where` behavior with recent 1.0 changes (porting #283 to v2).
