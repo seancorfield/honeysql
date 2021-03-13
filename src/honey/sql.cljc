@@ -111,6 +111,10 @@
   #?(:clj (fn [^String s] (.. s toString (toUpperCase (java.util.Locale/US))))
      :cljs str/upper-case))
 
+(def ^:private keep-hyphen
+  "The set of symbols that should not have `-` replaced by space."
+  #{"-" "<->"})
+
 (defn sql-kw
   "Given a keyword, return a SQL representation of it as a string.
 
@@ -120,7 +124,7 @@
   Any namespace qualifier is ignored."
   [k]
   (-> k (name) (upper-case)
-      (as-> s (if (= "-" s) s (str/replace s "-" " ")))))
+      (as-> s (if (keep-hyphen s) s (str/replace s "-" " ")))))
 
 (defn- sym->kw
   "Given a symbol, produce a keyword, retaining the namespace
@@ -841,7 +845,7 @@
    :regex :regexp})
 
 (def ^:private infix-ops
-  (-> #{"mod" "and" "or" "xor" "<>" "<=" ">=" "||"
+  (-> #{"mod" "and" "or" "xor" "<>" "<=" ">=" "||" "<->"
         "like" "not-like" "regexp"
         "ilike" "not-ilike" "similar-to" "not-similar-to"
         "is" "is-not" "not=" "!=" "regex"}
@@ -988,6 +992,13 @@
     (fn [_ [n units]]
       (let [[sql & params] (format-expr n)]
         (into [(str "INTERVAL " sql " " (sql-kw units))] params)))
+    :lateral
+    (fn [_ [clause-or-expr]]
+      (if (map? clause-or-expr)
+        (let [[sql & params] (format-dsl clause-or-expr)]
+          (into [(str "LATERAL (" sql ")")] params))
+        (let [[sql & params] (format-expr clause-or-expr)]
+          (into [(str "LATERAL " sql)] params))))
     :lift
     (fn [_ [x]]
       (if *inline*

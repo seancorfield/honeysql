@@ -636,6 +636,19 @@
   [& args]
   (into [:composite] args))
 
+(defn lateral
+  "Accepts a SQL clause or a SQL expression:
+
+  (lateral (-> (select '*) (from 'foo)))
+  (lateral '(calc_value bar))
+
+  Produces:
+  LATERAL (SELECT * FROM foo)
+  LATERAL CALC_VALUE(bar)"
+  {:arglists '([clause-or-expression])}
+  [& args]
+  (into [:lateral] args))
+
 ;; to make this easy to use in a select, wrap it so it becomes a function:
 (defn over
   "Accepts any number of OVER clauses, each of which
@@ -702,5 +715,5 @@
 
 #?(:clj
     (assert (= (clojure.core/set (conj @@#'honey.sql/base-clause-order
-                                       :composite :over :upsert))
+                                       :composite :lateral :over :upsert))
                (clojure.core/set (map keyword (keys (ns-publics *ns*)))))))

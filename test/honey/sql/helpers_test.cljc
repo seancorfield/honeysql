@@ -10,7 +10,7 @@
                      create-materialized-view drop-view drop-materialized-view
                      cross-join do-update-set drop-column drop-index drop-table from full-join
                      group-by having insert-into
-                     join-by join left-join limit offset on-conflict
+                     join-by join lateral left-join limit offset on-conflict
                      on-duplicate-key-update
                      order-by over partition-by refresh-materialized-view
                      rename-column rename-table returning right-join
@@ -94,6 +94,38 @@
            (sql/format (-> (select-top [10 :percent :with-ties] :foo :baz)
                            (from :bar)
                            (order-by :quux)))))))
+
+(deftest from-expression-tests
+  (testing "FROM can be a function invocation"
+    (is (= ["SELECT foo, bar FROM F(?) AS x" 1]
+           (sql/format {:select [:foo :bar] :from [[[:f 1] :x]]}))))
+  ;; these two examples are from https://www.postgresql.org/docs/9.3/queries-table-expressions.html#QUERIES-LATERAL
+  (testing "FROM can be a LATERAL select"
+    (is (= ["SELECT * FROM foo, LATERAL (SELECT * FROM bar WHERE bar.id = foo.bar_id) AS ss"]
+           (sql/format {:select :*
+                        :from [:foo
+                               [[:lateral {:select :*
+                                           :from :bar
+                                           :where [:= :bar.id :foo.bar_id]}] :ss]]}))))
+  (testing "FROM can be a LATERAL expression"
+    (is (= [(str "SELECT p1.id, p2.id, v1, v2"
+                 " FROM polygons AS p1, polygons AS p2,"
+                 " LATERAL VERTICES(p1.poly) AS v1,"
+                 " LATERAL VERTICES(p2.poly) AS v2"
+                 " WHERE ((v1 <-> v2) < ?) AND (p1.id <> p2.id)") 10]
+           (sql/format {:select [:p1.id :p2.id :v1 :v2]
+                        :from [[:polygons :p1] [:polygons :p2]
+                               [[:lateral [:vertices :p1.poly]] :v1]
+                               [[:lateral [:vertices :p2.poly]] :v2]]
+                        :where [:and [:< [:<-> :v1 :v2] 10] [:!= :p1.id :p2.id]]})))
+    (is (= [(str "SELECT m.name"
+                 " FROM manufacturers AS m"
+                 " LEFT JOIN LATERAL GET_PRODUCT_NAMES(m.id) AS pname ON TRUE"
+                 " WHERE pname IS NULL")]
+           (sql/format {:select :m.name
+                        :from [[:manufacturers :m]]
+                        :left-join [[[:lateral [:get_product_names :m.id]] :pname] true]
+                        :where [:= :pname nil]})))))
 
 (deftest join-by-test
   (testing "Natural JOIN orders"

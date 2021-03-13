@@ -98,6 +98,11 @@ that represents a time unit. Produces an `INTERVAL` expression:
 ;;=> ["DATE_ADD(NOW(), INTERVAL ? DAYS)" 30]
 ```
 
+## lateral
+
+Accepts a single argument that can be a (`SELECT`) clause or
+a (function call) expression.
+
 ## lift
 
 Used to wrap a Clojure value that should be passed as a

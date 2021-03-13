@@ -9,6 +9,7 @@
   * Add tests to confirm #299 does not affect v2.
   * Confirm the whole of the [nilenso/honeysql-postgres](https://github.com/nilenso/honeysql-postgres) is implemented out-of-the-box (#293).
   * Fix #292 by adding support for `SELECT TOP` and `OFFSET`/`FETCH`.
+  * Fix #284 by adding support for `LATERAL` (as special syntax, with a helper).
   * Reconcile `where` behavior with recent 1.0 changes (porting #283 to v2).
   * Fix #280 by adding `:escape` as special syntax for regular expression patterns.
   * Fix #277 by adding `:join-by`/`join-by` so that you can have multiple `JOIN`'s in a specific order.
