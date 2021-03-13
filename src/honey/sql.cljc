@@ -53,7 +53,7 @@
    :cross-join
    :where :group-by :having
    :window :partition-by
-   :order-by :limit :offset :for :values
+   :order-by :limit :offset :fetch :for :lock :values
    :on-conflict :on-constraint :do-nothing :do-update-set :on-duplicate-key-update
    :returning
    :with-data])
@@ -79,14 +79,9 @@
    :sqlserver {:quote #(str \[ % \])}
    :mysql     {:quote #(str \` % \`)
                :clause-order-fn (fn [order]
-                                  ;; :lock is like :for
-                                  (swap! clause-format assoc :lock
-                                         (get @clause-format :for))
                                   ;; MySQL :set has different priority
-                                  ;; and :lock is between :for and :values
                                   (-> (filterv (complement #{:set}) order)
-                                      (add-clause-before :set :where)
-                                      (add-clause-before :lock :values)))}
+                                      (add-clause-before :set :where)))}
    :oracle    {:quote #(str \" % \") :as false}})
 
 ; should become defonce
@@ -778,7 +773,9 @@
          :order-by        #'format-order-by
          :limit           #'format-on-expr
          :offset          #'format-on-expr
+         :fetch           #'format-on-expr
          :for             #'format-lock-strength
+         :lock            #'format-lock-strength
          :values          #'format-values
          :on-conflict     #'format-on-conflict
          :on-constraint   #'format-selector

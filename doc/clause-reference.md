@@ -570,18 +570,27 @@ user=> (sql/format {:select [:*] :from :table
 ["SELECT * FROM table ORDER BY status ASC, YEAR(created_date) ASC"]
 ```
 
-## limit, offset (MySQL)
+## limit, offset, fetch
 
-Both `:limit` and `:offset` expect a single SQL expression:
+Some databases, including MySQL, support `:limit` and `:offset`
+for paginated queries, other databases support `:offset` and
+`fetch` for that (which is ANSI-compliant and should be
+preferred if your database supports it). All three expect a
+single SQL expression:
 
 ```clojure
 user=> (sql/format {:select [:id :name]
                     :from [:table]
-                    :limit 20 :offset 20})
-["SELECT id, name FROM table LIMIT ? OFFSET ?" 20 20]
+                    :limit 10 :offset 20})
+["SELECT id, name FROM table LIMIT ? OFFSET ?" 10 20]
+user=> (sql/format {:select [:id :name]
+                    :from [:table]
+                    :offset 20 :fetch 10})
+["SELECT id, name FROM table OFFSET ? FETCH ? ONLY" 20 10]
 ```
 
-> Note: In the prerelease, these MySQL-specific clauses are in the default dialect but these will be moved to the `:mysql` dialect.
+All three are available in all dialects for HoneySQL so it
+is up to you to choose the correct pair for your database.
 
 ## for
 
@@ -626,8 +635,6 @@ expected to be just one of those three mentioned above).
 
 The syntax accepted for MySQL's `:lock` is exactly the
 same as the `:for` clause above.
-
-> Note: In the prerelease, this MySQL-specific clauses is in the default dialect but this will be moved to the `:mysql` dialect.
 
 ## values
 

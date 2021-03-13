@@ -259,8 +259,7 @@ The `:sqlserver` dialect uses `[`..`]` and the `:mysql` dialect uses
 ```..```. In addition, the `:oracle` dialect disables `AS` in aliases.
 
 Currently, the only dialect that has substantive differences from
-the others is `:mysql` which has a `:lock` clause (that is very
-similar to the ANSI `:for` clause) and for which the `:set` clause
+the others is `:mysql` for which the `:set` clause
 has a different precedence than ANSI SQL.
 
 You can change the dialect globally using the `set-dialect!` function,

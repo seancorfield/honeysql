@@ -527,13 +527,18 @@
   (limit 40)
 
   Produces: LIMIT ?
-  Parameters: 40"
+  Parameters: 40
+
+  The two-argument syntax is not supported: use `offset`
+  instead:
+
+  `LIMIT 20,10` is equivalent to `LIMIT 10 OFFSET 20`"
   {:arglists '([limit])}
   [& args]
   (generic-1 :limit args))
 
 (defn offset
-  "Specific to MySQL, accepts a single SQL expression:
+  "Accepts a single SQL expression:
 
   (offset 10)
 
@@ -543,9 +548,24 @@
   [& args]
   (generic-1 :offset args))
 
+(defn fetch
+  "Accepts a single SQL expression:
+
+  (fetch 10)
+
+  Produces: FETCH ? ONLY
+  Parameters: 10"
+  {:arglists '([offset])}
+  [& args]
+  (generic-1 :offset args))
+
 (defn for
   [& args]
   (generic-1 :for args))
+
+(defn lock
+  [& args]
+  (generic-1 :lock args))
 
 (defn values
   "Accepts a single argument: a collection of row values.
