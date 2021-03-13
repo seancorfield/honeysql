@@ -9,13 +9,13 @@ data to a SQL statement (string) and any parameters it needs.
 For the Clojure CLI, add the following dependency to your `deps.edn` file:
 
 ```clojure
-    seancorfield/honeysql {:mvn/version "2.0.0-alpha2"}
+    com.github.seancorfield/honeysql {:mvn/version "2.0.0-alpha3"}
 ```
 
 For Leiningen, add the following dependency to your `project.clj` file:
 
 ```clojure
-    [seancorfield/honeysql "2.0.0-alpha2"]
+    [com.github.seancorfield/honeysql "2.0.0-alpha3"]
 ```
 
 HoneySQL produces SQL statements but does not execute them.
@@ -318,6 +318,6 @@ section. The full list
 of "special syntax" functions is documented in the
 [Special Syntax](special-syntax.md) section. The best
 documentation for the helper functions is in the
-[honey.sql.helpers](https://cljdoc.org/d/seancorfield/honeysql/2.0.0-alpha2/api/honey.sql.helpers) namespace.
+[honey.sql.helpers](https://cljdoc.org/d/com.github.seancorfield/honeysql/2.0.0-alpha3/api/honey.sql.helpers) namespace.
 If you're migrating to HoneySQL 2.0, this [overview of differences
 between 1.0 and 2.0](differences-from-1-x.md) should help.

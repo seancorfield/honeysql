@@ -12,7 +12,7 @@ This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINO
 
 Prerelease builds of the upcoming 2.x version of HoneySQL are available for testing:
 
-[![Clojars Project](https://clojars.org/seancorfield/honeysql/latest-version.svg)](https://clojars.org/seancorfield/honeysql) [![cljdoc badge](https://cljdoc.org/badge/seancorfield/honeysql?2.0.0-alpha2)](https://cljdoc.org/d/seancorfield/honeysql/2.0.0-alpha2)
+[![Clojars Project](https://clojars.org/com.github.seancorfield/honeysql/latest-version.svg)](https://clojars.org/com.github.seancorfield/honeysql) [![cljdoc badge](https://cljdoc.org/badge/com.github.seancorfield/honeysql?2.0.0-alpha3)](https://cljdoc.org/d/com.github.seancorfield/honeysql/2.0.0-alpha3)
 
 HoneySQL 2.x requires Clojure 1.9 or later.
 

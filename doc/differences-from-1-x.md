@@ -10,7 +10,7 @@ HoneySQL 1.x supported Clojure 1.7 and later. HoneySQL 2.x requires Clojure 1.9 
 
 ## Group, Artifact, and Namespaces
 
-HoneySQL 2.x uses the group ID `seancorfield` with the original artifact ID of `honeysql`, in line with the recommendations in Inside Clojure's post about the changes in the Clojure CLI: [Deprecated unqualified lib names](https://insideclojure.org/2020/07/28/clj-exec/).
+HoneySQL 2.x uses the group ID `com.github.seancorfield` with the original artifact ID of `honeysql`, in line with the recommendations in Inside Clojure's post about the changes in the Clojure CLI: [Deprecated unqualified lib names](https://insideclojure.org/2020/07/28/clj-exec/).
 
 In addition, HoneySQL 2.x contains different namespaces so you can have both versions on your classpath without introducing any conflicts. The primary API is now in `honey.sql` and the helpers are in `honey.sql.helpers`. A Spec for the DSL data structure will be available in `honey.specs` at some point (work in progress).
 
@@ -46,7 +46,7 @@ Supported Clojure versions: 1.7 and later.
 
 ```clojure
 ;; in deps.edn:
-seancorfield/honeysql {:mvn/version "2.x"}
+com.github.seancorfield/honeysql {:mvn/version "2.x"}
 
 ;; in use:
 (ns my.project

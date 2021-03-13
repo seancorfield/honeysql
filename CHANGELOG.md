@@ -1,6 +1,7 @@
 # Changes
 
-* 2.0.0-alpha3 in progress
+* 2.0.0-alpha3 (for early testing; 2021-03-13)
+  * Change coordinates to `com.github.seancorfield/honeysql` (although new versions will continue to be deployed to `seancorfield/honeysql` for a while -- see the [Clojars Verified Group Names policy](https://github.com/clojars/clojars-web/wiki/Verified-Group-Names)).
   * Support much richer range of syntax on `CREATE`/`DROP` statements in general, including columns, `TABLESPACE`, `CASCADE`, `WITH [NO] DATA`, etc.
   * Fix #306 by supporting `CREATE TABLE .. AS ..`.
   * Fix #305 by supporting more complex join clauses.
@@ -15,7 +16,6 @@
   * Reconcile `where` behavior with recent 1.0 changes (porting #283 to v2).
   * Fix #280 by adding `:escape` as special syntax for regular expression patterns.
   * Fix #277 by adding `:join-by`/`join-by` so that you can have multiple `JOIN`'s in a specific order.
-
 * 2.0.0-alpha2 (for early testing)
   * Since Alpha 1, a lot more documentation has been written and docstrings have been added to most functions in `honey.sql.helpers`.
   * Numerous small improvements have been made to clauses and helpers around insert/upsert.
@@ -23,7 +23,7 @@
   * This is a complete rewrite/simplification of HoneySQL that provides just two namespaces:
     * `honey.sql` -- this is the primary API via the `format` function as well as the various extension points.
     * `honey.sql.helpers` -- provides a helper function for every piece of the DSL that is supported out-of-the-box.
-  * The coordinates for HoneySQL 2.0 are `seancorfield/honeysql` so it can be added to a project that already uses HoneySQL 1.0 without any conflicts, making it easier to migrate piecemeal from 1.0 to 2.0.
+  * The coordinates for HoneySQL 2.0 are `com.github.seancorfield/honeysql` so it can be added to a project that already uses HoneySQL 1.0 without any conflicts, making it easier to migrate piecemeal from 1.0 to 2.0.
 
 # HoneySQL pre-2.x Changes
 
