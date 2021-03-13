@@ -715,6 +715,10 @@ user=> (sql/format {:insert-into :companies
 ["INSERT INTO companies (name) VALUES (?) ON CONFLICT ON CONSTRAINT name_idx DO NOTHING" "Microsoft"]
 ```
 
+## on-duplicate-key-update
+
+This is the MySQL equivalent of `on-update-set` described above.
+
 ## returning
 
 `:returning` accepts a single sequence argument that lists

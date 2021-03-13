@@ -569,6 +569,10 @@
   [& args]
   (generic :do-update-set args))
 
+(defn on-duplicate-key-update
+  [& args]
+  (generic :on-duplicate-key-update args))
+
 (defn returning
   "Accepts any number of column names to return from an
   insert operation:

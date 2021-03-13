@@ -4,6 +4,7 @@
   * Support much richer range of syntax on `CREATE`/`DROP` statements in general, including columns, `TABLESPACE`, `CASCADE`, `WITH [NO] DATA`, etc.
   * Fix #306 by supporting `CREATE TABLE .. AS ..`.
   * Fix #305 by supporting more complex join clauses.
+  * Fix #303 by supporting MySQL's `ON DUPLICATE KEY UPDATE`.
   * Fix #301 by adding support for `CREATE`/`DROP`/`REFRESH` on `MATERIALIZED VIEW`.
   * Add tests to confirm #299 does not affect v2.
   * Confirm the whole of the [nilenso/honeysql-postgres](https://github.com/nilenso/honeysql-postgres) is implemented out-of-the-box (#293).

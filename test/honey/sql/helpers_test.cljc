@@ -10,8 +10,9 @@
                      create-materialized-view drop-view drop-materialized-view
                      cross-join do-update-set drop-column drop-index drop-table from full-join
                      group-by having insert-into
-                     join-by join left-join limit offset on-conflict order-by
-                     over partition-by refresh-materialized-view
+                     join-by join left-join limit offset on-conflict
+                     on-duplicate-key-update
+                     order-by over partition-by refresh-materialized-view
                      rename-column rename-table returning right-join
                      select select-distinct values where window with with-columns
                      with-data]]))
@@ -649,3 +650,24 @@
                  (f {k [:and [:a] [:b]]}
                     :or
                     [:x] [:y]))))))))
+
+(deftest mysql-on-duplicate-key-update
+  (testing "From https://www.mysqltutorial.org/mysql-insert-or-update-on-duplicate-key-update"
+    (is (= (sql/format (-> (insert-into :device)
+                           (columns :name)
+                           (values [["Printer"]])
+                           (on-duplicate-key-update {:name "Printer"})))
+           ["INSERT INTO device (name) VALUES (?) ON DUPLICATE KEY UPDATE name = ?"
+            "Printer" "Printer"]))
+    (is (= (sql/format (-> (insert-into :device)
+                           (columns :id :name)
+                           (values [[4 "Printer"]])
+                           (on-duplicate-key-update {:name "Central Printer"})))
+           ["INSERT INTO device (id, name) VALUES (?, ?) ON DUPLICATE KEY UPDATE name = ?"
+            4 "Printer" "Central Printer"]))
+    (is (= (sql/format (-> (insert-into :table)
+                           (columns :c1)
+                           (values [[42]])
+                           (on-duplicate-key-update {:c1 [:+ [:values :c1] 1]})))
+           ["INSERT INTO table (c1) VALUES (?) ON DUPLICATE KEY UPDATE c1 = VALUES(c1) + ?"
+            42 1]))))

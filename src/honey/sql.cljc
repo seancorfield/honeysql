@@ -54,7 +54,7 @@
    :where :group-by :having
    :window :partition-by
    :order-by :limit :offset :for :values
-   :on-conflict :on-constraint :do-nothing :do-update-set
+   :on-conflict :on-constraint :do-nothing :do-update-set :on-duplicate-key-update
    :returning
    :with-data])
 
@@ -754,6 +754,8 @@
          :on-constraint   #'format-selector
          :do-nothing      (fn [k _] (vector (sql-kw k)))
          :do-update-set   #'format-do-update-set
+         ;; MySQL-specific but might as well be always enabled:
+         :on-duplicate-key-update #'format-do-update-set
          :returning       #'format-selects
          :with-data       #'format-with-data}))
 
