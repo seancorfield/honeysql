@@ -331,6 +331,21 @@
   [& args]
   (generic :select-distinct-on args))
 
+(defn select-top
+  "Accepts a TOP expression, followed by any number of
+  column names, or column/alias pairs, or SQL expressions
+  (optionally aliased), as for `select`. The TOP expression
+  can be a simple numeric expression, or a sequence with
+  a numeric expression followed by keywords (or symbols)
+  for PERCENT and/or WITH TIES."
+  [& args]
+  (generic :select-top args))
+
+(defn select-distinct-top
+  "Like `select-top` but produces SELECT DISTINCT TOP..."
+  [& args]
+  (generic :select-distinct-top args))
+
 (defn insert-into
   "Accepts a table name or a table/alias pair. That
   can optionally be followed by a collection of

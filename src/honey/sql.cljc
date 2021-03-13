@@ -45,7 +45,7 @@
    :refresh-materialized-view
    ;; then SQL clauses in priority order:
    :nest :with :with-recursive :intersect :union :union-all :except :except-all
-   :select :select-distinct :select-distinct-on
+   :select :select-distinct :select-distinct-on :select-top :select-distinct-top
    :insert-into :update :delete :delete-from :truncate
    :columns :set :from :using
    :join-by
@@ -298,13 +298,39 @@
     k)
    xs))
 
-(defn- format-selects-on [k xs]
+(defn- format-selects-on [_ xs]
   (let [[on & cols] xs
         [sql & params]
         (format-expr (into [:distinct-on] on))
         [sql' & params']
         (format-selects-common
          (str (sql-kw :select) " " sql)
+         true
+         cols)]
+    (-> [sql'] (into params) (into params'))))
+
+(defn- format-select-top [k xs]
+  (let [[top & cols] xs
+        [top & parts]
+        (if (sequential? top)
+          ;; could be an expression or a number followed by :percent :with-ties
+          (let [top-q?    #(and (ident? %)
+                                (#{:percent :with-ties} (sym->kw %)))
+                r-top     (reverse top)
+                top-quals (take-while top-q? r-top)
+                top-list  (drop-while top-q? r-top)]
+            (if (seq top-quals)
+              (if (= 1 (count top-list))
+                (into (vec top-list) (reverse top-quals))
+                (throw (ex-info "unparseable TOP expression"
+                                {:top top})))
+              [top]))
+          [top])
+        [sql & params]
+        (format-expr top)
+        [sql' & params']
+        (format-selects-common
+         (str (sql-kw k) " " sql (str/join " " (map sql-kw parts)))
          true
          cols)]
     (-> [sql'] (into params) (into params'))))
@@ -723,6 +749,8 @@
          :select          #'format-selects
          :select-distinct #'format-selects
          :select-distinct-on #'format-selects-on
+         :select-top      #'format-select-top
+         :select-distinct-top #'format-select-top
          :insert-into     #'format-insert
          :update          #'format-selector
          :delete          #'format-selects

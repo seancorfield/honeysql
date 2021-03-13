@@ -14,7 +14,8 @@
                      on-duplicate-key-update
                      order-by over partition-by refresh-materialized-view
                      rename-column rename-table returning right-join
-                     select select-distinct values where window with with-columns
+                     select select-distinct select-top select-distinct-top
+                     values where window with with-columns
                      with-data]]))
 
 (deftest test-select
@@ -77,6 +78,9 @@
                          {:params {:param1 "gabba" :param2 2}
                           ;; to enable :lock
                           :dialect :mysql :quoted false}))))))
+
+(deftest select-top-tests
+  (is true))
 
 (deftest join-by-test
   (testing "Natural JOIN orders"
