@@ -232,6 +232,8 @@ user=> (sql/format {:select [:id, [[:* :cost 2] :total], [:event :status]]
 HoneySQL does not yet support `SELECT .. INTO ..`
 or `SELECT .. BULK COLLECT INTO ..`.
 
+## select-top, select-distinct-top
+
 ## select-distinct-on
 
 Similar to `:select-distinct` above but the first element

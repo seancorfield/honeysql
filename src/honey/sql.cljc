@@ -330,7 +330,9 @@
         (format-expr top)
         [sql' & params']
         (format-selects-common
-         (str (sql-kw k) " " sql (str/join " " (map sql-kw parts)))
+         (str (sql-kw k) "(" sql ")"
+              (when (seq parts) " ")
+              (str/join " " (map sql-kw parts)))
          true
          cols)]
     (-> [sql'] (into params) (into params'))))

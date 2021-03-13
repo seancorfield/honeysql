@@ -80,7 +80,20 @@
                           :dialect :mysql :quoted false}))))))
 
 (deftest select-top-tests
-  (is true))
+  (testing "Basic TOP syntax"
+    (is (= ["SELECT TOP(?) foo FROM bar ORDER BY quux ASC" 10]
+           (sql/format {:select-top [10 :foo] :from :bar :order-by [:quux]})))
+    (is (= ["SELECT TOP(?) foo FROM bar ORDER BY quux ASC" 10]
+           (sql/format (-> (select-top 10 :foo)
+                           (from :bar)
+                           (order-by :quux))))))
+  (testing "Expanded TOP syntax"
+    (is (= ["SELECT TOP(?) PERCENT WITH TIES foo, baz FROM bar ORDER BY quux ASC" 10]
+           (sql/format {:select-top [[10 :percent :with-ties] :foo :baz] :from :bar :order-by [:quux]})))
+    (is (= ["SELECT TOP(?) PERCENT WITH TIES foo, baz FROM bar ORDER BY quux ASC" 10]
+           (sql/format (-> (select-top [10 :percent :with-ties] :foo :baz)
+                           (from :bar)
+                           (order-by :quux)))))))
 
 (deftest join-by-test
   (testing "Natural JOIN orders"
