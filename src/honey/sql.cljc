@@ -169,8 +169,10 @@
       (str (q t) "."))))
 
 (comment
-  (for [v [:foo-bar 'foo-bar "foo-bar"] a [true false] d [true false]]
-    (binding [*dialect* (:mysql dialects)]
+  (for [v [:foo-bar 'foo-bar "foo-bar"
+           :f-o.bar 'f-o.bar "f-o.bar"]
+        a [true false] d [true false] q [true false]]
+    (binding [*dialect* (:mysql dialects) *quoted* q]
       (format-entity v :aliased a :drop-ns d)))
   .)
 
