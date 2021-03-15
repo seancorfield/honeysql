@@ -263,17 +263,6 @@
   [& views]
   (generic :refresh-materialized-view views))
 
-(defn nest
-  "A pseudo clause that exists purely to cause nesting
-  in parentheses. Should only be needed very rarely in
-  cases where HoneySQL doesn't do the right thing for
-  your specific database dialect.
-
-  Wraps a single clause."
-  {:arglists '([clause])}
-  [& args]
-  (generic :nest args))
-
 (defn with
   "Accepts one or more CTE definitions.
 
@@ -887,4 +876,5 @@
      ;; ensure all public functions match clauses:
      (assert (= (clojure.core/set (conj @@#'honey.sql/base-clause-order
                                         :composite :lateral :over :upsert))
-                (clojure.core/set (map keyword (keys (ns-publics *ns*))))))))
+                (clojure.core/set (conj (map keyword (keys (ns-publics *ns*)))
+                                        :nest :raw))))))

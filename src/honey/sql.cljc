@@ -44,7 +44,7 @@
    :drop-table :drop-view :drop-materialized-view :drop-extension
    :refresh-materialized-view
    ;; then SQL clauses in priority order:
-   :nest :with :with-recursive :intersect :union :union-all :except :except-all
+   :raw :nest :with :with-recursive :intersect :union :union-all :except :except-all
    :select :select-distinct :select-distinct-on :select-top :select-distinct-top
    :into :bulk-collect-into
    :insert-into :update :delete :delete-from :truncate
@@ -716,6 +716,20 @@
 (defn- format-rename-item [k [x y]]
   [(str (sql-kw k) " " (format-entity x) " TO " (format-entity y))])
 
+(defn- raw-render [_ [s]]
+  (if (sequential? s)
+    (let [[sqls params]
+          (reduce (fn [[sqls params] s]
+                    (if (sequential? s)
+                      (let [[sql & params'] (format-expr s)]
+                        [(conj sqls sql)
+                         (into params params')])
+                      [(conj sqls s) params]))
+                  [[] []]
+                  s)]
+      (into [(str/join sqls)] params))
+    [s]))
+
 (def ^:private base-clause-order
   "The (base) order for known clauses. Can have items added and removed.
 
@@ -751,6 +765,7 @@
          :drop-view       #'format-drop-items
          :drop-materialized-view #'format-drop-items
          :refresh-materialized-view (fn [_ x] (format-create :refresh :materialized-view x nil))
+         :raw             #'raw-render
          :nest            (fn [_ x] (format-expr x))
          :with            #'format-with
          :with-recursive  #'format-with
@@ -1049,19 +1064,7 @@
         [(sqlize-value (param-value k))]
         ["?" (->param k)]))
     :raw
-    (fn [_ [s]]
-      (if (sequential? s)
-        (let [[sqls params]
-              (reduce (fn [[sqls params] s]
-                        (if (sequential? s)
-                          (let [[sql & params'] (format-expr s)]
-                            [(conj sqls sql)
-                             (into params params')])
-                          [(conj sqls s) params]))
-                      [[] []]
-                      s)]
-          (into [(str/join sqls)] params))
-        [s]))}))
+    #'raw-render}))
 
 (defn format-expr
   "Given a data structure that represents a SQL expression and a hash

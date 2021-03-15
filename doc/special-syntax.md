@@ -129,7 +129,7 @@ level of parentheses around it:
 ;;=> ["WHERE (x = ?)" 42]
 ```
 
-`nest` is also supported as a SQL clause for the same reason.
+`:nest` is also supported as a SQL clause for the same reason.
 
 ## not
 
@@ -201,6 +201,8 @@ parameters from them:
 (sql/format {:select [:a [[:raw ["@var := " ["foo"]]]]]})
 ;;=> ["SELECT a, @var := ?" "foo"]
 ```
+
+`:raw` is also supported as a SQL clause for the same reason.
 
 ## Column Descriptors
 

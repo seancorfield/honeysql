@@ -154,6 +154,15 @@ needed and it is mostly present to provide the same
 functionality for clauses that `[:nest ..]` provides
 for expressions.
 
+## raw
+
+This is pseudo-syntax that lets you insert a complete
+SQL clause as a string, if HoneySQL doesn't support
+some exotic SQL construct. It should rarely be
+needed and it is mostly present to provide the same
+functionality for clauses that `[:raw ..]` provides
+for expressions (which usage is likely to be more common).
+
 ## with, with-recursive
 
 These provide CTE support for SQL Server. The argument to
