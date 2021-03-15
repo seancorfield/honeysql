@@ -716,7 +716,7 @@
 (defn- format-rename-item [k [x y]]
   [(str (sql-kw k) " " (format-entity x) " TO " (format-entity y))])
 
-(defn- raw-render [_ [s]]
+(defn- raw-render [s]
   (if (sequential? s)
     (let [[sqls params]
           (reduce (fn [[sqls params] s]
@@ -765,7 +765,7 @@
          :drop-view       #'format-drop-items
          :drop-materialized-view #'format-drop-items
          :refresh-materialized-view (fn [_ x] (format-create :refresh :materialized-view x nil))
-         :raw             #'raw-render
+         :raw             (fn [_ x] (raw-render x))
          :nest            (fn [_ x] (format-expr x))
          :with            #'format-with
          :with-recursive  #'format-with
@@ -1064,7 +1064,8 @@
         [(sqlize-value (param-value k))]
         ["?" (->param k)]))
     :raw
-    #'raw-render}))
+    (fn [_ [xs]]
+      (raw-render xs))}))
 
 (defn format-expr
   "Given a data structure that represents a SQL expression and a hash
