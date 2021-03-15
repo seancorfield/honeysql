@@ -168,6 +168,12 @@
       t
       (str (q t) "."))))
 
+(comment
+  (for [v [:foo-bar 'foo-bar "foo-bar"] a [true false] d [true false]]
+    (binding [*dialect* (:mysql dialects)]
+      (format-entity v :aliased a :drop-ns d)))
+  .)
+
 (defn- param-value [k]
   (if (contains? *params* k)
     (get *params* k)
