@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [ '8', '11', '14' ]
+        java: [ '8', '11', '14', '15', '16', '17-ea' ]
     steps:
       - uses: actions/checkout@v2
       - name: Setup Java
@@ -17,7 +17,7 @@ jobs:
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
-          tools-deps: '1.10.2.774'
+          tools-deps: '1.10.3.814'
       - name: Run Tests
         run: sh run-tests.sh all
       - name: Check cljdoc.edn
