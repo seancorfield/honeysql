@@ -1,6 +1,7 @@
 # Changes
 
 * 2.0.next in progress
+  * Fix #317 by dropping qualifiers in `:set` clauses (just like we do with `:insert` columns). Note that you can still use explicit _dotted_ names if you want table qualification.
   * Fix #312 by adding `:raw` as a clause. There is no helper function equivalent (because it would be ambiguous whether you meant a function form -- `[:raw ..]` -- or a clause form -- `{:raw ..}`; and for the same reason, there is no `nest` helper function since that also works as a clause and as a function/special syntax).
 
 * 2.0.0-alpha3 (for early testing; 2021-03-13)

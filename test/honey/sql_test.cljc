@@ -337,17 +337,41 @@
                    #_{:parameterizer :mysql-fill})
            ["WHERE (foo = ?) AND (bar = ?) AND (quux = ?)" "foo" "bar" "quux"]))))
 
-(deftest set-before-from ; issue 235
+(deftest set-before-from
+  ;; issue 235
   (is (=
        ["UPDATE \"films\" \"f\" SET \"kind\" = \"c\".\"test\" FROM (SELECT \"b\".\"test\" FROM \"bar\" AS \"b\" WHERE \"b\".\"id\" = ?) AS \"c\" WHERE \"f\".\"kind\" = ?" 1 "drama"]
        (->
-         {:update [:films :f]
-          :set    {:kind :c.test}
-          :from   [[{:select [:b.test]
-                     :from   [[:bar :b]]
-                     :where  [:= :b.id 1]} :c]]
-          :where  [:= :f.kind "drama"]}
-         (format {:quoted true})))))
+        {:update [:films :f]
+         :set    {:kind :c.test}
+         :from   [[{:select [:b.test]
+                    :from   [[:bar :b]]
+                    :where  [:= :b.id 1]} :c]]
+         :where  [:= :f.kind "drama"]}
+        (format {:quoted true}))))
+  ;; issue 317
+  (is (=
+       ["UPDATE \"films\" \"f\" SET \"kind\" = \"c\".\"test\" FROM (SELECT \"b\".\"test\" FROM \"bar\" AS \"b\" WHERE \"b\".\"id\" = ?) AS \"c\" WHERE \"f\".\"kind\" = ?" 1 "drama"]
+       (->
+        {:update [:films :f]
+         ;; drop ns in set clause...
+         :set    {:f/kind :c.test}
+         :from   [[{:select [:b.test]
+                    :from   [[:bar :b]]
+                    :where  [:= :b.id 1]} :c]]
+         :where  [:= :f.kind "drama"]}
+        (format {:quoted true}))))
+  (is (=
+       ["UPDATE \"films\" \"f\" SET \"f\".\"kind\" = \"c\".\"test\" FROM (SELECT \"b\".\"test\" FROM \"bar\" AS \"b\" WHERE \"b\".\"id\" = ?) AS \"c\" WHERE \"f\".\"kind\" = ?" 1 "drama"]
+       (->
+        {:update [:films :f]
+         ;; ...but keep literal dotted name
+         :set    {:f.kind :c.test}
+         :from   [[{:select [:b.test]
+                    :from   [[:bar :b]]
+                    :where  [:= :b.id 1]} :c]]
+         :where  [:= :f.kind "drama"]}
+        (format {:quoted true})))))
 
 (deftest set-after-join
   (is (=

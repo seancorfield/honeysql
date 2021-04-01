@@ -559,7 +559,7 @@
   (let [[sqls params]
         (reduce-kv (fn [[sql params] v e]
                      (let [[sql' & params'] (format-expr e)]
-                       [(conj sql (str (format-entity v) " = " sql'))
+                       [(conj sql (str (format-entity v {:drop-ns true}) " = " sql'))
                         (if params' (into params params') params)]))
                    [[] []]
                    xs)]
