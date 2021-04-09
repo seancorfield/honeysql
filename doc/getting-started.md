@@ -26,7 +26,7 @@ To execute SQL statements, you will also need a JDBC wrapper like
 
 SQL statements are represented as hash maps, with keys that
 represent clauses in SQL. SQL expressions are generally
-represented as vectors, where the first element identifies
+represented as sequences, where the first element identifies
 the function or operator and the remaining elements are the
 arguments or operands.
 
@@ -50,10 +50,10 @@ or symbols, are treated as positional parameters and replaced
 by `?` in the SQL string and lifted out into the vector that
 is returned from `format`.
 
-Most clauses expect a vector as their value, containing
+Most clauses expect a sequence as their value, containing
 either a list of SQL entities or the representation of a SQL
 expression. Some clauses accept a single SQL entity. A few
-accept a most specialized form (such as `:set` accepting a
+accept a more specialized form (such as `:set` accepting a
 hash map of SQL entities and SQL expressions).
 
 A SQL entity can be a simple keyword (or symbol) or a pair
@@ -97,7 +97,7 @@ the table name, i.e., `:foo/bar` instead of `:foo.bar`:
 ## SQL Expressions
 
 In addition to using hash maps to describe SQL clauses,
-HoneySQL uses vectors to describe SQL expressions. Any
+HoneySQL uses sequences to describe SQL expressions. Any
 sequence that begins with a keyword (or symbol) is considered
 to be a kind of function invocation. Certain "functions" are
 considered to be "special syntax" and have custom rendering.
@@ -168,7 +168,7 @@ call as the `:params` key of the options hash map.
 
 ## Functional Helpers
 
-In addition to the hash map (and vectors) approach of building
+In addition to the hash map (and sequences) approach of building
 SQL queries with raw Clojure data structures, a namespace full
 of helper functions is also available. These functions are
 generally variadic and threadable:
@@ -188,9 +188,9 @@ generally variadic and threadable:
 
 There is a helper function for every single clause that HoneySQL
 supports out of the box. In addition, there are helpers for
-`composite` and `over` that make it easier to construct those
-parts of the SQL DSL (examples of the former appear in the [README](README.md),
-examples of the latter appear in the [Clause Reference](docs/clause-reference.md))
+`composite`, `lateral`, `over`, and `upsert` that make it easier to construct those
+parts of the SQL DSL (examples of `composite` appear in the [README](README.md),
+examples of `over` appear in the [Clause Reference](docs/clause-reference.md))
 
 In addition to being variadic -- which often lets you omit one
 level of `[`..`]` -- the helper functions merge clauses, which
@@ -225,7 +225,7 @@ can rely on using keywords in `dissoc`.
 
 The following helpers shadow functions in `clojure.core` so
 you need to consider this when referring symbols in from the
-`honey.sql.helpers` namespace: `for`, `group-by`, `partition-by`,
+`honey.sql.helpers` namespace: `for`, `group-by`, `into`, `partition-by`,
 `set`, and `update`.
 
 ## DDL Statements
@@ -234,7 +234,7 @@ HoneySQL 1.x did not support any DDL statements. It was fairly
 common for people to use the [nilenso/honeysql-postgres library](https://github.com/nilenso/honeysql-postgres)
 to get DDL support, even if they didn't need the PostgreSQL-specific
 extensions. That library does not work with HoneySQL 2.x but all
-of the functionality from it has been incorporated
+of the functionality from it (up to 0.3.104) has been incorporated
 into HoneySQL now and is described in the [PostgreSQL](postgresql.md)
 section (because that covers all of the things that the nilenso
 library supported and much of it was PostgreSQL-specific!).
@@ -288,7 +288,7 @@ specify a dialect in the `format` call, you can specify
 Out of the box, as part of the extended ANSI SQL support,
 HoneySQL supports quite a few [PostgreSQL extensions](postgresql.md).
 
-> Note: the [nilenso/honeysql-postgres library](https://github.com/nilenso/honeysql-postgres) which provided PostgreSQL support for HoneySQL 1.x does not work with HoneySQL 2.x. However, HoneySQL 2.x includes all of the functionality from that library out of the box!
+> Note: the [nilenso/honeysql-postgres library](https://github.com/nilenso/honeysql-postgres) which provided PostgreSQL support for HoneySQL 1.x does not work with HoneySQL 2.x. However, HoneySQL 2.x includes all of the functionality from that library (up to 0.3.104) out of the box!
 
 ## Format Options
 
@@ -319,5 +319,7 @@ of "special syntax" functions is documented in the
 [Special Syntax](special-syntax.md) section. The best
 documentation for the helper functions is in the
 [honey.sql.helpers](https://cljdoc.org/d/com.github.seancorfield/honeysql/2.0.0-alpha3/api/honey.sql.helpers) namespace.
+More detail about certain core HoneySQL functionality can be found in the
+[Reference documentation](general-reference.md).
 If you're migrating to HoneySQL 2.0, this [overview of differences
 between 1.0 and 2.0](differences-from-1-x.md) should help.

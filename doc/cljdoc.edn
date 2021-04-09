@@ -2,6 +2,7 @@
  [["Readme" {:file "README.md"}]
   ["Changes" {:file "CHANGELOG.md"}]
   ["Getting Started" {:file "doc/getting-started.md"}
+   ["General Reference" {:file "doc/general-reference.md"}]
    ["SQL Clause Reference" {:file "doc/clause-reference.md"}]
    ["SQL Operator Reference" {:file "doc/operator-reference.md"}]
    ["SQL 'Special Syntax'" {:file "doc/special-syntax.md"}]

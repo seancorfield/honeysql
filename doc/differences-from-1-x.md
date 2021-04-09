@@ -10,7 +10,7 @@ HoneySQL 1.x supported Clojure 1.7 and later. HoneySQL 2.x requires Clojure 1.9 
 
 ## Group, Artifact, and Namespaces
 
-HoneySQL 2.x uses the group ID `com.github.seancorfield` with the original artifact ID of `honeysql`, in line with the recommendations in Inside Clojure's post about the changes in the Clojure CLI: [Deprecated unqualified lib names](https://insideclojure.org/2020/07/28/clj-exec/).
+HoneySQL 2.x uses the group ID `com.github.seancorfield` with the original artifact ID of `honeysql`, in line with the recommendations in Inside Clojure's post about the changes in the Clojure CLI: [Deprecated unqualified lib names](https://insideclojure.org/2020/07/28/clj-exec/); also Clojars [Verified Group Names policy](https://github.com/clojars/clojars-web/wiki/Verified-Group-Names).
 
 In addition, HoneySQL 2.x contains different namespaces so you can have both versions on your classpath without introducing any conflicts. The primary API is now in `honey.sql` and the helpers are in `honey.sql.helpers`. A Spec for the DSL data structure will be available in `honey.specs` at some point (work in progress).
 
@@ -80,7 +80,7 @@ You can now select a non-ANSI dialect of SQL using the new `honey.sql/set-dialec
 
 As noted above, the variadic options for `format` have been replaced by a single hash map as the optional second argument to `format`.
 
-The `:quoting <dialect>` option has superseded by the new dialect machinery and a new `:quoted` option that turns quoting on or off. You either use `:dialect <dialect>` instead or set a default dialect (via `set-dialect!`) and then use `{:quoted true}` in `format` calls where you want quoting.
+The `:quoting <dialect>` option has superseded by the new dialect machinery and a new `:quoted` option that turns quoting on or off. You either use `:dialect <dialect>` instead or set a default dialect (via `set-dialect!`) and then use `:quoted true` in `format` calls where you want quoting.
 
 Identifiers are automatically quoted if you specify a `:dialect` option to `format`, unless you also specify `:quoted false`.
 
@@ -105,11 +105,14 @@ The following new syntax has been added:
 * `:cast` -- `[:cast expr :type]` => `CAST( expr AS type )`,
 * `:composite` -- explicit syntax to produce a comma-separated list of expressions, wrapped in parentheses,
 * `:default` -- for `DEFAULT` values (in inserts) and for declaring column defaults in table definitions,
+* `:escape` -- used to wrap a regular expression so that non-standard escape characters can be provided,
 * `:inline` -- used as a function to replace the `sql/inline` / `#sql/inline` machinery,
-* `:interval` -- used as a function to support `INTERVAL <n> <units>`, e.g., `[:interval 30 :days]`.
+* `:interval` -- used as a function to support `INTERVAL <n> <units>`, e.g., `[:interval 30 :days]`,
+* `:lateral` -- used to wrap a statement or expression, to provide a `LATERAL` join,
 * `:lift` -- used as a function to prevent interpretation of a Clojure data structure as DSL syntax (e.g., when passing a vector or hash map as a parameter value) -- this should mostly be a replacement for `honeysql.format/value`,
 * `:nest` -- used as a function to add an extra level of nesting (parentheses) around an expression,
 * `:not` -- this is now explicit syntax,
+* `:over` -- the function-like part of a T-SQL window clause,
 * `:param` -- used as a function to replace the `sql/param` / `#sql/param` machinery,
 * `:raw` -- used as a function to replace the `sql/raw` / `#sql/raw` machinery. Vector subexpressions inside a `[:raw ..]` expression are formatted to SQL and parameters. Other subexpressions are just turned into strings and concatenated. This is different to the v1 behavior but should be more flexible, since you can now embed `:inline`, `:param`, and `:lift` inside a `:raw` expression.
 
@@ -117,8 +120,10 @@ The following new syntax has been added:
 
 Several additional pieces of syntax have also been added to support column
 definitions in `CREATE TABLE` clauses, now that v2 supports DDL statement
-construction: `:constraint`, `:foreign-key`, `:index`, `:primary-key`,
-`:references`, `:unique`, and -- as noted above -- `:default`.
+construction:
+
+* `:constraint`, `:default`, `:foreign-key`, `:index`, `:primary-key`, `:references`, `:unique`,
+* `:entity` -- used to force an expression to be rendered as a SQL entity (instead of a SQL keyword).
 
 ### select and function calls
 
@@ -174,6 +179,7 @@ And, finally, you can register new operators that will be recognized in expressi
 The `honey.sql.helpers` namespace includes a helper function that corresponds to every supported piece of the data DSL understood by HoneySQL (v1 only had a limited set of helper functions). Unlike v1 helpers which sometimes had both a regular helper and a `merge-` helper, v2 helpers will all merge clauses by default (if that makes sense for the underlying DSL): use `:dissoc` if you want to force an overwrite.
 
 The only helpers that have non-merging behavior are:
-* `intersect`, `union`, `union-all`, `except`, and `except-all` which always wrap around their arguments,
-* `delete`, `set`, `limit`, `offset`, `for`, and `values` which overwrite, rather than merge,
-* `composite` which is a convenience for the `:composite` syntax mentioned above: `(composite :a :b)` is the same as `[:composite :a :b]` which produces `(a, b)`.
+* The SQL set operations `intersect`, `union`, `union-all`, `except`, and `except-all` which always wrap around their arguments,
+* The SQL clauses `delete`, `fetch`, `for`, `limit`, `lock`, `offset`, `on-constraint`, `set`, `truncate`, `update`, and `values` which overwrite, rather than merge,
+* The DDL helpers `drop-column`, `drop-index`, `rename-table`, and `with-data`,
+* The function helper `composite` which is a convenience for the `:composite` syntax mentioned above: `(composite :a :b)` is the same as `[:composite :a :b]` which produces `(a, b)`.
