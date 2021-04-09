@@ -11,6 +11,12 @@ a space (e.g., `:left-join` is formatted as `LEFT JOIN`).
 Except as noted, these clauses apply to all the SQL
 dialects that HoneySQL supports.
 
+DDL clauses are listed first, followed by SQL clauses.
+
+# DDL Clauses
+
+HoneySQL supports the following DDL clauses as a data DSL.
+
 ## alter-table, add-column, drop-column, modify-column, rename-column
 
 `:alter-table` can accept either a single table name or
@@ -52,7 +58,7 @@ expressions); `:drop-column` accepts a single column name,
 and `:rename-column` accepts a sequence with two column
 names: the "from" and the "to" names.
 
-## add-index, drop-index
+### add-index, drop-index
 
 Used with `:alter-table`,
 `:add-index` accepts a single (function) expression
@@ -70,7 +76,7 @@ user=> (sql/format {:alter-table :fruit :drop-index :look})
 ["ALTER TABLE fruit DROP INDEX look"]
 ```
 
-## rename-table
+### rename-table
 
 Used with `:alter-table`,
 `:rename-table` accepts a single table name:
@@ -116,13 +122,50 @@ in the example above, but allow things like `CHECK` for a
 constraint, `FOREIGN KEY` (with a column name), `REFERENCES`
 (with a pair of column names). See [Clause Descriptors in Special Syntax](special-syntax.md#clause-descriptors) for more details.
 
-## create-table-as, create-view, and others
+## create-table-as
+
+`:create-table-as` can accept a single table name or a sequence
+that starts with a table name, optionally followed by
+a flag indicating the creation should be conditional
+(`:if-not-exists` or the symbol `if-not-exists`),
+optionally followed by a `{:columns ..}` clause to specify
+the columns to use in the created table, optionally followed
+by special syntax to specify `TABLESPACE` etc.
+
+For example:
+
+```clojure
+user=> (sql/format {:create-table-as [:metro :if-not-exists
+                                      {:columns [:foo :bar :baz]}
+                                      [:tablespace [:entity :quux]]],
+                    :select [:*],
+                    :from [:cities],
+                    :where [:= :metroflag "y"],
+                    :with-data false}
+                   {:pretty true})
+["
+CREATE TABLE IF NOT EXISTS metro (foo, bar, baz) TABLESPACE quux AS
+SELECT *
+FROM cities
+WHERE metroflag = ?
+WITH NO DATA
+" "y"]
+```
+
+Without the `{:columns ..}` clause, the table will be created
+based on the columns in the query that follows.
 
 ## create-extension
 
+`:create-extension` can accept a single extension name or a pair
+of the extension name, followed by
+a flag indicating the creation should be conditional
+(`:if-not-exists` or the symbol `if-not-exists`).
+See the [PostgreSQL](postgresql.md) section for examples.
+
 ## create-view, create-materialized-view
 
-`:create-view` accepts a single view name:
+`:create-view` and `:create-materialized-view` both accept a single view name:
 
 ```clojure
 user=> (sql/format {:create-view :products
@@ -146,6 +189,14 @@ user=> (sql/format {:drop-table [:foo :bar]})
 ["DROP TABLE foo, bar"]
 ```
 
+# SQL Pseudo-Syntax Clauses
+
+The following data DSL clauses are supported to let
+you modify how SQL clauses are generated, if the default
+generation is incorrect or unsupported.
+
+See also the [Extending HoneySQL](extending-honeysql.md) section.
+
 ## nest
 
 This is pseudo-syntax that lets you wrap a substatement
@@ -162,6 +213,12 @@ some exotic SQL construct. It should rarely be
 needed and it is mostly present to provide the same
 functionality for clauses that `[:raw ..]` provides
 for expressions (which usage is likely to be more common).
+
+# SQL Clauses
+
+HoneySQL supports the following SQL clauses as a data DSL.
+These are listed in precedence order (i.e., matching the
+order they would appear in a valid SQL statement).
 
 ## with, with-recursive
 
@@ -242,6 +299,24 @@ HoneySQL does not yet support `SELECT .. INTO ..`
 or `SELECT .. BULK COLLECT INTO ..`.
 
 ## select-top, select-distinct-top
+
+`:select-top` and `:select-distinct-top` are variants of `:select`
+and `:select-distinct`, respectively, that provide support for
+MS SQL Server's `TOP` modifier on a `SELECT` statement.
+
+They accept a sequence that starts with an expression to be
+used as the `TOP` limit value, followed by SQL entities as
+supported by `:select` above.
+
+The `TOP` expression can either be a general SQL expression
+or a sequence whose first element is a general SQL expression,
+followed by qualifiers for `:percent` and/or `:with-ties` (or
+the symbols `percent` and/or `with-ties`).
+
+```clojure
+user=> (sql/format {:select-top [[10 :percent :with-ties] :foo :baz] :from :bar :order-by [:quux]})
+["SELECT TOP(?) PERCENT WITH TIES foo, baz FROM bar ORDER BY quux ASC" 10]
+```
 
 ## select-distinct-on
 
@@ -605,7 +680,7 @@ user=> (sql/format {:select [:*] :from :table
 
 Some databases, including MySQL, support `:limit` and `:offset`
 for paginated queries, other databases support `:offset` and
-`fetch` for that (which is ANSI-compliant and should be
+`:fetch` for that (which is ANSI-compliant and should be
 preferred if your database supports it). All three expect a
 single SQL expression:
 
