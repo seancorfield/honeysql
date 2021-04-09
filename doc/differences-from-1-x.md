@@ -142,7 +142,8 @@ On a related note, `sql/call` has been removed because it should never be needed
 HoneySQL 1.x provided a `:modifiers` clause (and a `modifiers`) helper as a way to "modify"
 a `SELECT` to be `DISTINCT`. nilenso/honeysql-helpers extended that to support `:distinct-on`
 a group of columns. In HoneySQL 2.x, you use `:select-distinct` and `:select-distinct-on`
-(and their associated helpers) for that instead.
+(and their associated helpers) for that instead. MS SQL Server's `TOP` modifier is also
+supported via `:select-top` and `:select-distinct-top`.
 
 ### set vs sset, set0, set1
 
