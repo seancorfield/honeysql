@@ -1205,6 +1205,14 @@
   (when-let [f (:clause-order-fn @default-dialect)]
     (reset! current-clause-order (f @base-clause-order))))
 
+(defn clause-order
+  "Return the current order that known clauses will be applied when
+  formatting a data structure into SQL. This may be useful when you are
+  figuring out the `before` argument of `register-clause!` as well as
+  for debugging new clauses you have registered."
+  []
+  @current-clause-order)
+
 (defn register-clause!
   "Register a new clause formatter. If `before` is `nil`, the clause is
   added to the end of the list of known clauses, otherwise it is inserted
@@ -1216,7 +1224,9 @@
   clause `before` a clause that is ordered differently in different
   dialects, your new clause may also end up in a different place. The
   only clause so far where that would matter is `:set` which differs in
-  MySQL."
+  MySQL.
+
+  Use `clause-order` to see the full ordering of existing clauses."
   [clause formatter before]
   (let [clause (sym->kw clause)
         before (sym->kw before)]

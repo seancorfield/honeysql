@@ -33,12 +33,10 @@ The third argument to `register-clause!` allows you to
 insert your new clause formatter so that clauses are
 formatted in the correct order for your SQL dialect.
 For example, `:select` comes before `:from` which comes
-before `:where`. This is the most implementation-specific
-part of extending HoneySQL because you'll need to look at
-the (private) Var `default-clause-order` in `honey.sql`
-for guidance. _[I plan to add a section in the documentation
-somewhere that lists built-in clauses in order which this
-can link to...]_
+before `:where`. You can call `clause-order` to see what the
+current ordering of clauses is.
+
+> Note: if you call `register-clause!` more than once for the same clause, the last call "wins". This allows you to correct an incorrect clause order insertion by simply calling `register-clause!` again with a different third argument.
 
 ## Registering a New Operator
 
