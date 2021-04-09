@@ -623,3 +623,11 @@ ORDER BY id = ? DESC
            (format {:insert-into :table
                     :values [{:name name
                               :enabled enabled}]})))))
+
+(deftest issue-319-test
+  (testing "that registering a clause is idempotent"
+    (is (= ["FOO"]
+           (do
+             (sut/register-clause! :foo (constantly ["FOO"]) nil)
+             (sut/register-clause! :foo (constantly ["FOO"]) nil)
+             (format {:foo []}))))))

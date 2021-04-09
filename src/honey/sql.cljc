@@ -60,29 +60,32 @@
    :with-data])
 
 (defn- add-clause-before
-  "Low-level helper just to insert a new clause."
+  "Low-level helper just to insert a new clause.
+
+  If the clause is already in the list, remove it."
   [order clause before]
-  (if before
-    (do
-      (when-not (contains? (set order) before)
-        (throw (ex-info (str "Unrecognized clause: " before)
-                        {:known-clauses order})))
-      (reduce (fn [v k]
-                (if (= k before)
-                  (conj v clause k)
-                  (conj v k)))
-              []
-              order))
-    (conj order clause)))
+  (let [clauses (set order)
+        order   (if (contains? clauses clause)
+                  (filterv #(not= % clause) order)
+                  order)]
+    (if before
+      (do
+        (when-not (contains? clauses before)
+          (throw (ex-info (str "Unrecognized clause: " before)
+                          {:known-clauses order})))
+        (reduce (fn [v k]
+                  (if (= k before)
+                    (conj v clause k)
+                    (conj v k)))
+                []
+                order))
+      (conj order clause))))
 
 (def ^:private dialects
   {:ansi      {:quote #(str \" % \")}
    :sqlserver {:quote #(str \[ % \])}
    :mysql     {:quote #(str \` % \`)
-               :clause-order-fn (fn [order]
-                                  ;; MySQL :set has different priority
-                                  (-> (filterv (complement #{:set}) order)
-                                      (add-clause-before :set :where)))}
+               :clause-order-fn #(add-clause-before % :set :where)}
    :oracle    {:quote #(str \" % \") :as false}})
 
 ; should become defonce
