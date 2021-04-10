@@ -41,20 +41,37 @@ and treated as a table (or alias) name and a column name:
 ;;=> ["SELECT foo_bar.baz_quux"]
 ```
 
-A qualified keyword or symbol, will also be split apart:
+A qualified keyword or symbol, will also be split apart, but dashes (`-`)
+in the namespace portion _will_ be converted to underscores (`_`) even
+when quoting is in effect:
 
 ```clojure
 (sql/format {:select :foo-bar/baz-quux} {:quoted true})
-;;=> ["SELECT \"foo_bar\".\"baz-quux\""]
+;;=> ["SELECT \"foo_bar\".\"baz-quux\""] ; _ in table, - in column
 (sql/format {:select :foo-bar/baz-quux} {:dialect :mysql})
-;;=> ["SELECT `foo_bar`.`baz-quux`"]
+;;=> ["SELECT `foo_bar`.`baz-quux`"] ; _ in table, - in column
 (sql/format {:select :foo-bar/baz-quux})
-;;=> ["SELECT foo_bar.baz_quux"]
+;;=> ["SELECT foo_bar.baz_quux"] ; _ in table and _ in column
 (sql/format {:select :foo-bar/baz-quux} {:dialect :mysql :quoted false})
-;;=> ["SELECT foo_bar.baz_quux"]
+;;=> ["SELECT foo_bar.baz_quux"] ; _ in table and _ in column
 ```
 
-Combining dotted names and..
+Finally, there are some contexts where only a SQL entity is accepted, rather than an
+arbitrary SQL expression, so a string will be treated as a SQL entity and in such cases
+the entity name will always be quoted, dashes (`-`) will not be converted to
+underscores (`_`), and a slash (`/`) is not treated as separating a
+qualifier from the name, regardless of the `:dialect` or `:quoted` settings:
+
+```clojure
+(sql/format {:update :table :set {"foo-bar" 1 "baz/quux" 2}})
+;;=> ["UPDATE table SET \"foo-bar\" = ?, \"baz/quux\" = ?" 1 2]
+(sql/format {:update :table :set {"foo-bar" 1 "baz/quux" 2}} {:quoted true})
+;;=> ["UPDATE \"table\" SET \"foo-bar\" = ?, \"baz/quux\" = ?" 1 2]
+(sql/format {:update :table :set {"foo-bar" 1 "baz/quux" 2}} {:dialect :mysql})
+;;=> ["UPDATE `table` SET `foo-bar` = ?, `baz/quux` = ?" 1 2]
+(sql/format {:update :table :set {"foo-bar" 1 "baz/quux" 2}} {:dialect :sqlserver :quoted false})
+;;=> ["UPDATE table SET [foo-bar] = ?, [baz/quux] = ?" 1 2]
+```
 
 ## Tuples and Composite Values
 
