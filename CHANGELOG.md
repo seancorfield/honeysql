@@ -1,6 +1,6 @@
 # Changes
 
-* 2.0.next in progress
+* 2.0.0-beta1 (for testing; 2021-04-09)
   * Since Alpha 3, more documentation has been written and existing documentation clarified (addressing #300, #309, #313, #314).
   * Fix #319 by ensuring `register-clause!` is idempotent.
   * Fix #317 by dropping qualifiers in `:set` clauses (just like we do with `:insert` columns). Note that you can still use explicit _dotted_ names if you want table qualification.

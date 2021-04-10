@@ -110,6 +110,6 @@ section. The full list
 of "special syntax" functions is documented in the
 [Special Syntax](special-syntax.md) section. The best
 documentation for the helper functions is in the
-[honey.sql.helpers](https://cljdoc.org/d/com.github.seancorfield/honeysql/2.0.0-alpha3/api/honey.sql.helpers) namespace.
+[honey.sql.helpers](https://cljdoc.org/d/com.github.seancorfield/honeysql/2.0.0-beta1/api/honey.sql.helpers) namespace.
 If you're migrating to HoneySQL 2.0, this [overview of differences
 between 1.0 and 2.0](differences-from-1-x.md) should help.
