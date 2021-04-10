@@ -629,14 +629,24 @@ user=> (sql/format {:select [:id
                                 :MaxSalary]]]]
                     :from [:employee]
                     :window [:w {:partition-by [:department]}]})
-["SELECT id, AVG(salary) OVER (PARTITION BY department ORDER BY designation ASC) AS Average, MAX(salary) OVER w AS MaxSalary FROM employee WINDOW w AS (PARTITION BY department)"]
+;; newlines inserted for readability:
+["SELECT id,
+         AVG(salary) OVER (PARTITION BY department ORDER BY designation ASC) AS Average,
+         MAX(salary) OVER w AS MaxSalary
+  FROM employee
+  WINDOW w AS (PARTITION BY department)"]
 ;; easier to write with helpers (and easier to read!):
 user=> (sql/format (-> (select :id
                                (over [[:avg :salary] (-> (partition-by :department) (order-by :designation)) :Average]
                                      [[:max :salary] :w :MaxSalary]))
                        (from :employee)
                        (window :w (partition-by :department))))
-["SELECT id, AVG(salary) OVER (PARTITION BY department ORDER BY designation ASC) AS Average, MAX(salary) OVER w AS MaxSalary FROM employee WINDOW w AS (PARTITION BY department)"]
+;; newlines inserted for readability:
+["SELECT id,
+         AVG(salary) OVER (PARTITION BY department ORDER BY designation ASC) AS Average,
+         MAX(salary) OVER w AS MaxSalary
+  FROM employee
+  WINDOW w AS (PARTITION BY department)"]
 ```
 
 The window function in the `:over` expression may be `{}` or `nil`:

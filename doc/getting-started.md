@@ -190,7 +190,7 @@ There is a helper function for every single clause that HoneySQL
 supports out of the box. In addition, there are helpers for
 `composite`, `lateral`, `over`, and `upsert` that make it easier to construct those
 parts of the SQL DSL (examples of `composite` appear in the [README](README.md),
-examples of `over` appear in the [Clause Reference](docs/clause-reference.md))
+examples of `over` appear in the [Clause Reference](clause-reference.md))
 
 In addition to being variadic -- which often lets you omit one
 level of `[`..`]` -- the helper functions merge clauses, which

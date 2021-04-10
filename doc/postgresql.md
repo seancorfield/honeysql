@@ -5,7 +5,7 @@ features that HoneySQL supports out of the box
 for which you previously needed the
 [nilenso/honeysql-postgres library](https://github.com/nilenso/honeysql-postgres).
 
-Everything that the nilenso library provided is implemented
+Everything that the nilenso library provided (in 0.3.104) is implemented
 directly in HoneySQL 2.x although a few things have a
 slightly different syntax.
 
@@ -79,7 +79,7 @@ user=> (-> (insert-into :distributors)
 ```
 
 `ON CONSTRAINT` is handled slightly differently to the nilenso library,
-with provided a single `on-conflict-constraint` helper (and clause):
+which provided a single `on-conflict-constraint` helper (and clause):
 
 ```clojure
 user=> (-> (insert-into :distributors)
@@ -152,6 +152,18 @@ By comparison, this is the DSL structure that nilenso would have required:
 ```
 
 ## INSERT INTO AS
+
+HoneySQL supports aliases directly in `:insert-into` so no special
+clause is needed for this any more:
+
+```clojure
+user=> (sql/format (-> (insert-into :table :alias)
+                       (values [[1 2 3] [4 5 6]])))
+["INSERT INTO table AS alias VALUES (?, ?, ?), (?, ?, ?)" 1 2 3 4 5 6]
+user=> (sql/format {:insert-into [:table :alias],
+                    :values [[1 2 3] [4 5 6]]})
+["INSERT INTO table AS alias VALUES (?, ?, ?), (?, ?, ?)" 1 2 3 4 5 6]
+```
 
 ## Returning
 
@@ -325,3 +337,7 @@ user=> (sql/format (alter-table :fruit
 ```
 
 ## Window / Partition Support
+
+HoneySQL supports `:window`, `:partition-by`, and `:over`
+directly now.
+See the Clause Reference for examples of [WINDOW, PARTITION BY, and OVER](clause-reference.md#window-partition-by-and-over).
