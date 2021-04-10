@@ -921,17 +921,34 @@
     x))
 
 (defn- format-in [in [x y]]
-  (let [[sql-x & params-x] (format-expr x {:nested true})
-        [sql-y & params-y] (format-expr y {:nested true})
+  (let [nil-check          (and (sequential? y) (not (ident? (first y))))
+        y'                 (if nil-check (remove nil? y) y)
+        [sql-x & params-x] (format-expr x {:nested true})
+        [sql-y & params-y] (format-expr y' {:nested true})
         values             (unwrap (first params-y) {})]
     (if (and (= "?" sql-y) (= 1 (count params-y)) (coll? values))
-      (let [sql (str "(" (str/join ", " (repeat (count values) "?")) ")")]
-        (-> [(str sql-x " " (sql-kw in) " " sql)]
+      (let [values' (remove nil? values)
+            sql     (str "(" (str/join ", " (repeat (count values') "?")) ")")
+            in      (str sql-x " " (sql-kw in) " " sql)]
+        (-> [(if (not= (count values) (count values'))
+               (if (zero? (count values'))
+                 (str sql-x " IS NULL")
+                 (str "(" in " OR " sql-x " IS NULL)"))
+               (if (zero? (count values))
+                 "FALSE"
+                 in))]
             (into params-x)
-            (into values)))
-      (-> [(str sql-x " " (sql-kw in) " " sql-y)]
-          (into params-x)
-          (into params-y)))))
+            (into values')))
+      (let [in (str sql-x " " (sql-kw in) " " sql-y)]
+        (-> [(if (and nil-check (not= (count y) (count y')))
+               (if (zero? (count y'))
+                 (str sql-x " IS NULL")
+                 (str "(" in " OR " sql-x " IS NULL)"))
+               (if (zero? (count y))
+                 "FALSE"
+                 in))]
+            (into params-x)
+            (into params-y))))))
 
 (defn- function-0 [k xs]
   [(str (sql-kw k)

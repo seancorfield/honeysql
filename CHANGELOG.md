@@ -1,5 +1,8 @@
 # Changes
 
+* 2.0.next in progress
+  * Tentative fix for #315 by expanding `:in` handling to deal with `nil` values.
+
 * 2.0.0-beta1 (for testing; 2021-04-09)
   * Since Alpha 3, more documentation has been written and existing documentation clarified (addressing #300, #309, #313, #314).
   * Fix #319 by ensuring `register-clause!` is idempotent.

@@ -277,6 +277,39 @@
                  (sql/format {:select [:*]
                               :from [:customers]
                               :where [:in :id :?ids]}
+                             {:params {:ids values}})))))
+      (testing (str "with just a nil value from a " (name cname))
+        (let [values (conj coll nil)]
+          (is (= ["SELECT * FROM customers WHERE id IS NULL"]
+                 (sql/format {:select [:*]
+                              :from [:customers]
+                              :where [:in :id values]})))
+          (is (= ["SELECT * FROM customers WHERE id IS NULL"]
+                 (sql/format {:select [:*]
+                              :from [:customers]
+                              :where [:in :id :?ids]}
+                             {:params {:ids values}})))))
+      (testing (str "with nil values from a " (name cname))
+        (let [values (conj coll 1 nil)]
+          (is (= ["SELECT * FROM customers WHERE (id IN (?) OR id IS NULL)" 1]
+                 (sql/format {:select [:*]
+                              :from [:customers]
+                              :where [:in :id values]})))
+          (is (= ["SELECT * FROM customers WHERE (id IN (?) OR id IS NULL)" 1]
+                 (sql/format {:select [:*]
+                              :from [:customers]
+                              :where [:in :id :?ids]}
+                             {:params {:ids values}})))))
+      (testing (str "with no values from a " (name cname))
+        (let [values coll]
+          (is (= ["SELECT * FROM customers WHERE FALSE"]
+                 (sql/format {:select [:*]
+                              :from [:customers]
+                              :where [:in :id values]})))
+          (is (= ["SELECT * FROM customers WHERE FALSE"]
+                 (sql/format {:select [:*]
+                              :from [:customers]
+                              :where [:in :id :?ids]}
                              {:params {:ids values}}))))))
     (testing "with more than one integer"
       (let [values [1 2]]
@@ -285,6 +318,16 @@
                             :from [:customers]
                             :where [:in :id values]})))
         (is (= ["SELECT * FROM customers WHERE id IN (?, ?)" 1 2]
+               (sql/format {:select [:*]
+                            :from [:customers]
+                            :where [:in :id :?ids]}
+                           {:params {:ids values}}))))
+      (let [values [1 nil 2]]
+        (is (= ["SELECT * FROM customers WHERE (id IN (?, ?) OR id IS NULL)" 1 2]
+               (sql/format {:select [:*]
+                            :from [:customers]
+                            :where [:in :id values]})))
+        (is (= ["SELECT * FROM customers WHERE (id IN (?, ?) OR id IS NULL)" 1 2]
                (sql/format {:select [:*]
                             :from [:customers]
                             :where [:in :id :?ids]}
