@@ -8,20 +8,24 @@
   supported syntax.
 
   In addition, functions to extend HoneySQL are also provided here:
-  * `sql-kw` -- turns a Clojure keyword into SQL code (makes it uppercase
-        and replaces - with space).
+  * `clause-order` -- returns the current clause priority ordering;
+        intended as aid when registering new clauses.
   * `format-dsl` -- intended to format SQL statements; returns a vector
         containing a SQL string followed by parameter values.
+  * `format-entity` -- intended to format SQL entities; returns a string
+        representing the SQL entity.
   * `format-expr` -- intended to format SQL expressions; returns a vector
         containing a SQL string followed by parameter values.
   * `format-expr-list` -- intended to format a list of SQL expressions;
         returns a pair comprising: a sequence of SQL expressions (to be
         join with a delimiter) and a sequence of parameter values.
-  * `set-dialect!` -- set the default dialect to be used for formatting.
   * `register-clause!` -- register a new statement/clause formatter.
   * `register-fn!` -- register a new function call (or special syntax)
         formatter.
-  * `register-op!` -- register a new operator formatter."
+  * `register-op!` -- register a new operator formatter.
+  * `set-dialect!` -- set the default dialect to be used for formatting.
+  * `sql-kw` -- turns a Clojure keyword (or symbol) into SQL code (makes
+        it uppercase and replaces - with space). "
   (:refer-clojure :exclude [format])
   (:require [clojure.string :as str]))
 
