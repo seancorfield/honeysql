@@ -9,7 +9,28 @@ See #313
 
 ## Tuples and Composite Values
 
-See #314
+Some databases support "composite values" which are usually
+represented as tuples in SQL, eg., `(col1,col2)` or `(13,42,'foo')`.
+In HoneySQL v1, you could sometimes get away with just using a
+vector of entities and/or values, but it was very much dependent
+on the context. HoneySQL v2 always treats vectors (and sequences)
+as function calls (which may be "special syntax" or an actual
+function call).
+
+HoneySQL provides `:composite` as special syntax to construct
+these tuples:
+
+```clojure
+(sql/format-expr [:composite :col1 :col2])
+;;=> ["(col1, col2)"]
+(sql/format-expr [:composite 13 42 "foo"])
+;;=> ["(?, ?, ?)" 13 42 "foo"]
+;; or using symbols:
+(sql/format-expr '(composite col1 col2))
+;;=> ["(col1, col2)"]
+(sql/format-expr '(composite 13 42 "foo"))
+;;=> ["(?, ?, ?)" 13 42 "foo"]
+```
 
 ## Other Sections Will Be Added!
 
