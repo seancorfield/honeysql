@@ -17,6 +17,10 @@ DDL clauses are listed first, followed by SQL clauses.
 
 HoneySQL supports the following DDL clauses as a data DSL.
 
+Several of these include column specifications and HoneySQL
+provides some special syntax (functions) to support that.
+See [Clause Descriptors in Special Syntax](special-syntax.md#clause-descriptors) for more details.
+
 ## alter-table, add-column, drop-column, modify-column, rename-column
 
 `:alter-table` can accept either a single table name or
@@ -118,7 +122,7 @@ will be uppercased (mostly to give the appearance of separating
 the column name from the SQL keywords).
 
 Various function-like expressions can be specified, as shown
-in the example above, but allow things like `CHECK` for a
+in the example above, that allow things like `CHECK` for a
 constraint, `FOREIGN KEY` (with a column name), `REFERENCES`
 (with a pair of column names). See [Clause Descriptors in Special Syntax](special-syntax.md#clause-descriptors) for more details.
 

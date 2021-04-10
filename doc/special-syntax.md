@@ -67,10 +67,23 @@ SQL entity. This is intended for use in contexts that would
 otherwise produce a sequence of SQL keywords, such as when
 constructing DDL statements.
 
+```clojure
+[:tablespace :quux]
+;;=> TABLESPACE QUUX
+[:tablespace [:entity :quux]]
+;;=> TABLESPACE quux
+```
+
 ## escape
 
 Intended to be used with regular expression patterns to
 specify the escape characters (if any).
+
+```clojure
+(format {:select :* :from :foo
+         :where [:similar-to :foo [:escape "bar" [:inline  "*"]]]})
+;;=> ["SELECT * FROM foo WHERE foo SIMILAR TO ? ESCAPE '*'" "bar"]))))
+```
 
 ## inline
 
@@ -101,7 +114,8 @@ that represents a time unit. Produces an `INTERVAL` expression:
 ## lateral
 
 Accepts a single argument that can be a (`SELECT`) clause or
-a (function call) expression.
+a (function call) expression. Produces a `LATERAL` subquery
+clause based on the `SELECT` clause or the SQL expression.
 
 ## lift
 
@@ -230,7 +244,7 @@ Otherwise, these render as regular function calls:
 [:primary-key :x :y] ;=> PRIMARY KEY(x, y)
 ```
 
-## constraint, default, references
+### constraint, default, references
 
 Although these are grouped together, they are generally
 used differently. This group renders as SQL keywords if
@@ -248,7 +262,7 @@ followed by the rest as a regular argument list:
 [:references :foo :bar] ;=> REFERENCES foo(bar)
 ```
 
-## index, unique
+### index, unique
 
 These behave like the group above except that if the
 first argument is `nil`, it is omitted:
