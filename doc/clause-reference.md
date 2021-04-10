@@ -19,7 +19,7 @@ HoneySQL supports the following DDL clauses as a data DSL.
 
 Several of these include column specifications and HoneySQL
 provides some special syntax (functions) to support that.
-See [Clause Descriptors in Special Syntax](special-syntax.md#clause-descriptors) for more details.
+See [Column Descriptors in Special Syntax](special-syntax.md#column-descriptors) for more details.
 
 ## alter-table, add-column, drop-column, modify-column, rename-column
 
@@ -124,7 +124,7 @@ the column name from the SQL keywords).
 Various function-like expressions can be specified, as shown
 in the example above, that allow things like `CHECK` for a
 constraint, `FOREIGN KEY` (with a column name), `REFERENCES`
-(with a pair of column names). See [Clause Descriptors in Special Syntax](special-syntax.md#clause-descriptors) for more details.
+(with a pair of column names). See [Column Descriptors in Special Syntax](special-syntax.md#column-descriptors) for more details.
 
 ## create-table-as
 
