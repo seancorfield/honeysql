@@ -649,6 +649,20 @@ ORDER BY id = ? DESC
                     :values [{:name name
                               :enabled enabled}]})))))
 
+(deftest issue-316-test
+  (testing "SQL injection via keyword is detected"
+    (let [sort-column "foo; select * from users"]
+      (try
+        (-> {:select [:foo :bar]
+             :from [:mytable]
+             :order-by [(keyword sort-column)]}
+            (format))
+        (is false "; not detected in entity!")
+        (catch #?(:clj Throwable :cljs :default) e
+          (is (:disallowed (ex-data e))))))
+    ;; should not produce: ["SELECT foo, bar FROM mytable ORDER BY foo; select * from users"]
+    ))
+
 (deftest issue-319-test
   (testing "that registering a clause is idempotent"
     (is (= ["FOO"]

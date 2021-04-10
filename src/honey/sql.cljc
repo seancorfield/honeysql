@@ -98,6 +98,10 @@
 (def ^:private ^:dynamic *quoted* nil)
 (def ^:private ^:dynamic *inline* nil)
 (def ^:private ^:dynamic *params* nil)
+;; there is no way, currently, to enable suspicious characters
+;; in entities; if someone complains about this check, an option
+;; can be added to format to turn this on:
+(def ^:private ^:dynamic *allow-suspicious-entities* false)
 
 ;; clause helpers
 
@@ -164,12 +168,18 @@
                 (if aliased
                   [nil (nn x)]
                   (let [[t c] (str/split (nn x) #"\.")]
-                    (if c [t c] [nil t]))))]
-    (cond->> c
-      (not= "*" c)
-      (q)
-      t
-      (str (q t) "."))))
+                    (if c [t c] [nil t]))))
+        entity (cond->> c
+                 (not= "*" c)
+                 (q)
+                 t
+                 (str (q t) "."))
+        suspicious #";"]
+    (when-not *allow-suspicious-entities*
+      (when (re-find suspicious entity)
+        (throw (ex-info (str "suspicious character found in entity: " entity)
+                        {:disallowed suspicious}))))
+    entity))
 
 (comment
   (for [v [:foo-bar 'foo-bar "foo-bar"

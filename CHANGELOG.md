@@ -1,8 +1,10 @@
 # Changes
 
 * 2.0.next in progress
+  * Since Alpha 3, more documentation has been written and existing documentation clarified (addressing #300, #309, #313, #314).
   * Fix #319 by ensuring `register-clause!` is idempotent.
   * Fix #317 by dropping qualifiers in `:set` clauses (just like we do with `:insert` columns). Note that you can still use explicit _dotted_ names if you want table qualification.
+  * Fix #316 by disallowing entity names containing `;` (to avoid SQL injection risks).
   * Fix #312 by adding `:raw` as a clause. There is no helper function equivalent (because it would be ambiguous whether you meant a function form -- `[:raw ..]` -- or a clause form -- `{:raw ..}`; and for the same reason, there is no `nest` helper function since that also works as a clause and as a function/special syntax).
 
 * 2.0.0-alpha3 (for early testing; 2021-03-13)
@@ -21,9 +23,11 @@
   * Reconcile `where` behavior with recent 1.0 changes (porting #283 to v2).
   * Fix #280 by adding `:escape` as special syntax for regular expression patterns.
   * Fix #277 by adding `:join-by`/`join-by` so that you can have multiple `JOIN`'s in a specific order.
+
 * 2.0.0-alpha2 (for early testing)
   * Since Alpha 1, a lot more documentation has been written and docstrings have been added to most functions in `honey.sql.helpers`.
   * Numerous small improvements have been made to clauses and helpers around insert/upsert.
+
 * 2.0.0-alpha1 (for early testing)
   * This is a complete rewrite/simplification of HoneySQL that provides just two namespaces:
     * `honey.sql` -- this is the primary API via the `format` function as well as the various extension points.

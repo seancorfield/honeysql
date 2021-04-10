@@ -592,12 +592,26 @@
 
 (defn where
   "Accepts one or more SQL expressions (conditions) and
-  combines them with AND:
+  combines them with AND (by default):
 
   (where [:= :status 0] [:<> :task \"backup\"])
+  or:
+  (where :and [:= :status 0] [:<> :task \"backup\"])
 
   Produces: WHERE (status = ?) AND (task <> ?)
-  Parameters: 0 \"backup\""
+  Parameters: 0 \"backup\"
+
+  For a single expression, the brackets can be omitted:
+
+  (where := :status 0) ; same as (where [:= :status 0])
+
+  With multiple expressions, the conjunction may be
+  specified as a leading symbol:
+
+  (where :or [:= :status 0] [:= :task \"stop\"])
+
+  Produces: WHERE (status = 0) OR (task = ?)
+  Parameters: 0 \"stop\""
   [& exprs]
   (generic :where exprs))
 
@@ -615,12 +629,24 @@
 
 (defn having
   "Like `where`, accepts one or more SQL expressions
-  (conditions) and combines them with AND:
+  (conditions) and combines them with AND (by default):
 
   (having [:> :count 0] [:<> :name nil])
+  or:
+  (having :and [:> :count 0] [:<> :name nil])
 
   Produces: HAVING (count > ?) AND (name IS NOT NULL)
-  Parameters: 0"
+  Parameters: 0
+
+  (having :> :count 0)
+
+  Produces: HAVING count > ?
+  Parameters: 0
+
+  (having :or [:> :count 0] [:= :name \"\"])
+
+  Produces: HAVING (count > ?) OR (name = ?)
+  Parameters: 0 \"\""
   [& exprs]
   (generic :having exprs))
 

@@ -428,6 +428,8 @@ user=> (sql/format '{insert-into (((transport t) (id, name)) {select (*) from (c
 ["INSERT INTO transport AS t (id, name) SELECT * FROM cars"]
 ```
 
+> Note: if you specify `:columns` for an `:insert-into` that also includes column names, you will get invalid SQL. Similarly, if you specify `:columns` when `:values` is based on hash maps, you will get invalid SQL. Since clauses are generated independently, there is no cross-checking performed if you provide an illegal combination of clauses.
+
 ## update
 
 `:update` expects either a simple SQL entity (table name)
