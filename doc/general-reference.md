@@ -5,7 +5,56 @@ how to generate certain SQL constructs.
 
 ## SQL Entity Generation
 
-See #313
+HoneySQL treats keywords and symbols as SQL entities (in any context other
+than function call position in a sequence). If quoting is in effect,
+either because `:dialect` was specified as an option to `format` or
+because `:quoted true` was specified, the literal name of an unqualified,
+single-segment keyword or symbol is used as-is and quoted:
+
+```clojure
+(sql/format {:select :foo-bar} {:quoted true})
+;;=> ["SELECT \"foo-bar\""]
+(sql/format {:select :foo-bar} {:dialect :mysql})
+;;=> ["SELECT `foo-bar`"]
+```
+
+If quoting is not in effect, any dashes (`-`) in the name will be converted to underscores (`_`):
+
+```clojure
+(sql/format {:select :foo-bar})
+;;=> ["SELECT foo_bar"]
+(sql/format {:select :foo-bar} {:dialect :mysql :quoted false})
+;;=> ["SELECT foo_bar"]
+```
+
+If a keyword or symbol contains a dot (`.`), it will be split apart
+and treated as a table (or alias) name and a column name:
+
+```clojure
+(sql/format {:select :foo-bar.baz-quux} {:quoted true})
+;;=> ["SELECT \"foo-bar\".\"baz-quux\""]
+(sql/format {:select :foo-bar.baz-quux} {:dialect :mysql})
+;;=> ["SELECT `foo-bar`.`baz-quux`"]
+(sql/format {:select :foo-bar.baz-quux})
+;;=> ["SELECT foo_bar.baz_quux"]
+(sql/format {:select :foo-bar.baz-quux} {:dialect :mysql :quoted false})
+;;=> ["SELECT foo_bar.baz_quux"]
+```
+
+A qualified keyword or symbol, will also be split apart:
+
+```clojure
+(sql/format {:select :foo-bar/baz-quux} {:quoted true})
+;;=> ["SELECT \"foo_bar\".\"baz-quux\""]
+(sql/format {:select :foo-bar/baz-quux} {:dialect :mysql})
+;;=> ["SELECT `foo_bar`.`baz-quux`"]
+(sql/format {:select :foo-bar/baz-quux})
+;;=> ["SELECT foo_bar.baz_quux"]
+(sql/format {:select :foo-bar/baz-quux} {:dialect :mysql :quoted false})
+;;=> ["SELECT foo_bar.baz_quux"]
+```
+
+Combining dotted names and..
 
 ## Tuples and Composite Values
 
