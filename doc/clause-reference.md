@@ -167,9 +167,13 @@ a flag indicating the creation should be conditional
 (`:if-not-exists` or the symbol `if-not-exists`).
 See the [PostgreSQL](postgresql.md) section for examples.
 
-## create-view, create-materialized-view
+## create-view, create-materialized-view, refresh-materialized-view
 
-`:create-view` and `:create-materialized-view` both accept a single view name:
+`:create-view`, `:create-materialized-view`, and
+`:refresh-materialized-view` all accept a single view name
+or a sequence of optional modifiers, followed by the view name,
+followed by a flag indicating the creation should be conditional
+(`:if-not-exists` or the symbol `if-not-exists`):
 
 ```clojure
 user=> (sql/format {:create-view :products
@@ -177,14 +181,22 @@ user=> (sql/format {:create-view :products
                     :from [:items]
                     :where [:= :category "product"]})
 ["CREATE VIEW products AS SELECT * FROM items WHERE category = ?" "product"]
+user=> (sql/format {:create-view [:products :if-not-exists]
+                    :select [:*]
+                    :from [:items]
+                    :where [:= :category "product"]})
+["CREATE VIEW IF NOT EXISTS products AS SELECT * FROM items WHERE category = ?" "product"]
+user=> (sql/format {:refresh-materialized-view [:concurrently :products]
+                    :with-data false})
+["REFRESH MATERIALIZED VIEW CONCURRENTLY products WITH NO DATA"]
 ```
 
-## drop-table
+## drop-table, drop-extension, drop-view, drop-materialized-view
 
-`:drop-table` can accept a single table name or a sequence of
-table names. If a sequence is provided and the first element
+`:drop-table` et al can accept a single table (extension, view) name or a sequence of
+table (extension, view) names. If a sequence is provided and the first element
 is `:if-exists` (or the symbol `if-exists`) then that conditional
-clause is added before the table names:
+clause is added before the table (extension, view) names:
 
 ```clojure
 user=> (sql/format '{drop-table (if-exists foo bar)})
@@ -302,6 +314,19 @@ user=> (sql/format {:select [:id, [[:* :cost 2] :total], [:event :status]]
 HoneySQL does not yet support `SELECT .. INTO ..`
 or `SELECT .. BULK COLLECT INTO ..`.
 
+## select-distinct-on
+
+Similar to `:select-distinct` above but the first element
+in the sequence should be a sequence of columns for the
+`DISTINCT ON` clause and the remaining elements are the
+columns to be selected:
+
+```clojure
+user=> (sql/format '{select-distinct-on [[a b] c d]
+                     from [table]})
+["SELECT DISTINCT ON(a, b) c, d FROM table"]
+```
+
 ## select-top, select-distinct-top
 
 `:select-top` and `:select-distinct-top` are variants of `:select`
@@ -321,20 +346,6 @@ the symbols `percent` and/or `with-ties`).
 user=> (sql/format {:select-top [[10 :percent :with-ties] :foo :baz] :from :bar :order-by [:quux]})
 ["SELECT TOP(?) PERCENT WITH TIES foo, baz FROM bar ORDER BY quux ASC" 10]
 ```
-
-## select-distinct-on
-
-Similar to `:select-distinct` above but the first element
-in the sequence should be a sequence of columns for the
-`DISTINCT ON` clause and the remaining elements are the
-columns to be selected:
-
-```clojure
-user=> (sql/format '{select-distinct-on [[a b] c d]
-                     from [table]})
-["SELECT DISTINCT ON(a, b) c, d FROM table"]
-```
-
 ## into
 
 Used for selecting rows into a new table, optional in another database:
@@ -511,6 +522,28 @@ for more detail).
 
 > Note: the actual formatting of a `:using` clause is currently identical to the formatting of a `:select` clause.
 
+## join-by
+
+This is a convenience that allows for an arbitrary sequence of `JOIN`
+operations to be performed in a specific order. It accepts a sequence
+of join operation name (keyword or symbol) and the clause that join
+would take:
+
+```clojure
+user=> (sql/format {:select [:t.ref :pp.code]
+                    :from [[:transaction :t]]
+                    :join-by [:left [[:paypal-tx :pp]
+                                     [:using :id]]
+                              :join [[:logtransaction :log]
+                                     [:= :t.id :log.id]]]
+                    :where [:= "settled" :pp.status]})
+["SELECT t.ref, pp.code FROM transaction AS t LEFT JOIN paypal_tx AS pp USING (id) INNER JOIN logtransaction AS log ON t.id = log.id WHERE ? = pp.status" "settled"]
+```
+
+Without `:join-by`, a `:join` would normally be generated before a `:left-join`.
+To avoid repetition, `:join-by` allows shorthand versions of the join clauses
+using a keyword (or symbol) without the `-join` suffix, as shown in this example.
+
 ## join, left-join, right-join, inner-join, outer-join, full-join
 
 All these join clauses have the same structure: they accept a sequence
@@ -547,28 +580,6 @@ simple table name (keyword or symbol) or a pair of a
 table name and an alias.
 
 > Note: the actual formatting of a `:cross-join` clause is currently identical to the formatting of a `:select` clause.
-
-## join-by
-
-This is a convenience that allows for an arbitrary sequence of `JOIN`
-operations to be performed in a specific order. It accepts a sequence
-of join operation name (keyword or symbol) and the clause that join
-would take:
-
-```clojure
-user=> (sql/format {:select [:t.ref :pp.code]
-                    :from [[:transaction :t]]
-                    :join-by [:left [[:paypal-tx :pp]
-                                     [:using :id]]
-                              :join [[:logtransaction :log]
-                                     [:= :t.id :log.id]]]
-                    :where [:= "settled" :pp.status]})
-["SELECT t.ref, pp.code FROM transaction AS t LEFT JOIN paypal_tx AS pp USING (id) INNER JOIN logtransaction AS log ON t.id = log.id WHERE ? = pp.status" "settled"]
-```
-
-Without `:join-by`, a `:join` would normally be generated before a `:left-join`.
-To avoid repetition, `:join-by` allows shorthand versions of the join clauses
-using a keyword (or symbol) without the `-join` suffix, as shown in this example.
 
 ## set (MySQL)
 
@@ -846,3 +857,9 @@ simple table name (keyword or symbol) or a pair of a
 table name and an alias.
 
 > Note: the actual formatting of a `:returning` clause is currently identical to the formatting of a `:select` clause.
+
+## with-data
+
+`:with-data` accepts a single boolean argument and produces
+either `WITH DATA`, for a `true` argument, or `WITH NO DATA`,
+for a `false` argument.
