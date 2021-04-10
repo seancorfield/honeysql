@@ -2,7 +2,8 @@
 
 (ns honey.sql-test
   (:refer-clojure :exclude [format])
-  (:require #?(:clj [clojure.test :refer [deftest is testing]]
+  (:require [clojure.string :as str]
+            #?(:clj [clojure.test :refer [deftest is testing]]
                :cljs [cljs.test :refer-macros [deftest is testing]])
             [honey.sql :as sut :refer [format]]
             [honey.sql.helpers :as h]))
@@ -382,6 +383,30 @@
           :set    {:a 1}
           :where  [:= :bar.b 42]}
          (format {:dialect :mysql})))))
+
+(deftest format-arity-test
+  (testing "format can be called with no options"
+    (is (= ["DELETE FROM foo WHERE foo.id = ?" 42]
+           (-> {:delete-from :foo
+                :where [:= :foo.id 42]}
+               (format)))))
+  (testing "format can be called with an options hash map"
+    (is (= ["\nDELETE FROM `foo`\nWHERE `foo`.`id` = ?\n" 42]
+           (-> {:delete-from :foo
+                :where [:= :foo.id 42]}
+               (format {:dialect :mysql :pretty true})))))
+  (testing "format can be called with named arguments"
+    (is (= ["\nDELETE FROM `foo`\nWHERE `foo`.`id` = ?\n" 42]
+           (-> {:delete-from :foo
+                :where [:= :foo.id 42]}
+               (format :dialect :mysql :pretty true)))))
+  (when (str/starts-with? #?(:clj (clojure-version)
+                             :cljs *clojurescript-version*) "1.11")
+    (testing "format can be called with mixed arguments"
+      (is (= ["\nDELETE FROM `foo`\nWHERE `foo`.`id` = ?\n" 42]
+             (-> {:delete-from :foo
+                  :where [:= :foo.id 42]}
+                 (format :dialect :mysql {:pretty true})))))))
 
 (deftest delete-from-test
   (is (= ["DELETE FROM `foo` WHERE `foo`.`id` = ?" 42]

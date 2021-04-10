@@ -1192,7 +1192,8 @@
                            (:quoted opts)
                            dialect?)
                *params* (:params opts)]
-       (mapv #(unwrap % opts) (format-dsl data opts))))))
+       (mapv #(unwrap % opts) (format-dsl data opts)))))
+  ([data k v & {:as opts}] (format data (assoc opts k v))))
 
 (defn set-dialect!
   "Set the default dialect for formatting.

@@ -4,7 +4,10 @@ The goal of HoneySQL 1.x and earlier was to provide a DSL for vendor-neutral SQL
 
 The goal of HoneySQL 2.x is to provide an easily-extensible DSL for SQL, supporting vendor-specific differences and extensions, that is as consistent as possible. A secondary goal is to make maintenance much easier by streamlining the machinery and reducing the number of different ways to write and/or extend the DSL.
 
-The DSL itself -- the data structures that both versions convert to SQL and parameters via the `format` function -- is almost exactly the same between the two versions so that migration is relatively painless. The primary API -- the `format` function -- is preserved in 2.x, although the variadic options from 1.x have changed to an options hash map in 2.x as this is generally considered more idiomatic. See the **Option Changes** section below for the differences in the options supported.
+The DSL itself -- the data structures that both versions convert to SQL and parameters via the `format` function -- is almost exactly the same between the two versions so that migration is relatively painless. The primary API -- the `format` function -- is preserved in 2.x, although the options have changed between 1.x and 2.x. See the **Option Changes** section below for the differences in the options supported.
+`format` can accept its options as a single hash map or as named arguments (v1 only supported the latter).
+If you are using Clojure 1.11, you can invoke `format` with a mixture of named arguments and a trailing hash
+map of additional options, if you wish.
 
 HoneySQL 1.x supported Clojure 1.7 and later. HoneySQL 2.x requires Clojure 1.9 or later.
 
@@ -77,8 +80,6 @@ You can now select a non-ANSI dialect of SQL using the new `honey.sql/set-dialec
 > Note: in general, all clauses are available in all dialects in HoneySQL unless the syntax of the clauses conflict between dialects (currently, no such clauses exist). The `:mysql` dialect is the only one so far that changes the priority ordering of a few clauses.
 
 ## Option Changes
-
-As noted above, the variadic options for `format` have been replaced by a single hash map as the optional second argument to `format`.
 
 The `:quoting <dialect>` option has superseded by the new dialect machinery and a new `:quoted` option that turns quoting on or off. You either use `:dialect <dialect>` instead or set a default dialect (via `set-dialect!`) and then use `:quoted true` in `format` calls where you want quoting.
 
