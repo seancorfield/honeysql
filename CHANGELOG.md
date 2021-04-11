@@ -4,7 +4,7 @@
   * The documentation continues to be expanded and clarified in response to feedback!
   * Tentative fix for #315 by expanding `:in` handling to deal with `nil` values.
   * Fix #310 by adding support for `FILTER`, `WITHIN GROUP`, and `ORDER BY` (as an expression), from [nilenso/honeysql-postgres](https://github.com/nilenso/honeysql-postgres) 0.4.112. These are [Special Syntax](doc/special-syntax.md) and there are also helpers for `filter` and `within-group` -- so **be careful about referring in all of `honey.sql.helpers`** since it will now shadow `clojure.core/filter` (it already shadows `for`, `group-by`, `into`, `partition-by`, `set`, and `update`).
-  * Fix #308 by supporting join clauses in `join-by`.
+  * Fix #308 by supporting join clauses in `join-by` (and correcting the helper docstring).
 
 * 2.0.0-beta1 (for testing; 2021-04-09)
   * Since Alpha 3, more documentation has been written and existing documentation clarified (addressing #300, #309, #313, #314).
