@@ -77,9 +77,9 @@ qualifier from the name, regardless of the `:dialect` or `:quoted` settings:
 
 Some databases support "composite values" which are usually
 represented as tuples in SQL, eg., `(col1,col2)` or `(13,42,'foo')`.
-In HoneySQL v1, you could sometimes get away with just using a
+In HoneySQL 1.x, you could sometimes get away with just using a
 vector of entities and/or values, but it was very much dependent
-on the context. HoneySQL v2 always treats vectors (and sequences)
+on the context. HoneySQL 2.x always treats vectors (and sequences)
 as function calls (which may be "special syntax" or an actual
 function call).
 
@@ -111,5 +111,5 @@ of "special syntax" functions is documented in the
 [Special Syntax](special-syntax.md) section. The best
 documentation for the helper functions is in the
 [honey.sql.helpers](https://cljdoc.org/d/com.github.seancorfield/honeysql/2.0.0-beta1/api/honey.sql.helpers) namespace.
-If you're migrating to HoneySQL 2.0, this [overview of differences
-between 1.0 and 2.0](differences-from-1-x.md) should help.
+If you're migrating to HoneySQL 2.x, this [overview of differences
+between 1.x and 2.x](differences-from-1-x.md) should help.

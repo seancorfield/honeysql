@@ -83,7 +83,7 @@
                                :from [:Candidate]} :sub-q-alias]]}
                      {:dialect :oracle :quoted false}))))
 
-;; tests lifted from HoneySQL v1 to check for compatibility
+;; tests lifted from HoneySQL 1.x to check for compatibility
 
 (deftest alias-splitting
   (is (= ["SELECT `aa`.`c` AS `a.c`, `bb`.`c` AS `b.c`, `cc`.`c` AS `c.c`"]
@@ -311,7 +311,7 @@
                               [:= :quux "quux"]]}
                      {:parameterizer :postgresql})
              ["WHERE (foo = ?) AND (bar = $2) AND (quux = $3)" "foo" "bar" "quux"])))
-  ;; new :inline option is similar to :parameterizer :none in 1.0
+  ;; new :inline option is similar to :parameterizer :none in 1.x
   (testing "should fill param with single quote"
     (is (= (format {:where [:and
                             [:= :foo "foo"]
@@ -642,7 +642,7 @@ ORDER BY id = ? DESC
 
 (deftest issue-299-test
   (let [name    "test field"
-        ;; this was a bug in v1 -- adding here to prevent regression:
+        ;; this was a bug in 1.x -- adding here to prevent regression:
         enabled [true, "); SELECT case when (SELECT current_setting('is_superuser'))='off' then pg_sleep(0.2) end; -- "]]
     (is (= ["INSERT INTO table (name, enabled) VALUES (?, (TRUE, ?))" name (second enabled)]
            (format {:insert-into :table

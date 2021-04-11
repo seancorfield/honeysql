@@ -4,21 +4,15 @@ SQL as Clojure data structures. Build queries programmatically -- even at runtim
 
 ## Build
 
-The latest stable version (1.0.461) on Clojars and on cljdoc (note: `honeysql/honeysql`):
-
-[![Clojars Project](https://clojars.org/honeysql/honeysql/latest-version.svg)](https://clojars.org/honeysql/honeysql) [![cljdoc badge](https://cljdoc.org/badge/honeysql/honeysql?1.0.461)](https://cljdoc.org/d/honeysql/honeysql/1.0.461)
+[![Clojars Project](https://clojars.org/com.github.seancorfield/honeysql/latest-version.svg)](https://clojars.org/com.github.seancorfield/honeysql) [![cljdoc badge](https://cljdoc.org/badge/com.github.seancorfield/honeysql?2.0.0-beta1)](https://cljdoc.org/d/com.github.seancorfield/honeysql/2.0.0-beta1)
 
 This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINOR provide some relative indication of the size of the change, but do not follow semantic versioning. In general, all changes endeavor to be non-breaking (by moving to new names rather than by breaking existing names). COMMITS is an ever-increasing counter of commits since the beginning of this repository.
 
-Prerelease builds of the upcoming 2.x version of HoneySQL are available for testing:
-
-[![Clojars Project](https://clojars.org/com.github.seancorfield/honeysql/latest-version.svg)](https://clojars.org/com.github.seancorfield/honeysql) [![cljdoc badge](https://cljdoc.org/badge/com.github.seancorfield/honeysql?2.0.0-beta1)](https://cljdoc.org/d/com.github.seancorfield/honeysql/2.0.0-beta1)
-
 HoneySQL 2.x requires Clojure 1.9 or later.
 
-This is the README for the upcoming 2.x version of HoneySQL which provides a streamlined codebase and a simpler method for extending the DSL. It also supports SQL dialects out-of-the-box and will be extended to support vendor-specific language features over time (unlike the 1.x version).
+Compared to 1.x, HoneySQL 2.x provides a streamlined codebase and a simpler method for extending the DSL. It also supports SQL dialects out-of-the-box and will be extended to support vendor-specific language features over time (unlike 1.x).
 
-See this [summary of differences between v1 and v2](doc/differences-from-1-x.md) if you want to help test v2!
+> Note: you can use 1.x and 2.x side-by-side as they use different group IDs and different namespaces. This allows for a piecemeal migration. See this [summary of differences between 1.x and 2.x](doc/differences-from-1-x.md) if you are migrating from 1.x!
 
 ## Note on code samples
 
@@ -82,8 +76,6 @@ If you want to format the query as a string with no parameters (e.g. to use the 
 > Note: you'll need to add your preferred JDBC library as a dependency in your project -- HoneySQL deliberately does not make that choice for you.
 
 Namespace-qualified keywords are generally treated as table-qualified columns: `:foo/bar` becomes `foo.bar`, except in contexts where that would be illegal (such as the list of columns in an `INSERT` statement). This approach is likely to be more compatible with code that uses libraries like [`next.jdbc`](https://github.com/seancorfield/next-jdbc) and [`seql`](https://github.com/exoscale/seql), as well as being more convenient in a world of namespace-qualified keywords, following the example of `clojure.spec` etc.
-
-_[In HoneySQL 1.x, this was the behavior when `:namespace-as-table? true` was specified]_
 
 ```clojure
 (def q-sqlmap {:select [:foo/a :foo/b :foo/c]

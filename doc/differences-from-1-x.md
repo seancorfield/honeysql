@@ -5,7 +5,7 @@ The goal of HoneySQL 1.x and earlier was to provide a DSL for vendor-neutral SQL
 The goal of HoneySQL 2.x is to provide an easily-extensible DSL for SQL, supporting vendor-specific differences and extensions, that is as consistent as possible. A secondary goal is to make maintenance much easier by streamlining the machinery and reducing the number of different ways to write and/or extend the DSL.
 
 The DSL itself -- the data structures that both versions convert to SQL and parameters via the `format` function -- is almost exactly the same between the two versions so that migration is relatively painless. The primary API -- the `format` function -- is preserved in 2.x, although the options have changed between 1.x and 2.x. See the **Option Changes** section below for the differences in the options supported.
-`format` can accept its options as a single hash map or as named arguments (v1 only supported the latter).
+`format` can accept its options as a single hash map or as named arguments (1.x only supported the latter).
 If you are using Clojure 1.11, you can invoke `format` with a mixture of named arguments and a trailing hash
 map of additional options, if you wish.
 
@@ -49,7 +49,7 @@ Supported Clojure versions: 1.7 and later.
 
 ```clojure
 ;; in deps.edn:
-com.github.seancorfield/honeysql {:mvn/version "2.x"}
+com.github.seancorfield/honeysql {:mvn/version "2.0.0-beta1"}
 
 ;; in use:
 (ns my.project
@@ -85,11 +85,11 @@ The `:quoting <dialect>` option has superseded by the new dialect machinery and 
 Identifiers are automatically quoted if you specify a `:dialect` option to `format`, unless you also specify `:quoted false`.
 
 The following options are no longer supported:
-* `:allow-dashed-names?` -- if you provide dashed-names in v2, they will be left as-is if quoting is enabled, else they will be converted to snake_case (so you will either get `"dashed-names"` with quoting or `dashed_names` without).
+* `:allow-dashed-names?` -- if you provide dashed-names in 2.x, they will be left as-is if quoting is enabled, else they will be converted to snake_case (so you will either get `"dashed-names"` with quoting or `dashed_names` without).
 * `:allow-namespaced-names?` -- this supported `foo/bar` column names in SQL which I'd like to discourage.
-* `:namespace-as-table?` -- this is the default in v2: `:foo/bar` will be treated as `foo.bar` which is more in keeping with `next.jdbc`.
+* `:namespace-as-table?` -- this is the default in 2.x: `:foo/bar` will be treated as `foo.bar` which is more in keeping with `next.jdbc`.
 * `:parameterizer` -- this would add a lot of complexity to the formatting engine and I do not know how widely it was used (especially in its arbitrarily extensible form).
-* `:return-param-names` -- this was added to v1 back in 2013 without an associated issue or PR so I've no idea what use case this was intended to support.
+* `:return-param-names` -- this was added to 1.x back in 2013 without an associated issue or PR so I've no idea what use case this was intended to support.
 
 > Note: I expect some push back on those first three options and the associated behavior changes.
 
@@ -114,12 +114,12 @@ The following new syntax has been added:
 * `:not` -- this is now explicit syntax,
 * `:over` -- the function-like part of a T-SQL window clause,
 * `:param` -- used as a function to replace the `sql/param` / `#sql/param` machinery,
-* `:raw` -- used as a function to replace the `sql/raw` / `#sql/raw` machinery. Vector subexpressions inside a `[:raw ..]` expression are formatted to SQL and parameters. Other subexpressions are just turned into strings and concatenated. This is different to the v1 behavior but should be more flexible, since you can now embed `:inline`, `:param`, and `:lift` inside a `:raw` expression.
+* `:raw` -- used as a function to replace the `sql/raw` / `#sql/raw` machinery. Vector subexpressions inside a `[:raw ..]` expression are formatted to SQL and parameters. Other subexpressions are just turned into strings and concatenated. This is different to the 1.x behavior but should be more flexible, since you can now embed `:inline`, `:param`, and `:lift` inside a `:raw` expression.
 
 > Note 1: in 1.x, inlining a string `"foo"` produced `foo` but in 2.x it produces `'foo'`, i.e., string literals become SQL strings without needing internal quotes (1.x required `"'foo'"`).
 
 Several additional pieces of syntax have also been added to support column
-definitions in `CREATE TABLE` clauses, now that v2 supports DDL statement
+definitions in `CREATE TABLE` clauses, now that 2.x supports DDL statement
 construction:
 
 * `:constraint`, `:default`, `:foreign-key`, `:index`, `:primary-key`, `:references`, `:unique`,
@@ -135,7 +135,7 @@ user=> (sql/format {:select [:a [:b :c] [[:d :e]] [[:f :g] :h]]})
 ["SELECT a, b AS c, D(e), F(g) AS h"]
 ```
 
-On a related note, `sql/call` has been removed because it should never be needed now: `[:foo ...]` should always be treated as a function call, consistently, avoiding the special cases in v1 that necessitated the explicit `sql/call` syntax.
+On a related note, `sql/call` has been removed because it should never be needed now: `[:foo ...]` should always be treated as a function call, consistently, avoiding the special cases in 1.x that necessitated the explicit `sql/call` syntax.
 
 ### select modifiers
 
@@ -173,11 +173,11 @@ You can also register new "functions" that can implement special syntax (such as
 
 And, finally, you can register new operators that will be recognized in expressions via `honey.sql/register-op!`. This accepts an operator name as a keyword and optional named parameters to indicate whether the operator is `:variadic` (the default is strictly binary) and whether it should ignore operands that evaluate to `nil` (via `:ignore-nil`). The latter can make it easier to construct complex expressions programmatically without having to worry about conditionally removing "optional" (`nil`) values.
 
-> Note: because of the changes in the extension machinery between v1 and v2, it is not possible to use the https://github.com/nilenso/honeysql-postgres library with HoneySQL v2 but the goal is to incorporate all of the syntax from that library into the core of HoneySQL.
+> Note: because of the changes in the extension machinery between 1.x and 2.x, it is not possible to use the https://github.com/nilenso/honeysql-postgres library with HoneySQL 2.x but the goal is to incorporate all of the syntax from that library into the core of HoneySQL.
 
 ## Helpers
 
-The `honey.sql.helpers` namespace includes a helper function that corresponds to every supported piece of the data DSL understood by HoneySQL (v1 only had a limited set of helper functions). Unlike v1 helpers which sometimes had both a regular helper and a `merge-` helper, v2 helpers will all merge clauses by default (if that makes sense for the underlying DSL): use `:dissoc` if you want to force an overwrite.
+The `honey.sql.helpers` namespace includes a helper function that corresponds to every supported piece of the data DSL understood by HoneySQL (1.x only had a limited set of helper functions). Unlike 1.x helpers which sometimes had both a regular helper and a `merge-` helper, 2.x helpers will all merge clauses by default (if that makes sense for the underlying DSL): use `:dissoc` if you want to force an overwrite.
 
 The only helpers that have non-merging behavior are:
 * The SQL set operations `intersect`, `union`, `union-all`, `except`, and `except-all` which always wrap around their arguments,

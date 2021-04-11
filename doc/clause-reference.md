@@ -480,7 +480,7 @@ example above with `:insert-into`.
 that they should be assigned. This precedence -- between
 `:columns` and `:from` -- corresponds to ANSI SQL which
 is correct for most databases. The MySQL dialect that
-HoneySQL 2.0 supports has a different precedence (below).
+HoneySQL 2.x supports has a different precedence (below).
 
 ```clojure
 user=> (sql/format {:update :order

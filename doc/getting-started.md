@@ -246,7 +246,7 @@ a lot of PostgreSQL extensions in that mode. PostgreSQL is mostly
 a superset of ANSI SQL so it makes sense to support as much as
 possible of the union of ANSI SQL and PostgreSQL out of the box.
 
-The dialects supported by HoneySQL v2 are:
+The dialects supported by HoneySQL 2.x are:
 * `:ansi` -- the default, including most PostgreSQL extensions
 * `:sqlserver` -- Microsoft SQL Server
 * `:mysql` -- MySQL (and Percona and MariaDB)
@@ -321,5 +321,5 @@ documentation for the helper functions is in the
 [honey.sql.helpers](https://cljdoc.org/d/com.github.seancorfield/honeysql/2.0.0-beta1/api/honey.sql.helpers) namespace.
 More detail about certain core HoneySQL functionality can be found in the
 [Reference documentation](general-reference.md).
-If you're migrating to HoneySQL 2.0, this [overview of differences
-between 1.0 and 2.0](differences-from-1-x.md) should help.
+If you're migrating to HoneySQL 2.x, this [overview of differences
+between 1.x and 2.x](differences-from-1-x.md) should help.

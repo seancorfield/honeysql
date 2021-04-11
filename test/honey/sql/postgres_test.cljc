@@ -1,11 +1,11 @@
 ;; copied from https://github.com/nilenso/honeysql-postgres
 ;; on 2021-02-13 to verify the completeness of support for
-;; those features within HoneySQL v2
+;; those features within HoneySQL 2.x
 
 ;; where there are differences, the original code is kept
 ;; with #_ and the modified code follows it (aside from
 ;; the ns form which has numerous changes to both match
-;; the structure of HoneySQL v2 and to work with cljs)
+;; the structure of HoneySQL 2.x and to work with cljs)
 
 (ns honey.sql.postgres-test
   (:refer-clojure :exclude [update partition-by set])
