@@ -470,8 +470,8 @@
 
   (-> (select :*)
       (from :foo)
-      (join-by :left :bar [:= :foo.id :bar.id]
-               :join :quux [:= :bar.qid = :quux.id])
+      (join-by :left [:bar [:= :foo.id :bar.id]]
+               :join [:quux [:= :bar.qid :quux.id]]))
 
   This produces a LEFT JOIN followed by an INNER JOIN
   even though the 'natural' order for `left-join` and

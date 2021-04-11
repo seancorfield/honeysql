@@ -528,9 +528,9 @@ for more detail).
 ## join-by
 
 This is a convenience that allows for an arbitrary sequence of `JOIN`
-operations to be performed in a specific order. It accepts a sequence
-of join operation name (keyword or symbol) and the clause that join
-would take:
+operations to be performed in a specific order. It accepts either a sequence
+of alternating join operation name (keyword or symbol) and the clause that join
+would take, or a sequence of `JOIN` clauses as hash maps:
 
 ```clojure
 user=> (sql/format {:select [:t.ref :pp.code]
@@ -540,7 +540,24 @@ user=> (sql/format {:select [:t.ref :pp.code]
                               :join [[:logtransaction :log]
                                      [:= :t.id :log.id]]]
                     :where [:= "settled" :pp.status]})
-["SELECT t.ref, pp.code FROM transaction AS t LEFT JOIN paypal_tx AS pp USING (id) INNER JOIN logtransaction AS log ON t.id = log.id WHERE ? = pp.status" "settled"]
+;; newlines inserted for readability:
+["SELECT t.ref, pp.code FROM transaction AS t
+  LEFT JOIN paypal_tx AS pp USING (id)
+  INNER JOIN logtransaction AS log ON t.id = log.id
+  WHERE ? = pp.status" "settled"]
+;; or using helpers:
+user=> (sql/format (-> (select :t.ref :pp.code)
+                       (from [:transaction :t])
+                       (join-by (left-join [:paypal-tx :pp]
+                                           [:using :id])
+                                (join [:logtransaction :log]
+                                      [:= :t.id :log.id]))
+                       (where := "settled" :pp.status)))
+;; newlines inserted for readability:
+["SELECT t.ref, pp.code FROM transaction AS t
+  LEFT JOIN paypal_tx AS pp USING (id)
+  INNER JOIN logtransaction AS log ON t.id = log.id
+  WHERE ? = pp.status" "settled"]
 ```
 
 Without `:join-by`, a `:join` would normally be generated before a `:left-join`.

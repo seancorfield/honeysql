@@ -232,6 +232,21 @@
                         :right-join [:bock [:= :bock.z :c.e]]
                         :left-join  [[:clod :c] [:= :f.a :c.d]]
                         :inner-join [:draq [:= :f.b :draq.x]])
+               (sql/format)))))
+  (testing "Specific JOIN orders with join clauses"
+    (is (= ["SELECT * FROM foo FULL JOIN beck ON beck.x = c.y RIGHT JOIN bock ON bock.z = c.e LEFT JOIN clod AS c ON f.a = c.d INNER JOIN draq ON f.b = draq.x"]
+           (sql/format {:select [:*] :from [:foo]
+                        :join-by [{:full-join [:beck [:= :beck.x :c.y]]}
+                                  {:right-join [:bock [:= :bock.z :c.e]]}
+                                  {:left-join [[:clod :c] [:= :f.a :c.d]]}
+                                  {:join [:draq [:= :f.b :draq.x]]}]})))
+    (is (= ["SELECT * FROM foo FULL JOIN beck ON beck.x = c.y RIGHT JOIN bock ON bock.z = c.e LEFT JOIN clod AS c ON f.a = c.d INNER JOIN draq ON f.b = draq.x"]
+           (-> (select :*)
+               (from :foo)
+               (join-by (full-join :beck [:= :beck.x :c.y])
+                        (right-join :bock [:= :bock.z :c.e])
+                        (left-join [:clod :c] [:= :f.a :c.d])
+                        (join :draq [:= :f.b :draq.x]))
                (sql/format))))))
 
 (deftest test-cast

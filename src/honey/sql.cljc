@@ -464,10 +464,16 @@
 
 (defn- format-join-by
   "Clauses should be a sequence of join types followed
-  by their table and condition, so that you can construct
-  a series of joins in a specific order."
+  by their table and condition, or a sequence of join
+  clauses, so that you can construct a series of joins
+  in a specific order."
   [_ clauses]
-  (let [joins (partition-by ident? clauses)]
+  (let [joins (if (every? map? clauses)
+                (into []
+                      (comp (mapcat #(mapcat (juxt key val) %))
+                            (map vector))
+                      clauses)
+                (partition-by ident? clauses))]
     (when-not (even? (count joins))
       (throw (ex-info ":join-by expects a sequence of join clauses"
                       {:clauses clauses})))
