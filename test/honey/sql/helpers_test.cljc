@@ -1,7 +1,7 @@
 ;; copyright (c) 2020-2021 sean corfield, all rights reserved
 
 (ns honey.sql.helpers-test
-  (:refer-clojure :exclude [update set group-by for partition-by])
+  (:refer-clojure :exclude [filter for group-by partition-by set update])
   (:require #?(:clj [clojure.test :refer [deftest is testing]]
                :cljs [cljs.test :refer-macros [deftest is testing]])
             [honey.sql :as sql]
@@ -9,7 +9,8 @@
              :refer [add-column add-index alter-table columns create-table create-table-as create-view
                      create-materialized-view drop-view drop-materialized-view
                      bulk-collect-into
-                     cross-join do-update-set drop-column drop-index drop-table from full-join
+                     cross-join do-update-set drop-column drop-index drop-table
+                     filter from full-join
                      group-by having insert-into
                      join-by join lateral left-join limit offset on-conflict
                      on-duplicate-key-update
@@ -17,7 +18,7 @@
                      rename-column rename-table returning right-join
                      select select-distinct select-top select-distinct-top
                      values where window with with-columns
-                     with-data]]))
+                     with-data within-group]]))
 
 (deftest test-select
   (testing "large helper expression"
@@ -845,3 +846,28 @@
                            (on-duplicate-key-update {:c1 [:+ [:values :c1] 1]})))
            ["INSERT INTO table (c1) VALUES (?) ON DUPLICATE KEY UPDATE c1 = VALUES(c1) + ?"
             42 1]))))
+
+(deftest filter-within-order-by-test
+  (testing "PostgreSQL filter, within group, order-by as special syntax"
+    (is (= (sql/format {:select [[[:filter :%count.* {:where [:> :i 5]}] :a]
+                                 [[:filter ; two pairs -- alias is on last pair
+                                   [:avg :x [:order-by :y [:a :desc]]] {:where [:< :i 10]}
+                                   [:sum :q] {:where [:= :x nil]}] :b]
+                                 [[:within-group [:foo :y] {:order-by [:x]}]]]})
+           [(str "SELECT COUNT(*) FILTER (WHERE i > ?) AS a,"
+                 " AVG(x, y ORDER BY a DESC) FILTER (WHERE i < ?),"
+                 " SUM(q) FILTER (WHERE x IS NULL) AS b,"
+                 " FOO(y) WITHIN GROUP (ORDER BY x ASC)")
+            5 10])))
+  (testing "PostgreSQL filter, within group, order-by as helpers"
+    (is (= (sql/format (select [(filter :%count.* (where :> :i 5)) :a]
+                               [(filter ; two pairs -- alias is on last pair
+                                 ;; order by must remain special syntax here:
+                                 [:avg :x [:order-by :y [:a :desc]]] (where :< :i 10)
+                                 [:sum :q] (where := :x nil)) :b]
+                               [(within-group [:foo :y] (order-by :x))]))
+           [(str "SELECT COUNT(*) FILTER (WHERE i > ?) AS a,"
+                 " AVG(x, y ORDER BY a DESC) FILTER (WHERE i < ?),"
+                 " SUM(q) FILTER (WHERE x IS NULL) AS b,"
+                 " FOO(y) WITHIN GROUP (ORDER BY x ASC)")
+            5 10]))))

@@ -85,6 +85,46 @@ specify the escape characters (if any).
 ;;=> ["SELECT * FROM foo WHERE foo SIMILAR TO ? ESCAPE '*'" "bar"]))))
 ```
 
+## filter, within-group
+
+Used to produce PostgreSQL's `FILTER` and `WITHIN GROUP` expressions.
+See also **order-by** below.
+
+These both accept a SQL expression followed by a SQL clause.
+Filter generally expects an aggregate expression and a `WHERE` clause.
+Within group generally expects an aggregate expression and an `ORDER BY` clause.
+
+```clojure
+(format {:select [:a :b [[:filter :%count.* {:where [:< :x 100]}] :c]
+                  [[:within-group [:percentile_disc [:inline 0.25]]
+                                  {:order-by [:a]}] :inter_max]
+                  [[:within-group [:percentile_cont [:inline 0.25]]
+                                  {:order-by [:a]}] :abs_max]]
+         :from :aa})
+;; newlines added for readability:
+;;=> ["SELECT a, b, COUNT(*) FILTER (WHERE x < ?) AS c,
+;;=>          PERCENTILE_DISC(0.25) WITHIN GROUP (ORDER BY a ASC) AS inter_max,
+;;=>          PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY a ASC) AS abs_max
+;;=>   FROM aa" 100]
+```
+
+There are helpers for both `filter` and `within-group`. Be careful with `filter`
+since it shadows `clojure.core/filter`:
+
+```clojure
+(format (-> (select :a :b [(filter :%count.* (where :< :x 100)) :c]
+                    [(within-group [:percentile_disc [:inline 0.25]]
+                                   (order-by :a)) :inter_max]
+                    [(within-group [:percentile_cont [:inline 0.25]]
+                                   (order-by :a)) :abs_max])
+            (from :aa)))
+;; newlines added for readability:
+;;=> ["SELECT a, b, COUNT(*) FILTER (WHERE x < ?) AS c,
+;;=>          PERCENTILE_DISC(0.25) WITHIN GROUP (ORDER BY a ASC) AS inter_max,
+;;=>          PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY a ASC) AS abs_max
+;;=>   FROM aa" 100]
+```
+
 ## inline
 
 Accepts a single argument and tries to render it as a
@@ -156,6 +196,29 @@ in front of it:
 (sql/format-expr [:not [:= :x 42]])
 ;;=> ["NOT x = ?" 42]
 ```
+
+## order-by
+
+In addition to the `ORDER BY` clause, HoneySQL also supports `ORDER BY`
+in an expression (for PostgreSQL). It accepts a SQL expression followed
+by an ordering specifier, which can be an expression or a pair of expression
+and direction (`:asc` or `:desc`):
+
+```clojure
+(format {:select [[[:array_agg [:order-by :a [:b :desc]]]]] :from :table})
+;;=> ["SELECT ARRAY_AGG(a ORDER BY b DESC) FROM table"]
+(format (-> (select [[:array_agg [:order-by :a [:b :desc]]]])
+                (from :table)))
+;;=> ["SELECT ARRAY_AGG(a ORDER BY b DESC) FROM table"]
+(format {:select [[[:string_agg :a [:order-by [:inline ","] :a]]]] :from :table})
+;;=> ["SELECT STRING_AGG(a, ',' ORDER BY a ASC) FROM table"]
+(format (-> (select [[:string_agg :a [:order-by [:inline ","] :a]]])
+            (from :table)))
+;;=> ["SELECT STRING_AGG(a, ',' ORDER BY a ASC) FROM table"]
+```
+
+There is no helper for the `ORDER BY` special syntax: the `order-by` helper
+only produces a SQL clause.
 
 ## over
 

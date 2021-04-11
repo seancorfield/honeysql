@@ -24,10 +24,12 @@ Some of these samples show pretty-printed SQL: HoneySQL 2.x supports `:pretty tr
 ## Usage
 
 ```clojure
-(refer-clojure :exclude '[for group-by into partition-by set update])
+(refer-clojure :exclude '[filter for group-by into partition-by set update])
 (require '[honey.sql :as sql]
-         ;; caution: this overwrites several clojure.core fns:
-         ;; for, group-by, into, partition-by, set, and update
+         ;; CAUTION: this overwrites several clojure.core fns:
+         ;;
+         ;; filter, for, group-by, into, partition-by, set, and update
+         ;;
          ;; you should generally only refer in the specific
          ;; helpers that you want to use!
          '[honey.sql.helpers :refer :all :as h]

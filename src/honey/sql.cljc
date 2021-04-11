@@ -983,6 +983,20 @@
                                      args))
                       ")")))))])
 
+(defn- expr-clause-pairs
+  "For FILTER and WITHIN GROUP that have an expression
+  followed by a SQL clause."
+  [k pairs]
+  (let [[sqls params]
+        (reduce (fn [[sqls params] [e c]]
+                  (let [[sql-e & params-e] (format-expr e)
+                        [sql-c & params-c] (format-dsl c {:nested true})]
+                    [(conj sqls (str sql-e " " (sql-kw k) " " sql-c))
+                     (-> params (into params-e) (into params-c))]))
+                [[] []]
+                (partition 2 pairs))]
+    (into [(str/join ", " sqls)] params)))
+
 (def ^:private special-syntax
   (atom
    {;; these "functions" are mostly used in column
@@ -1054,6 +1068,7 @@
         (-> [(str sql-p " " (sql-kw :escape) " " sql-e)]
             (into params-p)
             (into params-e))))
+    :filter expr-clause-pairs
     :inline
     (fn [_ [x]]
       (if (sequential? x)
@@ -1086,6 +1101,13 @@
     (fn [_ [x]]
       (let [[sql & params] (format-expr x)]
         (into [(str "NOT " sql)] params)))
+    :order-by
+    (fn [k [e q]]
+      (let [[sql-e & params-e] (format-expr e)
+            [sql-q & params-q] (format-dsl {k [q]})]
+        (-> [(str sql-e " " sql-q)]
+            (into params-e)
+            (into params-q))))
     :over
     (fn [_ [& args]]
       (let [[sqls params]
@@ -1107,7 +1129,8 @@
         ["?" (->param k)]))
     :raw
     (fn [_ [xs]]
-      (raw-render xs))}))
+      (raw-render xs))
+    :within-group expr-clause-pairs}))
 
 (defn format-expr
   "Given a data structure that represents a SQL expression and a hash

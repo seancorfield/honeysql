@@ -2,7 +2,7 @@
 
 (ns honey.sql.helpers
   "Helper functions for the built-in clauses in honey.sql."
-  (:refer-clojure :exclude [for group-by into partition-by set update])
+  (:refer-clojure :exclude [filter for group-by into partition-by set update])
   (:require [clojure.core :as c]
             [honey.sql]))
 
@@ -818,6 +818,18 @@
   [& args]
   (c/into [:composite] args))
 
+(defn filter
+  "Accepts alternating expressions and clauses and
+  produces a FILTER expression:
+
+  (filter :%count.* (where :> i 5))
+
+  Produces: COUNT(*) FILTER (WHERE i > ?)
+  Parameters: 5"
+  {:arglists '([expr1 clause1 & more])}
+  [& args]
+  (c/into [:filter] args))
+
 (defn lateral
   "Accepts a SQL clause or a SQL expression:
 
@@ -843,6 +855,18 @@
   Produces: SELECT id, AVG(salary) OVER ()PARTITION BY department)"
   [& args]
   [(c/into [:over] args)])
+
+(defn within-group
+  "Accepts alternating expressions and clauses and
+  produces a WITHIN GROUP expression:
+
+  (within-group :%count.* (where :> i 5))
+
+  Produces: COUNT(*) WITHIN GROUP (WHERE i > ?)
+  Parameters: 5"
+  {:arglists '([expr1 clause1 & more])}
+  [& args]
+  (c/into [:within-group] args))
 
 ;; this helper is intended to ease the migration from nilenso:
 (defn upsert
@@ -898,9 +922,10 @@
 #?(:clj
    (do
      ;; ensure #295 stays true (all public functions have docstring):
-     (assert (empty? (->> (ns-publics *ns*) (vals) (filter (comp not :doc meta)))))
+     (assert (empty? (->> (ns-publics *ns*) (vals) (c/filter (comp not :doc meta)))))
      ;; ensure all public functions match clauses:
      (assert (= (clojure.core/set (conj @@#'honey.sql/base-clause-order
-                                        :composite :lateral :over :upsert))
+                                        :composite :filter :lateral :over :within-group
+                                        :upsert))
                 (clojure.core/set (conj (map keyword (keys (ns-publics *ns*)))
                                         :nest :raw))))))

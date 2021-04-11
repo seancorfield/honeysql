@@ -225,7 +225,7 @@ can rely on using keywords in `dissoc`.
 
 The following helpers shadow functions in `clojure.core` so
 you need to consider this when referring symbols in from the
-`honey.sql.helpers` namespace: `for`, `group-by`, `into`, `partition-by`,
+`honey.sql.helpers` namespace: `filter`, `for`, `group-by`, `into`, `partition-by`,
 `set`, and `update`.
 
 ## DDL Statements
