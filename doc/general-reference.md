@@ -57,7 +57,7 @@ when quoting is in effect:
 ```
 
 Finally, there are some contexts where only a SQL entity is accepted, rather than an
-arbitrary SQL expression, so a string will be treated as a SQL entity and in such cases
+arbitrary SQL expression, so a string will also be treated as a SQL entity and in such cases
 the entity name will always be quoted, dashes (`-`) will not be converted to
 underscores (`_`), and a slash (`/`) is not treated as separating a
 qualifier from the name, regardless of the `:dialect` or `:quoted` settings:
@@ -98,7 +98,11 @@ these tuples:
 ;;=> ["(?, ?, ?)" 13 42 "foo"]
 ```
 
+There is also a `composite` helper function.
+
 ## Other Sections Will Be Added!
+
+As questions arise about the use of HoneySQL 2.x, I will add new sections here.
 
 ## Other Reference Documentation
 

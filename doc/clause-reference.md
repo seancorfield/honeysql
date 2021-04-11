@@ -2,7 +2,8 @@
 
 This section lists all the SQL clauses that HoneySQL
 supports out of the box, in the order that they are
-processed for formatting.
+processed for formatting (except for some natural
+grouping of related clauses).
 
 Clauses can be specified as keywords or symbols. Use
 `-` in the clause name where the formatted SQL would have

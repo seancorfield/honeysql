@@ -1206,7 +1206,12 @@
   any parameter values that were encountered in the DSL structure.
 
   This is the primary API for HoneySQL and handles dialects, quoting,
-  and named parameters."
+  and named parameters.
+
+  `format` accepts options as either a single hash map argument or
+  as named arguments (alternating keys and values). If you are using
+  Clojure 1.11 (or later) you can mix'n'match, providing some options
+  as named arguments followed by other options in a hash map."
   ([data] (format data {}))
   ([data opts]
    (let [dialect? (contains? opts :dialect)

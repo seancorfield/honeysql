@@ -169,9 +169,9 @@ call as the `:params` key of the options hash map.
 ## Functional Helpers
 
 In addition to the hash map (and sequences) approach of building
-SQL queries with raw Clojure data structures, a namespace full
-of helper functions is also available. These functions are
-generally variadic and threadable:
+SQL queries with raw Clojure data structures, a
+[namespace full of helper functions](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT/api/honey.sql.helpers)
+is also available. These functions are generally variadic and threadable:
 
 ```clojure
 (ns my.example
@@ -189,7 +189,7 @@ generally variadic and threadable:
 There is a helper function for every single clause that HoneySQL
 supports out of the box. In addition, there are helpers for
 `composite`, `lateral`, `over`, and `upsert` that make it easier to construct those
-parts of the SQL DSL (examples of `composite` appear in the [README](README.md),
+parts of the SQL DSL (examples of `composite` appear in the [README](/README.md),
 examples of `over` appear in the [Clause Reference](clause-reference.md))
 
 In addition to being variadic -- which often lets you omit one
@@ -231,13 +231,17 @@ you need to consider this when referring symbols in from the
 ## DDL Statements
 
 HoneySQL 1.x did not support any DDL statements. It was fairly
-common for people to use the [nilenso/honeysql-postgres library](https://github.com/nilenso/honeysql-postgres)
+common for people to use the
+[nilenso/honeysql-postgres library](https://github.com/nilenso/honeysql-postgres)
 to get DDL support, even if they didn't need the PostgreSQL-specific
 extensions. That library does not work with HoneySQL 2.x but all
 of the functionality from it (up to 0.3.104) has been incorporated
 into HoneySQL now and is described in the [PostgreSQL](postgresql.md)
 section (because that covers all of the things that the nilenso
 library supported and much of it was PostgreSQL-specific!).
+
+See also the [DDL Clauses section](clause-reference.md#ddl-clauses) of
+the Clause Reference for documentation about supported DDL.
 
 ## Dialects
 
@@ -307,6 +311,11 @@ was wrapped in `[:inline `..`]`:
 * Clojure strings become inline SQL strings with single quotes (so `"foo"` becomes `'foo'`),
 * keywords and symbols become SQL keywords (uppercase, with `-` replaced by a space),
 * everything else is just turned into a string (by calling `str`) and added to the SQL string.
+
+`format` accepts options as either a single hash map argument or
+as named arguments (alternating keys and values). If you are using
+Clojure 1.11 (or later) you can mix'n'match, providing some options
+as named arguments followed by other options in a hash map.
 
 ## Reference Documentation
 

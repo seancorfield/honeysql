@@ -1,6 +1,7 @@
 # Changes
 
 * 2.0.next in progress
+  * The documentation continues to be expanded and clarified in respond to feedback!
   * Tentative fix for #315 by expanding `:in` handling to deal with `nil` values.
 
 * 2.0.0-beta1 (for testing; 2021-04-09)

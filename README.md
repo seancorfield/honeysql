@@ -66,6 +66,8 @@ to a JDBC library, such as [`next.jdbc`](https://github.com/seancorfield/next-jd
 (jdbc/execute! conn (sql/format sqlmap))
 ```
 
+> Note: you'll need to add your preferred JDBC library as a dependency in your project -- HoneySQL deliberately does not make that choice for you.
+
 If you want to format the query as a string with no parameters (e.g. to use the SQL statement in a SQL console), pass `:inline true` as an option to `sql/format`:
 
 ```clojure
@@ -73,9 +75,7 @@ If you want to format the query as a string with no parameters (e.g. to use the 
 => ["SELECT a, b, c FROM foo WHERE f.a = 'baz'"]
 ```
 
-> Note: you'll need to add your preferred JDBC library as a dependency in your project -- HoneySQL deliberately does not make that choice for you.
-
-Namespace-qualified keywords are generally treated as table-qualified columns: `:foo/bar` becomes `foo.bar`, except in contexts where that would be illegal (such as the list of columns in an `INSERT` statement). This approach is likely to be more compatible with code that uses libraries like [`next.jdbc`](https://github.com/seancorfield/next-jdbc) and [`seql`](https://github.com/exoscale/seql), as well as being more convenient in a world of namespace-qualified keywords, following the example of `clojure.spec` etc.
+Namespace-qualified keywords (and symbols) are generally treated as table-qualified columns: `:foo/bar` becomes `foo.bar`, except in contexts where that would be illegal (such as the list of columns in an `INSERT` statement). This approach is likely to be more compatible with code that uses libraries like [`next.jdbc`](https://github.com/seancorfield/next-jdbc) and [`seql`](https://github.com/exoscale/seql), as well as being more convenient in a world of namespace-qualified keywords, following the example of `clojure.spec` etc.
 
 ```clojure
 (def q-sqlmap {:select [:foo/a :foo/b :foo/c]
@@ -90,6 +90,11 @@ Namespace-qualified keywords are generally treated as table-qualified columns: `
     (sql/format))
 => ["SELECT foo.a, foo.b, foo.c FROM foo WHERE foo.a = ?" "baz"]
 ```
+
+Documentation for the entire data DSL can be found in the
+[Clause Reference](doc/clause-reference.md), the
+[Operator Reference](doc/operator-reference.md)], and the
+[Special Syntax referenc](doc/special-syntax.md).
 
 ### Vanilla SQL clause helpers
 
@@ -130,6 +135,8 @@ If you want to replace a clause, you can `dissoc` the existing clause first, sin
 => ["SELECT * FROM foo WHERE (f.a = ?) AND (b > ?)" "baz" 10]
 ```
 
+> Note: the helpers always produce keywords so you can rely on `dissoc` with the desired keyword to remove. If you are building the data DSL "manually" and using symbols instead of keywords, you'll need to `dissoc` the symbol form instead.
+
 `where` will combine multiple clauses together using SQL's `AND`:
 
 ```clojure
@@ -159,6 +166,9 @@ The examples in this README use a mixture of data structures and the helper
 functions interchangably. For any example using the helpers, you could evaluate
 it (without the call to `sql/format`) to see what the equivalent data structure
 would be.
+
+Documentation for all the helpers can be found in the
+[`honey.sql.helpers` API reference](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT/api/honey.sql.helpers).
 
 ### Inserts
 
