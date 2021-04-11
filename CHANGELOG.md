@@ -1,8 +1,9 @@
 # Changes
 
 * 2.0.next in progress
-  * The documentation continues to be expanded and clarified in respond to feedback!
+  * The documentation continues to be expanded and clarified in response to feedback!
   * Tentative fix for #315 by expanding `:in` handling to deal with `nil` values.
+  * Fix #310 by adding support for `FILTER`, `WITHIN GROUP`, and `ORDER BY` (as an expression), from [nilenso/honeysql-postgres](https://github.com/nilenso/honeysql-postgres) 0.4.112. These are [Special Syntax](doc/special-syntax.md) and there are also helpers for `filter` and `within-group` -- so **be careful about referring in all of `honey.sql.helpers`** since it will now shadow `clojure.core/filter` (it already shadows `for`, `group-by`, `into`, `partition-by`, `set`, and `update`).
 
 * 2.0.0-beta1 (for testing; 2021-04-09)
   * Since Alpha 3, more documentation has been written and existing documentation clarified (addressing #300, #309, #313, #314).
@@ -21,7 +22,7 @@
   * Add tests to confirm #299 does not affect 2.x.
   * Fix #297 by adding both `SELECT .. INTO ..` and `SELECT .. BULK COLLECT INTO ..`.
   * Fix #295 by adding docstrings to all helper functions (and adding an assert to ensure it stays that way as more are added in future).
-  * Confirm the whole of the [nilenso/honeysql-postgres](https://github.com/nilenso/honeysql-postgres) is implemented out-of-the-box (#293, but see #310 for recent additions not yet incorporated).
+  * Confirm the whole of the [nilenso/honeysql-postgres](https://github.com/nilenso/honeysql-postgres) is implemented out-of-the-box (#293, up to 0.3.104 -- see also #310 which brought parity up to 0.4.112).
   * Fix #292 by adding support for `SELECT TOP` and `OFFSET`/`FETCH`.
   * Fix #284 by adding support for `LATERAL` (as special syntax, with a helper).
   * Reconcile `where` behavior with recent 1.x changes (porting #283 to 2.x).

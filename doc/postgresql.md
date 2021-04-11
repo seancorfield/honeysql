@@ -3,9 +3,10 @@
 This section covers the PostgreSQL-specific
 features that HoneySQL supports out of the box
 for which you previously needed the
-[nilenso/honeysql-postgres library](https://github.com/nilenso/honeysql-postgres).
+[nilenso/honeysql-postgres](https://github.com/nilenso/honeysql-postgres)
+library.
 
-Everything that the nilenso library provided (in 0.3.104) is implemented
+Everything that the nilenso library provided (in 0.4.112) is implemented
 directly in HoneySQL 2.x although a few things have a
 slightly different syntax.
 
@@ -335,6 +336,15 @@ user=> (sql/format (alter-table :fruit
     ADD COLUMN skin VARCHAR(16) NULL,
     ADD UNIQUE fruit_name(name)"]
 ```
+
+## Filter / Within Group
+
+`honeysql-postgres` added support for `FILTER` and `WITHIN GROUP`
+in its 0.4.112 release. Those features have been integrated into
+HoneySQL 2.x (as of 2.0.next), along with support for `ORDER BY`
+in expressions. `:filter`, `:within-group`, and `:order-by` are
+all available as "functions" in [Special Syntax](special-syntax.md),
+and there are helpers for `filter` and `within-group`.
 
 ## Window / Partition Support
 

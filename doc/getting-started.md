@@ -235,7 +235,7 @@ common for people to use the
 [nilenso/honeysql-postgres library](https://github.com/nilenso/honeysql-postgres)
 to get DDL support, even if they didn't need the PostgreSQL-specific
 extensions. That library does not work with HoneySQL 2.x but all
-of the functionality from it (up to 0.3.104) has been incorporated
+of the functionality from it (up to 0.4.112) has been incorporated
 into HoneySQL now and is described in the [PostgreSQL](postgresql.md)
 section (because that covers all of the things that the nilenso
 library supported and much of it was PostgreSQL-specific!).
@@ -292,7 +292,7 @@ specify a dialect in the `format` call, you can specify
 Out of the box, as part of the extended ANSI SQL support,
 HoneySQL supports quite a few [PostgreSQL extensions](postgresql.md).
 
-> Note: the [nilenso/honeysql-postgres library](https://github.com/nilenso/honeysql-postgres) which provided PostgreSQL support for HoneySQL 1.x does not work with HoneySQL 2.x. However, HoneySQL 2.x includes all of the functionality from that library (up to 0.3.104) out of the box!
+> Note: the [nilenso/honeysql-postgres](https://github.com/nilenso/honeysql-postgres) library which provided PostgreSQL support for HoneySQL 1.x does not work with HoneySQL 2.x. However, HoneySQL 2.x includes all of the functionality from that library (up to 0.4.112) out of the box!
 
 ## Format Options
 

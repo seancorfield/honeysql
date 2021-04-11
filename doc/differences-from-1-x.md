@@ -140,7 +140,7 @@ On a related note, `sql/call` has been removed because it should never be needed
 ### select modifiers
 
 HoneySQL 1.x provided a `:modifiers` clause (and a `modifiers`) helper as a way to "modify"
-a `SELECT` to be `DISTINCT`. nilenso/honeysql-helpers extended that to support `:distinct-on`
+a `SELECT` to be `DISTINCT`. The [nilenso/honeysql-helpers](https://github.com/nilenso/honeysql-postgres) library extended that to support `:distinct-on`
 a group of columns. In HoneySQL 2.x, you use `:select-distinct` and `:select-distinct-on`
 (and their associated helpers) for that instead. MS SQL Server's `TOP` modifier is also
 supported via `:select-top` and `:select-distinct-top`.
@@ -173,7 +173,7 @@ You can also register new "functions" that can implement special syntax (such as
 
 And, finally, you can register new operators that will be recognized in expressions via `honey.sql/register-op!`. This accepts an operator name as a keyword and optional named parameters to indicate whether the operator is `:variadic` (the default is strictly binary) and whether it should ignore operands that evaluate to `nil` (via `:ignore-nil`). The latter can make it easier to construct complex expressions programmatically without having to worry about conditionally removing "optional" (`nil`) values.
 
-> Note: because of the changes in the extension machinery between 1.x and 2.x, it is not possible to use the https://github.com/nilenso/honeysql-postgres library with HoneySQL 2.x but the goal is to incorporate all of the syntax from that library into the core of HoneySQL.
+> Note: because of the changes in the extension machinery between 1.x and 2.x, it is not possible to use the [nilenso/honeysql-postgress](https://github.com/nilenso/honeysql-postgres) library with HoneySQL 2.x but the goal is to incorporate all of the syntax from that library into the core of HoneySQL.
 
 ## Helpers
 
