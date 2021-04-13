@@ -341,7 +341,7 @@ user=> (sql/format (alter-table :fruit
 
 `honeysql-postgres` added support for `FILTER` and `WITHIN GROUP`
 in its 0.4.112 release. Those features have been integrated into
-HoneySQL 2.x (as of 2.0.next), along with support for `ORDER BY`
+HoneySQL 2.x (as of 2.0.0-beta2), along with support for `ORDER BY`
 in expressions. `:filter`, `:within-group`, and `:order-by` are
 all available as "functions" in [Special Syntax](special-syntax.md),
 and there are helpers for `filter` and `within-group`.

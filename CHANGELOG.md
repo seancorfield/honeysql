@@ -1,12 +1,13 @@
 # Changes
 
-* 2.0.next in progress
+* 2.0.0-beta2 (for testing; 2021-04-13)
   * The documentation continues to be expanded and clarified in response to feedback!
-  * Fix #322 by rewriting/simplifying `WHERE`/`HAVING` merge logic.
+  * Fix #322 by rewriting/simplifying `WHERE`/`HAVING` merge logic. **Important bug fix!**
   * Fix #310 by adding support for `FILTER`, `WITHIN GROUP`, and `ORDER BY` (as an expression), from [nilenso/honeysql-postgres](https://github.com/nilenso/honeysql-postgres) 0.4.112. These are [Special Syntax](doc/special-syntax.md) and there are also helpers for `filter` and `within-group` -- so **be careful about referring in all of `honey.sql.helpers`** since it will now shadow `clojure.core/filter` (it already shadows `for`, `group-by`, `into`, `partition-by`, `set`, and `update`).
   * Fix #308 by supporting join clauses in `join-by` (and correcting the helper docstring).
 
 * 2.0.0-beta1 (for testing; 2021-04-09)
+  * **The merging behavior of `where`/`having` is broken in Beta 1!**
   * Since Alpha 3, more documentation has been written and existing documentation clarified (addressing #300, #309, #313, #314).
   * Fix #319 by ensuring `register-clause!` is idempotent.
   * Fix #317 by dropping qualifiers in `:set` clauses (just like we do with `:insert` columns). Note that you can still use explicit _dotted_ names if you want table qualification.
