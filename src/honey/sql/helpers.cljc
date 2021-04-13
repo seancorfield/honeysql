@@ -11,53 +11,67 @@
 (defn- default-merge [current args]
   (c/into (vec current) args))
 
-(defn- and-merge
-  "Merge a single conjunction expression into an existing one.
-  This merges `AND` to avoid nesting."
-  [current arg]
-  (if-let [conj' (and (sequential? arg)
-                      (ident? (first arg))
-                      (#{:and :or} (keyword (first arg))))]
-    (cond (= conj' (first current))
-          (c/into (vec current) (rest arg))
-          (seq current)
-          (c/into [conj' current] (rest arg))
-          :else
-          (c/into [conj'] (rest arg)))
-    (cond (#{:and 'and} (first current))
-          (conj (vec current) arg)
-          (seq current)
-          (conj [:and current] arg)
-          :else
-          (conj [:and] arg))))
+(defn- sym->kw
+  "Given a symbol, produce a keyword, retaining the namespace
+  qualifier, if any."
+  [s]
+  (if (symbol? s)
+    (if-let [n (namespace s)]
+      (keyword n (name s))
+      (keyword (name s)))
+    s))
 
-(defn- and-merges
-  "Merge multiple conjunction expressions into an existing,
-  possibly empty, expression. This ensures AND expressions
-  are merged and that we do not end up with a single AND
-  or OR expression."
+(defn- conjunction?
+  [e]
+  (and (ident? e)
+       (contains? #{:and :or} (sym->kw e))))
+
+(defn- simplify-logic
+  "For Boolean expressions, simplify the logic to make
+  the output expression less nested. Finding :and or
+  :or with a single condition can be lifted. Finding
+  a conjunction inside the same conjunction can be
+  merged.
+  Always called on an expression that begins with a conjunction!"
+  [e]
+  (if (= 1 (count (rest e)))
+    (fnext e)
+    (let [conjunction (sym->kw (first e))]
+      (reduce (fn [acc e]
+                (if (and (sequential? e)
+                         (conjunction? (first e))
+                         (= conjunction (sym->kw (first e))))
+                  (c/into acc (rest e))
+                  (conj acc e)))
+              [conjunction]
+              (rest e)))))
+
+(defn- conjunction-merge
+  "Merge for where/having. We ignore nil expressions.
+  By default, we combine with AND unless the new expression
+  begins with a conjunction, in which case use that to
+  combine the new expression. Then we perform some
+  simplifications to reduce nesting."
   [current args]
   (let [args (remove nil? args)
-        result
-        (cond (ident? (first args))
-              (and-merges current [args])
-              (seq args)
-              (let [[arg & args] args]
-                (and-merges (and-merge current arg) args))
+        [conjunction args]
+        (cond (conjunction? (first args))
+              [(first args) (rest args)]
+              (ident? (first args))
+              [:and [args]]
               :else
-              current)]
-    (case (count result)
-      0 nil
-      1 (if (sequential? (first result))(first result) result)
-      2 (if (#{:and :or} (first result))
-          (second result)
-          result)
-      result)))
+              [:and args])]
+    (if (seq args)
+      (-> [conjunction]
+          (cond-> (seq current) (conj current))
+          (c/into args)
+          (simplify-logic))
+      current)))
 
 (def ^:private special-merges
   "Identify the conjunction merge clauses."
-  {:where  #'and-merges
-   :having #'and-merges})
+  {:where  #'conjunction-merge
+   :having #'conjunction-merge})
 
 (defn- helper-merge [data k args]
   (if-let [merge-fn (special-merges k)]

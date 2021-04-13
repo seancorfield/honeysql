@@ -843,3 +843,17 @@
                  " SUM(q) FILTER (WHERE x IS NULL) AS b,"
                  " FOO(y) WITHIN GROUP (ORDER BY x ASC)")
             5 10]))))
+
+(deftest issue-322
+  (testing "Combining WHERE clauses with conditions"
+    (is (= {:where [:and [:= :a 1] [:or [:= :b 2] [:= :c 3]]]}
+           (where [:= :a 1] [:or [:= :b 2] [:= :c 3]])))
+    (is (= (-> (where :or [:= :b 2] [:= :c 3]) ; or first
+               (where := :a 1)) ; then implicit and
+           (-> (where := :b 2) ; implicit and
+               (where :or [:= :c 3]) ; then explicit or
+               (where := :a 1)))) ; then implicit and
+    (is (= {:where [:and [:or [:= :b 2] [:= :c 3]] [:= :a 1]]}
+           (where [:or [:= :b 2] [:= :c 3]] [:= :a 1])
+           (-> (where :or [:= :b 2] [:= :c 3]) ; explicit or
+               (where := :a 1)))))) ; then implicit and
