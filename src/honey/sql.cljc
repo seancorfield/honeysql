@@ -589,26 +589,25 @@
     (into [(str (sql-kw k) " " (str/join ", " sqls))] params)))
 
 (defn- format-on-conflict [k x]
-  (cond (ident? x)
-        [(str (sql-kw k) " (" (format-entity x) ")")]
-        (map? x)
-        (let [[sql & params] (format-dsl x)]
-          (into [(str (sql-kw k) " " sql)] params))
-        (and (sequential? x)
-             (ident? (first x))
-             (map? (second x)))
-        (let [[sql & params] (format-dsl (second x))]
-          (into [(str (sql-kw k)
-                      " (" (format-entity (first x)) ") "
-                      sql)]
-                params))
-        (and (sequential? x) (= 1 (count x)))
-        (format-on-conflict k (first x))
-        (and (sequential? x) (= 0 (count x)))
-        [(sql-kw k)]
-        :else
-        (throw (ex-info "unsupported :on-conflict format"
-                        {:clause x}))))
+  (if (sequential? x)
+    (let [entities (take-while ident? x)
+          n (count entities)
+          [clause & more] (drop n x)
+          _ (when (or (seq more)
+                      (and clause (not (map? clause))))
+              (throw (ex-info "unsupported :on-conflict format"
+                              {:clause x})))
+          [sql & params] (when clause
+                           (format-dsl clause))]
+      (into [(str (sql-kw k)
+                  (when (pos? n)
+                    (str " ("
+                         (str/join ", " (map #'format-entity entities))
+                         ")"))
+                  (when sql
+                    (str " " sql)))]
+            params))
+    (format-on-conflict k [x])))
 
 (defn- format-do-update-set [k x]
   (cond (map? x)

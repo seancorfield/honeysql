@@ -72,6 +72,20 @@
                (on-conflict (on-constraint :distributors_pkey))
                do-nothing
                sql/format)))
+    (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT (did) ON CONSTRAINT distributors_pkey DO NOTHING" 9 "Antwerp Design"]
+           ;; with both name and clause:
+           (-> (insert-into :distributors)
+               (values [{:did 9 :dname "Antwerp Design"}])
+               (on-conflict :did (on-constraint :distributors_pkey))
+               do-nothing
+               sql/format)))
+    (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT (did, dname) ON CONSTRAINT distributors_pkey DO NOTHING" 9 "Antwerp Design"]
+           ;; with multiple names and a clause:
+           (-> (insert-into :distributors)
+               (values [{:did 9 :dname "Antwerp Design"}])
+               (on-conflict :did :dname (on-constraint :distributors_pkey))
+               do-nothing
+               sql/format)))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT ON CONSTRAINT distributors_pkey DO NOTHING" 9 "Antwerp Design"]
            ;; almost identical to nilenso version:
            (-> (insert-into :distributors)

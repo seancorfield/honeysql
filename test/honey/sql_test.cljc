@@ -618,6 +618,32 @@ INSERT INTO customers
 (name, email)
 VALUES ('Microsoft', 'hotline@microsoft.com')
 ON CONFLICT (name)
+DO NOTHING
+"]
+         (format {:insert-into :customers
+                  :columns [:name :email]
+                  :values [[[:inline "Microsoft"], [:inline "hotline@microsoft.com"]]]
+                  :on-conflict [:name]
+                  :do-nothing true}
+                 {:pretty true})))
+  (is (= ["
+INSERT INTO customers
+(name, email)
+VALUES ('Microsoft', 'hotline@microsoft.com')
+ON CONFLICT (name, email)
+DO NOTHING
+"]
+         (format {:insert-into :customers
+                  :columns [:name :email]
+                  :values [[[:inline "Microsoft"], [:inline "hotline@microsoft.com"]]]
+                  :on-conflict [:name :email]
+                  :do-nothing true}
+                 {:pretty true})))
+  (is (= ["
+INSERT INTO customers
+(name, email)
+VALUES ('Microsoft', 'hotline@microsoft.com')
+ON CONFLICT (name)
 DO UPDATE SET email = EXCLUDED.email || ';' || customers.email
 "]
          (format {:insert-into :customers

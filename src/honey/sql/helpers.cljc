@@ -768,10 +768,9 @@
   (generic-1 :values args))
 
 (defn on-conflict
-  "Accepts a single column name to detect conflicts
-  during an upsert, optionally followed by a `WHERE`
-  clause."
-  {:arglists '([column] [column where-clause])}
+  "Accepts zero or more SQL entities (keywords or symbols),
+  optionally followed by a single SQL clause (hash map)."
+  {:arglists '([column* where-clause])}
   [& args]
   (generic :on-conflict args))
 

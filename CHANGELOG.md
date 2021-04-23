@@ -1,5 +1,8 @@
 # Changes
 
+* 2.0.next in progress
+  * Fix #323 by supporting more than one SQL entity in `:on-conflict`.
+
 * 2.0.0-beta2 (for testing; 2021-04-13)
   * The documentation continues to be expanded and clarified in response to feedback!
   * Fix #322 by rewriting/simplifying `WHERE`/`HAVING` merge logic. **Important bug fix!**

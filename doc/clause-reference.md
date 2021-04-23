@@ -815,10 +815,11 @@ These are grouped together because they are handled
 as if they are separate clauses but they will appear
 in pairs: `ON ... DO ...`.
 
-`:on-conflict` accepts either a single SQL entity
-(a keyword or symbol), or a SQL clause, or a pair
-of a SQL entity and a SQL clause. The SQL entity is
-a column name and the SQL clause can be an
+`:on-conflict` accepts a sequence of zero or more
+SQL entities (keywords or symbols), optionally
+followed by a single SQL clause (hash map). It can also
+accept either a single SQL entity or a single SQL clause.
+The SQL entities are column names and the SQL clause can be an
 `:on-constraint` clause or a`:where` clause.
 
 _[For convenience of use with the `on-conflict` helper, this clause can also accept any of those arguments, wrapped in a sequence; it can also accept an empty sequence, and just produce `ON CONFLICT`, so that it can be combined with other clauses directly]_
