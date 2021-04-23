@@ -106,6 +106,8 @@
 ;; in entities; if someone complains about this check, an option
 ;; can be added to format to turn this on:
 (def ^:private ^:dynamic *allow-suspicious-entities* false)
+;; "linting" mode (:none, :basic, :strict):
+(def ^:private ^:dynamic *checking* :none)
 
 ;; clause helpers
 
@@ -929,6 +931,16 @@
   (let [[sql-x & params-x] (format-expr x {:nested true})
         [sql-y & params-y] (format-expr y {:nested true})
         values             (unwrap (first params-y) {})]
+    (when-not (= :none *checking*)
+      (when (or (and (sequential? y)      (empty? y))
+                (and (sequential? values) (empty? values)))
+        (throw (ex-info "IN () empty collection is illegal"
+                        {:clause [in x y]})))
+      (when (and (= :strict *checking*)
+                 (or (and (sequential? y)      (some nil? y))
+                     (and (sequential? values) (some nil? values))))
+        (throw (ex-info "IN (NULL) does not match"
+                        {:clause [in x y]}))))
     (if (and (= "?" sql-y) (= 1 (count params-y)) (coll? values))
       (let [sql (str "(" (str/join ", " (repeat (count values) "?")) ")")]
         (-> [(str sql-x " " (sql-kw in) " " sql)]
@@ -1228,6 +1240,9 @@
    (let [dialect? (contains? opts :dialect)
          dialect  (when dialect? (get dialects (check-dialect (:dialect opts))))]
      (binding [*dialect* (if dialect? dialect @default-dialect)
+               *checking* (if (contains? opts :checking)
+                            (:checking opts)
+                            :none)
                *clause-order* (if dialect?
                                 (if-let [f (:clause-order-fn dialect)]
                                   (f @base-clause-order)

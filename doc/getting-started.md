@@ -297,7 +297,7 @@ HoneySQL supports quite a few [PostgreSQL extensions](postgresql.md).
 ## Format Options
 
 In addition to the `:quoted` and `:dialect` options described above,
-`format` also accepts `:inline` and `:params`.
+`format` also accepts `:checking`, `:inline`, and `:params`.
 
 The `:params` option was mentioned above and is used to specify
 the values of named parameters in the DSL.
@@ -311,6 +311,14 @@ was wrapped in `[:inline `..`]`:
 * Clojure strings become inline SQL strings with single quotes (so `"foo"` becomes `'foo'`),
 * keywords and symbols become SQL keywords (uppercase, with `-` replaced by a space),
 * everything else is just turned into a string (by calling `str`) and added to the SQL string.
+
+The `:checking` option defaults to `:none`. If `:checking :basic` is
+specified, certain obvious errors -- such as `IN` with an empty collection --
+is treated as an error and an exception is thrown. If `:checking :strict`
+is specified, certain dubious constructs -- such as `IN` with a collection
+containing `NULL` values -- is also treated as an error and an exception is
+thrown. It is expected that this feature will be expanded over time
+to help avoid generating illegal SQL. _[New in version 2.0.next]_
 
 `format` accepts options as either a single hash map argument or
 as named arguments (alternating keys and values). If you are using

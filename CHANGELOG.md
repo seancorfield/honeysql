@@ -2,6 +2,7 @@
 
 * 2.0.next in progress
   * Fix #323 by supporting more than one SQL entity in `:on-conflict`.
+  * Fix #321 by adding `:checking` mode. Currently only detects potential problems with `IN` clauses.
 
 * 2.0.0-beta2 (for testing; 2021-04-13)
   * The documentation continues to be expanded and clarified in response to feedback!

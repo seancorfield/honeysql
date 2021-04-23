@@ -6,7 +6,8 @@
             #?(:clj [clojure.test :refer [deftest is testing]]
                :cljs [cljs.test :refer-macros [deftest is testing]])
             [honey.sql :as sut :refer [format]]
-            [honey.sql.helpers :as h]))
+            [honey.sql.helpers :as h])
+  #?(:clj (:import (clojure.lang ExceptionInfo))))
 
 (deftest mysql-tests
   (is (= ["SELECT * FROM `table` WHERE `id` = ?" 1]
@@ -685,9 +686,9 @@ ORDER BY id = ? DESC
             (format))
         (is false "; not detected in entity!")
         (catch #?(:clj Throwable :cljs :default) e
-          (is (:disallowed (ex-data e))))))
+          (is (:disallowed (ex-data e))))))))
     ;; should not produce: ["SELECT foo, bar FROM mytable ORDER BY foo; select * from users"]
-    ))
+
 
 (deftest issue-319-test
   (testing "that registering a clause is idempotent"
@@ -696,3 +697,37 @@ ORDER BY id = ? DESC
              (sut/register-clause! :foo (constantly ["FOO"]) nil)
              (sut/register-clause! :foo (constantly ["FOO"]) nil)
              (format {:foo []}))))))
+
+(deftest issue-321-linting
+  (testing "empty IN is ignored by default"
+    (is (= ["WHERE x IN ()"]
+           (format {:where [:in :x []]})))
+    (is (= ["WHERE x IN ()"]
+           (format {:where [:in :x :?y]}
+                   {:params {:y []}}))))
+  (testing "empty IN is flagged in basic mode"
+    (is (thrown-with-msg? ExceptionInfo #"empty collection"
+                          (format {:where [:in :x []]}
+                                  {:checking :basic})))
+    (is (thrown-with-msg? ExceptionInfo #"empty collection"
+                          (format {:where [:in :x :?y]}
+                                  {:params {:y []} :checking :basic}))))
+  (testing "IN NULL is ignored by default and basic"
+    (is (= ["WHERE x IN (NULL)"]
+           (format {:where [:in :x [nil]]})))
+    (is (= ["WHERE x IN (NULL)"]
+           (format {:where [:in :x [nil]]}
+                   {:checking :basic})))
+    (is (= ["WHERE x IN (?)" nil]
+           (format {:where [:in :x :?y]}
+                   {:params {:y [nil]}})))
+    (is (= ["WHERE x IN (?)" nil]
+           (format {:where [:in :x :?y]}
+                   {:params {:y [nil]} :checking :basic}))))
+  (testing "IN NULL is flagged in strict mode"
+    (is (thrown-with-msg? ExceptionInfo #"does not match"
+                          (format {:where [:in :x [nil]]}
+                                  {:checking :strict})))
+    (is (thrown-with-msg? ExceptionInfo #"does not match"
+                          (format {:where [:in :x :?y]}
+                                  {:params {:y [nil]} :checking :strict})))))
