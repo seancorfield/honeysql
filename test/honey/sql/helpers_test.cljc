@@ -857,3 +857,12 @@
            (where [:or [:= :b 2] [:= :c 3]] [:= :a 1])
            (-> (where :or [:= :b 2] [:= :c 3]) ; explicit or
                (where := :a 1)))))) ; then implicit and
+
+(deftest issue-324
+  (testing "insert-into accepts statement"
+    (is (= (-> (with [:a])
+               (insert-into [:quux [:x :y]]
+                            {:select [:id] :from [:table]}))
+           {:with [[:a]],
+            :insert-into [[:quux [:x :y]]
+                          {:select [:id], :from [:table]}]}))))

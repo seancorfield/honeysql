@@ -1,6 +1,7 @@
 # Changes
 
 * 2.0.next in progress
+  * Fix #324 so that `insert-into` supports merging into another statement in all cases.
   * Fix #323 by supporting more than one SQL entity in `:on-conflict`.
   * Fix #321 by adding `:checking` mode. Currently only detects potential problems with `IN` clauses.
 

@@ -398,10 +398,12 @@
                (-> (select :*) (from :other)))"
   {:arglists '([table] [table cols] [table statement] [table cols statement])}
   [& args]
-  (let [[table cols statement] args]
+  (let [[data & args :as args']
+        (if (map? (first args)) args (cons {} args))
+        [table cols statement] args]
     (if (and (sequential? cols) (map? statement))
-      (generic :insert-into [[table cols] statement])
-      (generic :insert-into args))))
+      (generic :insert-into [data [table cols] statement])
+      (generic :insert-into args'))))
 
 (defn update
   "Accepts either a table name or a table/alias pair.
