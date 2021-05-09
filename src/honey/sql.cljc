@@ -214,11 +214,13 @@
      (fn [fk _] (param-value (fk)))}))
 
 (defn- format-var [x & [opts]]
-  (let [c (name-_ x)]
+  (let [c (name x)]
     (cond (= \% (first c))
-          (let [[f & args] (str/split (subs c 1) #"\.")]
-            ;; TODO: this does not quote arguments -- does that matter?
-            [(str (upper-case f) "(" (str/join "," args) ")")])
+          (let [[f & args] (str/split (subs c 1) #"\.")
+                quoted-args (->> args
+                                 (map keyword)
+                                 (map format-entity))]
+            [(str (upper-case f) "(" (str/join "," quoted-args) ")")])
           (= \? (first c))
           (let [k (keyword (subs c 1))]
            (if *inline*
