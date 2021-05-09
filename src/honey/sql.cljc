@@ -100,6 +100,7 @@
 ;; functions harder than necessary:
 (def ^:private ^:dynamic *clause-order* default-clause-order)
 (def ^:private ^:dynamic *quoted* nil)
+(def ^:private ^:dynamic *quoted-snake* nil)
 (def ^:private ^:dynamic *inline* nil)
 (def ^:private ^:dynamic *params* nil)
 ;; there is no way, currently, to enable suspicious characters
@@ -165,21 +166,23 @@
   return the equivalent SQL fragment (as a string -- no parameters).
 
   Handles quoting, splitting at / or ., replacing - with _ etc."
-  [x & [{:keys [aliased drop-ns]}]]
-  (let [nn    (if (or *quoted* (string? x)) name               name-_)
-        q     (if (or *quoted* (string? x)) (:quote *dialect*) identity)
-        [t c] (if-let [n (when-not (or drop-ns (string? x))
-                           (namespace-_ x))]
-                [n (nn x)]
-                (if aliased
-                  [nil (nn x)]
-                  (let [[t c] (str/split (nn x) #"\.")]
-                    (if c [t c] [nil t]))))
-        entity (cond->> c
-                 (not= "*" c)
-                 (q)
-                 t
-                 (str (q t) "."))
+  [e & [{:keys [aliased drop-ns]}]]
+  (let [col-fn      (if (or *quoted* (string? e))
+                      (if *quoted-snake* name-_ name)
+                      name-_)
+        quote-fn    (if (or *quoted* (string? e)) (:quote *dialect*) identity)
+        [table col] (if-let [n (when-not (or drop-ns (string? e))
+                                 (namespace-_ e))]
+                      [n (col-fn e)]
+                      (if aliased
+                        [nil (col-fn e)]
+                        (let [[t c] (str/split (col-fn e) #"\.")]
+                          (if c [t c] [nil t]))))
+        entity      (cond->> col
+                      (not= "*" col)
+                      (quote-fn)
+                      table
+                      (str (quote-fn table) "."))
         suspicious #";"]
     (when-not *allow-suspicious-entities*
       (when (re-find suspicious entity)
@@ -188,11 +191,15 @@
     entity))
 
 (comment
-  (for [v [:foo-bar 'foo-bar "foo-bar"
-           :f-o.bar 'f-o.bar "f-o.bar"]
+  (for [v [:foo-bar "foo-bar" ; symbol is the same as keyword
+           :f-o.b-r :f-o/b-r]
         a [true false] d [true false] q [true false]]
     (binding [*dialect* (:mysql dialects) *quoted* q]
-      (format-entity v :aliased a :drop-ns d)))
+      (if q
+        [v a d (format-entity v {:aliased a :drop-ns d})
+         (binding [*quoted-snake* true]
+           (format-entity v {:aliased a :drop-ns d}))]
+        [v a d (format-entity v {:aliased a :drop-ns d})])))
   .)
 
 (defn- param-value [k]
@@ -1253,6 +1260,8 @@
                *quoted*  (if (contains? opts :quoted)
                            (:quoted opts)
                            dialect?)
+               *quoted-snake* (when (contains? opts :quoted-snake)
+                                (:quoted-snake opts))
                *params* (:params opts)]
        (mapv #(unwrap % opts) (format-dsl data opts)))))
   ([data k v & {:as opts}] (format data (assoc opts k v))))

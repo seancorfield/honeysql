@@ -2,6 +2,8 @@
 
 * 2.0.next in progress
   * Update `test-runner`.
+  * Add `:quoted-snake true` option to force conversion from kebab-case to snake_case when `:quoted true` or a `:dialect` is specified to `format`.
+  * TBD `%` function syntax may respect `:quoted true` or a `:dialect` is specified to `format` (awaiting PR).
 
 * 2.0.0-rc1 (for testing; 2021-05-06)
   * Fix #324 so that `insert-into` supports merging into another statement in all cases.
