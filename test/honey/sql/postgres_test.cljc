@@ -14,21 +14,21 @@
             ;; pull in all the PostgreSQL helpers that the nilenso
             ;; library provided (as well as the regular HoneySQL ones):
             [honey.sql.helpers :as sqlh :refer
-            [upsert on-conflict do-nothing on-constraint
-             returning do-update-set
-             ;; not needed because do-update-set can do this directly
-             #_do-update-set!
-             alter-table rename-column drop-column
-             add-column partition-by
-             ;; not needed because insert-into can do this directly
-             #_insert-into-as
-             create-table rename-table drop-table
-             window create-view over with-columns
-             create-extension drop-extension
-             select-distinct-on
-             ;; already part of HoneySQL
-             insert-into values where select
-             from order-by update set]]
+             [upsert on-conflict do-nothing on-constraint
+              returning do-update-set
+              ;; not needed because do-update-set can do this directly
+              #_do-update-set!
+              alter-table rename-column drop-column
+              add-column partition-by
+              ;; not needed because insert-into can do this directly
+              #_insert-into-as
+              create-table rename-table drop-table
+              window create-view over with-columns
+              create-extension drop-extension
+              select-distinct-on
+              ;; already part of HoneySQL
+              insert-into values where select
+              from order-by update set]]
             [honey.sql :as sql]))
 
 (deftest upsert-test
