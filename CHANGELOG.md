@@ -1,5 +1,8 @@
 # Changes
 
+* 2.0.next in progress
+  * Update `test-runner`.
+
 * 2.0.0-rc1 (for testing; 2021-05-06)
   * Fix #324 so that `insert-into` supports merging into another statement in all cases.
   * Fix #323 by supporting more than one SQL entity in `:on-conflict`.

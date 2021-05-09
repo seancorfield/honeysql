@@ -7,12 +7,10 @@
   :master {:override-deps {org.clojure/clojure {:mvn/version "1.11.1-master-SNAPSHOT"}}}
   :test {:extra-paths ["test"]}
   :runner
-  {:extra-deps {com.cognitect/test-runner
+  {:extra-deps {io.github.cognitect-labs/test-runner
                 {:git/url "https://github.com/cognitect-labs/test-runner"
-                 :sha "b6b3193fcc42659d7e46ecd1884a228993441182"}}
-   :main-opts ["-m" "cognitect.test-runner"
-               ;"-d" "target/test-doc-blocks/test"
-               "-d" "test"]}
+                 :sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}}
+   :exec-fn cognitect.test-runner.api/test}
   :cljs-runner {:extra-deps {olical/cljs-test-runner {:mvn/version "3.8.0"}}
                 :main-opts ["-m" "cljs-test-runner.main"]}
   :readme {:extra-deps {seancorfield/readme {:mvn/version "1.0.16"}}
