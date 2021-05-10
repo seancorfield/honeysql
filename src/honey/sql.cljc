@@ -457,7 +457,7 @@
                              (into params-j)
                              (into params'))]))))
                 [[] []]
-                (partition 2 clauses))]
+                (partition-all 2 clauses))]
     (into [(str/join " " sqls)] params)))
 
 (def ^:private join-by-aliases
