@@ -153,7 +153,6 @@
 
 (defn- namespace-_ [x] (some-> (namespace x) (str/replace "-" "_")))
 (defn- name-_      [x] (str/replace (name x) "-" "_"))
-(defn- -_          [x] (str/replace x "-" "_"))
 
 (defn- sqlize-value [x]
   (cond
@@ -215,13 +214,17 @@
      (fn [fk _] (param-value (fk)))}))
 
 (defn- format-var [x & [opts]]
-  (let [c (name x)]
+  ;; rather than name/namespace, we want to allow
+  ;; for multiple / in the %fun.call case so that
+  ;; qualified column names can be used:
+  (let [c (cond-> (str x) (keyword? x) (subs 1))]
     (cond (= \% (first c))
           (let [[f & args] (str/split (subs c 1) #"\.")
                 quoted-args (map #(format-entity (keyword %) opts) args)]
-            [(str (upper-case (-_ f)) "(" (str/join ", " quoted-args) ")")])
+            [(str (upper-case (str/replace f "-" "_"))
+                  "(" (str/join ", " quoted-args) ")")])
           (= \? (first c))
-          (let [k (keyword (subs (-_ c) 1))]
+          (let [k (keyword (subs c 1))]
             (if *inline*
               [(sqlize-value (param-value k))]
               ["?" (->param k)]))
