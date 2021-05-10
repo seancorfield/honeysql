@@ -453,7 +453,9 @@
                        (into params params-j)]
                       (let [[sql & params'] (when e (format-expr e))]
                         [(cond-> sqls e (conj "ON" sql))
-                         (into params params')]))))
+                         (-> params
+                             (into params-j)
+                             (into params'))]))))
                 [[] []]
                 (partition 2 clauses))]
     (into [(str/join " " sqls)] params)))
