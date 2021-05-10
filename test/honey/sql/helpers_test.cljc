@@ -866,27 +866,3 @@
            {:with [[:a]],
             :insert-into [[:quux [:x :y]]
                           {:select [:id], :from [:table]}]}))))
-
-(deftest quoting-:%-syntax
-  (testing "quoting of expressions in functions shouldn't depend on syntax"
-    (is (= [(str "SELECT `foo-bar`,"
-                 " COUNT(*),"
-                 " COUNT(*),"
-                 " SYSDATE(),"
-                 " SYSDATE(),"
-                 " AVG(`bar-bar`),"
-                 " AVG(`bar-bar`,`bar-foo`),"
-                 " SUM(`foo-foo`)"
-                 " FROM `employee`"
-                 " GROUP BY `foo-bar`")]
-           (-> (select :foo-bar
-                       [[:count :*]]
-                       :%count.*
-                       :%sysdate
-                       :%sysdate.
-                       :%avg.bar-bar
-                       :%avg.bar-bar.bar-foo
-                       [[:sum :foo-foo]])
-                (from :employee)
-                (group-by :foo-bar)
-                (sql/format :dialect :mysql))))))

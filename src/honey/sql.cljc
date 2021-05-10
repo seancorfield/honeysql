@@ -153,6 +153,7 @@
 
 (defn- namespace-_ [x] (some-> (namespace x) (str/replace "-" "_")))
 (defn- name-_      [x] (str/replace (name x) "-" "_"))
+(defn- -_          [x] (str/replace x "-" "_"))
 
 (defn- sqlize-value [x]
   (cond
@@ -217,15 +218,13 @@
   (let [c (name x)]
     (cond (= \% (first c))
           (let [[f & args] (str/split (subs c 1) #"\.")
-                quoted-args (->> args
-                                 (map keyword)
-                                 (map format-entity))]
-            [(str (upper-case f) "(" (str/join "," quoted-args) ")")])
+                quoted-args (map #(format-entity (keyword %) opts) args)]
+            [(str (upper-case (-_ f)) "(" (str/join ", " quoted-args) ")")])
           (= \? (first c))
-          (let [k (keyword (subs c 1))]
-           (if *inline*
-             [(sqlize-value (param-value k))]
-             ["?" (->param k)]))
+          (let [k (keyword (subs (-_ c) 1))]
+            (if *inline*
+              [(sqlize-value (param-value k))]
+              ["?" (->param k)]))
           :else
           [(format-entity x opts)])))
 
