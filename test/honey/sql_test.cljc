@@ -731,3 +731,24 @@ ORDER BY id = ? DESC
     (is (thrown-with-msg? ExceptionInfo #"does not match"
                           (format {:where [:in :x :?y]}
                                   {:params {:y [nil]} :checking :strict})))))
+
+(deftest quoting-:%-syntax
+  (testing "quoting of expressions in functions shouldn't depend on syntax"
+    (is (= ["SELECT SYSDATE()"]
+           (format {:select [[[:sysdate]]]})
+           (format {:select :%sysdate})))
+    (is (= ["SELECT COUNT(*)"]
+           (format {:select [[[:count :*]]]})
+           (format {:select :%count.*})))
+    (is (= ["SELECT AVERAGE(`foo-foo`)"]
+           (format {:select [[[:average :foo-foo]]]} :dialect :mysql)
+           (format {:select :%average.foo-foo} :dialect :mysql)))
+    (is (= ["SELECT GREATER(`foo-foo`, `bar-bar`)"]
+           (format {:select [[[:greater :foo-foo :bar-bar]]]} :dialect :mysql)
+           (format {:select :%greater.foo-foo.bar-bar} :dialect :mysql)))
+    (is (= ["SELECT MIXED_KEBAB(`yum-yum`)"]
+           #_(format {:select [[[:mixed-kebab :yum-yum]]]} :dialect :mysql)
+           (format {:select :%mixed-kebab.yum-yum} :dialect :mysql)))
+    (is (= ["SELECT RANSOM(`NoTe`)"]
+           (format {:select [[[:ransom :NoTe]]]} :dialect :mysql)
+           (format {:select :%ransom.NoTe} :dialect :mysql)))))
