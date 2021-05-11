@@ -752,10 +752,10 @@ ORDER BY id = ? DESC
            (format {:select :%mixed-kebab.yum-yum} :dialect :mysql :quoted-snake true)))
     ;; qualifier is always - -> _ converted:
     (is (= ["SELECT MIXED_KEBAB(`yum_yum`.`bar-bar`, `a_b`.`c-d`)"]
-           (format {:select :%mixed-kebab.yum-yum/bar-bar.a-b/c-d} :dialect :mysql)))
+           (format {:select (keyword "%mixed-kebab.yum-yum/bar-bar.a-b/c-d")} :dialect :mysql)))
     ;; name is only - -> _ converted when snake_case requested:
     (is (= ["SELECT MIXED_KEBAB(`yum_yum`.`bar_bar`, `a_b`.`c_d`)"]
-           (format {:select :%mixed-kebab.yum-yum/bar-bar.a-b/c-d} :dialect :mysql :quoted-snake true)))
+           (format {:select (keyword "%mixed-kebab.yum-yum/bar-bar.a-b/c-d")} :dialect :mysql :quoted-snake true)))
     (is (= ["SELECT RANSOM(`NoTe`)"]
            (format {:select [[[:ransom :NoTe]]]} :dialect :mysql)
            (format {:select :%ransom.NoTe} :dialect :mysql)))))
