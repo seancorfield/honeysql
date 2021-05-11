@@ -1,4 +1,4 @@
-;; copyright (c) sean corfield, all rights reserved
+;; copyright (c) 2021 sean corfield, all rights reserved
 
 (ns honey.sql-test
   (:refer-clojure :exclude [format])
@@ -747,8 +747,39 @@ ORDER BY id = ? DESC
            (format {:select [[[:greater :foo-foo :bar-bar]]]} :dialect :mysql)
            (format {:select :%greater.foo-foo.bar-bar} :dialect :mysql)))
     (is (= ["SELECT MIXED_KEBAB(`yum-yum`)"]
-           #_(format {:select [[[:mixed-kebab :yum-yum]]]} :dialect :mysql)
            (format {:select :%mixed-kebab.yum-yum} :dialect :mysql)))
+    (is (= ["SELECT MIXED_KEBAB(`yum_yum`)"]
+           (format {:select :%mixed-kebab.yum-yum} :dialect :mysql :quoted-snake true)))
+    ;; qualifier is always - -> _ converted:
+    (is (= ["SELECT MIXED_KEBAB(`yum_yum`.`bar-bar`, `a_b`.`c-d`)"]
+           (format {:select :%mixed-kebab.yum-yum/bar-bar.a-b/c-d} :dialect :mysql)))
+    ;; name is only - -> _ converted when snake_case requested:
+    (is (= ["SELECT MIXED_KEBAB(`yum_yum`.`bar_bar`, `a_b`.`c_d`)"]
+           (format {:select :%mixed-kebab.yum-yum/bar-bar.a-b/c-d} :dialect :mysql :quoted-snake true)))
     (is (= ["SELECT RANSOM(`NoTe`)"]
            (format {:select [[[:ransom :NoTe]]]} :dialect :mysql)
            (format {:select :%ransom.NoTe} :dialect :mysql)))))
+
+(deftest join-without-on-using
+  ;; essentially issue 326
+  (testing "join does not need on or using"
+    (is (= ["SELECT foo FROM bar INNER JOIN quux"]
+           (format {:select :foo
+                    :from :bar
+                    :join [:quux]}))))
+  (testing "join on select with parameters"
+    (is (= ["SELECT foo FROM bar INNER JOIN (SELECT a FROM b WHERE id = ?) WHERE id = ?" 123 456]
+           (format {:select :foo
+                    :from :bar
+                    :join [{:select :a :from :b :where [:= :id 123]}]
+                    :where [:= :id 456]})))
+    (is (= ["SELECT foo FROM bar INNER JOIN (SELECT a FROM b WHERE id = ?) AS x WHERE id = ?" 123 456]
+           (format {:select :foo
+                    :from :bar
+                    :join [[{:select :a :from :b :where [:= :id 123]} :x]]
+                    :where [:= :id 456]})))
+    (is (= ["SELECT foo FROM bar INNER JOIN (SELECT a FROM b WHERE id = ?) AS x ON y WHERE id = ?" 123 456]
+           (format {:select :foo
+                    :from :bar
+                    :join [[{:select :a :from :b :where [:= :id 123]} :x] :y]
+                    :where [:= :id 456]})))))

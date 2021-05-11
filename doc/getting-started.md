@@ -136,6 +136,13 @@ are split at `.` and turned into function calls:
 %f.a.b   ;=> F(a,b)
 ```
 
+If you need to reference a table or alias for a column, you can use
+qualified names in a function invocation:
+
+```clojure
+%max.foo/bar ;=> MAX(foo.bar)
+```
+
 ## SQL Parameters
 
 As indicated in the preceding sections, values found in the DSL data structure

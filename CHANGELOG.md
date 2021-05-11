@@ -1,8 +1,8 @@
 # Changes
 
 * 2.0.next in progress
-  * Address #326 by allowing `ON`/`USING` to be optional and not dropping parameters on the floor. _[still needs tests to be written!]_
-  * Fix #325 by making the `%` function call syntax respect `:quoted true` and/or `:dialect` options, and also allowing for qualified column names _[some additional tests needed plus likely documentation updates]_. (PR from @lognush)
+  * Fix #326 by allowing `ON`/`USING` to be optional and not dropping parameters on the floor.
+  * Fix #325 by making the `%` function call syntax respect `:quoted true` and/or `:dialect` options, and also allowing for qualified column names. (PR from @lognush)
   * Add `:quoted-snake true` option to force conversion from kebab-case to snake_case when `:quoted true` or a `:dialect` is specified to `format`.
   * Update `test-runner`.
 
