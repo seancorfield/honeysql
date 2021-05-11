@@ -49,7 +49,7 @@ Supported Clojure versions: 1.7 and later.
 
 ```clojure
 ;; in deps.edn:
-com.github.seancorfield/honeysql {:mvn/version "2.0.0-rc1"}
+com.github.seancorfield/honeysql {:mvn/version "2.0.0-rc2"}
 
 ;; in use:
 (ns my.project
@@ -85,7 +85,7 @@ The `:quoting <dialect>` option has superseded by the new dialect machinery and 
 Identifiers are automatically quoted if you specify a `:dialect` option to `format`, unless you also specify `:quoted false`.
 
 The following options are no longer supported:
-* `:allow-dashed-names?` -- if you provide dashed-names in 2.x, they will be left as-is if quoting is enabled, else they will be converted to snake_case (so you will either get `"dashed-names"` with quoting or `dashed_names` without). If you want dashed-names to be converted to snake_case when `:quoted true`, you also need to specify `:quoted-snake true`. _[New in 2.0.next]_
+* `:allow-dashed-names?` -- if you provide dashed-names in 2.x, they will be left as-is if quoting is enabled, else they will be converted to snake_case (so you will either get `"dashed-names"` with quoting or `dashed_names` without). If you want dashed-names to be converted to snake_case when `:quoted true`, you also need to specify `:quoted-snake true`.
 * `:allow-namespaced-names?` -- this supported `foo/bar` column names in SQL which I'd like to discourage.
 * `:namespace-as-table?` -- this is the default in 2.x: `:foo/bar` will be treated as `foo.bar` which is more in keeping with `next.jdbc`.
 * `:parameterizer` -- this would add a lot of complexity to the formatting engine and I do not know how widely it was used (especially in its arbitrarily extensible form).

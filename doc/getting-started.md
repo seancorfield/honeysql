@@ -9,13 +9,13 @@ data to a SQL statement (string) and any parameters it needs.
 For the Clojure CLI, add the following dependency to your `deps.edn` file:
 
 ```clojure
-    com.github.seancorfield/honeysql {:mvn/version "2.0.0-rc1"}
+    com.github.seancorfield/honeysql {:mvn/version "2.0.0-rc2"}
 ```
 
 For Leiningen, add the following dependency to your `project.clj` file:
 
 ```clojure
-    [com.github.seancorfield/honeysql "2.0.0-rc1"]
+    [com.github.seancorfield/honeysql "2.0.0-rc2"]
 ```
 
 HoneySQL produces SQL statements but does not execute them.
@@ -325,7 +325,7 @@ are treated as an error and an exception is thrown. If `:checking :strict`
 is specified, certain dubious constructs -- such as `IN` with a collection
 containing `NULL` values -- are also treated as an error and an exception is
 thrown. It is expected that this feature will be expanded over time
-to help avoid generating illegal SQL. _[New in version 2.0.0-rc1]_
+to help avoid generating illegal SQL.
 
 `format` accepts options as either a single hash map argument or
 as named arguments (alternating keys and values). If you are using
@@ -342,7 +342,7 @@ section. The full list
 of "special syntax" functions is documented in the
 [Special Syntax](special-syntax.md) section. The best
 documentation for the helper functions is in the
-[honey.sql.helpers](https://cljdoc.org/d/com.github.seancorfield/honeysql/2.0.0-rc1/api/honey.sql.helpers) namespace.
+[honey.sql.helpers](https://cljdoc.org/d/com.github.seancorfield/honeysql/2.0.0-rc2/api/honey.sql.helpers) namespace.
 More detail about certain core HoneySQL functionality can be found in the
 [Reference documentation](general-reference.md).
 If you're migrating to HoneySQL 2.x, this [overview of differences
