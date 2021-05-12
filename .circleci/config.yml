@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/honeysql
     docker:
-      - image: circleci/clojure:openjdk-11-tools-deps-1.10.2.774
+      - image: circleci/clojure:openjdk-11-tools-deps-1.10.3.822
     steps:
       - checkout
       - restore_cache:
