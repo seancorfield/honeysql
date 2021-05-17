@@ -920,7 +920,7 @@
 
 (def ^:private infix-ops
   (-> #{"mod" "and" "or" "xor" "<>" "<=" ">=" "||" "<->"
-        "like" "not-like" "regexp"
+        "like" "not-like" "regexp" "&&"
         "ilike" "not-ilike" "similar-to" "not-similar-to"
         "is" "is-not" "not=" "!=" "regex"}
       (into (map str "+-*%|&^=<>"))
@@ -931,7 +931,7 @@
       (atom)))
 
 (def ^:private op-ignore-nil (atom #{:and :or}))
-(def ^:private op-variadic   (atom #{:and :or :+ :* :||}))
+(def ^:private op-variadic   (atom #{:and :or :+ :* :|| :&&}))
 
 (defn- unwrap [x opts]
   (if-let [m (meta x)]

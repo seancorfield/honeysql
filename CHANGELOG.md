@@ -1,5 +1,8 @@
 # Changes
 
+* 2.0.next in progress
+  * Support PostgreSQL's `&&` operator.
+
 * 2.0.0-rc2 (for testing; 2021-05-10)
   * Fix #326 by allowing `ON`/`USING` to be optional and not dropping parameters on the floor.
   * Fix #325 by making the `%` function call syntax respect `:quoted true` and/or `:dialect` options, and also allowing for qualified column names. (PR from @lognush)
