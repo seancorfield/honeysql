@@ -1,4 +1,4 @@
-# Honey SQL [![Clojure CI](https://github.com/seancorfield/honeysql/actions/workflows/test.yml/badge.svg)](https://github.com/seancorfield/honeysql/actions/workflows/test.yml) [![CircleCI](https://circleci.com/gh/seancorfield/honeysql/tree/develop.svg?style=svg)](https://circleci.com/gh/seancorfield/honeysql/tree/develop)
+# Honey SQL [![Clojure CI](https://github.com/seancorfield/honeysql/actions/workflows/test.yml/badge.svg?branch=v1)](https://github.com/seancorfield/honeysql/actions/workflows/test.yml) [![CircleCI](https://circleci.com/gh/seancorfield/honeysql/tree/v1.svg?style=svg)](https://circleci.com/gh/seancorfield/honeysql/tree/v1)
 
 SQL as Clojure data structures. Build queries programmatically -- even at runtime -- without having to bash strings together.
 
