@@ -4,11 +4,11 @@ SQL as Clojure data structures. Build queries programmatically -- even at runtim
 
 ## Build
 
-The latest versions on Clojars and on cljdoc:
+The latest legacy versions on Clojars and on cljdoc:
 
-[![Clojars Project](https://clojars.org/honeysql/latest-version.svg)](https://clojars.org/honeysql) [![cljdoc badge](https://cljdoc.org/badge/honeysql/honeysql?1.0.461)](https://cljdoc.org/d/honeysql/honeysql/CURRENT)
+[![Clojars Project](https://clojars.org/honeysql/honeysql/latest-version.svg)](https://clojars.org/honeysql/honeysql) [![cljdoc badge](https://cljdoc.org/badge/honeysql/honeysql?1.0.461)](https://cljdoc.org/d/honeysql/honeysql/CURRENT)
 
-> Note: HoneySQL 2.0 will soon be available -- check out the [release candidate](https://github.com/seancorfield/honeysql/tree/v2).
+> Note: HoneySQL 2.x is the current version -- check out the [develop branch](https://github.com/seancorfield/honeysql/) for details.
 
 This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINOR provide some relative indication of the size of the change, but do not follow semantic versioning. In general, all changes endeavor to be non-breaking (by moving to new names rather than by breaking existing names). COMMITS is an ever-increasing counter of commits since the beginning of this repository.
 
