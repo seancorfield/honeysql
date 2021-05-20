@@ -13,6 +13,7 @@
 .eastwood
 .lsp
 .nrepl-port
+.rebel_readline_history
 .socket-repl-port
 .classpath
 .project
