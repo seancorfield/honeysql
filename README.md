@@ -21,6 +21,12 @@ All sample code in this README is automatically run as a unit test using
 
 Some of these samples show pretty-printed SQL: HoneySQL 2.x supports `:pretty true` which inserts newlines between clauses in the generated SQL strings.
 
+### HoneySQL 1.x
+
+[![Clojars Project](https://clojars.org/honeysql/honeysql/latest-version.svg)](https://clojars.org/honeysql/honeysql) [![cljdoc badge](https://cljdoc.org/badge/honeysql/honeysql?1.0.461)](https://cljdoc.org/d/honeysql/honeysql/1.0.461)
+
+HoneySQL 1.x will continue to get critical security fixes but otherwise should be considered "legacy" at this point.
+
 ## Usage
 
 ```clojure
