@@ -1,7 +1,8 @@
 # Changes
 
 * 2.0.next in progress
-  * Support PostgreSQL's `&&` operator.
+  * Support PostgreSQL's `&&` array operator.
+  * Clarify how to `SELECT` a function expression (in **Getting Started**).
 
 * 2.0.0-rc2 (for testing; 2021-05-10)
   * Fix #326 by allowing `ON`/`USING` to be optional and not dropping parameters on the floor.

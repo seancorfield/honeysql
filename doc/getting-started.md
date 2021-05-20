@@ -143,6 +143,31 @@ qualified names in a function invocation:
 %max.foo/bar ;=> MAX(foo.bar)
 ```
 
+The latter syntax can be convenient in a `SELECT` because `[:a :b]` is
+otherwise taken as a column and its alias, so selecting a function call
+expression requires an extra level of nesting:
+
+```clojure
+(sql/format {:select [:a]})
+;;=> ["SELECT a"]
+(sql/format {:select [[:a :b]]})
+;;=> ["SELECT a AS b"]
+(sql/format {:select [[[:a :b]]]})
+;;=> ["SELECT A(b)"]
+;; or use the % notification:
+(sql/format {:select [:%a.b]})
+;;=> ["SELECT A(b)"]
+(sql/format {:select [[[:a :b] :c]]})
+;;=> ["SELECT A(b) AS c"]
+(sql/format {:select [[:%a.b :c]]})
+;;=> ["SELECT A(b) AS c"]
+;; putting it all together:
+(sql/format {:select [:x [:y :d] [[:z :e]] [[:z :f] :g]]})
+;;=> ["SELECT x, y AS d, Z(e), Z(f) AS g"]
+(sql/format {:select [:x [:y :d] [:%z.e] [:%z.f :g]]})
+;;=> ["SELECT x, y AS d, Z(e), Z(f) AS g"]
+```
+
 ## SQL Parameters
 
 As indicated in the preceding sections, values found in the DSL data structure
