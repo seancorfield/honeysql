@@ -3,20 +3,20 @@ jobs:
   build:
     working_directory: ~/honeysql
     docker:
-      - image: circleci/clojure:openjdk-11-tools-deps-1.10.0.442
+      - image: circleci/clojure:openjdk-11-tools-deps-1.10.3.822
     steps:
       - checkout
       - restore_cache:
           key: honeysql-{{ checksum "deps.edn" }}
       - run:
+          name: Get rid of erroneous git config
+          command: rm -rf ~/.gitconfig
+      - run:
           name: Install Node
           command: sudo apt-get update && sudo apt-get install -y nodejs
       - run:
-          name: Add Node symlink
-          command: sudo ln -s /usr/bin/js /usr/bin/node
-      - run:
           name: Download Dependencies
-          command: clojure -Spath -R:test:runner:cljs-runner:eastwood:readme && clojure -Spath -A:1.7 && clojure -Spath -A:1.8 && clojure -Spath -A:1.9
+          command: clojure -P -M:test:runner:cljs-runner:eastwood:readme && clojure -P -M:1.9
       - save_cache:
           paths:
             - ~/.m2

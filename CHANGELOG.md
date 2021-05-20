@@ -1,5 +1,62 @@
 # Changes
 
+* 2.0.next in progress
+  * Support PostgreSQL's `&&` operator.
+
+* 2.0.0-rc2 (for testing; 2021-05-10)
+  * Fix #326 by allowing `ON`/`USING` to be optional and not dropping parameters on the floor.
+  * Fix #325 by making the `%` function call syntax respect `:quoted true` and/or `:dialect` options, and also allowing for qualified column names. (PR from @lognush)
+  * Add `:quoted-snake true` option to force conversion from kebab-case to snake_case when `:quoted true` or a `:dialect` is specified to `format`.
+  * Update `test-runner`.
+
+* 2.0.0-rc1 (for testing; 2021-05-06)
+  * Fix #324 so that `insert-into` supports merging into another statement in all cases.
+  * Fix #323 by supporting more than one SQL entity in `:on-conflict`.
+  * Fix #321 by adding `:checking` mode. Currently only detects potential problems with `IN` clauses.
+
+* 2.0.0-beta2 (for testing; 2021-04-13)
+  * The documentation continues to be expanded and clarified in response to feedback!
+  * Fix #322 by rewriting/simplifying `WHERE`/`HAVING` merge logic. **Important bug fix!**
+  * Fix #310 by adding support for `FILTER`, `WITHIN GROUP`, and `ORDER BY` (as an expression), from [nilenso/honeysql-postgres](https://github.com/nilenso/honeysql-postgres) 0.4.112. These are [Special Syntax](doc/special-syntax.md) and there are also helpers for `filter` and `within-group` -- so **be careful about referring in all of `honey.sql.helpers`** since it will now shadow `clojure.core/filter` (it already shadows `for`, `group-by`, `into`, `partition-by`, `set`, and `update`).
+  * Fix #308 by supporting join clauses in `join-by` (and correcting the helper docstring).
+
+* 2.0.0-beta1 (for testing; 2021-04-09)
+  * **The merging behavior of `where`/`having` is broken in Beta 1!**
+  * Since Alpha 3, more documentation has been written and existing documentation clarified (addressing #300, #309, #313, #314).
+  * Fix #319 by ensuring `register-clause!` is idempotent.
+  * Fix #317 by dropping qualifiers in `:set` clauses (just like we do with `:insert` columns). Note that you can still use explicit _dotted_ names if you want table qualification.
+  * Fix #316 by disallowing entity names containing `;` (to avoid SQL injection risks).
+  * Fix #312 by adding `:raw` as a clause. There is no helper function equivalent (because it would be ambiguous whether you meant a function form -- `[:raw ..]` -- or a clause form -- `{:raw ..}`; and for the same reason, there is no `nest` helper function since that also works as a clause and as a function/special syntax).
+
+* 2.0.0-alpha3 (for early testing; 2021-03-13)
+  * Change coordinates to `com.github.seancorfield/honeysql` (although new versions will continue to be deployed to `seancorfield/honeysql` for a while -- see the [Clojars Verified Group Names policy](https://github.com/clojars/clojars-web/wiki/Verified-Group-Names)).
+  * Support much richer range of syntax on `CREATE`/`DROP` statements in general, including columns, `TABLESPACE`, `CASCADE`, `WITH [NO] DATA`, etc.
+  * Fix #306 by supporting `CREATE TABLE .. AS ..`.
+  * Fix #305 by supporting more complex join clauses.
+  * Fix #303 by supporting MySQL's `ON DUPLICATE KEY UPDATE`.
+  * Fix #301 by adding support for `CREATE`/`DROP`/`REFRESH` on `MATERIALIZED VIEW`.
+  * Add tests to confirm #299 does not affect 2.x.
+  * Fix #297 by adding both `SELECT .. INTO ..` and `SELECT .. BULK COLLECT INTO ..`.
+  * Fix #295 by adding docstrings to all helper functions (and adding an assert to ensure it stays that way as more are added in future).
+  * Confirm the whole of the [nilenso/honeysql-postgres](https://github.com/nilenso/honeysql-postgres) is implemented out-of-the-box (#293, up to 0.3.104 -- see also #310 which brought parity up to 0.4.112).
+  * Fix #292 by adding support for `SELECT TOP` and `OFFSET`/`FETCH`.
+  * Fix #284 by adding support for `LATERAL` (as special syntax, with a helper).
+  * Reconcile `where` behavior with recent 1.x changes (porting #283 to 2.x).
+  * Fix #280 by adding `:escape` as special syntax for regular expression patterns.
+  * Fix #277 by adding `:join-by`/`join-by` so that you can have multiple `JOIN`'s in a specific order.
+
+* 2.0.0-alpha2 (for early testing)
+  * Since Alpha 1, a lot more documentation has been written and docstrings have been added to most functions in `honey.sql.helpers`.
+  * Numerous small improvements have been made to clauses and helpers around insert/upsert.
+
+* 2.0.0-alpha1 (for early testing)
+  * This is a complete rewrite/simplification of HoneySQL that provides just two namespaces:
+    * `honey.sql` -- this is the primary API via the `format` function as well as the various extension points.
+    * `honey.sql.helpers` -- provides a helper function for every piece of the DSL that is supported out-of-the-box.
+  * The coordinates for HoneySQL 2.x are `com.github.seancorfield/honeysql` so it can be added to a project that already uses HoneySQL 1.x without any conflicts, making it easier to migrate piecemeal from 1.x to 2.x.
+
+# HoneySQL pre-2.x Changes
+
 * 1.0.461 -- 2021-02-22
   * **Fix #299 potential SQL injection vulnerability.**
   * Fix/Improve `merge-where` (and `merge-having`) behavior. #282 via #283 (@camsaul)
