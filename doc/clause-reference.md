@@ -695,7 +695,8 @@ user=> (sql/format (-> (select :id
 `:order-by` accepts a sequence of one or more ordering
 expressions. Each ordering expression is either a simple
 SQL entity or a pair of a SQL expression and a direction
-(which can be `:asc` or `:desc` -- or the symbol equivalent).
+(which can be `:asc`, `:desc`, `:nulls-first`, `:desc-null-last`,
+etc -- or the symbol equivalent).
 
 If you want to order by an expression, you should wrap it
 as a pair with a direction:
