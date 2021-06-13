@@ -1352,6 +1352,11 @@
     (when ignore-nil
       (swap! op-ignore-nil conj op))))
 
+;; aids to migration from HoneySQL 1.x -- these are deliberately undocumented
+;; so as not to encourage their use for folks starting fresh with 2.x!
+
+(defn ^:no-doc call [f & args] (apply vector f args))
+
 (comment
   (format {:truncate :foo})
   (format-expr [:= :id 1])
