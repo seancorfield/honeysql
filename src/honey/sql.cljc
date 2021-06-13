@@ -888,10 +888,10 @@
   [statement-map & [{:keys [aliased nested pretty]}]]
   (let [[sqls params leftover]
         (reduce (fn [[sql params leftover] k]
-                  (if-some [xs (if-some [xs (k statement-map)]
+                  (if-some [xs (if-some [xs (k leftover)]
                                  xs
                                  (let [s (kw->sym k)]
-                                   (get statement-map s)))]
+                                   (get leftover s)))]
                     (let [formatter (k @clause-format)
                           [sql' & params'] (formatter k xs)]
                       [(conj sql sql')
@@ -901,7 +901,7 @@
                 [[] [] statement-map]
                 *clause-order*)]
     (if (seq leftover)
-      (throw (ex-info (str "Unknown SQL clauses: "
+      (throw (ex-info (str "These SQL clauses are unknown or have nil values: "
                             (str/join ", " (keys leftover)))
                       leftover))
       (into [(cond-> (str/join (if pretty "\n" " ") (filter seq sqls))
