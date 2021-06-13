@@ -60,6 +60,15 @@ expression (comma-separated, wrapped in parentheses):
 ;;=> ["(a, b, ?, x + ?)" "red" 1]
 ```
 
+## distinct
+
+Accepts a single expression and prefixes it with `DISTINCT `:
+
+```clojure
+(sql/format {:select [ [[:count [:distinct :status]] :n] ] :from :table})
+;;=> ["SELECT COUNT(DISTINCT status) AS n FROM table"]
+```
+
 ## entity
 
 Accepts a single keyword or symbol argument and produces a

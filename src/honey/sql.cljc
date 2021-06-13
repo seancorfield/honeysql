@@ -1074,6 +1074,10 @@
     (fn [_ [& args]]
       (let [[sqls params] (format-expr-list args)]
         (into [(str "(" (str/join ", " sqls) ")")] params)))
+    :distinct
+    (fn [_ [x]]
+      (let [[sql & params] (format-expr x {:nested true})]
+        (into [(str "DISTINCT " sql)] params)))
     :escape
     (fn [_ [pattern escape-chars]]
       (let [[sql-p & params-p] (format-expr pattern)

@@ -1,6 +1,7 @@
 # Changes
 
 * 2.0.next in progress
+  * Fix #328 by adding `:distinct` as special syntax, affecting an expression.
   * Support PostgreSQL's `&&` array operator.
   * Clarify how to `SELECT` a function expression (in **Getting Started**).
 
