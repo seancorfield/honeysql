@@ -87,7 +87,7 @@
     (helper-merge {} k args)))
 
 (defn- generic-1 [k [data arg]]
-  (if (some? arg)
+  (if (map? data)
     (assoc data k arg)
     (assoc {} k data)))
 
