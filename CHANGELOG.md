@@ -1,11 +1,12 @@
 # Changes
 
-* 2.0.next in progress
+* 2.0.0-rc3 (for testing; 2021-06-16)
   * Fix #328 by adding `:distinct` as special syntax, affecting an expression.
   * Address #327 by changing "unknown clause" error to including mention of "nil values" (which are also illegal).
   * Fix #327 by making single-argument helpers consistent with multi-argument helpers.
   * Support PostgreSQL's `&&` array operator.
   * Clarify how to `SELECT` a function expression (in **Getting Started**).
+  * Update `test-runner`.
 
 * 2.0.0-rc2 (for testing; 2021-05-10)
   * Fix #326 by allowing `ON`/`USING` to be optional and not dropping parameters on the floor.

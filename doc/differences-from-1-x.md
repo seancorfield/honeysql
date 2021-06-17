@@ -49,7 +49,7 @@ Supported Clojure versions: 1.7 and later.
 
 ```clojure
 ;; in deps.edn:
-com.github.seancorfield/honeysql {:mvn/version "2.0.0-rc2"}
+com.github.seancorfield/honeysql {:mvn/version "2.0.0-rc3"}
 
 ;; in use:
 (ns my.project
@@ -70,7 +70,7 @@ Supported Clojure versions: 1.9 and later.
 
 ## API Changes
 
-The primary API is just `honey.sql/format`. The `array`, `call`, `inline`, `param`, and `raw` functions have all become standard syntax in the DSL as functions (and their tagged literal equivalents have also gone away because they are no longer needed). _[As of 2.0.next, `call` has been reinstated as an undocumented function in `honey.sql` purely to aid migration from 1.x]_
+The primary API is just `honey.sql/format`. The `array`, `call`, `inline`, `param`, and `raw` functions have all become standard syntax in the DSL as functions (and their tagged literal equivalents have also gone away because they are no longer needed). _[As of 2.0.0-rc3, `call` has been reinstated as an undocumented function in `honey.sql` purely to aid migration from 1.x]_
 
 Other `honeysql.core` functions that no longer exist include: `build`, `qualify`, and `quote-identifier`. Many other public functions were essentially undocumented (neither mentioned in the README nor in the tests) and also no longer exist.
 
