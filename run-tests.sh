@@ -11,7 +11,7 @@ then
     for v in 1.9 1.10 master
     do
       echo ==== Test Clojure $v ====
-      clojure -X:test:runner:$v
+      clojure -X:test:$v
       if test $? -ne 0
       then
         exit 1
@@ -19,7 +19,7 @@ then
     done
   else
     echo ==== Test Clojure ====
-    clojure -X:test:runner
+    clojure -X:test
   fi
 else
   exit 1
