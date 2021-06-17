@@ -156,22 +156,22 @@
   [x]
   (try
     (some-> (namespace x) (str/replace "-" "_"))
-    (catch Throwable t
+    (catch #?(:clj Throwable :cljs :default) t
       (throw (ex-info (str "expected symbol, found: "
                            (type x))
                       {:symbol x
-                       :failure (ex-message t)})))))
+                       :failure (str t)})))))
 
 (defn- name-_
   "Return the name portion of a symbol, with dashes converted."
   [x]
   (try
     (str/replace (name x) "-" "_")
-    (catch Throwable t
+    (catch #?(:clj Throwable :cljs :default) t
       (throw (ex-info (str "expected symbol, found: "
                            (type x))
                       {:symbol x
-                       :failure (ex-message t)})))))
+                       :failure (str t)})))))
 
 (defn- sqlize-value [x]
   (cond
