@@ -151,8 +151,27 @@
       (keyword (name s)))
     s))
 
-(defn- namespace-_ [x] (some-> (namespace x) (str/replace "-" "_")))
-(defn- name-_      [x] (str/replace (name x) "-" "_"))
+(defn- namespace-_
+  "Return the namespace portion of a symbol, with dashes converted."
+  [x]
+  (try
+    (some-> (namespace x) (str/replace "-" "_"))
+    (catch Throwable t
+      (throw (ex-info (str "expected symbol, found: "
+                           (type x))
+                      {:symbol x
+                       :failure (ex-message t)})))))
+
+(defn- name-_
+  "Return the name portion of a symbol, with dashes converted."
+  [x]
+  (try
+    (str/replace (name x) "-" "_")
+    (catch Throwable t
+      (throw (ex-info (str "expected symbol, found: "
+                           (type x))
+                      {:symbol x
+                       :failure (ex-message t)})))))
 
 (defn- sqlize-value [x]
   (cond

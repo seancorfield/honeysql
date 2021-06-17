@@ -1,5 +1,8 @@
 # Changes
 
+* 2.0.next in progress
+  * Address #330 by improving exception when a non-entity is encountered where an entity is expected.
+
 * 2.0.0-rc3 (for testing; 2021-06-16)
   * Fix #328 by adding `:distinct` as special syntax, affecting an expression.
   * Address #327 by changing "unknown clause" error to including mention of "nil values" (which are also illegal).
