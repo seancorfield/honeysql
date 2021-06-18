@@ -1,6 +1,6 @@
 name: Clojure CI
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   build:
@@ -18,7 +18,9 @@ jobs:
         uses: DeLaGuardo/setup-clojure@master
         with:
           tools-deps: '1.10.3.839'
+      - name: Lint test script
+        run: shellcheck run-tests.sh
       - name: Run Tests
-        run: sh run-tests.sh all
+        run: ./run-tests.sh all
       - name: Check cljdoc.edn
         run: curl -fsSL https://raw.githubusercontent.com/cljdoc/cljdoc/master/script/verify-cljdoc-edn | bash -s doc/cljdoc.edn

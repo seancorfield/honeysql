@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/usr/bin/env bash
+set -Eexo pipefail
 
 echo ==== Test README.md ==== && clojure -M:readme && \
   echo ==== Lint Source ==== && clojure -M:test:eastwood && \

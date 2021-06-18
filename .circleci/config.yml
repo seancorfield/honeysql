@@ -25,4 +25,4 @@ jobs:
           key: honeysql-{{ checksum "deps.edn" }}
       - run:
           name: Run all the tests
-          command: sh run-tests.sh all
+          command: ./run-tests.sh all
