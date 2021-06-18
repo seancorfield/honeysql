@@ -575,15 +575,15 @@
                            [:id :int :unsigned :auto-increment]
                            [:name [:varchar 50] [:not nil]])))
          ["CREATE TABLE IF NOT EXISTS films (id INT UNSIGNED AUTO_INCREMENT, name VARCHAR(50) NOT NULL)"]))
-  (is (= (sql/format (-> {:create-table :films
-                          :with-columns
-                          [[:id :int :unsigned :auto-increment]
-                           [:name [:varchar 50] [:not nil]]]}))
+  (is (= (sql/format {:create-table :films
+                      :with-columns
+                      [[:id :int :unsigned :auto-increment]
+                       [:name [:varchar 50] [:not nil]]]})
          ["CREATE TABLE films (id INT UNSIGNED AUTO_INCREMENT, name VARCHAR(50) NOT NULL)"]))
-  (is (= (sql/format (-> {:create-table [:films :if-not-exists]
-                          :with-columns
-                          [[:id :int :unsigned :auto-increment]
-                           [:name [:varchar 50] [:not nil]]]}))
+  (is (= (sql/format {:create-table [:films :if-not-exists]
+                      :with-columns
+                      [[:id :int :unsigned :auto-increment]
+                       [:name [:varchar 50] [:not nil]]]})
          ["CREATE TABLE IF NOT EXISTS films (id INT UNSIGNED AUTO_INCREMENT, name VARCHAR(50) NOT NULL)"]))
   (is (= (sql/format {:drop-table :foo})
          ["DROP TABLE foo"]))
