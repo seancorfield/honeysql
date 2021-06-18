@@ -116,6 +116,7 @@
   a column:
 
   (add-column :name [:varchar 32] [:not nil])"
+  {:arglists '([query & col-elems])}
   [& col-elems]
   (generic :add-column col-elems))
 
@@ -123,7 +124,7 @@
   "Takes a single column name (use with `alter-table`).
 
   (alter-table :foo (drop-column :bar))"
-  {:arglists '([col])}
+  {:arglists '([col] [query col])}
   [& args]
   (generic-1 :drop-column args))
 
@@ -140,7 +141,7 @@
   new name to which it should be renamed:
 
   (rename-column :name :full-name)"
-  {:arglists '([old-col new-col])}
+  {:arglists '([query old-col new-col])}
   [& args]
   (generic :rename-column args))
 
@@ -151,7 +152,7 @@
   (add-index :unique :name-key :first-name :last-name)
 
   Produces: UNIQUE name_key(first_name, last_name)"
-  {:arglist '([& index-elems])}
+  {:arglists '([& index-elems])}
   [& args]
   (generic :add-index args))
 
@@ -169,7 +170,7 @@
   (alter-table :foo (rename-table :bar))
 
   Produces: ALTER TABLE foo RENAME TO bar"
-  {:arglist '([new-table])}
+  {:arglists '([query new-table])}
   [& args]
   (generic-1 :rename-table args))
 
@@ -189,7 +190,7 @@
 
   (create-table-as :foo)
   (create-table-as :foo :if-not-exists)"
-  {:arglists '([table] [table if-not-exists])}
+  {:arglists '([table] [table if-not-exists & directives])}
   [& args]
   (generic :create-table-as args))
 
@@ -219,7 +220,7 @@
   collection of column descriptions (mostly for
   compatibility with nilenso/honeysql-postgres
   which used to be needed for DDL)."
-  {:arglists '([& col-specs] [col-spec-coll])}
+  {:arglists '([query & col-specs] [query col-spec-coll])}
   [& args]
   ;; special case so (with-columns [[:col-1 :definition] [:col-2 :definition]])
   ;; also works in addition to (with-columns [:col-1 :definition] [:col-2 :definition])
@@ -245,7 +246,7 @@
   (-> (create-materialized-view :cities)
       (select :*) (from :city))
       (with-data true)"
-  {:arglists '([view])}
+  {:arglists '([view & directives])}
   [& args]
   (generic :create-materialized-view args))
 
@@ -273,7 +274,7 @@
 
 (defn refresh-materialized-view
   "Accepts a materialied view name to refresh."
-  {:arglists '([view])}
+  {:arglists '([view] [directive view])}
   [& views]
   (generic :refresh-materialized-view views))
 
@@ -372,14 +373,14 @@
 
 (defn into
   "Accepts table name, optionally followed a database name."
-  {:arglist '([table] [table dbname])}
+  {:arglists '([query table] [query table dbname])}
   [& args]
   (generic :into args))
 
 (defn bulk-collect-into
   "Accepts a variable name, optionally followed by a limit
   expression."
-  {:arglist '([varname] [varname n])}
+  {:arglists '([query varname] [query varname n])}
   [& args]
   (generic :bulk-collect-into args))
 
@@ -460,7 +461,7 @@
       (set {:a 1 :b nil}))
 
   Produces: UPDATE foo SET a = ?, b = NULL"
-  {:arglists '([col-set-map])}
+  {:arglists '([query col-set-map])}
   [& args]
   (generic-1 :set args))
 
@@ -710,7 +711,7 @@
   `LIMIT 20,10` is equivalent to `LIMIT 10 OFFSET 20`
 
   (-> (limit 10) (offset 20))"
-  {:arglists '([limit])}
+  {:arglists '([query limit])}
   [& args]
   (generic-1 :limit args))
 
@@ -721,7 +722,7 @@
 
   Produces: OFFSET ?
   Parameters: 10"
-  {:arglists '([offset])}
+  {:arglists '([query offset])}
   [& args]
   (generic-1 :offset args))
 
@@ -732,14 +733,14 @@
 
   Produces: FETCH ? ONLY
   Parameters: 10"
-  {:arglists '([offset])}
+  {:arglists '([query offset])}
   [& args]
   (generic-1 :offset args))
 
 (defn for
   "Accepts a lock strength, optionally followed by one or
   more table names, optionally followed by a qualifier."
-  {:arglists '([lock-strength table* qualifier*])}
+  {:arglists '([query lock-strength table* qualifier*])}
   [& args]
   (generic-1 :for args))
 
@@ -748,7 +749,7 @@
 
   It will accept the same type of syntax as `for` even
   though MySQL's `lock` clause is less powerful."
-  {:arglists '([lock-mode])}
+  {:arglists '([query lock-mode])}
   [& args]
   (generic-1 :lock args))
 
@@ -765,26 +766,26 @@
 
   Produces: INSERT INTO foo (id, name) VALUES (?, ?), (?, ?)
   Parameters: 1 \"John\" 2 \"Fred\""
-  {:arglists '([row-value-coll])}
+  {:arglists '([query row-value-coll])}
   [& args]
   (generic-1 :values args))
 
 (defn on-conflict
   "Accepts zero or more SQL entities (keywords or symbols),
   optionally followed by a single SQL clause (hash map)."
-  {:arglists '([column* where-clause])}
+  {:arglists '([column*] [query & columns+where-clause])}
   [& args]
   (generic :on-conflict args))
 
 (defn on-constraint
   "Accepts a single constraint name."
-  {:arglists '([constraint])}
+  {:arglists '([constraint] [query constraint])}
   [& args]
   (generic-1 :on-constraint args))
 
 (defn do-nothing
   "Called with no arguments, produces DO NOTHING"
-  {:arglists '([])}
+  {:arglists '([query])}
   [& args]
   (generic :do-nothing args))
 
@@ -794,14 +795,14 @@
   by a `WHERE` clause. Can also accept a single hash map
   with a `:fields` entry specifying the columns to update
   and a `:where` entry specifying the `WHERE` clause."
-  {:arglists '([field-where-map] [column-value-map] [column* opt-where-clause])}
+  {:arglists '([query field-where-map] [query column-value-map] [query column* opt-where-clause])}
   [& args]
   (generic :do-update-set args))
 
 (defn on-duplicate-key-update
   "MySQL's upsert facility. Accepts a hash map of
   column/value pairs to be updated (like `set` does)."
-  {:arglists '([column-value-map])}
+  {:arglists '([query column-value-map])}
   [& args]
   (generic :on-duplicate-key-update args))
 
@@ -817,7 +818,7 @@
 
 (defn with-data
   "Accepts a Boolean determining WITH DATA vs WITH NO DATA."
-  {:arglists '([data?])}
+  {:arglists '([query data?])}
   [& args]
   (generic-1 :with-data args))
 
@@ -854,7 +855,7 @@
   Produces:
   LATERAL (SELECT * FROM foo)
   LATERAL CALC_VALUE(bar)"
-  {:arglists '([clause-or-expression])}
+  {:arglists '([query clause-or-expression])}
   [& args]
   (c/into [:lateral] args))
 
