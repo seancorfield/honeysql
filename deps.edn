@@ -15,8 +15,8 @@
                 :main-opts ["-m" "cljs-test-runner.main"]}
   :readme {:extra-deps {seancorfield/readme {:mvn/version "1.0.16"}}
            :main-opts ["-m" "seancorfield.readme"]}
-  :eastwood {:extra-deps {jonase/eastwood {:mvn/version "0.4.2"}}
-             :main-opts ["-m" "eastwood.lint" "{:source-paths,[\"src\"]}"]}
+  :eastwood {:extra-deps {jonase/eastwood {:mvn/version "0.5.1"}}
+             :main-opts ["-m" "eastwood.lint" "{}"]}
   :jar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.0.216"}}
         :exec-fn hf.depstar/jar
         :exec-args {:jar "honeysql.jar" :sync-pom true}}

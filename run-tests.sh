@@ -1,7 +1,7 @@
 #!/bin/sh
 
 echo ==== Test README.md ==== && clojure -M:readme && \
-  echo ==== Lint Source ==== && clojure -M:eastwood && \
+  echo ==== Lint Source ==== && clojure -M:test:eastwood && \
   echo ==== Test ClojureScript ==== && clojure -M:test:cljs-runner
 
 if test $? -eq 0
