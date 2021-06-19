@@ -657,7 +657,8 @@ Here's a big, complicated query. Note that HoneySQL makes no attempt to verify t
   (-> (select-distinct :f.* :b.baz :c.quux [:b.bla "bla-bla"]
                        [[:now]] [[:raw "@x := 10"]])
       (from [:foo :f] [:baz :b])
-      (join :draq [:= :f.b :draq.x])
+      (join :draq [:= :f.b :draq.x]
+            :eldr [:= :f.e :eldr.t])
       (left-join [:clod :c] [:= :f.a :c.d])
       (right-join :bock [:= :bock.z :c.e])
       (where [:or
@@ -676,7 +677,8 @@ big-complicated-map
 => {:select-distinct [:f.* :b.baz :c.quux [:b.bla "bla-bla"]
                      [[:now]] [[:raw "@x := 10"]]]
     :from [[:foo :f] [:baz :b]]
-    :join [:draq [:= :f.b :draq.x]]
+    :join [:draq [:= :f.b :draq.x]
+           :eldr [:= :f.e :eldr.t]]
     :left-join [[:clod :c] [:= :f.a :c.d]]
     :right-join [:bock [:= :bock.z :c.e]]
     :where [:or
@@ -697,7 +699,7 @@ big-complicated-map
 => ["
 SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS \"bla-bla\", NOW(), @x := 10
 FROM foo AS f, baz AS b
-INNER JOIN draq ON f.b = draq.x
+INNER JOIN draq ON f.b = draq.x INNER JOIN eldr ON f.e = eldr.t
 LEFT JOIN clod AS c ON f.a = c.d
 RIGHT JOIN bock ON bock.z = c.e
 WHERE ((f.a = ?) AND (b.baz <> ?)) OR ((? < ?) AND (? < ?)) OR (f.e IN (?, ?, ?)) OR f.e BETWEEN ? AND ?
