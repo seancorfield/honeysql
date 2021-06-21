@@ -2,6 +2,7 @@
 
 * 2.0.next in progress
   * Address #330 by improving exception when a non-entity is encountered where an entity is expected.
+  * Fix bug in unrolling nested argument to `with-columns` helper.
 
 * 2.0.0-rc3 (for testing; 2021-06-16)
   * Fix #328 by adding `:distinct` as special syntax, affecting an expression.
