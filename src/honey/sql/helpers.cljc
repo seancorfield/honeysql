@@ -221,12 +221,15 @@
   which used to be needed for DDL)."
   {:arglists '([& col-specs] [col-spec-coll])}
   [& args]
-  ;; special case so (with-columns [[:col-1 :definition] [:col-2 :definition]])
+  ;; special cases so (with-columns [[:col-1 :definition] [:col-2 :definition]])
   ;; also works in addition to (with-columns [:col-1 :definition] [:col-2 :definition])
   (cond (and (= 1 (count args)) (sequential? (first args)) (sequential? (ffirst args)))
-        (generic-1 :with-columns args)
-        (and (= 2 (count args)) (sequential? (second args)) (sequential? (fnext args)))
-        (generic-1 :with-columns args)
+        (generic :with-columns (cons {} (first args)))
+        (and (= 2 (count args))
+             (map? (first args))
+             (sequential? (second args))
+             (sequential? (first (second args))))
+        (generic :with-columns (cons (first args) (second args)))
         :else
         (generic :with-columns args)))
 
