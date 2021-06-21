@@ -1,6 +1,7 @@
 # Changes
 
 * 2.0.next in progress
+  * Some CI improvements (from PR #331 @vemv).
   * Address #330 by improving exception when a non-entity is encountered where an entity is expected.
   * Fix bug in unrolling nested argument to `with-columns` helper.
 
