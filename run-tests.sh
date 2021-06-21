@@ -1,5 +1,4 @@
 #!/bin/sh
-set -Eeo pipefail
 
 echo ==== Test README.md ==== && clojure -M:readme && \
   echo ==== Lint Source ==== && clojure -M:eastwood && \
