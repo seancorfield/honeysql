@@ -151,7 +151,7 @@
   (add-index :unique :name-key :first-name :last-name)
 
   Produces: UNIQUE name_key(first_name, last_name)"
-  {:arglist '([& index-elems])}
+  {:arglists '([& index-elems])}
   [& args]
   (generic :add-index args))
 
@@ -169,7 +169,7 @@
   (alter-table :foo (rename-table :bar))
 
   Produces: ALTER TABLE foo RENAME TO bar"
-  {:arglist '([new-table])}
+  {:arglists '([new-table])}
   [& args]
   (generic-1 :rename-table args))
 
@@ -375,14 +375,14 @@
 
 (defn into
   "Accepts table name, optionally followed a database name."
-  {:arglist '([table] [table dbname])}
+  {:arglists '([table] [table dbname])}
   [& args]
   (generic :into args))
 
 (defn bulk-collect-into
   "Accepts a variable name, optionally followed by a limit
   expression."
-  {:arglist '([varname] [varname n])}
+  {:arglists '([varname] [varname n])}
   [& args]
   (generic :bulk-collect-into args))
 
