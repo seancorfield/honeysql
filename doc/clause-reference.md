@@ -421,9 +421,6 @@ user=> (sql/format '{insert-into ((transport (id, name)) {select (*) from (cars)
 ;; with an alias:
 user=> (sql/format '{insert-into ((transport t) {select (id, name) from (cars)})})
 ["INSERT INTO transport AS t SELECT id, name FROM cars"]
-;; with columns:
-user=> (sql/format '{insert-into ((transport (id, name)) {select (*) from (cars)})})
-["INSERT INTO transport (id, name) SELECT * FROM cars"]
 ;; with an alias and columns:
 user=> (sql/format '{insert-into (((transport t) (id, name)) {select (*) from (cars)})})
 ["INSERT INTO transport AS t (id, name) SELECT * FROM cars"]
