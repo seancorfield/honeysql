@@ -17,7 +17,7 @@
            :main-opts ["-m" "seancorfield.readme"]}
   :eastwood {:extra-deps {jonase/eastwood {:mvn/version "0.5.1"}}
              :main-opts ["-m" "eastwood.lint" "{:source-paths,[\"src\"]}"]}
-  :jar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.0.216"}}
+  :jar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
         :exec-fn hf.depstar/jar
         :exec-args {:jar "honeysql.jar" :sync-pom true}}
   :install {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}

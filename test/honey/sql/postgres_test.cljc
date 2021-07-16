@@ -9,8 +9,7 @@
 
 (ns honey.sql.postgres-test
   (:refer-clojure :exclude [update partition-by set])
-  (:require #?(:clj [clojure.test :refer [deftest is testing]]
-               :cljs [cljs.test :refer-macros [deftest is testing]])
+  (:require [clojure.test :refer [deftest is testing]]
             ;; pull in all the PostgreSQL helpers that the nilenso
             ;; library provided (as well as the regular HoneySQL ones):
             [honey.sql.helpers :as sqlh :refer

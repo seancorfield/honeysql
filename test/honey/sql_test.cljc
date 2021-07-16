@@ -3,8 +3,7 @@
 (ns honey.sql-test
   (:refer-clojure :exclude [format])
   (:require [clojure.string :as str]
-            #?(:clj [clojure.test :refer [deftest is testing]]
-               :cljs [cljs.test :refer-macros [deftest is testing]])
+            [clojure.test :refer [deftest is testing]]
             [honey.sql :as sut :refer [format]]
             [honey.sql.helpers :as h])
   #?(:clj (:import (clojure.lang ExceptionInfo))))
