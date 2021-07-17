@@ -1,6 +1,7 @@
 # Changes
 
 * 2.0.next in progress (2.x will be VGN only)
+  * Fix #338 by adding `ONLY` to `:fetch`.
   * Fix #337 by switching to `clojure.test` even for ClojureScript.
   * Address #330 by improving exception when a non-entity is encountered where an entity is expected.
   * Fix bug in unrolling nested argument to `with-columns` helper.

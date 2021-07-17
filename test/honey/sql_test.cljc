@@ -782,3 +782,8 @@ ORDER BY id = ? DESC
                     :from :bar
                     :join [[{:select :a :from :b :where [:= :id 123]} :x] :y]
                     :where [:= :id 456]})))))
+
+(deftest fetch-offset-issue338
+  (is (= ["SELECT foo FROM bar OFFSET ? FETCH ? ONLY" 20 10]
+         (format {:select :foo :from :bar
+                  :fetch 10 :offset 20}))))

@@ -870,7 +870,9 @@
          :order-by        #'format-order-by
          :limit           #'format-on-expr
          :offset          #'format-on-expr
-         :fetch           #'format-on-expr
+         :fetch           (fn [_ x]
+                            (let [[sql & params] (format-on-expr :fetch x)]
+                              (into [(str sql " " (sql-kw :only))] params)))
          :for             #'format-lock-strength
          :lock            #'format-lock-strength
          :values          #'format-values
