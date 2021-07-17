@@ -2,6 +2,7 @@
 
 * 2.0.next (gold) in progress
   * Address #332 by improving `:cross-join` documentation.
+  * Fix `fetch` helper.
 
 * 2.0.0-rc4 (for testing; 2021-07-17)
   * Fix #338 by adding `ONLY` to `:fetch`.

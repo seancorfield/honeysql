@@ -735,9 +735,9 @@
 
   Produces: FETCH ? ONLY
   Parameters: 10"
-  {:arglists '([offset])}
+  {:arglists '([limit])}
   [& args]
-  (generic-1 :offset args))
+  (generic-1 :fetch args))
 
 (defn for
   "Accepts a lock strength, optionally followed by one or
