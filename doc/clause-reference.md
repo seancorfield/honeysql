@@ -592,9 +592,24 @@ user=> (sql/format {:select [:t.ref :pp.code]
 ## cross-join
 
 `:cross-join` accepts a single sequence argument that lists
-one or more SQL entities. Each entity can either be a
+one or more SQL expressions. Each expression can either be a
 simple table name (keyword or symbol) or a pair of a
-table name and an alias.
+table expression and an alias.
+
+```clojure
+user=> (sql/format {:select [:foo.id [:x.id :x_id] :x.value]
+                    :cross-join [[[:lateral
+                                   [:jsonb_to_recordset :foo.json_value]]
+                                  [[:raw "x(id text, value jsonb)"]]]]
+                    :from [:foo]})
+["SELECT foo.id, x.id AS x_id, x.value FROM foo CROSS JOIN LATERAL JSONB_TO_RECORDSET(foo.json_value) x(id text, value jsonb)"]
+```
+
+Here, `:cross-join` has a one expression as its argument, which is a
+table expression and an alias. The table expression is `[:lateral ..]`
+and the alias expression is double-nested so that it is read as a
+function call: an invocation of `:raw`.
+
 
 > Note: the actual formatting of a `:cross-join` clause is currently identical to the formatting of a `:select` clause.
 

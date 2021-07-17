@@ -1,5 +1,8 @@
 # Changes
 
+* 2.0.next (gold) in progress
+  * Address #332 by improving `:cross-join` documentation.
+
 * 2.0.0-rc4 (for testing; 2021-07-17)
   * Fix #338 by adding `ONLY` to `:fetch`.
   * Fix #337 by switching to `clojure.test` even for ClojureScript.
