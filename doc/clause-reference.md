@@ -750,11 +750,22 @@ user=> (sql/format {:select [:id :name]
 user=> (sql/format {:select [:id :name]
                     :from [:table]
                     :offset 20 :fetch 10})
-["SELECT id, name FROM table OFFSET ? FETCH ? ONLY" 20 10]
+["SELECT id, name FROM table OFFSET ? ROWS FETCH NEXT ? ROWS ONLY" 20 10]
 ```
 
 All three are available in all dialects for HoneySQL so it
 is up to you to choose the correct pair for your database.
+
+If you use `:offset` and `:limit` together, `OFFSET` will just have
+the number of rows. If you use `:offset` and `:fetch` together,
+`OFFSET` will have the number of rows and the `ROWS` keyword. If
+you use `:offset` on its own, it will have just the number
+of rows, unless you have the `:sqlserver` dialect selected,
+it which case it will have the `ROWS` keywords as well.
+_This seemed to be the least risky change in 2.0.0 RC 5 to avoid introducing a breaking change._
+
+If the number of rows is one, `ROW` will be used instead of `ROWS`.
+If `:fetch` is specified without `:offset`, `FIRST` will be used instead of `NEXT`.
 
 ## for
 
