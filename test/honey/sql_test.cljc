@@ -783,7 +783,30 @@ ORDER BY id = ? DESC
                     :join [[{:select :a :from :b :where [:= :id 123]} :x] :y]
                     :where [:= :id 456]})))))
 
-(deftest fetch-offset-issue338
-  (is (= ["SELECT foo FROM bar OFFSET ? FETCH ? ONLY" 20 10]
-         (format {:select :foo :from :bar
-                  :fetch 10 :offset 20}))))
+(deftest fetch-offset-issue-338
+  (testing "default offset (with and without limit)"
+    (is (= ["SELECT foo FROM bar LIMIT ? OFFSET ?" 10 20]
+           (format {:select :foo :from :bar
+                    :limit 10 :offset 20})))
+    (is (= ["SELECT foo FROM bar OFFSET ?" 20]
+           (format {:select :foo :from :bar
+                    :offset 20}))))
+  (testing "default offset / fetch"
+    (is (= ["SELECT foo FROM bar OFFSET ? ROWS FETCH NEXT ? ROWS ONLY" 20 10]
+           (format {:select :foo :from :bar
+                    :fetch 10 :offset 20})))
+    (is (= ["SELECT foo FROM bar OFFSET ? ROW FETCH NEXT ? ROW ONLY" 1 1]
+           (format {:select :foo :from :bar
+                    :fetch 1 :offset 1})))
+    (is (= ["SELECT foo FROM bar FETCH FIRST ? ROWS ONLY" 2]
+           (format {:select :foo :from :bar
+                    :fetch 2}))))
+  (testing "SQL Server offset"
+    (is (= ["SELECT [foo] FROM [bar] OFFSET ? ROWS FETCH NEXT ? ROWS ONLY" 20 10]
+           (format {:select :foo :from :bar
+                    :fetch 10 :offset 20}
+                   {:dialect :sqlserver})))
+    (is (= ["SELECT [foo] FROM [bar] OFFSET ? ROWS" 20]
+           (format {:select :foo :from :bar
+                    :offset 20}
+                   {:dialect :sqlserver})))))

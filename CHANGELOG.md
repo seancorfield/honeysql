@@ -1,13 +1,11 @@
 # Changes
 
-* 2.0.next (gold) in progress
-  * Address #332 by improving `:cross-join` documentation.
-  * Fix `fetch` helper.
-
-* 2.0.0-rc4 (for testing; 2021-07-17)
-  * Fix #338 by adding `ONLY` to `:fetch`.
+* 2.0.0-rc5 in progress
+  * Fix #338 by producing `OFFSET n ROWS` (or `ROW` if `n` is 1) if `:fetch` is present or `:sqlserver` dialect is specified; and by producing `FETCH NEXT n ROWS ONLY` (or `ROW` is `n` is 1; or `FIRST` instead of `NEXT` if `:offset` is not present).
   * Fix #337 by switching to `clojure.test` even for ClojureScript.
+  * Address #332 by improving `:cross-join` documentation.
   * Address #330 by improving exception when a non-entity is encountered where an entity is expected.
+  * Fix `fetch` helper (it previously returned an `:offset` clause).
   * Fix bug in unrolling nested argument to `with-columns` helper.
 
 * 2.0.0-rc3 (for testing; 2021-06-16)

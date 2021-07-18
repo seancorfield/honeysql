@@ -86,11 +86,14 @@
       (conj order clause))))
 
 (def ^:private dialects
-  {:ansi      {:quote #(str \" % \")}
-   :sqlserver {:quote #(str \[ % \])}
-   :mysql     {:quote #(str \` % \`)
-               :clause-order-fn #(add-clause-before % :set :where)}
-   :oracle    {:quote #(str \" % \") :as false}})
+  (reduce-kv (fn [m k v]
+               (assoc m k (assoc v :dialect k)))
+             {}
+             {:ansi      {:quote #(str \" % \")}
+              :sqlserver {:quote #(str \[ % \])}
+              :mysql     {:quote #(str \` % \`)
+                          :clause-order-fn #(add-clause-before % :set :where)}
+              :oracle    {:quote #(str \" % \") :as false}}))
 
 ; should become defonce
 (def ^:private default-dialect (atom (:ansi dialects)))
@@ -109,8 +112,25 @@
 (def ^:private ^:dynamic *allow-suspicious-entities* false)
 ;; "linting" mode (:none, :basic, :strict):
 (def ^:private ^:dynamic *checking* :none)
+;; the current DSL hash map being formatted (for contains-clause?):
+(def ^:private ^:dynamic *dsl* nil)
 
 ;; clause helpers
+
+(defn contains-clause?
+  "Returns true if the current DSL expression being formatted
+  contains the specified clause (as a keyword or symbol)."
+  [clause]
+  (or (contains? *dsl* clause)
+      (contains? *dsl*
+                 (if (keyword? clause)
+                   (symbol (name clause))
+                   (keyword (name clause))))))
+
+(defn- sql-server?
+  "Helper to detect if SQL Server is the current dialect."
+  []
+  (= :sqlserver (:dialect *dialect*)))
 
 ;; String.toUpperCase() or `str/upper-case` for that matter converts the
 ;; string to uppercase for the DEFAULT LOCALE. Normally this does what you'd
@@ -869,10 +889,18 @@
          :partition-by    #'format-selects
          :order-by        #'format-order-by
          :limit           #'format-on-expr
-         :offset          #'format-on-expr
+         :offset          (fn [_ x]
+                            (if (or (contains-clause? :fetch) (sql-server?))
+                              (let [[sql & params] (format-on-expr :offset x)
+                                    rows (if (and (number? x) (== 1 x)) :row :rows)]
+                                (into [(str sql " " (sql-kw rows))] params))
+                              ;; format in the old style:
+                              (format-on-expr :offset x)))
          :fetch           (fn [_ x]
-                            (let [[sql & params] (format-on-expr :fetch x)]
-                              (into [(str sql " " (sql-kw :only))] params)))
+                            (let [which (if (contains-clause? :offset) :fetch-next :fetch-first)
+                                  rows  (if (and (number? x) (== 1 x)) :row-only :rows-only)
+                                  [sql & params] (format-on-expr which x)]
+                              (into [(str sql " " (sql-kw rows))] params)))
          :for             #'format-lock-strength
          :lock            #'format-lock-strength
          :values          #'format-values
@@ -907,29 +935,30 @@
   This is intended to be used when writing your own formatters to
   extend the DSL supported by HoneySQL."
   [statement-map & [{:keys [aliased nested pretty]}]]
-  (let [[sqls params leftover]
-        (reduce (fn [[sql params leftover] k]
-                  (if-some [xs (if-some [xs (k leftover)]
-                                 xs
-                                 (let [s (kw->sym k)]
-                                   (get leftover s)))]
-                    (let [formatter (k @clause-format)
-                          [sql' & params'] (formatter k xs)]
-                      [(conj sql sql')
-                       (if params' (into params params') params)
-                       (dissoc leftover k (kw->sym k))])
-                    [sql params leftover]))
-                [[] [] statement-map]
-                *clause-order*)]
-    (if (seq leftover)
-      (throw (ex-info (str "These SQL clauses are unknown or have nil values: "
-                            (str/join ", " (keys leftover)))
-                      leftover))
-      (into [(cond-> (str/join (if pretty "\n" " ") (filter seq sqls))
-               pretty
-               (as-> s (str "\n" s "\n"))
-               (and nested (not aliased))
-               (as-> s (str "(" s ")")))] params))))
+  (binding [*dsl* statement-map]
+    (let [[sqls params leftover]
+          (reduce (fn [[sql params leftover] k]
+                    (if-some [xs (if-some [xs (k leftover)]
+                                   xs
+                                   (let [s (kw->sym k)]
+                                     (get leftover s)))]
+                      (let [formatter (k @clause-format)
+                            [sql' & params'] (formatter k xs)]
+                        [(conj sql sql')
+                         (if params' (into params params') params)
+                         (dissoc leftover k (kw->sym k))])
+                      [sql params leftover]))
+                  [[] [] statement-map]
+                  *clause-order*)]
+      (if (seq leftover)
+        (throw (ex-info (str "These SQL clauses are unknown or have nil values: "
+                             (str/join ", " (keys leftover)))
+                        leftover))
+        (into [(cond-> (str/join (if pretty "\n" " ") (filter seq sqls))
+                 pretty
+                 (as-> s (str "\n" s "\n"))
+                 (and nested (not aliased))
+                 (as-> s (str "(" s ")")))] params)))))
 
 (def ^:private infix-aliases
   "Provided for backward compatibility with earlier HoneySQL versions."
