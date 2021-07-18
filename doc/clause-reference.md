@@ -302,6 +302,10 @@ user=> (sql/format '{select (id, ((* cost 2)), (event status))
 ["SELECT id, cost * ?, event AS status FROM table" 2]
 ```
 
+Here, `:select` has a three expressions as its argument. The first is
+a simple column name. The second is an expression with no alias, which
+is why it is still double-nested. The third is a simple column name and its alias.
+
 With an alias on the expression:
 
 ```clojure
@@ -309,6 +313,10 @@ user=> (sql/format {:select [:id, [[:* :cost 2] :total], [:event :status]]
                     :from [:table]})
 ["SELECT id, cost * ? AS total, event AS status FROM table" 2]
 ```
+
+Here, `:select` has a three expressions as its argument. The first is
+a simple column name. The second is an expression and its alias. The
+third is a simple column name and its alias.
 
 `:select-distinct` works the same way but produces `SELECT DISTINCT`.
 
@@ -610,7 +618,6 @@ table expression and an alias. The table expression is `[:lateral ..]`
 and the alias expression is double-nested so that it is read as a
 function call: an invocation of `:raw`.
 
-
 > Note: the actual formatting of a `:cross-join` clause is currently identical to the formatting of a `:select` clause.
 
 ## set (MySQL)
@@ -750,11 +757,22 @@ user=> (sql/format {:select [:id :name]
 user=> (sql/format {:select [:id :name]
                     :from [:table]
                     :offset 20 :fetch 10})
-["SELECT id, name FROM table OFFSET ? FETCH ? ONLY" 20 10]
+["SELECT id, name FROM table OFFSET ? ROWS FETCH NEXT ? ROWS ONLY" 20 10]
 ```
 
 All three are available in all dialects for HoneySQL so it
 is up to you to choose the correct pair for your database.
+
+If you use `:offset` and `:limit` together, `OFFSET` will just have
+the number of rows. If you use `:offset` and `:fetch` together,
+`OFFSET` will have the number of rows and the `ROWS` keyword. If
+you use `:offset` on its own, it will have just the number
+of rows, unless you have the `:sqlserver` dialect selected,
+it which case it will have the `ROWS` keywords as well.
+_This seemed to be the least risky change in 2.0.0 RC 5 to avoid introducing a breaking change._
+
+If the number of rows is one, `ROW` will be used instead of `ROWS`.
+If `:fetch` is specified without `:offset`, `FIRST` will be used instead of `NEXT`.
 
 ## for
 
