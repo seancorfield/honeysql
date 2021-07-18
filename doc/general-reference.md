@@ -100,6 +100,26 @@ these tuples:
 
 There is also a `composite` helper function.
 
+## Working with JSON/JSONB (PostgreSQL)
+
+It is increasingly common for PostgreSQL users to be working with JSON columns
+in their databases these days. PostgreSQL has really good support for JSON types.
+
+When using HoneySQL to generate SQL that manipulates JSON, you need to be careful
+because it is common to use regular Clojure data structures to represent the JSON
+and rely on protocol extensions for the JDBC libraries to handle automatic
+conversion of Clojure data structures to JSON (e.g., see
+[Tips & Tricks > Working with JSON and JSONB](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/doc/getting-started/tips-tricks#working-with-json-and-jsonb) in the `next.jdbc`
+documentation).
+
+HoneySQL also uses Clojure data structures, to represent function calls (vectors) and
+SQL statements (hash maps), so if you are also using Clojure data structures for your
+JSON, you need to tell HoneySQL not to interpret those values. There
+are two possible approaches:
+
+1. Use named parameters (e.g., `[:param :myval]`) instead of having the values directly in the DSL structure and then pass `{:params {:myval some-json}}` as part of the options in the call to `format`, or
+2. Use `[:lift ..]` wrapped around any structured values which tells HoneySQL not to interpret the vector or hash map value as a DSL: `[:lift some-json]`.
+
 ## Other Sections Will Be Added!
 
 As questions arise about the use of HoneySQL 2.x, I will add new sections here.

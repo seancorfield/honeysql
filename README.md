@@ -66,7 +66,7 @@ Column names can be provided as keywords or symbols (but not strings -- HoneySQL
 => ["SELECT a, b, c FROM foo WHERE f.a = ?" "baz"]
 ```
 
-HoneySQL is a relatively "pure" library, it does not manage your sql connection
+HoneySQL is a relatively "pure" library, it does not manage your JDBC connection
 or run queries for you, it simply generates SQL strings. You can then pass them
 to a JDBC library, such as [`next.jdbc`](https://github.com/seancorfield/next-jdbc):
 
@@ -298,6 +298,15 @@ INSERT INTO user_profile_to_role
     (sql/format))
 => ["SELECT * FROM foo WHERE foo.a IN (SELECT a FROM bar)"]
 ```
+
+Because values can be nested queries -- and also because values can be function calls --
+whenever you are working with values that are, themselves, structured data, you will
+need to tell HoneySQL not to interpret that structured data as part of the DSL. This
+especially affects using JSON values with HoneySQL (e.g., targeting PostgreSQL). There
+are two possible approaches:
+
+1. Use named parameters instead of having the values directly in the DSL structure (see `:param` under **Miscellaneous** below), or
+2. Use `[:lift ..]` wrapped around any structured values which tells HoneySQL not to interpret the vector or hash map value as a DSL.
 
 ### Composite types
 
