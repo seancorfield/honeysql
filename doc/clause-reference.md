@@ -302,6 +302,10 @@ user=> (sql/format '{select (id, ((* cost 2)), (event status))
 ["SELECT id, cost * ?, event AS status FROM table" 2]
 ```
 
+Here, `:select` has a three expressions as its argument. The first is
+a simple column name. The second is an expression with no alias, which
+is why it is still double-nested. The third is a simple column name and its alias.
+
 With an alias on the expression:
 
 ```clojure
@@ -309,6 +313,10 @@ user=> (sql/format {:select [:id, [[:* :cost 2] :total], [:event :status]]
                     :from [:table]})
 ["SELECT id, cost * ? AS total, event AS status FROM table" 2]
 ```
+
+Here, `:select` has a three expressions as its argument. The first is
+a simple column name. The second is an expression and its alias. The
+third is a simple column name and its alias.
 
 `:select-distinct` works the same way but produces `SELECT DISTINCT`.
 
@@ -609,7 +617,6 @@ Here, `:cross-join` has a one expression as its argument, which is a
 table expression and an alias. The table expression is `[:lateral ..]`
 and the alias expression is double-nested so that it is read as a
 function call: an invocation of `:raw`.
-
 
 > Note: the actual formatting of a `:cross-join` clause is currently identical to the formatting of a `:select` clause.
 
