@@ -1,6 +1,9 @@
 # Changes
 
-* 2.0.0-rc5 in progress
+* 2.0.next in progress
+  * Documentation improvements: `:fetch`, `:lift`, `:limit`, `:offset`, `:param`, `:select`; also around JSON/PostgreSQL.
+
+* 2.0.0-rc5 (for testing; 2021-07-17)
   * Fix #338 by producing `OFFSET n ROWS` (or `ROW` if `n` is 1) if `:fetch` is present or `:sqlserver` dialect is specified; and by producing `FETCH NEXT n ROWS ONLY` (or `ROW` is `n` is 1; or `FIRST` instead of `NEXT` if `:offset` is not present).
   * Fix #337 by switching to `clojure.test` even for ClojureScript.
   * Address #332 by improving `:cross-join` documentation.
