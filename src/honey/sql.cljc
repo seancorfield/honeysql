@@ -146,9 +146,15 @@
   #?(:clj (fn [^String s] (.. s toString (toUpperCase (java.util.Locale/US))))
      :cljs str/upper-case))
 
-(def ^:private keep-hyphen
-  "The set of symbols that should not have `-` replaced by space."
-  #{"-" "<->"})
+(defn- dehyphen
+  "The loop/recur is because we might need to account for x-y-z in
+  a string where the second - won't get replaced because the regex
+  already matched y. I'm sure there's a more efficent solution!"
+  [s]
+  (loop [s s prev nil]
+    (if (= s prev)
+      s
+      (recur (str/replace s #"(\w)-(\w)" "$1 $2") s))))
 
 (defn sql-kw
   "Given a keyword, return a SQL representation of it as a string.
@@ -158,8 +164,7 @@
 
   Any namespace qualifier is ignored."
   [k]
-  (-> k (name) (upper-case)
-      (as-> s (if (keep-hyphen s) s (str/replace s "-" " ")))))
+  (-> k (name) (dehyphen) (upper-case)))
 
 (defn- sym->kw
   "Given a symbol, produce a keyword, retaining the namespace
