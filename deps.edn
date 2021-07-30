@@ -8,8 +8,7 @@
   :test
   {:extra-paths ["test"]
    :extra-deps {io.github.cognitect-labs/test-runner
-                {:git/url "https://github.com/cognitect-labs/test-runner"
-                 :sha "62ef1de18e076903374306060ac0e8a752e57c86"}}
+                {:git/tag "v0.4.0" :git/sha "334f2e2"}}
    :exec-fn cognitect.test-runner.api/test}
   :cljs-runner {:extra-deps {olical/cljs-test-runner {:mvn/version "3.8.0"}}
                 :main-opts ["-m" "cljs-test-runner.main"]}
@@ -17,7 +16,7 @@
            :main-opts ["-m" "seancorfield.readme"]}
   :eastwood {:extra-deps {jonase/eastwood {:mvn/version "0.5.1"}}
              :main-opts ["-m" "eastwood.lint" "{:source-paths,[\"src\"]}"]}
-  :jar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
+  :jar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.278"}}
         :exec-fn hf.depstar/jar
         :exec-args {:jar "honeysql.jar" :sync-pom true}}
   :install {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}

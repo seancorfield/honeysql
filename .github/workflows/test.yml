@@ -17,7 +17,7 @@ jobs:
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
-          tools-deps: '1.10.3.839'
+          tools-deps: '1.10.3.933'
       - name: Run Tests
         run: sh run-tests.sh all
       - name: Check cljdoc.edn
