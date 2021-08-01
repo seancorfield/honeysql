@@ -16,7 +16,8 @@ jobs:
           command: sudo apt-get update && sudo apt-get install -y nodejs
       - run:
           name: Download Dependencies
-          command: clojure -P -M:test:cljs-runner:eastwood:readme && clojure -P -M:1.9
+          # 1.9 is the default so we need to ask for 1.10 (1.11 is a snapshot we don't cache):
+          command: clojure -P -M:test:cljs-runner:eastwood:readme && clojure -P -M:1.10
       - save_cache:
           paths:
             - ~/.m2
