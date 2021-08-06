@@ -22,6 +22,10 @@ HoneySQL produces SQL statements but does not execute them.
 To execute SQL statements, you will also need a JDBC wrapper like
 [`seancorfield/next.jdbc`](https://github.com/seancorfield/next-jdbc) and a JDBC driver for the database you use.
 
+You can also experiment with HoneySQL directly in a browser -- no installation
+required -- using [John Shaffer](https://github.com/john-shaffer)'s awesome
+[HoneySQL web app](https://www.john-shaffer.com/honeysql/), written in ClojureScript!
+
 ## Basic Concepts
 
 SQL statements are represented as hash maps, with keys that

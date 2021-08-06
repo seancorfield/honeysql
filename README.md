@@ -14,6 +14,14 @@ Compared to 1.x, HoneySQL 2.x provides a streamlined codebase and a simpler meth
 
 > Note: you can use 1.x and 2.x side-by-side as they use different group IDs and different namespaces. This allows for a piecemeal migration. See this [summary of differences between 1.x and 2.x](doc/differences-from-1-x.md) if you are migrating from 1.x!
 
+## Try HoneySQL Online!
+
+[John Shaffer](https://github.com/john-shaffer) has created this awesome
+[HoneySQL web app](https://www.john-shaffer.com/honeysql/), written in ClojureScript,
+so you can experiment with HoneySQL in a browser, including setting different
+options so you can generate pretty SQL with inline values (via `:inline true`)
+for copying and pasting directly into your SQL tool of choice!
+
 ## Note on code samples
 
 All sample code in this README is automatically run as a unit test using

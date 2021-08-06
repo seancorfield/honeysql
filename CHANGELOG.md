@@ -1,8 +1,9 @@
 # Changes
 
-* 2.0.next in progress
+* 2.0.next in progress ("gold" mid-August?)
   * Fixes #340 by making hyphen to space logic more general so _operators_ containing `-` should retain the hyphen without special cases.
   * Documentation improvements: `:fetch`, `:lift`, `:limit`, `:offset`, `:param`, `:select`; also around JSON/PostgreSQL.
+  * Link to the [HoneySQL web app](https://www.john-shaffer.com/honeysql/) in both the README and **Getting Started**.
   * Update `depstar` and `test-runner`.
 
 * 2.0.0-rc5 (for testing; 2021-07-17)
