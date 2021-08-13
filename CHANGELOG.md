@@ -5,7 +5,7 @@
   * Fixes #340 by making hyphen to space logic more general so _operators_ containing `-` should retain the hyphen without special cases.
   * Documentation improvements: `:fetch`, `:lift`, `:limit`, `:offset`, `:param`, `:select`; also around JSON/PostgreSQL.
   * Link to the [HoneySQL web app](https://www.john-shaffer.com/honeysql/) in both the README and **Getting Started**.
-  * Update `depstar` and `test-runner`.
+  * Switch to `tools.build` for running tests and JAR building etc.
 
 * 2.0.0-rc5 (for testing; 2021-07-17)
   * Fix #338 by producing `OFFSET n ROWS` (or `ROW` if `n` is 1) if `:fetch` is present or `:sqlserver` dialect is specified; and by producing `FETCH NEXT n ROWS ONLY` (or `ROW` is `n` is 1; or `FIRST` instead of `NEXT` if `:offset` is not present).

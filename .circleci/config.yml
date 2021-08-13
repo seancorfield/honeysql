@@ -17,7 +17,7 @@ jobs:
       - run:
           name: Download Dependencies
           # 1.9 is the default so we need to ask for 1.10 (1.11 is a snapshot we don't cache):
-          command: clojure -P -M:test:cljs-runner:eastwood:readme && clojure -P -M:1.10
+          command: clojure -P -M:test:cljs:eastwood:readme && clojure -P -M:1.10
       - save_cache:
           paths:
             - ~/.m2
@@ -26,4 +26,4 @@ jobs:
           key: honeysql-{{ checksum "deps.edn" }}
       - run:
           name: Run all the tests
-          command: sh run-tests.sh all
+          command: clojure -T:build ci

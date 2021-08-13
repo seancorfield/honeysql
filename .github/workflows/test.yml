@@ -19,6 +19,6 @@ jobs:
         with:
           tools-deps: '1.10.3.933'
       - name: Run Tests
-        run: sh run-tests.sh all
+        run: clojure -T:build ci
       - name: Check cljdoc.edn
         run: curl -fsSL https://raw.githubusercontent.com/cljdoc/cljdoc/master/script/verify-cljdoc-edn | bash -s doc/cljdoc.edn
