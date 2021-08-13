@@ -73,6 +73,6 @@
             (reduce (fn [opts alias]
                       (run-tests (assoc opts :aliases [alias])))
                     opts
-                    [:cljs-runner :1.9 :1.10 :master]))
+                    [:cljs :1.9 :1.10 :master]))
       (clean)
       (jar)))
