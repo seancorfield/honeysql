@@ -378,11 +378,21 @@
   (is (=
        ["UPDATE `foo` INNER JOIN `bar` ON `bar`.`id` = `foo`.`bar_id` SET `a` = ? WHERE `bar`.`b` = ?" 1 42]
        (->
-         {:update :foo
-          :join   [:bar [:= :bar.id :foo.bar_id]]
-          :set    {:a 1}
-          :where  [:= :bar.b 42]}
-         (format {:dialect :mysql})))))
+        {:update :foo
+         :join   [:bar [:= :bar.id :foo.bar_id]]
+         :set    {:a 1}
+         :where  [:= :bar.b 42]}
+        (format {:dialect :mysql}))))
+  ;; issue 344
+  (is (=
+       ["UPDATE `foo` INNER JOIN `bar` ON `bar`.`id` = `foo`.`bar_id` SET `f`.`a` = ? WHERE `bar`.`b` = ?" 1 42]
+       (->
+        {:update :foo
+         :join   [:bar [:= :bar.id :foo.bar_id]]
+         ;; do not drop ns in set clause for MySQL:
+         :set    {:f/a 1}
+         :where  [:= :bar.b 42]}
+        (format {:dialect :mysql})))))
 
 (deftest format-arity-test
   (testing "format can be called with no options"

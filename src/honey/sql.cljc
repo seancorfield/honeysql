@@ -127,6 +127,11 @@
                    (symbol (name clause))
                    (keyword (name clause))))))
 
+(defn- mysql?
+  "Helper to detect if MySQL is the current dialect."
+  []
+  (= :mysql (:dialect *dialect*)))
+
 (defn- sql-server?
   "Helper to detect if SQL Server is the current dialect."
   []
@@ -641,7 +646,7 @@
   (let [[sqls params]
         (reduce-kv (fn [[sql params] v e]
                      (let [[sql' & params'] (format-expr e)]
-                       [(conj sql (str (format-entity v {:drop-ns true}) " = " sql'))
+                       [(conj sql (str (format-entity v {:drop-ns (not (mysql?))}) " = " sql'))
                         (if params' (into params params') params)]))
                    [[] []]
                    xs)]
