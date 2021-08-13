@@ -27,8 +27,9 @@
              :main-opts ["-m" "eastwood.lint" "{:source-paths,[\"src\"]}"]}
 
   ;; first run: clojure -T:build ci
-  ;; then: clojure -X:deploy target/h<TAB>
-  :deploy {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
+  ;; then: clojure -T:deploy target/h<TAB>
+  :deploy {:deps {slipset/deps-deploy {:git/url "https://github.com/slipset/deps-deploy"
+                                       :sha "b4359c5d67ca002d9ed0c4b41b710d7e5a82e3bf"}}
            :exec-fn deps-deploy.deps-deploy/deploy
            :exec-args {:installer :remote
                        :pom-file "target/classes/META-INF/maven/com.github.seancorfield/honeysql/pom.xml"}}}}
