@@ -109,8 +109,8 @@ Namespace-qualified keywords (and symbols) are generally treated as table-qualif
 
 Documentation for the entire data DSL can be found in the
 [Clause Reference](doc/clause-reference.md), the
-[Operator Reference](doc/operator-reference.md)], and the
-[Special Syntax referenc](doc/special-syntax.md).
+[Operator Reference](doc/operator-reference.md), and the
+[Special Syntax reference](doc/special-syntax.md).
 
 ### Vanilla SQL clause helpers
 
@@ -528,7 +528,7 @@ The `:lift` syntax will prevent interpretation of Clojure data structures as
 part of the DSL and instead turn such values into parameters (useful when you
 want to pass a vector or a hash map directly as a positional parameter value,
 for example when you have extended `next.jdbc`'s `SettableParameter` protocol
-to a data structure).
+to a data structure -- as is common when working with PostgreSQL's JSON/JSONB types).
 
 Finally, the `:nest` syntax will cause an extra set of parentheses to be
 wrapped around its argument, after formatting that argument as a SQL expression.
