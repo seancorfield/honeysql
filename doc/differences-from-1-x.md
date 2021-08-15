@@ -49,7 +49,7 @@ Supported Clojure versions: 1.7 and later.
 
 ```clojure
 ;; in deps.edn:
-com.github.seancorfield/honeysql {:mvn/version "2.0.0-rc5"}
+com.github.seancorfield/honeysql {:mvn/version "2.0.783"}
 
 ;; in use:
 (ns my.project

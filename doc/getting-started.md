@@ -9,13 +9,13 @@ data to a SQL statement (string) and any parameters it needs.
 For the Clojure CLI, add the following dependency to your `deps.edn` file:
 
 ```clojure
-    com.github.seancorfield/honeysql {:mvn/version "2.0.0-rc5"}
+    com.github.seancorfield/honeysql {:mvn/version "2.0.783"}
 ```
 
 For Leiningen, add the following dependency to your `project.clj` file:
 
 ```clojure
-    [com.github.seancorfield/honeysql "2.0.0-rc5"]
+    [com.github.seancorfield/honeysql "2.0.783"]
 ```
 
 HoneySQL produces SQL statements but does not execute them.
