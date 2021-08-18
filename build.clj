@@ -72,7 +72,9 @@
       (eastwood)
       (as-> opts
             (reduce (fn [opts alias]
-                      (run-tests (assoc opts :aliases [alias])))
+                      (run-tests (assoc opts :aliases (cond-> [alias]
+                                                        (not= :cljs alias)
+                                                        (conj :runner)))))
                     opts
                     [:cljs :1.9 :1.10 :master]))
       (clean)

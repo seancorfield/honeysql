@@ -16,9 +16,9 @@
   {:extra-paths ["test"]
    :extra-deps {io.github.cognitect-labs/test-runner
                 {:git/tag "v0.4.0" :git/sha "334f2e2"}}
-   ;; so we can run both ways:
-   :exec-fn cognitect.test-runner.api/test
-   :main-opts ["-m" "cognitect.test-runner"]}
+   :exec-fn cognitect.test-runner.api/test}
+  :runner
+  {:main-opts ["-m" "cognitect.test-runner"]}
   :cljs {:extra-deps {olical/cljs-test-runner {:mvn/version "3.8.0"}}
          :main-opts ["-m" "cljs-test-runner.main"]}
   :readme {:extra-deps {seancorfield/readme {:mvn/version "1.0.16"}}
