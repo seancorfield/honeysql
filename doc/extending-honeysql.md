@@ -50,6 +50,8 @@ two arguments. You can optionally specify that an operator
 can take any number of arguments with `:variadic true`:
 
 ```clojure
+(require '[honey.sql :as sql])
+
 (sql/register-op! :<=> :variadic true)
 ;; and then use the new operator:
 (sql/format {:select [:*], :from [:table], :where [:<=> 13 :x 42]})
@@ -86,6 +88,7 @@ The formatter function will be called with:
 
 For example:
 
+<!-- :test-doc-blocks/skip -->
 ```clojure
 (sql/register-fn! :foo (fn [f args] ..))
 

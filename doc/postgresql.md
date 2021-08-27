@@ -18,6 +18,22 @@ HoneySQL not to do that. There are two possible approaches:
 1. Use named parameters (e.g., `[:param :myval]`) instead of having the values directly in the DSL structure and then pass `{:params {:myval some-json}}` as part of the options in the call to `format`, or
 2. Use `[:lift ..]` wrapped around any structured values which tells HoneySQL not to interpret the vector or hash map value as a DSL: `[:lift some-json]`.
 
+The code example herein assume:
+```clojure
+(require '[honey.sql :as sql]
+         '[honey.sql.helpers :refer [select from where
+                                     update set
+                                     insert-into values
+                                     create-table with-columns create-view create-extension
+                                     add-column alter-table add-index
+                                     modify-column rename-column rename-table
+                                     drop-table drop-column drop-index drop-extension
+                                     upsert returning on-conflict on-constraint
+                                     do-update-set do-nothing]])
+```
+
+Clojure users can opt for the shorter `(require '[honey.sql :as sql] '[honey.sql.helpers :refer :all])` but this syntax is not available to ClojureScript users.
+
 ## Upsert
 
 Upserting data is relatively easy in PostgreSQL
@@ -34,11 +50,16 @@ user=> (-> (insert-into :distributors)
            (upsert (-> (on-conflict :did)
                        (do-update-set :dname)))
            (returning :*)
-           sql/format)
-;; newlines inserted for readability:
-["INSERT INTO distributors (did, dname) VALUES (?, ?), (?, ?)
-  ON CONFLICT (did) DO UPDATE SET dname = EXCLUDED.dname RETURNING *"
- 5 "Gizmo Transglobal" 6 "Associated Computing, Inc"]
+           (sql/format {:pretty true}))
+["
+INSERT INTO distributors
+(did, dname) VALUES (?, ?), (?, ?)
+ON CONFLICT (did)
+DO UPDATE SET dname = EXCLUDED.dname
+RETURNING *
+"
+5 "Gizmo Transglobal"
+6 "Associated Computing, Inc"]
 ```
 
 However, the nested `upsert` helper is no longer needed
@@ -51,11 +72,16 @@ user=> (-> (insert-into :distributors)
            (on-conflict :did)
            (do-update-set :dname)
            (returning :*)
-           sql/format)
-;; newlines inserted for readability:
-["INSERT INTO distributors (did, dname) VALUES (?, ?), (?, ?)
-  ON CONFLICT (did) DO UPDATE SET dname = EXCLUDED.dname RETURNING *"
- 5 "Gizmo Transglobal" 6 "Associated Computing, Inc"]
+           (sql/format {:pretty true}))
+["
+INSERT INTO distributors
+(did, dname) VALUES (?, ?), (?, ?)
+ON CONFLICT (did)
+DO UPDATE SET dname = EXCLUDED.dname
+RETURNING *
+"
+5 "Gizmo Transglobal"
+6 "Associated Computing, Inc"]
 ```
 
 Similarly, the `do-nothing` helper behaves just the same
@@ -66,11 +92,14 @@ user=> (-> (insert-into :distributors)
            (values [{:did 7 :dname "Redline GmbH"}])
            (upsert (-> (on-conflict :did)
                        do-nothing))
-           sql/format)
-;; newlines inserted for readability:
-["INSERT INTO distributors (did, dname) VALUES (?, ?)
-  ON CONFLICT (did) DO NOTHING"
- 7 "Redline GmbH"]
+           (sql/format {:pretty true}))
+["
+INSERT INTO distributors
+(did, dname) VALUES (?, ?)
+ON CONFLICT (did)
+DO NOTHING
+"
+7 "Redline GmbH"]
 ```
 
 As above, the nested `upsert` helper is no longer needed:
@@ -80,11 +109,14 @@ user=> (-> (insert-into :distributors)
            (values [{:did 7 :dname "Redline GmbH"}])
            (on-conflict :did)
            do-nothing
-           sql/format)
-;; newlines inserted for readability:
-["INSERT INTO distributors (did, dname) VALUES (?, ?)
-  ON CONFLICT (did) DO NOTHING"
- 7 "Redline GmbH"]
+           (sql/format {:pretty true}))
+["
+INSERT INTO distributors
+(did, dname) VALUES (?, ?)
+ON CONFLICT (did)
+DO NOTHING
+"
+7 "Redline GmbH"]
 ```
 
 `ON CONSTRAINT` is handled slightly differently to the nilenso library,
@@ -96,22 +128,29 @@ user=> (-> (insert-into :distributors)
            ;; can specify as a nested clause...
            (on-conflict (on-constraint :distributors_pkey))
            do-nothing
-           sql/format)
-;; newlines inserted for readability:
-["INSERT INTO distributors (did, dname) VALUES (?, ?)
-  ON CONFLICT ON CONSTRAINT distributors_pkey DO NOTHING"
- 9 "Antwerp Design"]
+           (sql/format {:pretty true}))
+["
+INSERT INTO distributors
+(did, dname) VALUES (?, ?)
+ON CONFLICT ON CONSTRAINT distributors_pkey
+DO NOTHING
+"
+9 "Antwerp Design"]
 user=> (-> (insert-into :distributors)
            (values [{:did 9 :dname "Antwerp Design"}])
            ;; ...or as two separate clauses
            on-conflict
            (on-constraint :distributors_pkey)
            do-nothing
-           sql/format)
-;; newlines inserted for readability:
-["INSERT INTO distributors (did, dname) VALUES (?, ?)
-  ON CONFLICT ON CONSTRAINT distributors_pkey DO NOTHING"
- 9 "Antwerp Design"]
+           (sql/format {:pretty true}))
+["
+INSERT INTO distributors
+(did, dname) VALUES (?, ?)
+ON CONFLICT
+ON CONSTRAINT distributors_pkey
+DO NOTHING
+"
+9 "Antwerp Design"]
 ```
 
 As above, the `upsert` helper has been omitted here.
@@ -124,12 +163,14 @@ user=> (-> (insert-into :user)
            (values [{:phone "5555555" :name "John"}])
            (on-conflict :phone (where [:<> :phone nil]))
            (do-update-set :phone :name (where [:= :user.active false]))
-           sql/format)
-;; newlines inserted for readability:
-["INSERT INTO user (phone, name) VALUES (?, ?)
-  ON CONFLICT (phone) WHERE phone IS NOT NULL
-  DO UPDATE SET phone = EXCLUDED.phone, name = EXCLUDED.name
-  WHERE user.active = FALSE" "5555555" "John"]
+           (sql/format {:pretty true}))
+["
+INSERT INTO user
+(phone, name) VALUES (?, ?)
+ON CONFLICT (phone) WHERE phone IS NOT NULL
+DO UPDATE SET phone = EXCLUDED.phone, name = EXCLUDED.name WHERE user.active = FALSE
+"
+"5555555" "John"]
 ;; using the DSL directly:
 user=> (sql/format
         {:insert-into    :user
@@ -137,16 +178,20 @@ user=> (sql/format
           :on-conflict   [:phone
                           {:where [:<> :phone nil]}]
           :do-update-set {:fields [:phone :name]
-                          :where  [:= :user.active false]}})
-;; newlines inserted for readability:
-["INSERT INTO user (phone, name) VALUES (?, ?)
-  ON CONFLICT (phone) WHERE phone IS NOT NULL
-  DO UPDATE SET phone = EXCLUDED.phone, name = EXCLUDED.name
-  WHERE user.active = FALSE" "5555555" "John"]
+                          :where  [:= :user.active false]}}
+        {:pretty true})
+["
+INSERT INTO user
+(phone, name) VALUES (?, ?)
+ON CONFLICT (phone) WHERE phone IS NOT NULL
+DO UPDATE SET phone = EXCLUDED.phone, name = EXCLUDED.name WHERE user.active = FALSE
+"
+"5555555" "John"]
 ```
 
 By comparison, this is the DSL structure that nilenso would have required:
 
+<!-- :test-doc-blocks/skip -->
 ```clojure
   ;; NOT VALID FOR HONEYSQL!
   {:insert-into :user
@@ -230,12 +275,12 @@ user=> (-> (create-table :distributors)
                                          ;; "serial" is inlined as 'SERIAL':
                                          [:default [:nextval "serial"]]]
                           [:name [:varchar 40] [:not nil]]])
-           sql/format)
+           (sql/format {:pretty true}))
 ;; newlines inserted for readability:
-["CREATE TABLE distributors (
-  did INTEGER PRIMARY KEY DEFAULT NEXTVAL('SERIAL'),
-  name VARCHAR(40) NOT NULL
-)"]
+["
+CREATE TABLE distributors
+(did INTEGER PRIMARY KEY DEFAULT NEXTVAL('SERIAL'), name VARCHAR(40) NOT NULL)
+"]
 ;; PostgreSQL CHECK constraint is supported:
 user=> (-> (create-table :products)
            (with-columns [[:product_no :integer]
@@ -243,20 +288,16 @@ user=> (-> (create-table :products)
                           [:price :numeric [:check [:> :price 0]]]
                           [:discounted_price :numeric]
                           [[:check [:and [:> :discounted_price 0] [:> :price :discounted_price]]]]])
-           sql/format)
-;; newlines inserted for readability:
-["CREATE TABLE products (
-  product_no INTEGER,
-  name TEXT,
-  price NUMERIC CHECK(PRICE > 0),
-  discounted_price NUMERIC,
-  CHECK((discounted_price > 0) AND (price > discounted_price))
-)"]
+           (sql/format {:pretty true}))
+["
+CREATE TABLE products
+(product_no INTEGER, name TEXT, price NUMERIC CHECK(PRICE > 0), discounted_price NUMERIC, CHECK((discounted_price > 0) AND (price > discounted_price)))
+"]
 ;; conditional creation:
 user=> (-> (create-table :products :if-not-exists)
-           ...
+           (with-columns [[:name :text]])
            sql/format)
-["CREATE TABLE IF NOT EXISTS products (...)"]
+["CREATE TABLE IF NOT EXISTS products (name TEXT)"]
 ;; drop table:
 user=> (sql/format (drop-table :cities))
 ["DROP TABLE cities"]
@@ -339,10 +380,7 @@ user=> (-> (alter-table :fruit)
 user=> (sql/format (alter-table :fruit
                                 (add-column :skin [:varchar 16] nil)
                                 (add-index :unique :fruit-name :name)))
-;; newlines inserted for readability:
-["ALTER TABLE fruit
-    ADD COLUMN skin VARCHAR(16) NULL,
-    ADD UNIQUE fruit_name(name)"]
+["ALTER TABLE fruit ADD COLUMN skin VARCHAR(16) NULL, ADD UNIQUE fruit_name(name)"]
 ```
 
 ## Filter / Within Group

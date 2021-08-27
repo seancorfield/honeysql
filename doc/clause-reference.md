@@ -14,6 +14,13 @@ dialects that HoneySQL supports.
 
 DDL clauses are listed first, followed by SQL clauses.
 
+The examples herein assume:
+```clojure
+(require '[honey.sql :as sql]
+         '[honey.sql.helpers :refer [select from join-by left-join join
+                                     where order-by over partition-by window]])
+```
+
 # DDL Clauses
 
 HoneySQL supports the following DDL clauses as a data DSL.
@@ -76,7 +83,7 @@ user=> (sql/format {:alter-table :fruit
 ["ALTER TABLE fruit ADD INDEX look(appearance)"]
 user=> (sql/format {:alter-table :fruit
                     :add-index [:unique nil :color :appearance]})
-["ALTER TABLE fruit ADD UNIQUE(color,appearance)"]
+["ALTER TABLE fruit ADD UNIQUE(color, appearance)"]
 user=> (sql/format {:alter-table :fruit :drop-index :look})
 ["ALTER TABLE fruit DROP INDEX look"]
 ```
@@ -108,12 +115,7 @@ user=> (sql/format {:create-table :fruit
                     [[:id :int [:not nil]]
                      [:name [:varchar 32] [:not nil]]
                      [:cost :float :null]]})
-;; reformatted for clarity:
-["CREATE TABLE fruit (
-  id INT NOT NULL,
-  name VARCHAR(32) NOT NULL,
-  cost FLOAT NULL
-)"]
+["CREATE TABLE fruit (id INT NOT NULL, name VARCHAR(32) NOT NULL, cost FLOAT NULL)"]
 ```
 
 The `:with-columns` clause is formatted as if `{:inline true}`
@@ -544,25 +546,30 @@ user=> (sql/format {:select [:t.ref :pp.code]
                                      [:using :id]]
                               :join [[:logtransaction :log]
                                      [:= :t.id :log.id]]]
-                    :where [:= "settled" :pp.status]})
-;; newlines inserted for readability:
-["SELECT t.ref, pp.code FROM transaction AS t
-  LEFT JOIN paypal_tx AS pp USING (id)
-  INNER JOIN logtransaction AS log ON t.id = log.id
-  WHERE ? = pp.status" "settled"]
-;; or using helpers:
+                    :where [:= "settled" :pp.status]}
+                    {:pretty true})
+["
+SELECT t.ref, pp.code
+FROM transaction AS t
+LEFT JOIN paypal_tx AS pp USING (id) INNER JOIN logtransaction AS log ON t.id = log.id
+WHERE ? = pp.status
+" "settled"]
+
+;; or the equivalent using helpers:
 user=> (sql/format (-> (select :t.ref :pp.code)
                        (from [:transaction :t])
                        (join-by (left-join [:paypal-tx :pp]
                                            [:using :id])
                                 (join [:logtransaction :log]
                                       [:= :t.id :log.id]))
-                       (where := "settled" :pp.status)))
-;; newlines inserted for readability:
-["SELECT t.ref, pp.code FROM transaction AS t
-  LEFT JOIN paypal_tx AS pp USING (id)
-  INNER JOIN logtransaction AS log ON t.id = log.id
-  WHERE ? = pp.status" "settled"]
+                       (where := "settled" :pp.status))
+                   {:pretty true})
+["
+SELECT t.ref, pp.code
+FROM transaction AS t
+LEFT JOIN paypal_tx AS pp USING (id) INNER JOIN logtransaction AS log ON t.id = log.id
+WHERE ? = pp.status
+" "settled"]
 ```
 
 Without `:join-by`, a `:join` would normally be generated before a `:left-join`.
@@ -667,25 +674,25 @@ user=> (sql/format {:select [:id
                                 :w
                                 :MaxSalary]]]]
                     :from [:employee]
-                    :window [:w {:partition-by [:department]}]})
-;; newlines inserted for readability:
-["SELECT id,
-         AVG(salary) OVER (PARTITION BY department ORDER BY designation ASC) AS Average,
-         MAX(salary) OVER w AS MaxSalary
-  FROM employee
-  WINDOW w AS (PARTITION BY department)"]
+                    :window [:w {:partition-by [:department]}]}
+                    {:pretty true})
+["
+SELECT id, AVG(salary) OVER (PARTITION BY department ORDER BY designation ASC) AS Average, MAX(salary) OVER w AS MaxSalary
+FROM employee
+WINDOW w AS (PARTITION BY department)
+"]
 ;; easier to write with helpers (and easier to read!):
 user=> (sql/format (-> (select :id
                                (over [[:avg :salary] (-> (partition-by :department) (order-by :designation)) :Average]
                                      [[:max :salary] :w :MaxSalary]))
                        (from :employee)
-                       (window :w (partition-by :department))))
-;; newlines inserted for readability:
-["SELECT id,
-         AVG(salary) OVER (PARTITION BY department ORDER BY designation ASC) AS Average,
-         MAX(salary) OVER w AS MaxSalary
-  FROM employee
-  WINDOW w AS (PARTITION BY department)"]
+                       (window :w (partition-by :department)))
+                   {:pretty true})
+["
+SELECT id, AVG(salary) OVER (PARTITION BY department ORDER BY designation ASC) AS Average, MAX(salary) OVER w AS MaxSalary
+FROM employee
+WINDOW w AS (PARTITION BY department)
+"]
 ```
 
 The window function in the `:over` expression may be `{}` or `nil`:
