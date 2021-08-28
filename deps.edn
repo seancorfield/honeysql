@@ -5,8 +5,7 @@
  {;; for help: clojure -A:deps -T:build help/doc
   :build {:deps {babashka/fs {:mvn/version "0.0.5"}
                  com.github.lread/test-doc-blocks {:mvn/version "1.0.137-alpha"}
-                 io.github.clojure/tools.build {:git/tag "v0.1.9" :git/sha "6736c83"}
-                 io.github.slipset/deps-deploy {:sha "b4359c5d67ca002d9ed0c4b41b710d7e5a82e3bf"}}
+                 io.github.seancorfield/build-clj {:git/tag "v0.1.0" :git/sha "fe2d586"}}
           :ns-default build}
 
   ;; versions to test against:
@@ -15,20 +14,17 @@
   :master {:override-deps {org.clojure/clojure {:mvn/version "1.11.1-master-SNAPSHOT"}}}
 
   ;; running tests/checks of various kinds:
-
-  :test {:extra-paths ["test"]}
-
-  :runner ; can also run clojure -X:test
-  {:extra-deps  {io.github.cognitect-labs/test-runner
+  :test
+  {:extra-paths ["test"]
+   :extra-deps  {io.github.cognitect-labs/test-runner
                  {:git/tag "v0.4.0" :git/sha "334f2e2"}}
-   :main-opts ["-m" "cognitect.test-runner"]
    :exec-fn     cognitect.test-runner.api/test}
 
-;; various "runners" for tests/CI:
+  ;; various "runners" for tests/CI:
   :cljs {:extra-deps {olical/cljs-test-runner {:mvn/version "3.8.0"}}
          :main-opts ["-m" "cljs-test-runner.main"]}
 
-  :test-doc {:extra-paths ["target/test-doc-blocks/test"]}
+  :test-doc {:replace-paths ["src" "target/test-doc-blocks/test"]}
   :test-doc-clj {:main-opts ["-m" "cognitect.test-runner"
                              "-d" "target/test-doc-blocks/test"]}
   :test-doc-cljs {:main-opts ["-m" "cljs-test-runner.main"
