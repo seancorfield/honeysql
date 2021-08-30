@@ -22,7 +22,9 @@
   (-> opts (bb/run-task [:eastwood])))
 
 (defn gen-doc-tests "Generate tests from doc code blocks" [opts]
-  (let [docs ["README.md"
+  (let [target "target/test-doc-blocks"
+        success-marker (fs/file target "SUCCESS")
+        docs ["README.md"
               "doc/clause-reference.md"
               "doc/differences-from-1-x.md"
               "doc/extending-honeysql.md"
@@ -30,12 +32,21 @@
               "doc/getting-started.md"
               "doc/postgresql.md"
               "doc/special-syntax.md"]
-        updated-docs (fs/modified-since "target/test-doc-blocks" (conj docs "build.clj" "deps.edn"))]
-    (if (seq updated-docs)
+        regen-reason (if (not (fs/exists? success-marker))
+                       "a previous successful gen result not found"
+                       (let [newer-thans (fs/modified-since target
+                                                            (concat docs
+                                                                    ["build.clj" "deps.edn"]
+                                                                    (fs/glob "src" "**/*.*")))]
+                         (when (seq newer-thans)
+                           (str "found files newer than last gen: " (mapv str newer-thans)))))]
+    (if regen-reason
       (do
-        (println "gen-doc-tests: Regenerating: found newer:" (mapv str updated-docs))
-        (tdb/gen-tests {:docs docs}))
-      (println "gen-doc-tests: Tests already generated")))
+        (fs/delete-if-exists success-marker)
+        (println "gen-doc-tests: Regenerating:" regen-reason)
+        (tdb/gen-tests {:docs docs})
+        (spit success-marker "SUCCESS"))
+      (println "gen-doc-tests: Tests already successfully generated")))
   opts)
 
 (defn run-doc-tests
