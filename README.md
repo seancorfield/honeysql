@@ -56,12 +56,13 @@ From Clojure:
 From ClojureScript, we don't have `:refer :all`. If we want to use `:refer`, we have no choice but to be specific:
 <!-- {:test-doc-blocks/reader-cond :cljs} -->
 ```Clojure
+(refer-clojure :exclude '[filter for group-by into partition-by set update])
 (require '[honey.sql :as sql]
          '[honey.sql.helpers :refer [select select-distinct from
                                      join left-join right-join
                                      where for group-by having union
                                      order-by limit offset values columns
-                                     insert-into set composite
+                                     update insert-into set composite
                                      delete delete-from truncate] :as h]
          '[clojure.core :as c])
 ```
@@ -368,7 +369,7 @@ VALUES (?, (?, ?)), (?, (?, ?))
 Updates are possible too:
 
 ```clojure
-(-> (h/update :films)
+(-> (update :films)
     (set {:kind "dramatic"
            :watched [:+ :watched 1]})
     (where [:= :kind "drama"])
@@ -655,7 +656,7 @@ If `<table(s)>` and `<qualifier>` are both omitted, you may also omit the `[`..`
 (-> (select :foo.a)
     (from :foo)
     (where [:= :foo.a "baz"])
-    (h/for :update)
+    (for :update)
     (sql/format))
 => ["SELECT foo.a FROM foo WHERE foo.a = ? FOR UPDATE" "baz"]
 ```

@@ -20,6 +20,7 @@ HoneySQL not to do that. There are two possible approaches:
 
 The code example herein assume:
 ```clojure
+(refer-clojure :exclude '[update set])
 (require '[honey.sql :as sql]
          '[honey.sql.helpers :refer [select from where
                                      update set

@@ -4,7 +4,7 @@
  :aliases
  {;; for help: clojure -A:deps -T:build help/doc
   :build {:deps {babashka/fs {:mvn/version "0.0.5"}
-                 com.github.lread/test-doc-blocks {:mvn/version "1.0.137-alpha"}
+                 com.github.lread/test-doc-blocks {:mvn/version "1.0.146-alpha"}
                  io.github.seancorfield/build-clj {:git/tag "v0.1.0" :git/sha "fe2d586"}}
           :ns-default build}
 

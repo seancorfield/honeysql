@@ -124,6 +124,7 @@ There are helpers for both `filter` and `within-group`. Be careful with `filter`
 since it shadows `clojure.core/filter`:
 
 ```clojure
+(refer-clojure :exclude '[filter])
 (require '[honey.sql.helpers :refer [select filter within-group from order-by where]])
 
 (sql/format (-> (select :a :b [(filter :%count.* (where :< :x 100)) :c]

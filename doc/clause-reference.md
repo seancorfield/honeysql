@@ -16,6 +16,7 @@ DDL clauses are listed first, followed by SQL clauses.
 
 The examples herein assume:
 ```clojure
+(refer-clojure :exclude '[partition-by])
 (require '[honey.sql :as sql]
          '[honey.sql.helpers :refer [select from join-by left-join join
                                      where order-by over partition-by window]])
