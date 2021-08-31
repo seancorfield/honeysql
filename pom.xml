@@ -34,9 +34,6 @@
       <version>1.9.0</version>
     </dependency>
   </dependencies>
-  <build>
-    <sourceDirectory>src</sourceDirectory>
-  </build>
   <repositories>
     <repository>
       <id>clojars</id>
@@ -47,6 +44,9 @@
       <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
     </repository>
   </repositories>
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+  </build>
   <distributionManagement>
     <repository>
       <id>clojars</id>
