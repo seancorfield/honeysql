@@ -15,7 +15,7 @@ jobs:
           distribution: 'adopt'
           java-version: ${{ matrix.java }}
           cache: 'maven'
-      - name: Clojure CLI
+      - name: Clojure CLI 1.10.3.933
         uses: DeLaGuardo/setup-clojure@master
         with:
           tools-deps: '1.10.3.933'
