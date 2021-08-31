@@ -35,5 +35,5 @@
                               "-c" "{:warnings,{:single-segment-namespace,false}}"
                               "-d" "target/test-doc-blocks/test"]}
 
-  :eastwood {:extra-deps {jonase/eastwood {:mvn/version "0.5.1"}}
+  :eastwood {:extra-deps {jonase/eastwood {:mvn/version "0.9.9"}}
              :main-opts ["-m" "eastwood.lint" "{:source-paths,[\"src\"]}"]}}}

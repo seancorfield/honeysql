@@ -25,6 +25,7 @@
     <url>https://github.com/seancorfield/honeysql</url>
     <connection>scm:git:git://github.com/seancorfield/honeysql.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/seancorfield/honeysql.git</developerConnection>
+    <tag>TAG</tag>
   </scm>
   <dependencies>
     <dependency>
