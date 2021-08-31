@@ -1,5 +1,8 @@
 # Changes
 
+* 2.0.next in progress
+  * Clean up build/update deps.
+
 * 2.0.783 -- 2021-08-15 (a.k.a "2.0 Gold")
   * Fixes #344 by no longer dropping the qualifier on columns in a `SET` clause _for the `:mysql` dialect only_; the behavior is unchanged for all other dialects.
   * Fixes #340 by making the "hyphen to space" logic more general so _operators_ containing `-` should retain the hyphen without special cases.
