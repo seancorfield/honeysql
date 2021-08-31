@@ -13,16 +13,27 @@
   :master {:override-deps {org.clojure/clojure {:mvn/version "1.11.1-master-SNAPSHOT"}}}
 
   ;; running tests/checks of various kinds:
-  :test ; can also run clojure -X:test
+  :test
   {:extra-paths ["test"]
-   :extra-deps {io.github.cognitect-labs/test-runner
-                {:git/tag "v0.4.0" :git/sha "334f2e2"}}
-   :exec-fn cognitect.test-runner.api/test}
+   :extra-deps  {io.github.cognitect-labs/test-runner
+                 {:git/tag "v0.4.0" :git/sha "334f2e2"}}
+   :exec-fn     cognitect.test-runner.api/test}
 
   ;; various "runners" for tests/CI:
   :cljs {:extra-deps {olical/cljs-test-runner {:mvn/version "3.8.0"}}
          :main-opts ["-m" "cljs-test-runner.main"]}
-  :readme {:extra-deps {seancorfield/readme {:mvn/version "1.0.16"}}
-           :main-opts ["-m" "seancorfield.readme"]}
+
+  :gen-doc-tests {:replace-paths ["build"]
+                  :extra-deps {babashka/fs {:mvn/version "0.0.5"}
+                               com.github.lread/test-doc-blocks {:mvn/version "1.0.146-alpha"}}
+                  :main-opts ["-m" "honey.gen-doc-tests"]}
+
+  :test-doc {:replace-paths ["src" "target/test-doc-blocks/test"]}
+  :test-doc-clj {:main-opts ["-m" "cognitect.test-runner"
+                             "-d" "target/test-doc-blocks/test"]}
+  :test-doc-cljs {:main-opts ["-m" "cljs-test-runner.main"
+                              "-c" "{:warnings,{:single-segment-namespace,false}}"
+                              "-d" "target/test-doc-blocks/test"]}
+
   :eastwood {:extra-deps {jonase/eastwood {:mvn/version "0.9.9"}}
              :main-opts ["-m" "eastwood.lint" "{:source-paths,[\"src\"]}"]}}}

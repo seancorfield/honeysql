@@ -12,6 +12,8 @@ because `:quoted true` was specified, the literal name of an unqualified,
 single-segment keyword or symbol is used as-is and quoted:
 
 ```clojure
+(require '[honey.sql :as sql])
+
 (sql/format {:select :foo-bar} {:quoted true})
 ;;=> ["SELECT \"foo-bar\""]
 (sql/format {:select :foo-bar} {:dialect :mysql})

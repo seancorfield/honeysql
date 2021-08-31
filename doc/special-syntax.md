@@ -13,6 +13,8 @@ a sequence, and produces `ARRAY[?, ?, ..]` for the elements
 of that sequence (as SQL parameters):
 
 ```clojure
+(require '[honey.sql :as sql])
+
 (sql/format-expr [:array (range 5)])
 ;;=> ["ARRAY[?, ?, ?, ?, ?]" 0 1 2 3 4]
 ```
@@ -36,8 +38,7 @@ may be `:else` (or `'else`) to produce `ELSE`, otherwise
 
 ```clojure
 (sql/format-expr [:case [:< :a 10] "small" [:> :a 100] "big" :else "medium"])
-;;=> ["CASE WHEN a < ? THEN ? WHEN a > ? THEN ? ELSE ? END"
-;;    10 "small" 100 "big" "medium"]
+;; => ["CASE WHEN a < ? THEN ? WHEN a > ? THEN ? ELSE ? END" 10 "small" 100 "big" "medium"]
 ```
 
 ## cast
@@ -76,6 +77,7 @@ SQL entity. This is intended for use in contexts that would
 otherwise produce a sequence of SQL keywords, such as when
 constructing DDL statements.
 
+<!-- :test-doc-blocks/skip -->
 ```clojure
 [:tablespace :quux]
 ;;=> TABLESPACE QUUX
@@ -89,9 +91,9 @@ Intended to be used with regular expression patterns to
 specify the escape characters (if any).
 
 ```clojure
-(format {:select :* :from :foo
-         :where [:similar-to :foo [:escape "bar" [:inline  "*"]]]})
-;;=> ["SELECT * FROM foo WHERE foo SIMILAR TO ? ESCAPE '*'" "bar"]))))
+(sql/format {:select :* :from :foo
+             :where [:similar-to :foo [:escape "bar" [:inline  "*"]]]})
+;;=> ["SELECT * FROM foo WHERE foo SIMILAR TO ? ESCAPE '*'" "bar"]
 ```
 
 ## filter, within-group
@@ -104,34 +106,39 @@ Filter generally expects an aggregate expression and a `WHERE` clause.
 Within group generally expects an aggregate expression and an `ORDER BY` clause.
 
 ```clojure
-(format {:select [:a :b [[:filter :%count.* {:where [:< :x 100]}] :c]
-                  [[:within-group [:percentile_disc [:inline 0.25]]
-                                  {:order-by [:a]}] :inter_max]
-                  [[:within-group [:percentile_cont [:inline 0.25]]
-                                  {:order-by [:a]}] :abs_max]]
-         :from :aa})
-;; newlines added for readability:
-;;=> ["SELECT a, b, COUNT(*) FILTER (WHERE x < ?) AS c,
-;;=>          PERCENTILE_DISC(0.25) WITHIN GROUP (ORDER BY a ASC) AS inter_max,
-;;=>          PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY a ASC) AS abs_max
-;;=>   FROM aa" 100]
+(sql/format {:select [:a :b [[:filter :%count.* {:where [:< :x 100]}] :c]
+                     [[:within-group [:percentile_disc [:inline 0.25]]
+                                     {:order-by [:a]}] :inter_max]
+                     [[:within-group [:percentile_cont [:inline 0.25]]
+                                     {:order-by [:a]}] :abs_max]]
+             :from :aa}
+             {:pretty true})
+;;=> ["
+SELECT a, b, COUNT(*) FILTER (WHERE x < ?) AS c, PERCENTILE_DISC(0.25) WITHIN GROUP (ORDER BY a ASC) AS inter_max, PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY a ASC) AS abs_max
+FROM aa
+"
+100]
 ```
 
 There are helpers for both `filter` and `within-group`. Be careful with `filter`
 since it shadows `clojure.core/filter`:
 
 ```clojure
-(format (-> (select :a :b [(filter :%count.* (where :< :x 100)) :c]
-                    [(within-group [:percentile_disc [:inline 0.25]]
-                                   (order-by :a)) :inter_max]
-                    [(within-group [:percentile_cont [:inline 0.25]]
-                                   (order-by :a)) :abs_max])
-            (from :aa)))
-;; newlines added for readability:
-;;=> ["SELECT a, b, COUNT(*) FILTER (WHERE x < ?) AS c,
-;;=>          PERCENTILE_DISC(0.25) WITHIN GROUP (ORDER BY a ASC) AS inter_max,
-;;=>          PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY a ASC) AS abs_max
-;;=>   FROM aa" 100]
+(refer-clojure :exclude '[filter])
+(require '[honey.sql.helpers :refer [select filter within-group from order-by where]])
+
+(sql/format (-> (select :a :b [(filter :%count.* (where :< :x 100)) :c]
+                        [(within-group [:percentile_disc [:inline 0.25]]
+                                       (order-by :a)) :inter_max]
+                        [(within-group [:percentile_cont [:inline 0.25]]
+                                       (order-by :a)) :abs_max])
+                (from :aa))
+                {:pretty true})
+;;=> ["
+SELECT a, b, COUNT(*) FILTER (WHERE x < ?) AS c, PERCENTILE_DISC(0.25) WITHIN GROUP (ORDER BY a ASC) AS inter_max, PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY a ASC) AS abs_max
+FROM aa
+"
+100]
 ```
 
 ## inline
@@ -214,15 +221,15 @@ by an ordering specifier, which can be an expression or a pair of expression
 and direction (`:asc` or `:desc`):
 
 ```clojure
-(format {:select [[[:array_agg [:order-by :a [:b :desc]]]]] :from :table})
+(sql/format {:select [[[:array_agg [:order-by :a [:b :desc]]]]] :from :table})
 ;;=> ["SELECT ARRAY_AGG(a ORDER BY b DESC) FROM table"]
-(format (-> (select [[:array_agg [:order-by :a [:b :desc]]]])
+(sql/format (-> (select [[:array_agg [:order-by :a [:b :desc]]]])
                 (from :table)))
 ;;=> ["SELECT ARRAY_AGG(a ORDER BY b DESC) FROM table"]
-(format {:select [[[:string_agg :a [:order-by [:inline ","] :a]]]] :from :table})
+(sql/format {:select [[[:string_agg :a [:order-by [:inline ","] :a]]]] :from :table})
 ;;=> ["SELECT STRING_AGG(a, ',' ORDER BY a ASC) FROM table"]
-(format (-> (select [[:string_agg :a [:order-by [:inline ","] :a]]])
-            (from :table)))
+(sql/format (-> (select [[:string_agg :a [:order-by [:inline ","] :a]]])
+                (from :table)))
 ;;=> ["SELECT STRING_AGG(a, ',' ORDER BY a ASC) FROM table"]
 ```
 
@@ -285,7 +292,7 @@ parameters from them:
 (sql/format {:select [:a [[:raw ["@var := " [:inline "foo"]]]]]})
 ;;=> ["SELECT a, @var := 'foo'"]
 (sql/format {:select [:a [[:raw ["@var := " ["foo"]]]]]})
-;;=> ["SELECT a, @var := ?" "foo"]
+;;=> ["SELECT a, @var := (?)" "foo"]
 ```
 
 `:raw` is also supported as a SQL clause for the same reason.
@@ -304,6 +311,7 @@ specifications).
 If no arguments are provided, these render as just SQL
 keywords (uppercase):
 
+<!-- :test-doc-blocks/skip -->
 ```clojure
 [:foreign-key] ;=> FOREIGN KEY
 [:primary-key] ;=> PRIMARY KEY
@@ -311,6 +319,7 @@ keywords (uppercase):
 
 Otherwise, these render as regular function calls:
 
+<!-- :test-doc-blocks/skip -->
 ```clojure
 [:foreign-key :a]    ;=> FOREIGN KEY(a)
 [:primary-key :x :y] ;=> PRIMARY KEY(x, y)
@@ -326,6 +335,7 @@ argument. If two or more arguments are provided, this
 renders as a SQL keyword followed by the first argument,
 followed by the rest as a regular argument list:
 
+<!-- :test-doc-blocks/skip -->
 ```clojure
 [:default]              ;=> DEFAULT
 [:default 42]           ;=> DEFAULT 42
@@ -339,6 +349,7 @@ followed by the rest as a regular argument list:
 These behave like the group above except that if the
 first argument is `nil`, it is omitted:
 
+<!-- :test-doc-blocks/skip -->
 ```clojure
 [:index :foo :bar :quux] ;=> INDEX foo(bar, quux)
 [:index nil :bar :quux]  ;=> INDEX(bar, quux)

@@ -24,8 +24,8 @@ for copying and pasting directly into your SQL tool of choice!
 
 ## Note on code samples
 
-All sample code in this README is automatically run as a unit test using
-[seancorfield/readme](https://github.com/seancorfield/readme).
+Sample code in this documentation is verified via
+[lread/test-doc-blocks](https://github.com/lread/test-doc-blocks).
 
 Some of these samples show pretty-printed SQL: HoneySQL 2.x supports `:pretty true` which inserts newlines between clauses in the generated SQL strings.
 
@@ -37,6 +37,8 @@ HoneySQL 1.x will continue to get critical security fixes but otherwise should b
 
 ## Usage
 
+From Clojure:
+<!-- {:test-doc-blocks/reader-cond :clj} -->
 ```clojure
 (refer-clojure :exclude '[filter for group-by into partition-by set update])
 (require '[honey.sql :as sql]
@@ -48,6 +50,20 @@ HoneySQL 1.x will continue to get critical security fixes but otherwise should b
          ;; helpers that you want to use!
          '[honey.sql.helpers :refer :all :as h]
          ;; so we can still get at clojure.core functions:
+         '[clojure.core :as c])
+```
+
+From ClojureScript, we don't have `:refer :all`. If we want to use `:refer`, we have no choice but to be specific:
+<!-- {:test-doc-blocks/reader-cond :cljs} -->
+```Clojure
+(refer-clojure :exclude '[filter for group-by into partition-by set update])
+(require '[honey.sql :as sql]
+         '[honey.sql.helpers :refer [select select-distinct from
+                                     join left-join right-join
+                                     where for group-by having union
+                                     order-by limit offset values columns
+                                     update insert-into set composite
+                                     delete delete-from truncate] :as h]
          '[clojure.core :as c])
 ```
 
@@ -78,7 +94,8 @@ HoneySQL is a relatively "pure" library, it does not manage your JDBC connection
 or run queries for you, it simply generates SQL strings. You can then pass them
 to a JDBC library, such as [`next.jdbc`](https://github.com/seancorfield/next-jdbc):
 
-```clj
+<!-- :test-doc-blocks/skip -->
+```clojure
 (jdbc/execute! conn (sql/format sqlmap))
 ```
 
@@ -352,7 +369,7 @@ VALUES (?, (?, ?)), (?, (?, ?))
 Updates are possible too:
 
 ```clojure
-(-> (h/update :films)
+(-> (update :films)
     (set {:kind "dramatic"
            :watched [:+ :watched 1]})
     (where [:= :kind "drama"])
@@ -543,9 +560,9 @@ These can be combined to allow more fine-grained control over SQL generation:
 ```
 ```clojure
 call-qualify-map
-=> '{:where [:and [:= :a [:param :baz]] [:= :b [:inline 42]]]
-     :from (:foo)
-     :select [[[:foo :bar]] [[:raw "@var := foo.bar"]]]}
+=> {:where [:and [:= :a [:param :baz]] [:= :b [:inline 42]]]
+    :from (:foo)
+    :select [[[:foo :bar]] [[:raw "@var := foo.bar"]]]}
 ```
 ```clojure
 (sql/format call-qualify-map {:params {:baz "BAZ"}})
@@ -730,7 +747,9 @@ OFFSET ?
 ```
 ```clojure
 ;; Printable and readable
-(= big-complicated-map (read-string (pr-str big-complicated-map)))
+(require '[clojure.edn :as edn])
+
+(= big-complicated-map (edn/read-string (pr-str big-complicated-map)))
 => true
 ```
 

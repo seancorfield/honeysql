@@ -19,17 +19,30 @@ In addition, HoneySQL 2.x contains different namespaces so you can have both ver
 
 ### HoneySQL 1.x
 
+In `deps.edn`:
+<!-- :test-doc-blocks/skip -->
 ```clojure
-;; in deps.edn:
 honeysql {:mvn/version "1.0.461"}
 ;; or, more correctly:
 honeysql/honeysql {:mvn/version "1.0.461"}
+```
 
-;; in use:
+Required as:
+<!-- :test-doc-blocks/skip -->
+```clojure
 (ns my.project
   (:require [honeysql.core :as sql]))
+```
 
-...
+Or if in the REPL:
+<!-- :test-doc-blocks/skip -->
+```clojure
+(require '[honeysql.core :as sq])
+```
+
+In use:
+<!-- :test-doc-blocks/skip -->
+```clojure
   (sql/format {:select [:*] :from [:table] :where [:= :id 1]})
   ;;=> ["SELECT * FROM table WHERE id = ?" 1]
   (sql/format {:select [:*] :from [:table] :where [:= :id 1]} :quoting :mysql)
@@ -47,15 +60,26 @@ Supported Clojure versions: 1.7 and later.
 
 ### HoneySQL 2.x
 
+In `deps.edn`:
+<!-- :test-doc-blocks/skip -->
 ```clojure
-;; in deps.edn:
 com.github.seancorfield/honeysql {:mvn/version "2.0.783"}
+```
 
-;; in use:
+Required as:
+<!-- :test-doc-blocks/skip -->
+```clojure
 (ns my.project
   (:require [honey.sql :as sql]))
+```
 
-...
+Or if in the REPL:
+```clojure
+(require '[honey.sql :as sql])
+```
+
+In use:
+```clojure
   (sql/format {:select [:*] :from [:table] :where [:= :id 1]})
   ;;=> ["SELECT * FROM table WHERE id = ?" 1]
   (sql/format {:select [:*] :from [:table] :where [:= :id 1]} {:dialect :mysql})
@@ -158,7 +182,7 @@ it should have been a function, and in 2.x it is:
 ```clojure
 ;; 1.x: EXISTS should never have been implemented as SQL syntax: it's an operator!
 ;; (sq/format {:exists {:select [:a] :from [:foo]}})
-;;=> ["EXISTS (SELECT a FROM foo)"]
+;; -> ["EXISTS (SELECT a FROM foo)"]
 
 ;; 2.x: select function call with an alias:
 user=> (sql/format {:select [[[:exists {:select [:a] :from [:foo]}] :x]]})

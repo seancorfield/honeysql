@@ -8,12 +8,14 @@ data to a SQL statement (string) and any parameters it needs.
 
 For the Clojure CLI, add the following dependency to your `deps.edn` file:
 
+<!-- :test-doc-blocks/skip -->
 ```clojure
     com.github.seancorfield/honeysql {:mvn/version "2.0.783"}
 ```
 
 For Leiningen, add the following dependency to your `project.clj` file:
 
+<!-- :test-doc-blocks/skip -->
 ```clojure
     [com.github.seancorfield/honeysql "2.0.783"]
 ```
@@ -41,11 +43,9 @@ SQL string as the first element followed by any parameter
 values identified in the SQL expressions:
 
 ```clojure
-(ns my.example
-  (:require [honey.sql :as sql]))
+(require '[honey.sql :as sql])
 
 (sql/format {:select [:*], :from [:table], :where [:= :id 1]})
-;; produces:
 ;;=> ["SELECT * FROM table WHERE id = ?" 1]
 ```
 
@@ -65,7 +65,6 @@ that represents a SQL entity and its alias (where aliases are allowed):
 
 ```clojure
 (sql/format {:select [:t.id [:name :item]], :from [[:table :t]], :where [:= :id 1]})
-;; produces:
 ;;=> ["SELECT t.id, name AS item FROM table AS t WHERE id = ?" 1]
 ```
 
@@ -80,9 +79,10 @@ avoid evaluation:
 
 ```clojure
 (sql/format '{select [t.id [name item]], from [[table t]], where [= id 1]})
-;; or you can use (..) instead of [..] when quoted:
+;;=> ["SELECT t.id, name AS item FROM table AS t WHERE id = ?" 1]
+
+;; or you can use (..) instead of [..] when quoted to produce the same result:
 (sql/format '{select (t.id (name item)), from ((table t)), where (= id 1)})
-;; also produces:
 ;;=> ["SELECT t.id, name AS item FROM table AS t WHERE id = ?" 1]
 ```
 
@@ -91,10 +91,10 @@ keywords (or symbols) and the namespace portion will treated as
 the table name, i.e., `:foo/bar` instead of `:foo.bar`:
 
 ```clojure
+;; notice the following both produce the same result:
 (sql/format {:select [:t/id [:name :item]], :from [[:table :t]], :where [:= :id 1]})
-;; and
+;;=> ["SELECT t.id, name AS item FROM table AS t WHERE id = ?" 1]
 (sql/format '{select [t/id [name item]], from [[table t]], where [= id 1]})
-;; both produce:
 ;;=> ["SELECT t.id, name AS item FROM table AS t WHERE id = ?" 1]
 ```
 
@@ -116,6 +116,7 @@ described in the [Special Syntax](special-syntax.md) section.
 
 Some examples:
 
+<!-- :test-doc-blocks/skip -->
 ```clojure
 [:= :a 42]                              ;=> "a = ?" with a parameter of 42
 [:+ 42 :a :b]                           ;=> "? + a + b" with a parameter of 42
@@ -133,6 +134,7 @@ Another form of special syntax that is treated as function calls
 is keywords or symbols that begin with `%`. Such keywords (or symbols)
 are split at `.` and turned into function calls:
 
+<!-- :test-doc-blocks/skip -->
 ```clojure
 %now     ;=> NOW()
 %count.* ;=> COUNT(*)
@@ -143,6 +145,7 @@ are split at `.` and turned into function calls:
 If you need to reference a table or alias for a column, you can use
 qualified names in a function invocation:
 
+<!-- :test-doc-blocks/skip -->
 ```clojure
 %max.foo/bar ;=> MAX(foo.bar)
 ```
@@ -179,6 +182,7 @@ that are not keywords or symbols are lifted out as positional parameters.
 They are replaced by `?` in the generated SQL string and added to the
 parameter list in order:
 
+<!-- :test-doc-blocks/skip -->
 ```clojure
 [:between :size 10 20] ;=> "size BETWEEN ? AND ?" with parameters 10 and 20
 ```
@@ -195,11 +199,11 @@ call as the `:params` key of the options hash map.
 (sql/format {:select [:*] :from [:table]
              :where [:= :a :?x]}
             {:params {:x 42}})
-["SELECT * FROM table WHERE a = ?" 42]
+;;=> ["SELECT * FROM table WHERE a = ?" 42]
 (sql/format {:select [:*] :from [:table]
              :where [:= :a [:param :x]]}
             {:params {:x 42}})
-["SELECT * FROM table WHERE a = ?" 42]
+;;=> ["SELECT * FROM table WHERE a = ?" 42]
 ```
 
 ## Functional Helpers
@@ -210,15 +214,13 @@ SQL queries with raw Clojure data structures, a
 is also available. These functions are generally variadic and threadable:
 
 ```clojure
-(ns my.example
-  (:require [honey.sql :as sql]
-            [honey.sql.helpers :refer [select from where]]))
+(require '[honey.sql :as sql]
+         '[honey.sql.helpers :refer [select from where]])
 
 (-> (select :t/id [:name :item])
     (from [:table :t])
     (where [:= :id 1])
     (sql/format))
-;; produces:
 ;;=> ["SELECT t.id, name AS item FROM table AS t WHERE id = ?" 1]
 ```
 
@@ -238,7 +240,6 @@ can make it easier to build queries programmatically:
     (where [:= :id 1])
     (select [:name :item])
     (sql/format))
-;; produces:
 ;;=> ["SELECT t.id, name AS item FROM table AS t WHERE id = ?" 1]
 ```
 
@@ -252,7 +253,6 @@ you need to explicitly remove the prior value:
     (dissoc :select)
     (select [:name :item])
     (sql/format))
-;; produces:
 ;;=> ["SELECT name AS item FROM table AS t WHERE id = ?" 1]
 ```
 
@@ -314,6 +314,8 @@ dialect in a `format` call, they will be quoted. If you don't
 specify a dialect in the `format` call, you can specify
 `:quoted true` to have SQL entities quoted.
 
+<!-- Reminder to doc author:
+     Reset dialect to default so other blocks are not affected for test-doc-blocks -->
 ```clojure
 (sql/format '{select (id) from (table)} {:quoted true})
 ;;=> ["SELECT \"id\" FROM \"table\""]
@@ -323,6 +325,11 @@ specify a dialect in the `format` call, you can specify
 ;;=> nil
 (sql/format '{select (id) from (table)} {:quoted true})
 ;;=> ["SELECT [id] FROM [table]"]
+;; and  to the default of :ansi
+(sql/set-dialect! :ansi)
+;;=> nil
+(sql/format '{select (id) from (table)} {:quoted true})
+;;=> ["SELECT \"id\" FROM \"table\""]
 ```
 
 Out of the box, as part of the extended ANSI SQL support,
