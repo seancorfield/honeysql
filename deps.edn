@@ -3,9 +3,8 @@
  :deps {org.clojure/clojure {:mvn/version "1.9.0"}}
  :aliases
  {;; for help: clojure -A:deps -T:build help/doc
-  :build {:deps {babashka/fs {:mvn/version "0.0.5"}
-                 com.github.lread/test-doc-blocks {:mvn/version "1.0.146-alpha"}
-                 io.github.seancorfield/build-clj {:git/tag "v0.1.0" :git/sha "fe2d586"}}
+  :build {:deps {io.github.seancorfield/build-clj
+                 {:git/tag "v0.1.0" :git/sha "fe2d586"}}
           :ns-default build}
 
   ;; versions to test against:
@@ -23,6 +22,11 @@
   ;; various "runners" for tests/CI:
   :cljs {:extra-deps {olical/cljs-test-runner {:mvn/version "3.8.0"}}
          :main-opts ["-m" "cljs-test-runner.main"]}
+
+  :gen-doc-tests {:replace-paths ["build"]
+                  :extra-deps {babashka/fs {:mvn/version "0.0.5"}
+                               com.github.lread/test-doc-blocks {:mvn/version "1.0.146-alpha"}}
+                  :main-opts ["-m" "honey.gen-doc-tests"]}
 
   :test-doc {:replace-paths ["src" "target/test-doc-blocks/test"]}
   :test-doc-clj {:main-opts ["-m" "cognitect.test-runner"
