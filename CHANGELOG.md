@@ -1,6 +1,7 @@
 # Changes
 
 * 2.0.next in progress
+  * Switch from `readme` to `test-doc-blocks` so all documentation is tested!
   * Clean up build/update deps.
 
 * 2.0.783 -- 2021-08-15 (a.k.a "2.0 Gold")

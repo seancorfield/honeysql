@@ -1,12 +1,13 @@
 (ns build
   "HoneySQL's build script.
 
-  clojure -T:build run-tests
-  clojure -T:build run-tests :aliases '[:master]'
+  clojure -T:build ci
 
   clojure -T:build run-doc-tests :aliases '[:cljs]'
 
-  clojure -T:build ci
+  Run tests:
+  clojure -X:test
+  clojure -X:test:master
 
   For more information, run:
 
@@ -38,8 +39,8 @@
                        (-> [:test-doc]
                            (into aliases)
                            (into (if (some #{:cljs} aliases)
-                             [:test-doc-cljs]
-                             [:test-doc-clj])))))
+                                   [:test-doc-cljs]
+                                   [:test-doc-clj])))))
   opts)
 
 (defn ci "Run the CI pipeline of tests (and build the JAR)." [opts]
