@@ -10,11 +10,11 @@ jobs:
         java: [ '8', '11', '14', '15', '16', '17-ea' ]
     steps:
       - uses: actions/checkout@v2
-      - name: Setup Java
-        uses: actions/setup-java@v1
+      - uses: actions/setup-java@v2
         with:
           java-version: ${{ matrix.java }}
-      - name: Setup Clojure
+          cache: 'maven'
+      - name: Clojure CLI
         uses: DeLaGuardo/setup-clojure@master
         with:
           tools-deps: '1.10.3.933'
