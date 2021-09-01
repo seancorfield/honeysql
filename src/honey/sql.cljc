@@ -380,8 +380,8 @@
 (defn- format-selects [k xs]
   (format-selects-common
    (sql-kw k)
-   (#{:select :select-distinct :from :window
-      'select 'select-distinct 'from 'window}
+   (#{:select :select-distinct :from :window :delete-from
+      'select 'select-distinct 'from 'window 'delete-from}
     k)
    xs))
 
