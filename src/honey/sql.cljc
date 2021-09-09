@@ -220,18 +220,13 @@
                       (if *quoted-snake* name-_ name)
                       name-_)
         quote-fn    (if (or *quoted* (string? e)) (:quote *dialect*) identity)
-        [table col] (if-let [n (when-not (or drop-ns (string? e))
+        parts       (if-let [n (when-not (or drop-ns (string? e))
                                  (namespace-_ e))]
                       [n (col-fn e)]
                       (if aliased
-                        [nil (col-fn e)]
-                        (let [[t c] (str/split (col-fn e) #"\.")]
-                          (if c [t c] [nil t]))))
-        entity      (cond->> col
-                      (not= "*" col)
-                      (quote-fn)
-                      table
-                      (str (quote-fn table) "."))
+                        [(col-fn e)]
+                        (str/split (col-fn e) #"\.")))
+        entity      (str/join "." (map #(cond-> % (not= "*" %) (quote-fn)) parts))
         suspicious #";"]
     (when-not *allow-suspicious-entities*
       (when (re-find suspicious entity)
@@ -743,8 +738,9 @@
         (if (sequential? table)
           table
           [table])
-        coll (take-while ident? params)
-        opts (drop-while ident? params)
+        tab? #(or (ident? %) (string? %))
+        coll (take-while tab? params)
+        opts (drop-while tab? params)
         ine  (last coll)
         [prequel table ine]
         (if (= :if-not-exists (sym->kw ine))
