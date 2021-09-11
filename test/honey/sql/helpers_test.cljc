@@ -865,3 +865,14 @@
            {:with [[:a]],
             :insert-into [[:quux [:x :y]]
                           {:select [:id], :from [:table]}]}))))
+
+(deftest issue-355-multiple-add-column-test
+  (testing "the first column clause is not wrapped into a vector (backward compatible)"
+    (is (= {:add-column [:a :string]}
+           (add-column :a :string))))
+
+  (testing "subsequent calls conj the clause into a vector"
+    (is (= {:add-column [[:a :string] [:b :string] [:c :string]]}
+           (-> {:add-column [:a :string]}
+               (add-column :b :string)
+               (add-column :c :string))))))

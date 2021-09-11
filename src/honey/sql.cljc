@@ -801,7 +801,10 @@
         ")")])
 
 (defn- format-add-item [k spec]
-  [(str (sql-kw k) " " (format-single-column spec))])
+  ;; if there are several column clauses
+  (if (sequential? (first spec))
+    [(str/join ", " (map #(str (sql-kw k) " " (format-single-column %)) spec))]
+    [(str (sql-kw k) " " (format-single-column spec))]))
 
 (defn- format-rename-item [k [x y]]
   [(str (sql-kw k) " " (format-entity x) " TO " (format-entity y))])

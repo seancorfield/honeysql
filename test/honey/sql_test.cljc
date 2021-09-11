@@ -820,3 +820,13 @@ ORDER BY id = ? DESC
            (format {:select :foo :from :bar
                     :offset 20}
                    {:dialect :sqlserver})))))
+
+(deftest issue-355-multiple-alter-columns-test
+  (testing "alter table add single column"
+    (is (= ["ALTER TABLE t ADD COLUMN a STRING"]
+           (format {:alter-table :t :add-column [:a :string]})))
+    (is (= ["ALTER TABLE t ADD COLUMN a STRING"]
+           (format {:alter-table :t :add-column [[:a :string]]}))))
+  (testing "alter table add multiple columns"
+    (is (= ["ALTER TABLE t ADD COLUMN a STRING, ADD COLUMN b STRING NOT NULL"]
+           (format {:alter-table :t :add-column [[:a :string] [:b :string [:not nil]]]})))))

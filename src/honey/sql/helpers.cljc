@@ -68,10 +68,24 @@
           (simplify-logic))
       current)))
 
+(defn- one-then-many-merge
+  "Merge for add-column.
+  The clause supports both single and multiple columns statements
+  (we keep the single case to ensure retro-compability).
+  the first add-column will add the column args directly into the key
+  and subsequent calls will transform it into a vector of column args"
+  [current args]
+  (if current
+    (if (sequential? (first current))
+      (conj current args)
+      [current args])
+    args))
+
 (def ^:private special-merges
   "Identify the conjunction merge clauses."
-  {:where  #'conjunction-merge
-   :having #'conjunction-merge})
+  {:where      #'conjunction-merge
+   :having     #'conjunction-merge
+   :add-column #'one-then-many-merge})
 
 (defn- helper-merge [data k args]
   (if-let [merge-fn (special-merges k)]
