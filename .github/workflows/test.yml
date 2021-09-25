@@ -18,7 +18,7 @@ jobs:
       - name: Clojure CLI
         uses: DeLaGuardo/setup-clojure@master
         with:
-          tools-deps: '1.10.3.967'
+          tools-deps: '1.10.3.986'
       - name: Run Tests
         run: clojure -T:build ci
       - name: Check cljdoc.edn

@@ -74,6 +74,18 @@ to achieve that:
 ;;=> ["SELECT * FROM table WHERE x <=> ?" 42]
 ```
 
+### PostgreSQL Operators
+
+A number of PostgreSQL operators contain `@` which is not legal in a Clojure keyword or symbol (as literal syntax). The recommendation is to `def` your own name for these
+operators, using `at` in place of `@`, with an explicit call to `keyword` (or `symbol`), and then use that `def`'d name when registering new operators and when writing
+your DSL expressions:
+
+```clojure
+(def <at (keyword "<@"))
+(sql/register-op! <at)
+;; and use it in expressions: [<at :submitted [:range :begin :end]]
+```
+
 ## Registering a New Function (Special Syntax)
 
 `honey.sql/register-fn!` accepts a keyword (or a symbol)

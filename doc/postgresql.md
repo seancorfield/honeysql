@@ -10,6 +10,20 @@ Everything that the nilenso library provided (in 0.4.112) is implemented
 directly in HoneySQL 2.x although a few things have a
 slightly different syntax.
 
+## Operators with @
+
+A number of PostgreSQL operators contain `@` which is not legal in a Clojure keyword or symbol (as literal syntax). The recommendation is to `def` your own name for these
+operators, using `at` in place of `@`, with an explicit call to `keyword` (or `symbol`), and then use that `def`'d name when registering new operators and when writing
+your DSL expressions:
+
+```clojure
+(def <at (keyword "<@"))
+;; then register it: (sql/register-op! <at)
+;; and use it in expressions: [<at :submitted [:range :begin :end]]
+```
+
+## JSON/JSONB
+
 If you are using JSON with PostgreSQL, you will probably try to pass Clojure
 data structures as values into your HoneySQL DSL -- but HoneySQL will see those
 vectors as function calls and hash maps as SQL statements, so you need to tell
@@ -18,7 +32,9 @@ HoneySQL not to do that. There are two possible approaches:
 1. Use named parameters (e.g., `[:param :myval]`) instead of having the values directly in the DSL structure and then pass `{:params {:myval some-json}}` as part of the options in the call to `format`, or
 2. Use `[:lift ..]` wrapped around any structured values which tells HoneySQL not to interpret the vector or hash map value as a DSL: `[:lift some-json]`.
 
-The code example herein assume:
+## Code Examples
+
+The code examples herein assume:
 ```clojure
 (refer-clojure :exclude '[update set])
 (require '[honey.sql :as sql]

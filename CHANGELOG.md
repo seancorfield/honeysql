@@ -1,6 +1,7 @@
 # Changes
 
 * 2.0.next in progress
+  * Address #364 by recommending how to handle PostgreSQL operators that contain `@`.
   * Support `AS` aliasing in `DELETE FROM`.
   * Switch from `readme` to `test-doc-blocks` so all documentation is tested!
   * Clean up build/update deps.
