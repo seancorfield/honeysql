@@ -2,6 +2,7 @@
 
 * 2.0.next in progress
   * Address #364 by recommending how to handle PostgreSQL operators that contain `@`.
+  * Fix #363 by aligning more closely the semantics of `:inline` syntax with the `:inline true` option. A side effect of this is that `[:inline [:param :foo]]` will now (correctly) inline the value of the parameter `:foo` whereas it previously produced `PARAMS SOURCE`. In addition, inlining has been extended to vector values, so `[:inline ["a" "b" "c"]]` will now produce `('a', 'b', 'c')` and `[:inline [:lift ["a" "b" "c"]]]` will now produce `['a', 'b', 'c']` which is what people seemed to expect (the behavior was previously unspecified).
   * Support `AS` aliasing in `DELETE FROM`.
   * Switch from `readme` to `test-doc-blocks` so all documentation is tested!
   * Clean up build/update deps.

@@ -208,6 +208,7 @@
     (nil? x)     "NULL"
     (string? x)  (str \' (str/replace x "'" "''") \')
     (ident? x)   (sql-kw x)
+    (vector? x)  (str "[" (str/join ", " (map #'sqlize-value x)) "]")
     :else        (str x)))
 
 (defn format-entity
@@ -1144,9 +1145,8 @@
     :filter expr-clause-pairs
     :inline
     (fn [_ [x]]
-      (if (sequential? x)
-        [(str/join " " (map #'sqlize-value x))]
-        [(sqlize-value x)]))
+      (binding [*inline* true]
+        (format-expr x)))
     :interval
     (fn [_ [n units]]
       (let [[sql & params] (format-expr n)]

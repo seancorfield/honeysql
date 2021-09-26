@@ -12,7 +12,7 @@
   For more information, run:
 
   clojure -A:deps -T:build help/doc"
-
+  (:refer-clojure :exclude [test])
   (:require [clojure.tools.build.api :as b]
             [org.corfield.build :as bb]))
 
@@ -42,6 +42,11 @@
                                    [:test-doc-cljs]
                                    [:test-doc-clj])))))
   opts)
+
+(defn test "Run basic tests." [opts]
+  (-> opts
+      (assoc :aliases [:1.10])
+      (bb/run-tests)))
 
 (defn ci "Run the CI pipeline of tests (and build the JAR)." [opts]
   (-> opts
