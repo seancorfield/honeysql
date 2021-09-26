@@ -23,7 +23,8 @@
   * `register-fn!` -- register a new function call (or special syntax)
         formatter.
   * `register-op!` -- register a new operator formatter.
-  * `set-dialect!` -- set the default dialect to be used for formatting.
+  * `set-dialect!` -- set the default dialect to be used for formatting,
+        and optionally set a global `:quoted` option.
   * `sql-kw` -- turns a Clojure keyword (or symbol) into SQL code (makes
         it uppercase and replaces - with space). "
   (:refer-clojure :exclude [format])
@@ -97,6 +98,7 @@
 
 ; should become defonce
 (def ^:private default-dialect (atom (:ansi dialects)))
+(def ^:private default-quoted (atom nil))
 
 (def ^:private ^:dynamic *dialect* nil)
 ;; nil would be a better default but that makes testing individual
@@ -1323,9 +1325,12 @@
                                 @current-clause-order)
                *inline*  (when (contains? opts :inline)
                            (:inline opts))
-               *quoted*  (if (contains? opts :quoted)
-                           (:quoted opts)
-                           dialect?)
+               *quoted*  (cond (contains? opts :quoted)
+                               (:quoted opts)
+                               dialect?
+                               true
+                               :else
+                               @default-quoted)
                *quoted-snake* (when (contains? opts :quoted-snake)
                                 (:quoted-snake opts))
                *params* (:params opts)]
@@ -1337,11 +1342,15 @@
 
   Can be: `:ansi` (the default), `:mysql`, `:oracle`, or `:sqlserver`.
 
+  Can optionally accept `:quoted true` (or `:quoted false`) to set the
+  default global quoting strategy.
+
   Dialects are always applied to the base order to create the current order."
-  [dialect]
+  [dialect & {:keys [quoted]}]
   (reset! default-dialect (get dialects (check-dialect dialect)))
   (when-let [f (:clause-order-fn @default-dialect)]
-    (reset! current-clause-order (f @base-clause-order))))
+    (reset! current-clause-order (f @base-clause-order)))
+  (reset! default-quoted quoted))
 
 (defn clause-order
   "Return the current order that known clauses will be applied when

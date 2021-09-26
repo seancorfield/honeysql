@@ -325,7 +325,15 @@ specify a dialect in the `format` call, you can specify
 ;;=> nil
 (sql/format '{select (id) from (table)} {:quoted true})
 ;;=> ["SELECT [id] FROM [table]"]
-;; and  to the default of :ansi
+;; you can also choose to enable quoting globally
+;; when you set a dialect:
+(sql/set-dialect! :mysql :quoted true)
+(sql/format '{select (id) from (table)})
+;;=> ["SELECT `id` FROM `table`"]
+;; and opt out for a specific call:
+(sql/format '{select (id) from (table)} {:quoted false})
+;;=> ["SELECT id FROM table"]
+;; and reset back to the default of :ansi
 (sql/set-dialect! :ansi)
 ;;=> nil
 (sql/format '{select (id) from (table)} {:quoted true})
