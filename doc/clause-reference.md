@@ -18,8 +18,8 @@ The examples herein assume:
 ```clojure
 (refer-clojure :exclude '[partition-by])
 (require '[honey.sql :as sql]
-         '[honey.sql.helpers :refer [select from join-by left-join join
-                                     where order-by over partition-by window]])
+         '[honey.sql.helpers :as h :refer [select from join-by left-join join
+                                           where order-by over partition-by window]])
 ```
 
 # DDL Clauses
@@ -87,6 +87,15 @@ user=> (sql/format {:alter-table :fruit
 ["ALTER TABLE fruit ADD UNIQUE(color, appearance)"]
 user=> (sql/format {:alter-table :fruit :drop-index :look})
 ["ALTER TABLE fruit DROP INDEX look"]
+```
+
+You can use `:add-index` to add a primary key to an existing table, as follows:
+
+```clojure
+user=> (-> (h/alter-table :fruit)
+           (h/add-index :primary-key :id)
+           (sql/format))
+["ALTER TABLE fruit ADD PRIMARY KEY(id)"]
 ```
 
 ### rename-table
