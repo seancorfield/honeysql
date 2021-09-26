@@ -17,7 +17,9 @@
             [org.corfield.build :as bb]))
 
 (def lib 'com.github.seancorfield/honeysql)
-(def version (format "2.0.%s" (b/git-count-revs nil)))
+(defn- the-version [patch] (format "2.0.%s" patch))
+(def version (the-version (b/git-count-revs nil)))
+(def snapshot (the-version "999-SNAPSHOT"))
 
 (defn eastwood "Run Eastwood." [opts]
   (-> opts (bb/run-task [:eastwood])))
@@ -51,7 +53,7 @@
 (defn ci "Run the CI pipeline of tests (and build the JAR)." [opts]
   (-> opts
       (bb/clean)
-      (assoc :lib lib :version version)
+      (assoc :lib lib :version (if (:snapshot opts) snapshot version))
       (as-> opts
             (reduce (fn [opts alias]
                       (run-doc-tests (assoc opts :aliases [alias])))
@@ -68,5 +70,5 @@
 
 (defn deploy "Deploy the JAR to Clojars." [opts]
   (-> opts
-      (assoc :lib lib :version version)
+      (assoc :lib lib :version (if (:snapshot opts) snapshot version))
       (bb/deploy)))

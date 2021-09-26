@@ -1,0 +1,48 @@
+name: Clojure CI
+
+on: [push]
+
+jobs:
+  build-and-snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: '0'
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '11'
+          cache: 'maven'
+      - name: Setup Clojure
+        uses: DeLaGuardo/setup-clojure@master
+        with:
+          tools-deps: '1.10.3.986'
+      - name: Run Tests
+        run: clojure -T:build ci :snapshot true
+      - name: Deploy Snapshot
+        run: clojure -T:build deploy :snapshot true
+        env:
+          CLOJARS_PASSWORD: ${{secrets.DEPLOY_TOKEN}}
+          CLOJARS_USERNAME: ${{secrets.DEPLOY_USERNAME}}
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [ '8', '14', '15', '16', '17' ]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: ${{ matrix.java }}
+          cache: 'maven'
+      - name: Clojure CLI
+        uses: DeLaGuardo/setup-clojure@master
+        with:
+          tools-deps: '1.10.3.986'
+      - name: Run Tests
+        run: clojure -T:build ci
+      - name: Check cljdoc.edn
+        run: curl -fsSL https://raw.githubusercontent.com/cljdoc/cljdoc/master/script/verify-cljdoc-edn | bash -s doc/cljdoc.edn
