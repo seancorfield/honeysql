@@ -842,9 +842,13 @@ row values or a sequence of sequences, also representing row
 values.
 
 In the former case, all of the rows are augmented to have
-`nil` values for any missing keys (columns). In the latter,
+either `NULL` or `DEFAULT` values for any missing keys (columns).
+By default, `NULL` is used but you can specify a set of columns
+to get `DEFAULT` values, via the `:values-default-columns` option.
+In the latter case -- a sequence of sequences --
 all of the rows are padded to the same length by adding `nil`
-values if needed.
+values if needed (since `:values` does not know how or if column
+names are being used in this case).
 
 ```clojure
 user=> (sql/format {:insert-into :table
@@ -855,7 +859,15 @@ user=> (sql/format '{insert-into table
                              {id 2}
                              {name "Extra"})})
 ["INSERT INTO table (id, name) VALUES (?, ?), (?, NULL), (NULL, ?)" 1 "Sean" 2 "Extra"]
+user=> (sql/format '{insert-into table
+                     values ({id 1 name "Sean"}
+                             {id 2}
+                             {name "Extra"})}
+                   {:values-default-columns #{'id}})
+["INSERT INTO table (id, name) VALUES (?, ?), (?, NULL), (DEFAULT, ?)" 1 "Sean" 2 "Extra"]
 ```
+
+> Note: the `:values-default-columns` option must match how the columns are specified, i.e., as symbols or keywords.
 
 ## on-conflict, on-constraint, do-nothing, do-update-set
 

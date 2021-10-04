@@ -4,7 +4,7 @@ SQL as Clojure data structures. Build queries programmatically -- even at runtim
 
 ## Build
 
-[![Clojars Project](https://clojars.org/com.github.seancorfield/honeysql/latest-version.svg)](https://clojars.org/com.github.seancorfield/honeysql) [![cljdoc badge](https://cljdoc.org/badge/com.github.seancorfield/honeysql?2.0.813)](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT)
+[![Clojars Project](https://clojars.org/com.github.seancorfield/honeysql/latest-version.svg)](https://clojars.org/com.github.seancorfield/honeysql) [![cljdoc badge](https://cljdoc.org/badge/com.github.seancorfield/honeysql?2.1.818)](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT)
 
 This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINOR provide some relative indication of the size of the change, but do not follow semantic versioning. In general, all changes endeavor to be non-breaking (by moving to new names rather than by breaking existing names). COMMITS is an ever-increasing counter of commits since the beginning of this repository.
 
@@ -273,7 +273,37 @@ INSERT INTO properties
 ```
 
 The set of columns used in the insert will be the union of all column names from all
-the hash maps: columns that are missing from any rows will have `NULL` as their value.
+the hash maps: columns that are missing from any rows will have `NULL` as their value
+unless you specify those columns in the `:values-default-columns` option, which takes
+a set of column names that should get the value `DEFAULT` instead of `NULL`:
+
+
+```clojure
+(-> (insert-into :properties)
+    (values [{:name "John" :surname "Smith" :age 34}
+             {:name "Andrew" :age 12}
+             {:name "Jane" :surname "Daniels"}])
+    (sql/format {:pretty true}))
+=> ["
+INSERT INTO properties
+(name, surname, age) VALUES (?, ?, ?), (?, NULL, ?), (?, ?, NULL)
+"
+"John" "Smith" 34
+"Andrew" 12
+"Jane" "Daniels"]
+(-> (insert-into :properties)
+    (values [{:name "John" :surname "Smith" :age 34}
+             {:name "Andrew" :age 12}
+             {:name "Jane" :surname "Daniels"}])
+    (sql/format {:pretty true :values-default-columns #{:age}}))
+=> ["
+INSERT INTO properties
+(name, surname, age) VALUES (?, ?, ?), (?, NULL, ?), (?, ?, DEFAULT)
+"
+"John" "Smith" 34
+"Andrew" 12
+"Jane" "Daniels"]
+```
 
 ### Nested subqueries
 
