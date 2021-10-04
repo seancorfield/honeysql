@@ -1256,7 +1256,9 @@
                                    (if (= := op) " IS NULL" " IS NOT NULL"))
                               (cond-> nested
                                 (as-> s (str "(" s ")")))
-                              (vector))
+                              (vector)
+                              (into p1)
+                              (into p2))
                           (-> (str s1 " " (sql-kw op) " " s2)
                               (cond-> nested
                                 (as-> s (str "(" s ")")))
