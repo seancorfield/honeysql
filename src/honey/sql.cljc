@@ -108,6 +108,7 @@
 (def ^:private ^:dynamic *quoted-snake* nil)
 (def ^:private ^:dynamic *inline* nil)
 (def ^:private ^:dynamic *params* nil)
+(def ^:private ^:dynamic *values-default-columns* nil)
 ;; there is no way, currently, to enable suspicious characters
 ;; in entities; if someone complains about this check, an option
 ;; can be added to format to turn this on:
@@ -621,7 +622,15 @@
                          (if params' (into params params') params')])
                       [[] []]
                       (map (fn [m]
-                             (format-expr-list (map #(get m %) cols)))
+                             (format-expr-list
+                              (map #(get m
+                                         %
+                                         ;; issue #366: use NULL or DEFAULT
+                                         ;; for missing column values:
+                                         (if (contains? *values-default-columns* %)
+                                           [:default]
+                                           nil))
+                                   cols)))
                            xs))]
           (into [(str "("
                       (str/join ", "
@@ -1330,7 +1339,8 @@
                                @default-quoted)
                *quoted-snake* (when (contains? opts :quoted-snake)
                                 (:quoted-snake opts))
-               *params* (:params opts)]
+               *params* (:params opts)
+               *values-default-columns* (:values-default-columns opts)]
        (mapv #(unwrap % opts) (format-dsl data opts)))))
   ([data k v & {:as opts}] (format data (assoc opts k v))))
 
