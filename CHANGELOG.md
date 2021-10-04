@@ -1,5 +1,9 @@
 # Changes
 
+* 2.0.next in progress
+  * Fix #367 by supporting parameters in subexpressions around `IS NULL` / `IS NOT NULL` tests.
+  * Update `build-clj` to v0.5.0.
+
 * 2.0.813 -- 2021-09-25
   * Address #364 by recommending how to handle PostgreSQL operators that contain `@`.
   * Fix #363 and #362 by aligning more closely the semantics of `:inline` syntax with the `:inline true` option. A side effect of this is that `[:inline [:param :foo]]` will now (correctly) inline the value of the parameter `:foo` whereas it previously produced `PARAMS SOURCE`. In addition, inlining has been extended to vector values, so `[:inline ["a" "b" "c"]]` will now produce `('a', 'b', 'c')` and `[:inline [:lift ["a" "b" "c"]]]` will now produce `['a', 'b', 'c']` which is what people seemed to expect (the behavior was previously unspecified).

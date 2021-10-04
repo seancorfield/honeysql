@@ -1249,20 +1249,17 @@
                           [s1 & p1]   (format-expr a {:nested true})
                           [s2 & p2]   (format-expr b {:nested true})
                           op          (get infix-aliases op op)]
-                        (if (and (#{:= :<>} op) (or (nil? a) (nil? b)))
-                          (-> (str (if (nil? a)
-                                     (if (nil? b) "NULL" s2)
-                                     s1)
-                                   (if (= := op) " IS NULL" " IS NOT NULL"))
-                              (cond-> nested
-                                (as-> s (str "(" s ")")))
-                              (vector))
-                          (-> (str s1 " " (sql-kw op) " " s2)
-                              (cond-> nested
-                                (as-> s (str "(" s ")")))
-                              (vector)
-                              (into p1)
-                              (into p2)))))
+                      (-> (if (and (#{:= :<>} op) (or (nil? a) (nil? b)))
+                            (str (if (nil? a)
+                                   (if (nil? b) "NULL" s2)
+                                   s1)
+                                 (if (= := op) " IS NULL" " IS NOT NULL"))
+                            (str s1 " " (sql-kw op) " " s2))
+                          (cond-> nested
+                            (as-> s (str "(" s ")")))
+                          (vector)
+                          (into p1)
+                          (into p2))))
                   (contains? #{:in :not-in} op)
                   (let [[sql & params] (format-in op (rest expr))]
                     (into [(if nested (str "(" sql ")") sql)] params))
