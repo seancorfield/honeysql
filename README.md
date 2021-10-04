@@ -471,7 +471,7 @@ Queries may be combined with a `:union`, `:union-all`, `:intersect` or `:except`
 ```clojure
 (sql/format {:union [(-> (select :*) (from :foo))
                      (-> (select :*) (from :bar))]})
-=> ["(SELECT * FROM foo) UNION (SELECT * FROM bar)"]
+=> ["SELECT * FROM foo UNION SELECT * FROM bar"]
 ```
 
 There are also helpers for each of those:
@@ -479,7 +479,7 @@ There are also helpers for each of those:
 ```clojure
 (sql/format (union (-> (select :*) (from :foo))
                    (-> (select :*) (from :bar))))
-=> ["(SELECT * FROM foo) UNION (SELECT * FROM bar)"]
+=> ["SELECT * FROM foo UNION SELECT * FROM bar"]
 ```
 
 

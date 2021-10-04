@@ -2,6 +2,7 @@
 
 * 2.0.next in progress
   * Fix #367 by supporting parameters in subexpressions around `IS NULL` / `IS NOT NULL` tests.
+  * Fix #365 -- a regression from 1.x -- where subclauses for `UNION`, `EXCEPT`, etc were incorrectly parenthesized.
   * Update `build-clj` to v0.5.0.
 
 * 2.0.813 -- 2021-09-25

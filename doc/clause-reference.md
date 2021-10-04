@@ -298,7 +298,7 @@ between those clauses.
 ```clojure
 user=> (sql/format '{union [{select (id,status) from (table-a)}
                             {select (id,(event status) from (table-b))}]})
-["(SELECT id, status FROM table_a) UNION (SELECT id, event AS status, from, table_b)"]
+["SELECT id, status FROM table_a UNION SELECT id, event AS status, from, table_b"]
 ```
 
 ## select, select-distinct
