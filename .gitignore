@@ -12,6 +12,7 @@
 .lsp/sqlite.db
 .nrepl-history
 .nrepl-port
+.portal
 .project
 .rebel_readline_history
 .settings
