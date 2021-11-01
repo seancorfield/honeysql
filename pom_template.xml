@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.github.seancorfield</groupId>
-  <artifactId>honeysql</artifactId>
-  <version>VERSION</version>
   <name>honeysql</name>
   <description>SQL as Clojure data structures.</description>
   <url>https://github.com/seancorfield/honeysql</url>
@@ -25,33 +22,5 @@
     <url>https://github.com/seancorfield/honeysql</url>
     <connection>scm:git:git://github.com/seancorfield/honeysql.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/seancorfield/honeysql.git</developerConnection>
-    <tag>TAG</tag>
   </scm>
-  <dependencies>
-    <dependency>
-      <groupId>org.clojure</groupId>
-      <artifactId>clojure</artifactId>
-      <version>1.9.0</version>
-    </dependency>
-  </dependencies>
-  <repositories>
-    <repository>
-      <id>clojars</id>
-      <url>https://repo.clojars.org/</url>
-    </repository>
-    <repository>
-      <id>sonatype</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-    </repository>
-  </repositories>
-  <build>
-    <sourceDirectory>src</sourceDirectory>
-  </build>
-  <distributionManagement>
-    <repository>
-      <id>clojars</id>
-      <name>Clojars repository</name>
-      <url>https://clojars.org/repo</url>
-    </repository>
-  </distributionManagement>
 </project>

@@ -66,6 +66,7 @@
                     opts
                     [:cljs :1.9 :1.10 :master]))
       (bb/clean)
+      (assoc :src-pom "pom_template.xml")
       (bb/jar)))
 
 (defn deploy "Deploy the JAR to Clojars." [opts]
