@@ -11,11 +11,19 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: '11'
-          cache: 'maven'
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
           tools-deps: '1.10.3.986'
+      - name: Cache All The Things
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            ~/.clojure
+            ~/.cpcache
+          key: ${{ runner.os }}-${{ hashFiles('**/deps.edn') }}
       - name: Run Tests
         run: clojure -T:build ci :snapshot true
       - name: Deploy Snapshot
@@ -35,11 +43,19 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: ${{ matrix.java }}
-          cache: 'maven'
       - name: Clojure CLI
         uses: DeLaGuardo/setup-clojure@master
         with:
           tools-deps: '1.10.3.986'
+      - name: Cache All The Things
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            ~/.clojure
+            ~/.cpcache
+          key: ${{ runner.os }}-${{ hashFiles('**/deps.edn') }}
       - name: Run Tests
         run: clojure -T:build ci
       - name: Check cljdoc.edn
