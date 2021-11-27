@@ -813,7 +813,9 @@
         ")")])
 
 (defn- format-add-item [k spec]
-  [(str (sql-kw k) " " (format-single-column spec))])
+  (if (contains? #{:if-not-exists 'if-not-exists} (last spec))
+    [(str (sql-kw k) " " (sql-kw :if-not-exists) " " (format-single-column (butlast spec)))]
+    [(str (sql-kw k) " " (format-single-column spec))]))
 
 (defn- format-rename-item [k [x y]]
   [(str (sql-kw k) " " (format-entity x) " TO " (format-entity y))])
@@ -849,7 +851,7 @@
   and removed."
   (atom {:alter-table     #'format-alter-table
          :add-column      #'format-add-item
-         :drop-column     #'format-selector
+         :drop-column     #'format-drop-items
          :modify-column   #'format-add-item
          :rename-column   #'format-rename-item
          ;; so :add-index works with both [:index] and [:unique]

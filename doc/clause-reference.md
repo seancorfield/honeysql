@@ -44,8 +44,14 @@ user=> (sql/format {:alter-table :fruit
                     :add-column [:id :int [:not nil]]})
 ["ALTER TABLE fruit ADD COLUMN id INT NOT NULL"]
 user=> (sql/format {:alter-table :fruit
+                    :add-column [:id :int [:not nil] :if-not-exists]})
+["ALTER TABLE fruit ADD COLUMN IF NOT EXISTS id INT NOT NULL"]
+user=> (sql/format {:alter-table :fruit
                     :drop-column :ident})
 ["ALTER TABLE fruit DROP COLUMN ident"]
+user=> (sql/format {:alter-table :fruit
+                    :drop-column [:if-exists :ident]})
+["ALTER TABLE fruit DROP COLUMN IF EXISTS ident"]
 user=> (sql/format {:alter-table :fruit
                     :modify-column [:id :int :unsigned nil]})
 ["ALTER TABLE fruit MODIFY COLUMN id INT UNSIGNED NULL"]
@@ -63,6 +69,16 @@ user=> (sql/format {:alter-table [:fruit
                                   {:add-column [:id :int [:not nil]]}
                                   {:drop-column :ident}]})
 ["ALTER TABLE fruit ADD COLUMN id INT NOT NULL, DROP COLUMN ident"]
+user=> (sql/format {:alter-table [:fruit
+                                  {:add-column [:id :int [:not nil]]}
+                                  {:add-column [:name [:varchar 32]]}
+                                  {:drop-column :ident}
+                                  {:modify-column [:appearance :text]}]})
+["ALTER TABLE fruit ADD COLUMN id INT NOT NULL, ADD COLUMN name VARCHAR(32), DROP COLUMN ident, MODIFY COLUMN appearance TEXT"]
+user=> (sql/format {:alter-table [:fruit
+                                  {:add-column [:id :int [:not nil] :if-not-exists]}
+                                  {:drop-column [:if-exists :ident]}]})
+["ALTER TABLE fruit ADD COLUMN IF NOT EXISTS id INT NOT NULL, DROP COLUMN IF EXISTS ident"]
 ```
 
 As can be seen above, `:add-column` and `:modify-column`
