@@ -1,7 +1,8 @@
 # Changes
 
 * 2.1.next in progress
-  * Fix #371 by always parenthesizing the operand of `NOT`.
+  * Fix #371 by treating the operand of `NOT` as a nested expression (so it is parenthesized unless it is a simple value).
+  * Fix #370 by **always** parenthesizing the operand of `:nest`.
 
 * 2.1.818 -- 2021-10-04
   * Fix #367 by supporting parameters in subexpressions around `IS NULL` / `IS NOT NULL` tests.
