@@ -868,7 +868,7 @@
          :drop-materialized-view #'format-drop-items
          :refresh-materialized-view (fn [_ x] (format-create :refresh :materialized-view x nil))
          :raw             (fn [_ x] (raw-render x))
-         :nest            (fn [_ x] (format-expr x))
+         :nest            (fn [_ x] (format-expr x {:nested true}))
          :with            #'format-with
          :with-recursive  #'format-with
          :intersect       #'format-on-set-op
@@ -1183,7 +1183,7 @@
       (format-expr x {:nested true}))
     :not
     (fn [_ [x]]
-      (let [[sql & params] (format-expr x)]
+      (let [[sql & params] (format-expr x {:nested true})]
         (into [(str "NOT " sql)] params)))
     :order-by
     (fn [k [e q]]

@@ -1,5 +1,8 @@
 # Changes
 
+* 2.1.next in progress
+  * Fix #371 by always parenthesizing the operand of `NOT`.
+
 * 2.1.818 -- 2021-10-04
   * Fix #367 by supporting parameters in subexpressions around `IS NULL` / `IS NOT NULL` tests.
   * Address #366 by introducing `:values-default-columns` option to control whether missing columns are treated as `NULL` or `DEFAULT` in `:values` clauses with sequences of hash maps.

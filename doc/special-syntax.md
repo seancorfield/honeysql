@@ -210,7 +210,7 @@ in front of it:
 (sql/format-expr [:not nil])
 ;;=> ["NOT NULL"]
 (sql/format-expr [:not [:= :x 42]])
-;;=> ["NOT x = ?" 42]
+;;=> ["NOT (x = ?)" 42]
 ```
 
 ## order-by
