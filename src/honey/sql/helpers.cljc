@@ -1,7 +1,49 @@
 ;; copyright (c) 2020-2021 sean corfield, all rights reserved
 
 (ns honey.sql.helpers
-  "Helper functions for the built-in clauses in honey.sql."
+  "Helper functions for the built-in clauses in honey.sql.
+
+  All helper functions are inherently variadic. Typical
+  usage is threaded, like this:
+
+```
+  (-> (select :a :b :c)
+      (from :table)
+      (where [:= :id 42])
+      (sql/format))
+```
+
+  Therefore all helpers can take an existing DSL expression
+  as their first argument or, if the first argument is not
+  a hash map, an empty DSL is assumed -- an empty hash map.
+  The above is therefore equivalent to:
+
+```
+  (-> {}
+      (select :a :b :c)
+      (from :table)
+      (where [:= :id 42])
+      (sql/format))
+```
+
+  Some of the helper functions here have `:arglists` metadata
+  in an attempt to provide better hints for auto-complete in
+  editors but those `:arglists` _always omit the DSL argument_
+  to avoid duplicating the various argument lists. When you
+  see an auto-complete suggestion like:
+
+    bulk-collect-into [varname] [varname n]
+
+  bear in mind that a DSL hash map can always be threaded in
+  so the following (pseudo) arities are also available:
+
+    bulk-collect-into [dsl varname] [dsl varname n]
+
+  The actual arguments are:
+
+    bulk-collect-info [& args]
+
+  (as they are for all helper functions)."
   (:refer-clojure :exclude [filter for group-by into partition-by set update])
   (:require [clojure.core :as c]
             [honey.sql]))
