@@ -1,6 +1,6 @@
 # Changes
 
-* 2.1.next in progress
+* 2.1.829 -- 2021-11-27
   * Fix #371 by treating the operand of `NOT` as a nested expression (so it is parenthesized unless it is a simple value).
   * Fix #370 by **always** parenthesizing the operand of `:nest`.
   * Address #369 by adding a big clarifying docstring to the `honey.sql.helpers` namespace pointing out that all helper functions are variadic, they are all `[& args]`, some have `:arglists` metadata to provide a more specific usage hint but those _all omit the optional first argument (the DSL hash map)_.
