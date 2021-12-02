@@ -110,10 +110,20 @@
           (simplify-logic))
       current)))
 
+(defn- select-distinct-on-merge
+  "Since the first argument in a group is special, we
+  need to merge that, and then merge the other args."
+  [[c-on & current] [a-on & args]]
+  (-> (c/into (vec c-on) a-on)
+      (vector)
+      (c/into current)
+      (c/into args)))
+
 (def ^:private special-merges
   "Identify the conjunction merge clauses."
-  {:where  #'conjunction-merge
-   :having #'conjunction-merge})
+  {:select-distinct-on #'select-distinct-on-merge
+   :where              #'conjunction-merge
+   :having             #'conjunction-merge})
 
 (defn- helper-merge [data k args]
   (if-let [merge-fn (special-merges k)]
@@ -399,6 +409,12 @@
   {:arglists '([distinct-cols & exprs])}
   [& args]
   (generic :select-distinct-on args))
+
+(comment
+  (= (select-distinct-on [:a :b] :c [:d :dd])
+     (-> (select-distinct-on [:a] :c)
+         (select-distinct-on [:b] [:d :dd])))
+  )
 
 (defn select-top
   "Accepts a TOP expression, followed by any number of

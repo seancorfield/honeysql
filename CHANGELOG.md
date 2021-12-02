@@ -1,5 +1,9 @@
 # Changes
 
+* 2.1.next in progress
+  * Fix #372 by merging `:select-distinct-on` differently.
+  * Update `build-clj` to v0.6.0.
+
 * 2.1.829 -- 2021-11-27
   * Fix #371 by treating the operand of `NOT` as a nested expression (so it is parenthesized unless it is a simple value).
   * Fix #370 by **always** parenthesizing the operand of `:nest`.
