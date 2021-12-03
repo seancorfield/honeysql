@@ -364,7 +364,8 @@ was wrapped in `[:inline `..`]`:
 * everything else is just turned into a string (by calling `str`) and added to the SQL string.
 
 The `:checking` option defaults to `:none`. If `:checking :basic` is
-specified, certain obvious errors -- such as `IN` with an empty collection --
+specified, certain obvious errors -- such as `IN` with an empty collection
+or `SELECT` with an empty list of columns --
 are treated as an error and an exception is thrown. If `:checking :strict`
 is specified, certain dubious constructs -- such as `IN` with a collection
 containing `NULL` values -- are also treated as an error and an exception is

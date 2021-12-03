@@ -372,6 +372,10 @@
                     [(conj sql sql') (if params' (into params params') params)])
                   [[] []]
                   (map #(format-selectable-dsl % {:as as}) xs))]
+      (when-not (= :none *checking*)
+        (when (empty? xs)
+          (throw (ex-info (str prefix " empty column list is illegal")
+                          {:clause (into [prefix] xs)}))))
       (into [(str prefix " " (str/join ", " sqls))] params))
     (let [[sql & params] (format-selectable-dsl xs {:as as})]
       (into [(str prefix " " sql)] params))))
