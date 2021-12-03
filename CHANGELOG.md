@@ -1,6 +1,6 @@
 # Changes
 
-* 2.1.832 -- 2021-12-03
+* 2.1.833 -- 2021-12-03
   * Fix #372 by merging `:select-distinct-on` differently.
   * Add empty column list check for `SELECT` and several other clauses, when `:checking :basic` (or `:strict`) is provided.
   * Update `build-clj` to v0.6.0.
