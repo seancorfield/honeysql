@@ -648,8 +648,8 @@
   (full-join [:table :t] [:= :foo.id :t.foo_id])
 
   Produces:
-  INNER JOIN table ON foo.id = table.foo_id
-  INNER JOIN table AS t ON foo.id = t.foo_id"
+  FULL JOIN table ON foo.id = table.foo_id
+  FULL JOIN table AS t ON foo.id = t.foo_id"
   [& args]
   (generic :full-join args))
 
