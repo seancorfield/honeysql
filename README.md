@@ -19,7 +19,7 @@ Compared to 1.x, HoneySQL 2.x provides a streamlined codebase and a simpler meth
 ## Try HoneySQL Online!
 
 [John Shaffer](https://github.com/john-shaffer) has created this awesome
-[HoneySQL web app](https://www.john-shaffer.com/honeysql/), written in ClojureScript,
+[HoneySQL web app](https://john.shaffe.rs/honeysql/), written in ClojureScript,
 so you can experiment with HoneySQL in a browser, including setting different
 options so you can generate pretty SQL with inline values (via `:inline true`)
 for copying and pasting directly into your SQL tool of choice!
