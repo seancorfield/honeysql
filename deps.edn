@@ -4,7 +4,7 @@
  :aliases
  {;; for help: clojure -A:deps -T:build help/doc
   :build {:deps {io.github.seancorfield/build-clj
-                 {:git/tag "v0.6.0" :git/sha "2451bea"}}
+                 {:git/tag "v0.6.2" :git/sha "97c275a"}}
           :ns-default build}
 
   ;; versions to test against:
@@ -24,8 +24,8 @@
          :main-opts ["-m" "cljs-test-runner.main"]}
 
   :gen-doc-tests {:replace-paths ["build"]
-                  :extra-deps {babashka/fs {:mvn/version "0.0.5"}
-                               com.github.lread/test-doc-blocks {:mvn/version "1.0.146-alpha"}}
+                  :extra-deps {babashka/fs {:mvn/version "0.1.2"}
+                               com.github.lread/test-doc-blocks {:mvn/version "1.0.166-alpha"}}
                   :main-opts ["-m" "honey.gen-doc-tests"]}
 
   :test-doc {:replace-paths ["src" "target/test-doc-blocks/test"]}
@@ -35,5 +35,5 @@
                               "-c" "{:warnings,{:single-segment-namespace,false}}"
                               "-d" "target/test-doc-blocks/test"]}
 
-  :eastwood {:extra-deps {jonase/eastwood {:mvn/version "0.9.9"}}
+  :eastwood {:extra-deps {jonase/eastwood {:mvn/version "1.0.0"}}
              :main-opts ["-m" "eastwood.lint" "{:source-paths,[\"src\"]}"]}}}

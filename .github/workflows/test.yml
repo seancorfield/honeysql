@@ -17,7 +17,7 @@ jobs:
       - name: Clojure CLI
         uses: DeLaGuardo/setup-clojure@master
         with:
-          tools-deps: '1.10.3.986'
+          tools-deps: '1.10.3.1040'
       - name: Cache All The Things
         uses: actions/cache@v2
         with:
