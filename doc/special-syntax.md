@@ -201,6 +201,12 @@ level of parentheses around it:
 
 `:nest` is also supported as a SQL clause for the same reason.
 
+```clojure
+;; BigQuery requires UNION clauses be parenthesized:
+(sql/format {:union-all [{:nest {:select :*}} {:nest {:select :*}}]})
+;;=> ["(SELECT *) UNION ALL (SELECT *)"]
+```
+
 ## not
 
 Accepts a single expression and formats it with `NOT`

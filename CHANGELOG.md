@@ -1,6 +1,7 @@
 # Changes
 
 * 2.1.next in progress
+  * Fix #375 for `:nest` statement.
   * Update test dependencies.
   * Update `build-clj` to v0.6.1.
 

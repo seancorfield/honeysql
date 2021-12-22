@@ -875,8 +875,8 @@
          :refresh-materialized-view (fn [_ x] (format-create :refresh :materialized-view x nil))
          :raw             (fn [_ x] (raw-render x))
          :nest            (fn [_ x]
-                            (let [[sql & params] (format-expr x)]
-                              (into [(str "(" sql ")")] params)))
+                            (let [[sql & params] (format-dsl x {:nested true})]
+                              (into [sql] params)))
          :with            #'format-with
          :with-recursive  #'format-with
          :intersect       #'format-on-set-op
