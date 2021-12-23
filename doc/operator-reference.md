@@ -37,9 +37,31 @@ can simply evaluate to `nil` instead).
 Binary comparison operators. These expect exactly
 two arguments.
 
-The following aliases are also supported:
-* `is` -- an alias for `=`
-* `is-not`, `not=`, `!=` -- aliases for `<>`
+`not=` and `!=` are accepted as aliases for `<>`.
+
+## is, is-not
+
+Binary predicates for `NULL` and Boolean values:
+
+```clojure
+{...
+ :where [:is :id nil]
+ ...}
+;;=> ["...WHERE col IS NULL..."]
+{...
+ :where [:is-not :id nil]
+ ...}
+;;=> ["...WHERE col IS NOT NULL..."]
+{...
+ :where [:is :col true]
+ ...}
+;;=> ["...WHERE col IS TRUE..."]
+{...
+ ;; unlike [:<> :col false], the following will include NULLs:
+ :where [:is-not :col false]
+ ...}
+;;=> ["...WHERE col IS NOT FALSE..."]
+```
 
 ## mod, xor, + - * / % | & ^
 

@@ -14,17 +14,39 @@
                      {:dialect :mysql}))))
 
 (deftest expr-tests
+  ;; special-cased = nil:
   (is (= ["id IS NULL"]
          (sut/format-expr [:= :id nil])))
   (is (= ["id IS NULL"]
          (sut/format-expr [:is :id nil])))
+  (is (= ["id = TRUE"]
+         (sut/format-expr [:= :id true])))
+  (is (= ["id IS TRUE"]
+         (sut/format-expr [:is :id true])))
+  (is (= ["id <> TRUE"]
+         (sut/format-expr [:<> :id true])))
+  (is (= ["id IS NOT TRUE"]
+         (sut/format-expr [:is-not :id true])))
+  (is (= ["id = FALSE"]
+         (sut/format-expr [:= :id false])))
+  (is (= ["id IS FALSE"]
+         (sut/format-expr [:is :id false])))
+  (is (= ["id <> FALSE"]
+         (sut/format-expr [:<> :id false])))
+  (is (= ["id IS NOT FALSE"]
+         (sut/format-expr [:is-not :id false])))
+  ;; special-cased <> nil:
   (is (= ["id IS NOT NULL"]
          (sut/format-expr [:<> :id nil])))
+  ;; legacy alias:
   (is (= ["id IS NOT NULL"]
          (sut/format-expr [:!= :id nil])))
+  ;; legacy alias:
+  (is (= ["id IS NOT NULL"]
+         (sut/format-expr [:not= :id nil])))
   (is (= ["id IS NOT NULL"]
          (sut/format-expr [:is-not :id nil])))
-  ;; degenerate cases:
+  ;; degenerate (special) cases:
   (is (= ["NULL IS NULL"]
          (sut/format-expr [:= nil nil])))
   (is (= ["NULL IS NOT NULL"]

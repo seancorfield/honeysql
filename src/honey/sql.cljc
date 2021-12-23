@@ -988,9 +988,7 @@
 
 (def ^:private infix-aliases
   "Provided for backward compatibility with earlier HoneySQL versions."
-  {:is :=
-   :is-not :<>
-   :not= :<>
+  {:not= :<>
    :!= :<>
    :regex :regexp})
 
