@@ -1,5 +1,8 @@
 # Changes
 
+* 2.2.next in progress
+  * Update `build-clj` to v0.6.6.
+
 * 2.2.840 -- 2021-12-23
   * Fix #375 for `:nest` statement.
   * Fix #374 by removing aliasing of `:is` / `:is-not` -- this changes the behavior of `[:is-not :col true/false]` to be _correct_ and _include `NULL` values_. Using `:is` / `:is-not` with values that are not Boolean and not `nil` will produce invalid SQL.
