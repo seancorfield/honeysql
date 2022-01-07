@@ -4,7 +4,7 @@
  :aliases
  {;; for help: clojure -A:deps -T:build help/doc
   :build {:deps {io.github.seancorfield/build-clj
-                 {:git/tag "v0.6.6" :git/sha "171d5f1"}}
+                 {:git/tag "v0.6.7" :git/sha "22c2d09"}}
           :ns-default build}
 
   ;; versions to test against:
