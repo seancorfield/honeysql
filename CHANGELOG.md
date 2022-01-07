@@ -1,7 +1,7 @@
 # Changes
 
 * 2.2.next in progress
-  * Address #281 by adding support for `SELECT * EXCEPT ..` and `SELECT * REPLACE ..` -- see [SQL Clause Reference - SELECT](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT/doc/getting-started/sql-clause-reference#select-select-distinct) for more details.
+  * Address #281 by adding support for `SELECT * EXCEPT ..` and `SELECT * REPLACE ..` and `ARRAY<>` and `STRUCT<>` column types -- see [SQL Clause Reference - SELECT](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT/doc/getting-started/sql-clause-reference#select-select-distinct) and [SQL Clause Reference - DDL](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT/doc/getting-started/sql-clause-reference#ddl-clauses) respectively for more details.
   * Update `build-clj` to v0.6.7.
 
 * 2.2.840 -- 2021-12-23

@@ -30,6 +30,8 @@ Several of these include column specifications and HoneySQL
 provides some special syntax (functions) to support that.
 See [Column Descriptors in Special Syntax](special-syntax.md#column-descriptors) for more details.
 
+> Google BigQuery support: `[:bigquery/array :string]` as a column type produces `ARRAY<STRING>` and `[:bigquery/struct col1-spec col2-spec]` as a column type produces `STRUCT<col1, col2>` (where `colN-spec` is a vector specifying a named column).
+
 ## alter-table, add-column, drop-column, modify-column, rename-column
 
 `:alter-table` can accept either a single table name or

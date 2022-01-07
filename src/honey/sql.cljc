@@ -840,9 +840,16 @@
   (let [[if-exists tables & more] (destructure-drop-items params "DROP options")]
     [(str/join " " (remove nil? (into [(sql-kw k) if-exists tables] more)))]))
 
+(def ^:private ^:dynamic *formatted-column* (atom false))
+
 (defn- format-single-column [xs]
-  (str/join " " (let [[id & spec] (map #(format-simple-expr % "column operation") xs)]
-                  (cons id (map upper-case spec)))))
+  (reset! *formatted-column* true)
+  (str/join " " (cons (format-simple-expr (first xs) "column operation")
+                      (map #(binding [*formatted-column* (atom false)]
+                              (cond-> (format-simple-expr % "column operation")
+                                (not @*formatted-column*)
+                                (upper-case)))
+                           (rest xs)))))
 
 (defn- format-table-columns [_ xs]
   [(str "("
@@ -1139,6 +1146,15 @@
     ;; used in DDL to force rendering as a SQL entity instead
     ;; of a SQL keyword:
     :entity      (fn [_ [e]] [(format-entity e)])
+    ;; bigquery column types:
+    :bigquery/array (fn [_ spec]
+                      [(str "ARRAY<"
+                            (str/join " " (map #(format-simple-expr % "column operation") spec))
+                            ">")])
+    :bigquery/struct (fn [_ spec]
+                       [(str "STRUCT<"
+                             (str/join ", " (map format-single-column spec))
+                             ">")])
     :array
     (fn [_ [arr]]
       (let [[sqls params] (format-expr-list arr)]

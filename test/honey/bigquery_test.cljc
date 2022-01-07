@@ -29,3 +29,16 @@
                (sut/format {:select [[:* :except]]})))
   (is (thrown? ExceptionInfo
                (sut/format {:select [[:foo :bar :quux]]}))))
+
+(deftest struct-array-tests
+  (is (= ["CREATE TABLE IF NOT EXISTS my_table (name STRING NOT NULL, my_struct STRUCT<name STRING NOT NULL, description STRING>, my_array ARRAY<STRING>)"]
+         (sut/format (-> {:create-table [:my-table :if-not-exists]
+                          :with-columns
+                          [[:name :string [:not nil]]
+                           [:my_struct [:bigquery/struct [:name :string [:not nil]] [:description :string]]]
+                           [:my_array [:bigquery/array :string]]]}))))
+  (is (= ["ALTER TABLE my_table ADD COLUMN IF NOT EXISTS name STRING, ADD COLUMN IF NOT EXISTS my_struct STRUCT<name STRING, description STRING>, ADD COLUMN IF NOT EXISTS my_array ARRAY<STRING>"]
+         (sut/format {:alter-table [:my-table
+                                    {:add-column [:name :string :if-not-exists]}
+                                    {:add-column [:my_struct [:bigquery/struct [:name :string] [:description :string]] :if-not-exists]}
+                                    {:add-column [:my_array [:bigquery/array :string] :if-not-exists]}]}))))
