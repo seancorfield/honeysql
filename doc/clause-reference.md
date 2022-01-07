@@ -348,8 +348,16 @@ third is a simple column name and its alias.
 
 `:select-distinct` works the same way but produces `SELECT DISTINCT`.
 
-HoneySQL does not yet support `SELECT .. INTO ..`
-or `SELECT .. BULK COLLECT INTO ..`.
+> Google BigQuery support: to provide `SELECT * EXCEPT ..` and `SELECT * REPLACE ..` syntax, HoneySQL supports a vector starting with `:*` or the symbol `*` followed by except columns and/or replace expressions as columns:
+
+```clojure
+user=> (sql/format {:select [[:* :except [:a :b :c]]] :from [:table]})
+["SELECT * EXCEPT (a, b, c) FROM table"]
+user=> (sql/format {:select [[:* :replace [[[:* :a [:inline 100]] :b] [[:inline 2] :c]]]] :from [:table]})
+["SELECT * REPLACE (a * 100 AS b, 2 AS c) FROM table"]
+user=> (sql/format {:select [[:* :except [:a :b] :replace [[[:inline 2] :c]]]] :from [:table]})
+["SELECT * EXCEPT (a, b) REPLACE (2 AS c) FROM table"]
+```
 
 ## select-distinct-on
 
