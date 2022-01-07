@@ -11,6 +11,8 @@
          (sut/format {:select [:*] :from [:table] :where [:= :id 1]})))
   (is (= ["SELECT * EXCEPT (a, b, c) FROM table WHERE id = ?" 1]
          (sut/format {:select [[:* :except [:a :b :c]]] :from [:table] :where [:= :id 1]})))
+  (is (= ["SELECT table.* EXCEPT (a, b, c) FROM table WHERE id = ?" 1]
+         (sut/format {:select [[:table.* :except [:a :b :c]]] :from [:table] :where [:= :id 1]})))
   (is (= ["SELECT * REPLACE (a * 100 AS b, 2 AS c) FROM table WHERE id = ?" 1]
          (sut/format {:select [[:* :replace [[[:* :a [:inline 100]] :b] [[:inline 2] :c]]]] :from [:table] :where [:= :id 1]})))
   (is (= ["SELECT * EXCEPT (a, b) REPLACE (2 AS c) FROM table WHERE id = ?" 1]

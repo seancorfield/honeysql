@@ -304,7 +304,7 @@
         (let [s     (first x)
               a     (second x)
               pair? (= 2 (count x))
-              big?  (and (ident? s) (= "*" (name s))
+              big?  (and (ident? s) (or (= "*" (name s)) (str/ends-with? (name s) ".*"))
                          (ident? a) (#{"except" "replace"} (name a)))
               more? (and (< 2 (count x)) (not big?))
               [sql & params] (if (map? s)
