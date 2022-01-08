@@ -75,6 +75,8 @@
 (deftest general-tests
   (is (= ["SELECT * FROM \"table\" WHERE \"id\" = ?" 1]
          (sut/format {:select [:*] :from [:table] :where [:= :id 1]} {:quoted true})))
+  (is (= ["SELECT * FROM \"table\" WHERE \"id\" = ?" 1]
+         (sut/format {:select [:*] :from [:table] :where (sut/map= {:id 1})} {:quoted true})))
   (is (= ["SELECT \"t\".* FROM \"table\" AS \"t\" WHERE \"id\" = ?" 1]
          (sut/format {:select [:t.*] :from [[:table :t]] :where [:= :id 1]} {:quoted true})))
   (is (= ["SELECT * FROM \"table\" GROUP BY \"foo\", \"bar\""]

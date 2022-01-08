@@ -1,6 +1,7 @@
 # Changes
 
 * 2.2.next in progress
+  * Address #377 by adding `honey.sql/map=` to convert a hash map into an equality condition (for a `WHERE` clause).
   * Address #281 by adding support for `SELECT * EXCEPT ..` and `SELECT * REPLACE ..` and `ARRAY<>` and `STRUCT<>` column types -- see [SQL Clause Reference - SELECT](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT/doc/getting-started/sql-clause-reference#select-select-distinct) and [SQL Clause Reference - DDL](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT/doc/getting-started/sql-clause-reference#ddl-clauses) respectively for more details.
   * Update `build-clj` to v0.6.7.
 

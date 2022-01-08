@@ -674,6 +674,17 @@ The `:where` clause can have a single SQL expression, or
 a sequence of SQL expressions prefixed by either `:and`
 or `:or`. See examples of `:where` in various clauses above.
 
+Sometimes it is convenient to construct a `WHERE` clause that
+tests several columns for equality, and you might have a Clojure
+hash map containing those values. `honey.sql/map=` exists to
+convert a hash map of values into a condition that you can use
+in a `WHERE` clause to match against those columns and values:
+
+```clojure
+user=> (sql/format {:select :* :from :transaction :where (sql/map= {:type "sale" :productid 123})})
+["SELECT * FROM transaction WHERE (type = ?) AND (productid = ?)" "sale" 123]
+```
+
 ## group-by
 
 `:group-by` accepts a sequence of one or more SQL expressions.

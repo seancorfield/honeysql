@@ -1484,6 +1484,24 @@
     (when ignore-nil
       (swap! op-ignore-nil conj op))))
 
+;; helper functions to create HoneySQL data structures from other things
+
+(defn map=
+  "Given a hash map, return a condition structure that can be used in a
+  WHERE clause to test for equality:
+
+  {:select :* :from :table :where (sql/map= {:id 1})}
+
+  will produce: SELECT * FROM table WHERE id = ? (and a parameter of 1)"
+  [data]
+  (let [clauses (reduce-kv (fn [where col val]
+                             (conj where [:= col val]))
+                           []
+                           data)]
+    (if (= 1 (count clauses))
+      (first clauses)
+      (into [:and] clauses))))
+
 ;; aids to migration from HoneySQL 1.x -- these are deliberately undocumented
 ;; so as not to encourage their use for folks starting fresh with 2.x!
 
