@@ -28,41 +28,53 @@
       (limit 50)
       (offset 10)))
 
+(defn- cache-size [cache] (-> cache (deref) (keys) (count)))
+
 (deftest cache-tests
   (let [cache (cache/basic-cache-factory {})]
+    (is (zero? (cache-size cache)))
     (is (= ["SELECT * FROM table WHERE id = ?" 1]
            (sut/format {:select [:*] :from [:table] :where [:= :id 1]}
                        {:cache cache})
            (sut/format {:select [:*] :from [:table] :where [:= :id 1]}
                        {:cache cache})))
-    (is (= (sut/format {:select [:*] :from [:table] :where [:= :id 1]})
-           (sut/format {:select [:*] :from [:table] :where [:= :id 1]}
+    (is (= 1 (cache-size cache)))
+    (is (= (sut/format {:select [:*] :from [:table] :where [:= :id 2]})
+           (sut/format {:select [:*] :from [:table] :where [:= :id 2]}
                        {:cache cache})))
+    (is (= 2 (cache-size cache)))
     (is (= (sut/format big-complicated-map {:params {:param1 "gabba" :param2 2}})
            (sut/format big-complicated-map {:cache cache :params {:param1 "gabba" :param2 2}})
            (sut/format big-complicated-map {:cache cache :params {:param1 "gabba" :param2 2}})))
+    (is (= 3 (cache-size cache)))
     (is (= (sut/format big-complicated-map {:params {:param1 "foo" :param2 42}})
            (sut/format big-complicated-map {:cache cache :params {:param1 "foo" :param2 42}})
            (sut/format big-complicated-map {:cache cache :params {:param1 "foo" :param2 42}})))
+    (is (= 3 (cache-size cache)))
     (println "Uncached, simple, embedded")
     (time (dotimes [_ 100000]
-            (sut/format {:select [:*] :from [:table] :where [:= :id 1]})))
+            (sut/format {:select [:*] :from [:table] :where [:= :id (rand-int 10)]})))
     (println "Cached, simple, embedded")
     (time (dotimes [_ 100000]
-            (sut/format {:select [:*] :from [:table] :where [:= :id 1]} {:cache cache})))
+            (sut/format {:select [:*] :from [:table] :where [:= :id (rand-int 10)]} {:cache cache})))
+    (is (= 11 (cache-size cache)))
     (println "Uncached, complex, mixed")
     (time (dotimes [_ 10000]
-            (sut/format big-complicated-map {:params {:param1 "gabba" :param2 2}})))
+            (sut/format big-complicated-map {:params {:param1 "gabba" :param2 (rand-int 10)}})))
     (println "Cached, complex, mixed")
     (time (dotimes [_ 10000]
-            (sut/format big-complicated-map {:cache cache :params {:param1 "gabba" :param2 2}}))))
+            (sut/format big-complicated-map {:cache cache :params {:param1 "gabba" :param2 (rand-int 10)}})))
+    (is (= 11 (cache-size cache))))
   (let [cache (cache/basic-cache-factory {})]
+    (is (zero? (cache-size cache)))
     (is (= ["SELECT * FROM table WHERE id = ?" 1]
            (sut/format {:select [:*] :from [:table] :where [:= :id :?id]}
                        {:cache cache :params {:id 1}})
            (sut/format {:select [:*] :from [:table] :where [:= :id :?id]}
                        {:cache cache :params {:id 1}})))
+    (is (= 1 (cache-size cache)))
     (is (= (sut/format {:select [:*] :from [:table] :where [:= :id :?id]}
                        {:params {:id 2}})
            (sut/format {:select [:*] :from [:table] :where [:= :id :?id]}
-                       {:cache cache :params {:id 2}})))))
+                       {:cache cache :params {:id 2}})))
+    (is (= 1 (cache-size cache)))))
