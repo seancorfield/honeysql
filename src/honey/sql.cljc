@@ -294,30 +294,63 @@
         :else
         (format-entity x)))
 
+(declare format-selects-common)
+
 (defn- format-selectable-dsl [x & [{:keys [as aliased] :as opts}]]
   (cond (map? x)
         (format-dsl x {:nested true})
 
         (sequential? x)
         (let [s     (first x)
-              pair? (< 1 (count x))
               a     (second x)
+              pair? (= 2 (count x))
+              big?  (and (ident? s) (or (= "*" (name s)) (str/ends-with? (name s) ".*"))
+                         (ident? a) (#{"except" "replace"} (name a)))
+              more? (and (< 2 (count x)) (not big?))
               [sql & params] (if (map? s)
                                (format-dsl s {:nested true})
                                (format-expr s))
-              [sql' & params'] (when pair?
-                                 (if (sequential? a)
-                                   (let [[sql params] (format-expr-list a {:aliased true})]
-                                     (into [(str/join " " sql)] params))
-                                   (format-selectable-dsl a {:aliased true})))]
-          (-> [(cond-> sql
-                 pair?
-                 (str (if as
-                        (if (and (contains? *dialect* :as)
-                                 (not (:as *dialect*)))
-                          " "
-                          " AS ")
-                        " ") sql'))]
+              [sql' & params'] (when (or pair? big?)
+                                 (cond (sequential? a)
+                                       (let [[sqls params] (format-expr-list a {:aliased true})]
+                                         (into [(str/join " " sqls)] params))
+                                       big? ; BigQuery support #281
+                                       (reduce (fn [[sql & params] [k arg]]
+                                                 (let [[sql' params']
+                                                       (cond (and (ident? k) (= "except" (name k)) arg)
+                                                             (let [[sqls params]
+                                                                   (format-expr-list arg {:aliased true})]
+                                                               [(str (sql-kw k) " (" (str/join ", " sqls) ")")
+                                                                params])
+                                                             (and (ident? k) (= "replace" (name k)) arg)
+                                                             (let [[sql & params] (format-selects-common nil true arg)]
+                                                               [(str (sql-kw k) " (" sql ")")
+                                                                params])
+                                                             :else
+                                                             (throw (ex-info "bigquery * only supports except and replace"
+                                                                             {:clause k :arg arg})))]
+                                                   (-> [(cond->> sql' sql (str sql " "))]
+                                                       (into params)
+                                                       (into params'))))
+                                               []
+                                               (partition-all 2 (rest x)))
+                                       :else
+                                       (format-selectable-dsl a {:aliased true})))]
+          (-> [(cond pair?
+                     (str sql
+                          (if as
+                            (if (and (contains? *dialect* :as)
+                                     (not (:as *dialect*)))
+                              " "
+                              " AS ")
+                            " ") sql')
+                     big?
+                     (str sql " " sql')
+                     more?
+                     (throw (ex-info "illegal syntax in select expression"
+                                     {:symbol s :alias a :unexpected (nnext x)}))
+                     :else
+                     sql)]
               (into params)
               (into params')))
 
@@ -376,9 +409,9 @@
         (when (empty? xs)
           (throw (ex-info (str prefix " empty column list is illegal")
                           {:clause (into [prefix] xs)}))))
-      (into [(str prefix " " (str/join ", " sqls))] params))
+      (into [(str (when prefix (str prefix " ")) (str/join ", " sqls))] params))
     (let [[sql & params] (format-selectable-dsl xs {:as as})]
-      (into [(str prefix " " sql)] params))))
+      (into [(str (when prefix (str prefix " ")) sql)] params))))
 
 (defn- format-selects [k xs]
   (format-selects-common
@@ -807,9 +840,16 @@
   (let [[if-exists tables & more] (destructure-drop-items params "DROP options")]
     [(str/join " " (remove nil? (into [(sql-kw k) if-exists tables] more)))]))
 
+(def ^:private ^:dynamic *formatted-column* (atom false))
+
 (defn- format-single-column [xs]
-  (str/join " " (let [[id & spec] (map #(format-simple-expr % "column operation") xs)]
-                  (cons id (map upper-case spec)))))
+  (reset! *formatted-column* true)
+  (str/join " " (cons (format-simple-expr (first xs) "column operation")
+                      (map #(binding [*formatted-column* (atom false)]
+                              (cond-> (format-simple-expr % "column operation")
+                                (not @*formatted-column*)
+                                (upper-case)))
+                           (rest xs)))))
 
 (defn- format-table-columns [_ xs]
   [(str "("
@@ -1106,6 +1146,15 @@
     ;; used in DDL to force rendering as a SQL entity instead
     ;; of a SQL keyword:
     :entity      (fn [_ [e]] [(format-entity e)])
+    ;; bigquery column types:
+    :bigquery/array (fn [_ spec]
+                      [(str "ARRAY<"
+                            (str/join " " (map #(format-simple-expr % "column operation") spec))
+                            ">")])
+    :bigquery/struct (fn [_ spec]
+                       [(str "STRUCT<"
+                             (str/join ", " (map format-single-column spec))
+                             ">")])
     :array
     (fn [_ [arr]]
       (let [[sqls params] (format-expr-list arr)]
@@ -1434,6 +1483,24 @@
       (swap! op-variadic conj op))
     (when ignore-nil
       (swap! op-ignore-nil conj op))))
+
+;; helper functions to create HoneySQL data structures from other things
+
+(defn map=
+  "Given a hash map, return a condition structure that can be used in a
+  WHERE clause to test for equality:
+
+  {:select :* :from :table :where (sql/map= {:id 1})}
+
+  will produce: SELECT * FROM table WHERE id = ? (and a parameter of 1)"
+  [data]
+  (let [clauses (reduce-kv (fn [where col val]
+                             (conj where [:= col val]))
+                           []
+                           data)]
+    (if (= 1 (count clauses))
+      (first clauses)
+      (into [:and] clauses))))
 
 ;; aids to migration from HoneySQL 1.x -- these are deliberately undocumented
 ;; so as not to encourage their use for folks starting fresh with 2.x!

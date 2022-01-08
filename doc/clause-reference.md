@@ -30,6 +30,8 @@ Several of these include column specifications and HoneySQL
 provides some special syntax (functions) to support that.
 See [Column Descriptors in Special Syntax](special-syntax.md#column-descriptors) for more details.
 
+> Google BigQuery support: `[:bigquery/array :string]` as a column type produces `ARRAY<STRING>` and `[:bigquery/struct col1-spec col2-spec]` as a column type produces `STRUCT<col1, col2>` (where `colN-spec` is a vector specifying a named column).
+
 ## alter-table, add-column, drop-column, modify-column, rename-column
 
 `:alter-table` can accept either a single table name or
@@ -348,8 +350,16 @@ third is a simple column name and its alias.
 
 `:select-distinct` works the same way but produces `SELECT DISTINCT`.
 
-HoneySQL does not yet support `SELECT .. INTO ..`
-or `SELECT .. BULK COLLECT INTO ..`.
+> Google BigQuery support: to provide `SELECT * EXCEPT ..` and `SELECT * REPLACE ..` syntax, HoneySQL supports a vector starting with `:*` or the symbol `*` followed by except columns and/or replace expressions as columns:
+
+```clojure
+user=> (sql/format {:select [[:* :except [:a :b :c]]] :from [:table]})
+["SELECT * EXCEPT (a, b, c) FROM table"]
+user=> (sql/format {:select [[:* :replace [[[:* :a [:inline 100]] :b] [[:inline 2] :c]]]] :from [:table]})
+["SELECT * REPLACE (a * 100 AS b, 2 AS c) FROM table"]
+user=> (sql/format {:select [[:* :except [:a :b] :replace [[[:inline 2] :c]]]] :from [:table]})
+["SELECT * EXCEPT (a, b) REPLACE (2 AS c) FROM table"]
+```
 
 ## select-distinct-on
 
@@ -663,6 +673,17 @@ It is otherwise identical to the `:set` clause described above.
 The `:where` clause can have a single SQL expression, or
 a sequence of SQL expressions prefixed by either `:and`
 or `:or`. See examples of `:where` in various clauses above.
+
+Sometimes it is convenient to construct a `WHERE` clause that
+tests several columns for equality, and you might have a Clojure
+hash map containing those values. `honey.sql/map=` exists to
+convert a hash map of values into a condition that you can use
+in a `WHERE` clause to match against those columns and values:
+
+```clojure
+user=> (sql/format {:select :* :from :transaction :where (sql/map= {:type "sale" :productid 123})})
+["SELECT * FROM transaction WHERE (type = ?) AND (productid = ?)" "sale" 123]
+```
 
 ## group-by
 
