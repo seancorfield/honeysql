@@ -1,4 +1,4 @@
-;; copyright (c) 2021 sean corfield, all rights reserved
+;; copyright (c) 2021-2022 sean corfield, all rights reserved
 
 (ns honey.sql-test
   (:refer-clojure :exclude [format])

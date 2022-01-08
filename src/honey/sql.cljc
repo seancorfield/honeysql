@@ -1,4 +1,4 @@
-;; copyright (c) 2020-2021 sean corfield, all rights reserved
+;; copyright (c) 2020-2022 sean corfield, all rights reserved
 
 (ns honey.sql
   "Primary API for HoneySQL 2.x.
@@ -1374,7 +1374,8 @@
   as named arguments followed by other options in a hash map."
   ([data] (format data {}))
   ([data opts]
-   (let [dialect? (contains? opts :dialect)
+   (let [cache    (:cache opts)
+         dialect? (contains? opts :dialect)
          dialect  (when dialect? (get dialects (check-dialect (:dialect opts))))]
      (binding [*dialect* (if dialect? dialect @default-dialect)
                *checking* (if (contains? opts :checking)
@@ -1397,7 +1398,16 @@
                                 (:quoted-snake opts))
                *params* (:params opts)
                *values-default-columns* (:values-default-columns opts)]
-       (mapv #(unwrap % opts) (format-dsl data opts)))))
+       (if cache
+         #?(:clj
+            ;; prefer requiring-resolve but that's 1.10+ only:
+            (let [_ (require 'clojure.core.cache.wrapped)
+                  through (resolve 'clojure.core.cache.wrapped/lookup-or-miss)]
+              (->> (through cache data (fn [_] (format-dsl data (dissoc opts :cache))))
+                   (mapv #(unwrap % opts))))
+            :cljs
+            (throw (ex-info "cached queries are not supported in ClojureScript" opts)))
+         (mapv #(unwrap % opts) (format-dsl data opts))))))
   ([data k v & {:as opts}] (format data (assoc opts k v))))
 
 (defn set-dialect!
