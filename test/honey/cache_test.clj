@@ -77,4 +77,16 @@
                        {:params {:id 2}})
            (sut/format {:select [:*] :from [:table] :where [:= :id :?id]}
                        {:cache cache :params {:id 2}})))
-    (is (= 1 (cache-size cache)))))
+    (is (= 1 (cache-size cache)))
+    ;; different parameter names create different cache entries:
+    (is (= (sut/format {:select [:*] :from [:table] :where [:= :id :?x]}
+                       {:cache cache :params {:x 2}})
+           (sut/format {:select [:*] :from [:table] :where [:= :id :?y]}
+                       {:cache cache :params {:y 2}})))
+    (is (= 3 (cache-size cache)))
+    ;; swapping parameter names creates different cache entries:
+    (is (= (sut/format {:select [:*] :from [:table] :where [:and [:= :id :?x] [:= :foo :?y]]}
+                       {:cache cache :params {:x 2 :y 3}})
+           (sut/format {:select [:*] :from [:table] :where [:and [:= :id :?y] [:= :foo :?x]]}
+                       {:cache cache :params {:x 3 :y 2}})))
+    (is (= 5 (cache-size cache)))))
