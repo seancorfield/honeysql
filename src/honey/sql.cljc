@@ -1361,6 +1361,19 @@
                     {:valid-dialects (vec (sort (keys dialects)))})))
   dialect)
 
+(def through
+  "Resolves to core.cache.wrapped/lookup-or-miss when it's available, or to a throwing function otherwise.
+   In CLJS it always resolves to a throwing function."
+  #?(:clj (try (require 'clojure.core.cache.wrapped)
+               (let [through (deref (resolve 'clojure.core.cache.wrapped/lookup-or-miss))]
+                 (fn [_opts cache data f]
+                   (through cache data f)))
+               (catch Throwable _
+                 (fn [opts _cache _data _f]
+                   (throw (ex-info "include core.cached on the classpath to use the :cache option" opts)))))
+     :cljs (fn [opts _cache _data _f]
+             (throw (ex-info "cached queries are not supported in ClojureScript" opts)))))
+
 (defn format
   "Turn the data DSL into a vector containing a SQL string followed by
   any parameter values that were encountered in the DSL structure.
@@ -1399,14 +1412,8 @@
                *params* (:params opts)
                *values-default-columns* (:values-default-columns opts)]
        (if cache
-         #?(:clj
-            ;; prefer requiring-resolve but that's 1.10+ only:
-            (let [_ (require 'clojure.core.cache.wrapped)
-                  through (resolve 'clojure.core.cache.wrapped/lookup-or-miss)]
-              (->> (through cache data (fn [_] (format-dsl data (dissoc opts :cache))))
-                   (mapv #(unwrap % opts))))
-            :cljs
-            (throw (ex-info "cached queries are not supported in ClojureScript" opts)))
+         (->> (through opts cache data (fn [_] (format-dsl data (dissoc opts :cache))))
+              (mapv #(unwrap % opts)))
          (mapv #(unwrap % opts) (format-dsl data opts))))))
   ([data k v & {:as opts}] (format data (assoc opts k v))))
 
