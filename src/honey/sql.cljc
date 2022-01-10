@@ -1361,13 +1361,13 @@
                     {:valid-dialects (vec (sort (keys dialects)))})))
   dialect)
 
-(def through
+(def through-opts
   "Resolves to core.cache.wrapped/lookup-or-miss when it's available, or to a throwing function otherwise.
    In CLJS it always resolves to a throwing function."
   #?(:clj (try (require 'clojure.core.cache.wrapped)
-               (let [through (deref (resolve 'clojure.core.cache.wrapped/lookup-or-miss))]
+               (let [lookup-or-miss (deref (resolve 'clojure.core.cache.wrapped/lookup-or-miss))]
                  (fn [_opts cache data f]
-                   (through cache data f)))
+                   (lookup-or-miss cache data f)))
                (catch Throwable _
                  (fn [opts _cache _data _f]
                    (throw (ex-info "include core.cached on the classpath to use the :cache option" opts)))))
@@ -1412,7 +1412,7 @@
                *params* (:params opts)
                *values-default-columns* (:values-default-columns opts)]
        (if cache
-         (->> (through opts cache data (fn [_] (format-dsl data (dissoc opts :cache))))
+         (->> (through-opts opts cache data (fn [_] (format-dsl data (dissoc opts :cache))))
               (mapv #(unwrap % opts)))
          (mapv #(unwrap % opts) (format-dsl data opts))))))
   ([data k v & {:as opts}] (format data (assoc opts k v))))
