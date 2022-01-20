@@ -124,7 +124,7 @@ are two possible approaches:
 
 ## Caching
 
-As of 2.2.next, `format` can cache the SQL and parameters produced from the data structure so that it does not need to be computed on every call. This functionality is available only in Clojure and depends on [`org.clojure/core.cache`](https://github.com/clojure/core.cache) being on your classpath. If you are repeatedly building the same complex SQL statements over and over again, this can be a good way to provide a performance boost but there are some caveats.
+As of 2.2.858, `format` can cache the SQL and parameters produced from the data structure so that it does not need to be computed on every call. This functionality is available only in Clojure and depends on [`org.clojure/core.cache`](https://github.com/clojure/core.cache) being on your classpath. If you are repeatedly building the same complex SQL statements over and over again, this can be a good way to provide a performance boost but there are some caveats.
 
 * You need `core.cache` as a dependency: `org.clojure/core.cache {:mvn/version "1.0.225"}` was the latest as of January 20th, 2022,
 * You need to create one or more caches yourself, from the various factory functions in the [`clojure.core.cache.wrapped` namespace](http://clojure.github.io/core.cache/#clojure.core.cache.wrapped),

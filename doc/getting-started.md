@@ -10,14 +10,14 @@ For the Clojure CLI, add the following dependency to your `deps.edn` file:
 
 <!-- :test-doc-blocks/skip -->
 ```clojure
-    com.github.seancorfield/honeysql {:mvn/version "2.2.840"}
+    com.github.seancorfield/honeysql {:mvn/version "2.2.858"}
 ```
 
 For Leiningen, add the following dependency to your `project.clj` file:
 
 <!-- :test-doc-blocks/skip -->
 ```clojure
-    [com.github.seancorfield/honeysql "2.2.840"]
+    [com.github.seancorfield/honeysql "2.2.858"]
 ```
 
 HoneySQL produces SQL statements but does not execute them.
@@ -349,7 +349,7 @@ HoneySQL supports quite a few [PostgreSQL extensions](postgresql.md).
 
 In addition to the `:quoted` and `:dialect` options described above,
 `format` also accepts `:checking`, `:inline`, and `:params`.
-As of 2.2.next, `format` accepts a `:cache` option -- see the
+As of 2.2.858, `format` accepts a `:cache` option -- see the
 [**Caching** section of the **General Reference**](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT/doc/getting-started/general-reference#caching)
 for details.
 
