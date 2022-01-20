@@ -1362,8 +1362,12 @@
   dialect)
 
 (def through-opts
-  "Resolves to core.cache.wrapped/lookup-or-miss when it's available, or to a throwing function otherwise.
-   In CLJS it always resolves to a throwing function."
+  "If org.clojure/core.cache is available, resolves to a function that
+  calls core.cache.wrapped/lookup-or-miss, otherwise to a function that
+  throws an exception.
+
+  In ClojureScript, a resolves to a function that throws an exception
+  because core.cache relies on JVM machinery and is Clojure-only."
   #?(:clj (try (require 'clojure.core.cache.wrapped)
                (let [lookup-or-miss (deref (resolve 'clojure.core.cache.wrapped/lookup-or-miss))]
                  (fn [_opts cache data f]

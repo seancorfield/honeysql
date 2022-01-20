@@ -349,6 +349,9 @@ HoneySQL supports quite a few [PostgreSQL extensions](postgresql.md).
 
 In addition to the `:quoted` and `:dialect` options described above,
 `format` also accepts `:checking`, `:inline`, and `:params`.
+As of 2.2.next, `format` accepts a `:cache` option -- see the
+[**Caching** section of the **General Reference**](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT/doc/getting-started/general-reference#caching)
+for details.
 
 The `:params` option was mentioned above and is used to specify
 the values of named parameters in the DSL.
