@@ -16,7 +16,8 @@
   :test
   {:extra-paths ["test"]
    :extra-deps  {io.github.cognitect-labs/test-runner
-                 {:git/tag "v0.5.0" :git/sha "48c3c67"}}
+                 {:git/tag "v0.5.0" :git/sha "48c3c67"}
+                 org.clojure/core.cache {:mvn/version "RELEASE"}}
    :exec-fn     cognitect.test-runner.api/test}
 
   ;; various "runners" for tests/CI:

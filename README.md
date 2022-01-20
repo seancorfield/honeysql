@@ -39,6 +39,12 @@ HoneySQL 1.x will continue to get critical security fixes but otherwise should b
 
 ## Usage
 
+This section includes a number of usage examples but does not dive deep into the
+way the data structure acts as a DSL that can specify SQL statements (as hash maps)
+and SQL expressions and function calls (as vectors). It is recommended that you read the
+[**Getting Started**](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT/doc/getting-started)
+section of the documentation before trying to use HoneySQL to build your own queries!
+
 From Clojure:
 <!-- {:test-doc-blocks/reader-cond :clj} -->
 ```clojure
@@ -512,10 +518,20 @@ There are also helpers for each of those:
 => ["SELECT * FROM foo UNION SELECT * FROM bar"]
 ```
 
-
 ### Functions
 
-Keywords that begin with `%` are interpreted as SQL function calls:
+Function calls (and expressions with operators) can be specified as
+vectors where the first element is either a keyword or a symbol:
+
+```clojure
+(-> (select :*) (from :foo)
+    (where [:> :date_created [:date_add [:now] [:interval 24 :hours]]])
+    (sql/format))
+=> ["SELECT * FROM foo WHERE date_created > DATE_ADD(NOW(), INTERVAL ? HOURS)" 24]
+```
+
+A shorthand syntax also exists for simple function calls:
+keywords that begin with `%` are interpreted as SQL function calls:
 
 ```clojure
 (-> (select :%count.*) (from :foo) sql/format)
@@ -535,10 +551,26 @@ regular function calls in a select:
 => ["SELECT COUNT(*) FROM foo"]
 ```
 ```clojure
+(-> (select [:%count.*]) (from :foo) sql/format)
+=> ["SELECT COUNT(*) FROM foo"]
+;; or even:
+(-> (select :%count.*) (from :foo) sql/format)
+=> ["SELECT COUNT(*) FROM foo"]
+```
+```clojure
 (-> (select [[:max :id]]) (from :foo) sql/format)
 => ["SELECT MAX(id) FROM foo"]
 ;; the pure data DSL requires an extra level of brackets:
 (-> {:select [[[:max :id]]], :from [:foo]} sql/format)
+=> ["SELECT MAX(id) FROM foo"]
+;; the shorthand makes this simpler:
+(-> {:select [[:%max.id]], :from [:foo]} sql/format)
+=> ["SELECT MAX(id) FROM foo"]
+;; or even:
+(-> {:select [:%max.id], :from [:foo]} sql/format)
+=> ["SELECT MAX(id) FROM foo"]
+;; or even:
+(-> {:select :%max.id, :from :foo} sql/format)
 => ["SELECT MAX(id) FROM foo"]
 ```
 

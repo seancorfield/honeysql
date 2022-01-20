@@ -1,4 +1,4 @@
-;; copyright (c) 2020-2021 sean corfield, all rights reserved
+;; copyright (c) 2020-2022 sean corfield, all rights reserved
 
 (ns honey.sql
   "Primary API for HoneySQL 2.x.
@@ -1361,6 +1361,23 @@
                     {:valid-dialects (vec (sort (keys dialects)))})))
   dialect)
 
+(def through-opts
+  "If org.clojure/core.cache is available, resolves to a function that
+  calls core.cache.wrapped/lookup-or-miss, otherwise to a function that
+  throws an exception.
+
+  In ClojureScript, a resolves to a function that throws an exception
+  because core.cache relies on JVM machinery and is Clojure-only."
+  #?(:clj (try (require 'clojure.core.cache.wrapped)
+               (let [lookup-or-miss (deref (resolve 'clojure.core.cache.wrapped/lookup-or-miss))]
+                 (fn [_opts cache data f]
+                   (lookup-or-miss cache data f)))
+               (catch Throwable _
+                 (fn [opts _cache _data _f]
+                   (throw (ex-info "include core.cached on the classpath to use the :cache option" opts)))))
+     :cljs (fn [opts _cache _data _f]
+             (throw (ex-info "cached queries are not supported in ClojureScript" opts)))))
+
 (defn format
   "Turn the data DSL into a vector containing a SQL string followed by
   any parameter values that were encountered in the DSL structure.
@@ -1374,7 +1391,8 @@
   as named arguments followed by other options in a hash map."
   ([data] (format data {}))
   ([data opts]
-   (let [dialect? (contains? opts :dialect)
+   (let [cache    (:cache opts)
+         dialect? (contains? opts :dialect)
          dialect  (when dialect? (get dialects (check-dialect (:dialect opts))))]
      (binding [*dialect* (if dialect? dialect @default-dialect)
                *checking* (if (contains? opts :checking)
@@ -1397,7 +1415,10 @@
                                 (:quoted-snake opts))
                *params* (:params opts)
                *values-default-columns* (:values-default-columns opts)]
-       (mapv #(unwrap % opts) (format-dsl data opts)))))
+       (if cache
+         (->> (through-opts opts cache data (fn [_] (format-dsl data (dissoc opts :cache))))
+              (mapv #(unwrap % opts)))
+         (mapv #(unwrap % opts) (format-dsl data opts))))))
   ([data k v & {:as opts}] (format data (assoc opts k v))))
 
 (defn set-dialect!
