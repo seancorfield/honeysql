@@ -722,7 +722,6 @@ ORDER BY id = ? DESC
           (is (:disallowed (ex-data e))))))))
     ;; should not produce: ["SELECT foo, bar FROM mytable ORDER BY foo; select * from users"]
 
-
 (deftest issue-319-test
   (testing "that registering a clause is idempotent"
     (is (= ["FOO"]
@@ -730,6 +729,10 @@ ORDER BY id = ? DESC
              (sut/register-clause! :foo (constantly ["FOO"]) nil)
              (sut/register-clause! :foo (constantly ["FOO"]) nil)
              (format {:foo []}))))))
+
+(deftest issue-380-test
+  (testing "that registering a clause by name works"
+    (is (map? (sut/register-clause! :qualify :having :window)))))
 
 (deftest issue-321-linting
   (testing "empty IN is ignored by default"

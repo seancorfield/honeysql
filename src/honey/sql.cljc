@@ -1466,7 +1466,7 @@
           f (if (keyword? k)
               (get @clause-format k)
               formatter)]
-      (when-not (and f (fn? f))
+      (when-not (and f (or (fn? f) (and (var? f) (fn? (deref f)))) )
         (throw (ex-info "The formatter must be a function or existing clause"
                         {:type (type formatter)})))
       (swap! base-clause-order add-clause-before clause before)
@@ -1487,7 +1487,7 @@
           f (if (keyword? k)
               (get @special-syntax k)
               formatter)]
-      (when-not (and f (fn? f))
+      (when-not (and f (or (fn? f) (and (var? f) (fn? (deref f)))))
         (throw (ex-info "The formatter must be a function or existing fn name"
                         {:type (type formatter)})))
       (swap! special-syntax assoc function f))))
