@@ -42,3 +42,13 @@
                                     {:add-column [:name :string :if-not-exists]}
                                     {:add-column [:my_struct [:bigquery/struct [:name :string] [:description :string]] :if-not-exists]}
                                     {:add-column [:my_array [:bigquery/array :string] :if-not-exists]}]}))))
+
+(deftest test-case-expr
+  (is (= ["SELECT CASE foo WHEN ? THEN ? WHEN ? THEN foo / ? ELSE ? END FROM bar"
+          1 -1 2 2 0]
+         (sut/format
+          {:select [[[:case-expr :foo
+                      1 -1
+                      2 [:/ :foo 2]
+                      :else 0]]]
+           :from [:bar]}))))

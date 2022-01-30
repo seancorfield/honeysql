@@ -41,6 +41,15 @@ may be `:else` (or `'else`) to produce `ELSE`, otherwise
 ;; => ["CASE WHEN a < ? THEN ? WHEN a > ? THEN ? ELSE ? END" 10 "small" 100 "big" "medium"]
 ```
 
+Google BigQuery supports a variant of `CASE` that takes an expression and then the `WHEN`
+clauses contain expressions to match against, rather than conditions. HoneySQL supports
+this using `:case-expr`:
+
+```clojure
+(sql/format-expr [:case-expr :a 10 "small" 100 "big" :else "medium"])
+;; => ["CASE a WHEN ? THEN ? WHEN ? THEN ? ELSE ? END" 10 "small" 100 "big" "medium"]
+```
+
 ## cast
 
 A SQL CAST expression. Expects an expression and something

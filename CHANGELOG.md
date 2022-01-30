@@ -1,7 +1,8 @@
 # Changes
 
 * 2.2.next in progress
-  * Fix #380 by correcting test for function type in `register-clause!`.
+  * Address [#382](https://github.com/seancorfield/honeysql/issues/382) by adding `:case-expr` for BigQuery support.
+  * Fix [#380](https://github.com/seancorfield/honeysql/issues/380) by correcting test for function type in `register-clause!` and `register-fn!`.
 
 * 2.2.858 -- 2022-01-20
   * Address #377 by adding `honey.sql/map=` to convert a hash map into an equality condition (for a `WHERE` clause).

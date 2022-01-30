@@ -1124,6 +1124,31 @@
                 (partition 2 pairs))]
     (into [(str/join ", " sqls)] params)))
 
+(defn- case-clauses
+  "For both :case and :case-expr."
+  [k clauses]
+  (let [case-expr? (= :case-expr k)
+        [sqlx & paramsx] (when case-expr? (format-expr (first clauses)))
+        [sqls params]
+        (reduce (fn [[sqls params] [condition value]]
+                  (let [[sqlc & paramsc] (when-not (= :else condition)
+                                           (format-expr condition))
+                        [sqlv & paramsv] (format-expr value)]
+                    [(if (or (= :else condition)
+                             (= 'else condition))
+                       (conj sqls (sql-kw :else) sqlv)
+                       (conj sqls (sql-kw :when) sqlc (sql-kw :then) sqlv))
+                     (-> params (into paramsc) (into paramsv))]))
+                [[] []]
+                (partition 2 (if case-expr? (rest clauses) clauses)))]
+    (-> [(str (sql-kw :case) " "
+              (when case-expr?
+                (str sqlx " "))
+              (str/join " " sqls)
+              " " (sql-kw :end))]
+        (into paramsx)
+        (into params))))
+
 (def ^:private special-syntax
   (atom
    {;; these "functions" are mostly used in column
@@ -1168,24 +1193,8 @@
             (into params-x)
             (into params-a)
             (into params-b))))
-    :case
-    (fn [_ clauses]
-      (let [[sqls params]
-            (reduce (fn [[sqls params] [condition value]]
-                      (let [[sqlc & paramsc] (when-not (= :else condition)
-                                               (format-expr condition))
-                            [sqlv & paramsv] (format-expr value)]
-                        [(if (or (= :else condition)
-                                 (= 'else condition))
-                           (conj sqls (sql-kw :else) sqlv)
-                           (conj sqls (sql-kw :when) sqlc (sql-kw :then) sqlv))
-                         (-> params (into paramsc) (into paramsv))]))
-                    [[] []]
-                    (partition 2 clauses))]
-        (into [(str (sql-kw :case) " "
-                    (str/join " " sqls)
-                    " " (sql-kw :end))]
-              params)))
+    :case      #'case-clauses
+    :case-expr #'case-clauses
     :cast
     (fn [_ [x type]]
       (let [[sql & params]   (format-expr x)
