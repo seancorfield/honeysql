@@ -369,6 +369,18 @@
                (join :x [:using :id] :y [:using :foo :bar])
                sql/format)))))
 
+(defn my-update [& args] (h/generic-helper-unary    :update args))
+(defn my-set    [& args] (h/generic-helper-unary    :set    args))
+(defn my-where  [& args] (h/generic-helper-variadic :where  args))
+
+(deftest custom-helpers-test
+  (testing "nil join"
+    (is (= ["UPDATE foo SET bar = ? WHERE quux = ?" 1 2]
+           (-> (my-update :foo)
+               (my-set {:bar 1})
+               (my-where (sql/map= {:quux 2}))
+               sql/format)))))
+
 (deftest inline-test
   (is (= ["SELECT * FROM foo WHERE id = 5"]
          (-> (select :*)

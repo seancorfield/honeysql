@@ -1,7 +1,8 @@
 # Changes
 
-* 2.2.next in progress
+* 2.2.861 -- 2022-01-30
   * Address [#382](https://github.com/seancorfield/honeysql/issues/382) by adding `:case-expr` for BigQuery support.
+  * Address [#381](https://github.com/seancorfield/honeysql/issues/381) by adding `generic-helper-variadic` and `generic-helper-unary` to `honey.sql.helpers`.
   * Fix [#380](https://github.com/seancorfield/honeysql/issues/380) by correcting test for function type in `register-clause!` and `register-fn!`.
 
 * 2.2.858 -- 2022-01-20

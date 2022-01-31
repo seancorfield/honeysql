@@ -38,6 +38,28 @@ current ordering of clauses is.
 
 > Note: if you call `register-clause!` more than once for the same clause, the last call "wins". This allows you to correct an incorrect clause order insertion by simply calling `register-clause!` again with a different third argument.
 
+## Defining a Helper Function for a New Clause
+
+Having registered a new clause, you might also want a helper function
+for it, just as the built-in clauses have helpers in `honey.sql.helpers`.
+Two functions exist in that namespace to make it easier for you to
+define your own helpers:
+
+* `generic-helper-variadic` -- most clauses accept an arbitrary number of items in a sequence and multiple calls in a DSL expression will merge so this is the helper you will use for most clauses,
+* `generic-helper-unary` -- a handful of clauses only accept a single item and cannot be merged (they behave as "last one wins"), so this helper supports that semantic.
+
+Each of these helper support functions should be called with the keyword that
+identifies your new clause and the sequence of arguments passed to it. See
+the docstrings for more detail.
+
+You might have:
+
+<!-- :test-doc-blocks/skip -->
+```clojure
+(sql/register-clause! :my-clause my-formatter :where)
+(defn my-clause [& args] (h/generic-helper-variadic :my-clause args))
+```
+
 ## Registering a New Operator
 
 `honey.sql/register-op!` accepts a keyword (or a symbol) that

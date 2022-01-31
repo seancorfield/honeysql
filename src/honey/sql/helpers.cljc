@@ -995,6 +995,26 @@
                                 :where  where}
                                do-update-set))))))
 
+(defn generic-helper-variadic
+  "Most clauses that accept a sequence of items can be implemented
+  using this helper, as:
+
+  (defn my-helper [& args] (generic-helper-variadic :my-clause args))"
+  [k args]
+  (generic k args))
+
+(defn generic-helper-unary
+  "Clauses that accept only a single item can be implemented
+  using this helper, as:
+
+  (defn my-helper [& args] (generic-helper-unary :my-clause args))
+
+  Even though your helper is designed for clauses that accept
+  only a single item, you should still define it as variadic,
+  because that is the convention all helpers use here."
+  [k args]
+  (generic-1 k args))
+
 #?(:clj
    (do
      ;; ensure #295 stays true (all public functions have docstring):
@@ -1002,6 +1022,7 @@
      ;; ensure all public functions match clauses:
      (assert (= (clojure.core/set (conj @@#'honey.sql/base-clause-order
                                         :composite :filter :lateral :over :within-group
-                                        :upsert))
+                                        :upsert
+                                        :generic-helper-variadic :generic-helper-unary))
                 (clojure.core/set (conj (map keyword (keys (ns-publics *ns*)))
                                         :nest :raw))))))
