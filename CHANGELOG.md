@@ -1,5 +1,8 @@
 # Changes
 
+* 2.2.next in progress
+  * Address [#352](https://github.com/seancorfield/honeysql/issues/352) by treating `:'` as introducing a function name that should be transcribed exactly as-is into the generated SQL.
+
 * 2.2.861 -- 2022-01-30
   * Address [#382](https://github.com/seancorfield/honeysql/issues/382) by adding `:case-expr` for BigQuery support.
   * Address [#381](https://github.com/seancorfield/honeysql/issues/381) by adding `generic-helper-variadic` and `generic-helper-unary` to `honey.sql.helpers`.
