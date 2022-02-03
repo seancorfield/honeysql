@@ -574,6 +574,17 @@ regular function calls in a select:
 => ["SELECT MAX(id) FROM foo"]
 ```
 
+If a keyword begins with `'`, the function name is treated literally
+without being converted to uppercase (and without hyphens `-` becoming
+spaces):
+
+```clojure
+(-> (select :*) (from :foo)
+    (where [:'my-schema.SomeFunction :bar 0])
+    (sql/format))
+=> ["SELECT * FROM foo WHERE my-schema.SomeFunction(bar, ?)" 0]
+```
+
 ### Bindable parameters
 
 Keywords that begin with `?` are interpreted as bindable parameters:
