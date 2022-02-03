@@ -167,12 +167,17 @@
 (defn sql-kw
   "Given a keyword, return a SQL representation of it as a string.
 
-  A `:kebab-case` keyword becomes a `KEBAB CASE` (uppercase) string
-  with hyphens replaced by spaces, e.g., `:insert-into` => `INSERT INTO`.
+  A keyword whose name begins with a single quote is left exactly as-is
+  (with the `:` and `'` removed), otherwise a `:kebab-case` keyword
+  becomes a `KEBAB CASE` (uppercase) string with hyphens replaced
+  by spaces, e.g., `:insert-into` => `INSERT INTO`.
 
   Any namespace qualifier is ignored."
   [k]
-  (-> k (name) (dehyphen) (upper-case)))
+  (let [n (name k)]
+    (if (= \' (first n))
+      (subs n 1 (count n))
+      (-> n (dehyphen) (upper-case)))))
 
 (defn- sym->kw
   "Given a symbol, produce a keyword, retaining the namespace

@@ -794,7 +794,16 @@ ORDER BY id = ? DESC
            (format {:select (keyword "%mixed-kebab.yum-yum/bar-bar.a-b/c-d")} :dialect :mysql :quoted-snake true)))
     (is (= ["SELECT RANSOM(`NoTe`)"]
            (format {:select [[[:ransom :NoTe]]]} :dialect :mysql)
-           (format {:select :%ransom.NoTe} :dialect :mysql)))))
+           (format {:select :%ransom.NoTe} :dialect :mysql))))
+  (testing "issue 352: literal function calls"
+    (is (= ["SELECT sysdate()"]
+           (format {:select [[[:'sysdate]]]})))
+    (is (= ["SELECT count(*)"]
+           (format {:select [[[:'count :*]]]})))
+    (is (= ["SELECT Mixed-Kebab(`yum-yum`)"]
+           (format {:select [[[:'Mixed-Kebab :yum-yum]]]} :dialect :mysql)))
+    (is (= ["SELECT other-project.other_dataset.other_function(?, ?)" 1 2]
+           (format {:select [[[:'other-project.other_dataset.other_function 1 2]]]})))))
 
 (deftest join-without-on-using
   ;; essentially issue 326
