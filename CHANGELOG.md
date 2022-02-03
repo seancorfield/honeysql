@@ -1,7 +1,7 @@
 # Changes
 
 * 2.2.next in progress
-  * Address [#352](https://github.com/seancorfield/honeysql/issues/352) by treating `:'` as introducing a function name that should be transcribed exactly as-is into the generated SQL.
+  * Address [#352](https://github.com/seancorfield/honeysql/issues/352) by treating `:'` as introducing a function name that should be formatted as a SQL entity (respects quoting, dot-splitting, etc).
 
 * 2.2.861 -- 2022-01-30
   * Address [#382](https://github.com/seancorfield/honeysql/issues/382) by adding `:case-expr` for BigQuery support.

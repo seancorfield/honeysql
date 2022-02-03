@@ -164,31 +164,6 @@
       s
       (recur (str/replace s #"(\w)-(\w)" "$1 $2") s))))
 
-(defn sql-kw
-  "Given a keyword, return a SQL representation of it as a string.
-
-  A keyword whose name begins with a single quote is left exactly as-is
-  (with the `:` and `'` removed), otherwise a `:kebab-case` keyword
-  becomes a `KEBAB CASE` (uppercase) string with hyphens replaced
-  by spaces, e.g., `:insert-into` => `INSERT INTO`.
-
-  Any namespace qualifier is ignored."
-  [k]
-  (let [n (name k)]
-    (if (= \' (first n))
-      (subs n 1 (count n))
-      (-> n (dehyphen) (upper-case)))))
-
-(defn- sym->kw
-  "Given a symbol, produce a keyword, retaining the namespace
-  qualifier, if any."
-  [s]
-  (if (symbol? s)
-    (if-let [n (namespace s)]
-      (keyword n (name s))
-      (keyword (name s)))
-    s))
-
 (defn- namespace-_
   "Return the namespace portion of a symbol, with dashes converted."
   [x]
@@ -210,14 +185,6 @@
                            (type x))
                       {:symbol x
                        :failure (str t)})))))
-
-(defn- sqlize-value [x]
-  (cond
-    (nil? x)     "NULL"
-    (string? x)  (str \' (str/replace x "'" "''") \')
-    (ident? x)   (sql-kw x)
-    (vector? x)  (str "[" (str/join ", " (map #'sqlize-value x)) "]")
-    :else        (str x)))
 
 (defn format-entity
   "Given a simple SQL entity (a keyword or symbol -- or string),
@@ -254,6 +221,39 @@
            (format-entity v {:aliased a :drop-ns d}))]
         [v a d (format-entity v {:aliased a :drop-ns d})])))
   .)
+
+(defn sql-kw
+  "Given a keyword, return a SQL representation of it as a string.
+
+  A keyword whose name begins with a single quote is left exactly as-is
+  (with the `:` and `'` removed), otherwise a `:kebab-case` keyword
+  becomes a `KEBAB CASE` (uppercase) string with hyphens replaced
+  by spaces, e.g., `:insert-into` => `INSERT INTO`.
+
+  Any namespace qualifier is ignored."
+  [k]
+  (let [n (name k)]
+    (if (= \' (first n))
+      (format-entity (keyword (subs n 1 (count n))))
+      (-> n (dehyphen) (upper-case)))))
+
+(defn- sym->kw
+  "Given a symbol, produce a keyword, retaining the namespace
+  qualifier, if any."
+  [s]
+  (if (symbol? s)
+    (if-let [n (namespace s)]
+      (keyword n (name s))
+      (keyword (name s)))
+    s))
+
+(defn- sqlize-value [x]
+  (cond
+    (nil? x)     "NULL"
+    (string? x)  (str \' (str/replace x "'" "''") \')
+    (ident? x)   (sql-kw x)
+    (vector? x)  (str "[" (str/join ", " (map #'sqlize-value x)) "]")
+    :else        (str x)))
 
 (defn- param-value [k]
   (if (contains? *params* k)

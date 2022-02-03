@@ -800,10 +800,14 @@ ORDER BY id = ? DESC
            (format {:select [[[:'sysdate]]]})))
     (is (= ["SELECT count(*)"]
            (format {:select [[[:'count :*]]]})))
-    (is (= ["SELECT Mixed-Kebab(`yum-yum`)"]
+    (is (= ["SELECT Mixed_Kebab(yum_yum)"]
+           (format {:select [[[:'Mixed-Kebab :yum-yum]]]})))
+    (is (= ["SELECT `Mixed-Kebab`(`yum-yum`)"]
            (format {:select [[[:'Mixed-Kebab :yum-yum]]]} :dialect :mysql)))
-    (is (= ["SELECT other-project.other_dataset.other_function(?, ?)" 1 2]
-           (format {:select [[[:'other-project.other_dataset.other_function 1 2]]]})))))
+    (is (= ["SELECT other_project.other_dataset.other_function(?, ?)" 1 2]
+           (format {:select [[[:'other-project.other_dataset.other_function 1 2]]]})))
+    (is (= ["SELECT \"other-project\".\"other_dataset\".\"other_function\"(?, ?)" 1 2]
+           (format {:select [[[:'other-project.other_dataset.other_function 1 2]]]} :dialect :ansi)))))
 
 (deftest join-without-on-using
   ;; essentially issue 326
