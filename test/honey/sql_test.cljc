@@ -134,10 +134,10 @@
   (is (= (format {:with [[[:static {:columns [:a :b :c]}] {:values [[1 2 3] [4 5]]}]]})
          ["WITH static (a, b, c) AS (VALUES (?, ?, ?), (?, ?, NULL))" 1 2 3 4 5]))
   (is (= (format
-           {:with [[[:static {:columns [:a :b :c]}]
-                    {:values [[1 2] [4 5 6]]}]]
-            :select [:*]
-            :from [:static]})
+          {:with [[[:static {:columns [:a :b :c]}]
+                   {:values [[1 2] [4 5 6]]}]]
+           :select [:*]
+           :from [:static]})
          ["WITH static (a, b, c) AS (VALUES (?, ?, NULL), (?, ?, ?)) SELECT * FROM static" 1 2 4 5 6])))
 
 (deftest insert-into
@@ -236,15 +236,15 @@
 (deftest inner-parts-test
   (testing "The correct way to apply ORDER BY to various parts of a UNION"
     (is (= (format
-             {:union
-              [{:select [:amount :id :created_on]
-                :from [:transactions]}
-               {:select [:amount :id :created_on]
-                :from [{:select [:amount :id :created_on]
-                        :from [:other_transactions]
-                        :order-by [[:amount :desc]]
-                        :limit 5}]}]
-              :order-by [[:amount :asc]]})
+            {:union
+             [{:select [:amount :id :created_on]
+               :from [:transactions]}
+              {:select [:amount :id :created_on]
+               :from [{:select [:amount :id :created_on]
+                       :from [:other_transactions]
+                       :order-by [[:amount :desc]]
+                       :limit 5}]}]
+             :order-by [[:amount :asc]]})
            ["SELECT amount, id, created_on FROM transactions UNION SELECT amount, id, created_on FROM (SELECT amount, id, created_on FROM other_transactions ORDER BY amount DESC LIMIT ?) ORDER BY amount ASC" 5]))))
 
 (deftest compare-expressions-test
@@ -361,6 +361,12 @@
                    ;; this never did anything useful:
                    #_{:parameterizer :mysql-fill})
            ["WHERE (foo = ?) AND (bar = ?) AND (quux = ?)" "foo" "bar" "quux"]))))
+
+#?(:clj
+   (deftest issue-385-test
+     (let [u (java.util.UUID/randomUUID)]
+       (is (= [(str "VALUES ('" (str u) "')")]
+              (format {:values [[u]]} {:inline true}))))))
 
 (deftest set-before-from
   ;; issue 235

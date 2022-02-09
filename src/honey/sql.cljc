@@ -253,6 +253,9 @@
     (string? x)  (str \' (str/replace x "'" "''") \')
     (ident? x)   (sql-kw x)
     (vector? x)  (str "[" (str/join ", " (map #'sqlize-value x)) "]")
+    ;; issue 385: quoted UUIDs for PostgreSQL/ANSI
+    #?(:clj (instance? java.util.UUID x) :cljs false)
+    (str \' x \') ; UUID cannot contain quotes
     :else        (str x)))
 
 (defn- param-value [k]
