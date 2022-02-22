@@ -155,14 +155,11 @@
      :cljs str/upper-case))
 
 (defn- dehyphen
-  "The loop/recur is because we might need to account for x-y-z in
-  a string where the second - won't get replaced because the regex
-  already matched y. I'm sure there's a more efficent solution!"
+  "Replace _embedded_ hyphens with spaces.
+
+  Hyphens at the start or end of a string should not be touched."
   [s]
-  (loop [s s prev nil]
-    (if (= s prev)
-      s
-      (recur (str/replace s #"(\w)-(\w)" "$1 $2") s))))
+  (str/replace s #"(\w)-(\w)" "$1 $2"))
 
 (defn- namespace-_
   "Return the namespace portion of a symbol, with dashes converted."

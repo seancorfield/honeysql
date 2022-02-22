@@ -866,3 +866,13 @@ ORDER BY id = ? DESC
            (format {:select :foo :from :bar
                     :offset 20}
                    {:dialect :sqlserver})))))
+
+(deftest sql-kw-test
+  (is (= "FETCH NEXT" (sut/sql-kw :fetch-next)))
+  (is (= "WHAT IS THIS" (sut/sql-kw :what-is-this)))
+  (is (= "FEE FIE FOE FUM" (sut/sql-kw :fee-fie-foe-fum)))
+  (is (= "-WHAT THE-" (sut/sql-kw :-what-the-)))
+  (is (= "fetch_next" (sut/sql-kw :'fetch-next)))
+  (is (= "what_is_this" (sut/sql-kw :'what-is-this)))
+  (is (= "fee_fie_foe_fum" (sut/sql-kw :'fee-fie-foe-fum)))
+  (is (= "_what_the_" (sut/sql-kw :'-what-the-))))
