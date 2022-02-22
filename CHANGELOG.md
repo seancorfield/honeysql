@@ -1,6 +1,6 @@
 # Changes
 
-* 2.2.next in progress
+* 2.2.868 -- 2022-02-21
   * Address [#387](https://github.com/seancorfield/honeysql/issues/387) by making the function simpler.
   * Fix [#385](https://github.com/seancorfield/honeysql/issues/385) by quoting inlined UUIDs.
   * Address [#352](https://github.com/seancorfield/honeysql/issues/352) by treating `:'` as introducing a function name that should be formatted as a SQL entity (respects quoting, dot-splitting, etc).
