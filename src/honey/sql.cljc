@@ -159,7 +159,7 @@
 
   Hyphens at the start or end of a string should not be touched."
   [s]
-  (str/replace s #"(\w)-(\w)" "$1 $2"))
+  (str/replace s #"(\w)-(?=\w)" "$1 "))
 
 (defn- namespace-_
   "Return the namespace portion of a symbol, with dashes converted."

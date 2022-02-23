@@ -868,6 +868,13 @@ ORDER BY id = ? DESC
                    {:dialect :sqlserver})))))
 
 (deftest sql-kw-test
+  (is (= "-" (sut/sql-kw :-)))
+  (is (= "-X" (sut/sql-kw :-x)))
+  (is (= "X-" (sut/sql-kw :x-)))
+  (is (= "-X-" (sut/sql-kw :-x-)))
+  (is (= "A B" (sut/sql-kw :a-b)))
+  (is (= "A B C" (sut/sql-kw :a-b-c)))
+  (is (= "A B C D" (sut/sql-kw :a-b-c-d)))
   (is (= "FETCH NEXT" (sut/sql-kw :fetch-next)))
   (is (= "WHAT IS THIS" (sut/sql-kw :what-is-this)))
   (is (= "FEE FIE FOE FUM" (sut/sql-kw :fee-fie-foe-fum)))
