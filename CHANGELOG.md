@@ -2,6 +2,7 @@
 
 * 2.2.next in progress
   * Fix [#387](https://github.com/seancorfield/honeysql/issues/387) again.
+  * Update `build-clj` to v0.8.0.
 
 * 2.2.868 -- 2022-02-21
   * Address [#387](https://github.com/seancorfield/honeysql/issues/387) by making the function simpler.
