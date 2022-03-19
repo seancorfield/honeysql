@@ -67,7 +67,7 @@
 (defn- add-clause-before
   "Low-level helper just to insert a new clause.
 
-  If the clause is already in the list, remove it."
+  If the clause is already in the list, this moves it to the end."
   [order clause before]
   (let [clauses (set order)
         order   (if (contains? clauses clause)
