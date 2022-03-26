@@ -23,7 +23,7 @@
 (def at? "The @? operator." (keyword "@?"))
 (def atat "The @@ operator." (keyword "@@"))
 
-(sql/register-op! :->)
+(sql/register-op! :-> :variadic true)
 (sql/register-op! :->>)
 (sql/register-op! :#>)
 (sql/register-op! :#>>)

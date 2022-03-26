@@ -36,4 +36,7 @@
     (is (= ["SELECT a @?? b AS x"]
            (sql/format {:select [[[sut/at? :a :b] :x]]})))
     (is (= ["SELECT a @@ b AS x"]
-           (sql/format {:select [[[sut/atat :a :b] :x]]})))))
+           (sql/format {:select [[[sut/atat :a :b] :x]]}))))
+  (testing "variadic ops"
+    (is (= ["SELECT a -> b -> c AS x"]
+           (sql/format {:select [[[:-> :a :b :c] :x]]})))))
