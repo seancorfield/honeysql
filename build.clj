@@ -33,7 +33,8 @@
   Optionally specify :aliases vector:
   [:1.9] -- test against Clojure 1.9 (the default)
   [:1.10] -- test against Clojure 1.10.3
-  [:master] -- test against Clojure 1.11 master snapshot
+  [:1.11] -- test against Clojure 1.11.0
+  [:master] -- test against Clojure 1.12 master snapshot
   [:cljs] -- test against ClojureScript"
   [{:keys [aliases] :as opts}]
   (gen-doc-tests opts)
@@ -47,7 +48,7 @@
 
 (defn test "Run basic tests." [opts]
   (-> opts
-      (assoc :aliases [:1.10])
+      (assoc :aliases [:1.11])
       (bb/run-tests)))
 
 (defn ci "Run the CI pipeline of tests (and build the JAR)." [opts]
@@ -58,13 +59,13 @@
             (reduce (fn [opts alias]
                       (run-doc-tests (assoc opts :aliases [alias])))
                     opts
-                    [:cljs :1.9 :1.10 :master]))
+                    [:cljs :1.9 :1.10 :1.11 :master]))
       (eastwood)
       (as-> opts
             (reduce (fn [opts alias]
                       (bb/run-tests (assoc opts :aliases [alias])))
                     opts
-                    [:cljs :1.9 :1.10 :master]))
+                    [:cljs :1.9 :1.10 :1.11 :master]))
       (bb/clean)
       (assoc :src-pom "template/pom.xml")
       (bb/jar)))

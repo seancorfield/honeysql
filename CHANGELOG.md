@@ -2,6 +2,7 @@
 
 * 2.2.next in progress
   * Fix [#387](https://github.com/seancorfield/honeysql/issues/387) again.
+  * Update CI to reflect Clojure 1.11 release (master -> 1.11; new master is 1.12).
   * Update `build-clj` to v0.8.0.
 
 * 2.2.868 -- 2022-02-21
