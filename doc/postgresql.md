@@ -250,9 +250,9 @@ user=> (sql/format {:delete-from :distributors
 user=> (-> (update :distributors)
            (set {:dname "Foo Bar Designs"})
            (where [:= :did 2])
-           (returning [:did :dname])
+           (returning :did :dname)
            sql/format)
-["UPDATE distributors SET dname = ? WHERE did = ? RETURNING did dname"
+["UPDATE distributors SET dname = ? WHERE did = ? RETURNING did, dname"
  "Foo Bar Designs" 2]
 ```
 

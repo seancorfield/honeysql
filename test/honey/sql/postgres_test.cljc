@@ -152,11 +152,11 @@
            (sql/format {:delete-from :distributors
                         :where [:> :did :10]
                         :returning [:*]})))
-    (is (= ["UPDATE distributors SET dname = ? WHERE did = 2 RETURNING did dname" "Foo Bar Designs"]
+    (is (= ["UPDATE distributors SET dname = ? WHERE did = 2 RETURNING did, dname" "Foo Bar Designs"]
            (-> (update :distributors)
                (set {:dname "Foo Bar Designs"})
                (where [:= :did :2])
-               (returning [:did :dname])
+               (returning :did :dname)
                sql/format)))))
 
 (deftest create-view-test

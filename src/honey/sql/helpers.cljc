@@ -1,4 +1,4 @@
-;; copyright (c) 2020-2021 sean corfield, all rights reserved
+;; copyright (c) 2020-2022 sean corfield, all rights reserved
 
 (ns honey.sql.helpers
   "Helper functions for the built-in clauses in honey.sql.
@@ -870,9 +870,9 @@
   "Accepts any number of column names to return from an
   insert operation:
 
-  (returning :*)
+  (returning :*) and (returning :a :b)
 
-  Produces: RETURNING *"
+  Produce: RETURNING * and RETURNING a, b respectively."
   [& cols]
   (generic :returning cols))
 
