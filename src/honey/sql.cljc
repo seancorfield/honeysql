@@ -50,6 +50,7 @@
    :refresh-materialized-view
    ;; then SQL clauses in priority order:
    :raw :nest :with :with-recursive :intersect :union :union-all :except :except-all
+   :table
    :select :select-distinct :select-distinct-on :select-top :select-distinct-top
    :into :bulk-collect-into
    :insert-into :update :delete :delete-from :truncate
@@ -931,6 +932,7 @@
          :union-all       #'format-on-set-op
          :except          #'format-on-set-op
          :except-all      #'format-on-set-op
+         :table           #'format-selector
          :select          #'format-selects
          :select-distinct #'format-selects
          :select-distinct-on #'format-selects-on

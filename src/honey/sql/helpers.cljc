@@ -876,6 +876,14 @@
   [& cols]
   (generic :returning cols))
 
+(defn table
+  "Accepts a single table name and produces TABLE name
+
+  This is equivalent to: SELECT * FROM name"
+  {:arglists '([name])}
+  [& args]
+  (generic-1 :table args))
+
 (defn with-data
   "Accepts a Boolean determining WITH DATA vs WITH NO DATA."
   {:arglists '([data?])}

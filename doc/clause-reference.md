@@ -190,6 +190,25 @@ WITH NO DATA
 Without the `{:columns ..}` clause, the table will be created
 based on the columns in the query that follows.
 
+A more concise version of the above can use the `TABLE` clause:
+
+
+```clojure
+user=> (sql/format {:create-table-as [:metro :if-not-exists
+                                      {:columns [:foo :bar :baz]}
+                                      [:tablespace [:entity :quux]]],
+                    :table :cities,
+                    :where [:= :metroflag "y"],
+                    :with-data false}
+                   {:pretty true})
+["
+CREATE TABLE IF NOT EXISTS metro (foo, bar, baz) TABLESPACE quux AS
+TABLE cities
+WHERE metroflag = ?
+WITH NO DATA
+" "y"]
+```
+
 ## create-extension
 
 `:create-extension` can accept a single extension name or a pair
@@ -319,7 +338,7 @@ user=> (sql/format '{union [{select (id,status) from (table-a)}
 ["SELECT id, status FROM table_a UNION SELECT id, event AS status, from, table_b"]
 ```
 
-## select, select-distinct
+## select, select-distinct, table
 
 `:select` and `:select-distinct` expect a sequence of SQL entities (column names
 or expressions). Any of the SQL entities can be a pair of entity and alias. If you are selecting an expression, you would most
@@ -360,6 +379,9 @@ user=> (sql/format {:select [[:* :replace [[[:* :a [:inline 100]] :b] [[:inline 
 user=> (sql/format {:select [[:* :except [:a :b] :replace [[[:inline 2] :c]]]] :from [:table]})
 ["SELECT * EXCEPT (a, b) REPLACE (2 AS c) FROM table"]
 ```
+
+The `:table` clause is equivalent to `:select :* :from` and accepts just
+a simple table name -- `:create-table-as` above for an example.
 
 ## select-distinct-on
 

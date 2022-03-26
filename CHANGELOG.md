@@ -1,6 +1,7 @@
 # Changes
 
 * 2.2.next in progress
+  * Address [#400](https://github.com/seancorfield/honeysql/issues/400) by adding `:table` clause.
   * Address [#399](https://github.com/seancorfield/honeysql/issues/399) by correcting multi-column `RETURNING` clauses in docs and tests.
   * Address [#398](https://github.com/seancorfield/honeysql/issues/398) by adding `honey.sql.pg-json` namespace that registers PostgreSQL JSON operators and provides symbolic names for "unwritable" operators (that contain `@`).
   * Fix [#387](https://github.com/seancorfield/honeysql/issues/387) again.
