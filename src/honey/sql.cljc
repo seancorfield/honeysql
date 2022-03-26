@@ -227,9 +227,11 @@
   becomes a `KEBAB CASE` (uppercase) string with hyphens replaced
   by spaces, e.g., `:insert-into` => `INSERT INTO`.
 
-  Any namespace qualifier is ignored."
+  Any namespace qualifier is ignored.
+
+  Any ? is escaped to ??."
   [k]
-  (let [n (name k)]
+  (let [n (str/replace (name k) "?" "??")]
     (if (= \' (first n))
       (format-entity (keyword (subs n 1 (count n))))
       (-> n (dehyphen) (upper-case)))))
