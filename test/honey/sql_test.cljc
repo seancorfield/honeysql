@@ -883,3 +883,12 @@ ORDER BY id = ? DESC
   (is (= "what_is_this" (sut/sql-kw :'what-is-this)))
   (is (= "fee_fie_foe_fum" (sut/sql-kw :'fee-fie-foe-fum)))
   (is (= "_what_the_" (sut/sql-kw :'-what-the-))))
+
+(deftest issue-394-quoting
+  (is (= ["SELECT \"A\"\"B\""] (sut/format {:select (keyword "A\"B")} {:quoted true})))
+  (is (= ["SELECT \"A\"\"B\""] (sut/format {:select (keyword "A\"B")} {:dialect :ansi})))
+  (is (= ["SELECT [A\"B]"]     (sut/format {:select (keyword "A\"B")} {:dialect :sqlserver})))
+  (is (= ["SELECT [A]]B]"]     (sut/format {:select (keyword "A]B")} {:dialect :sqlserver})))
+  (is (= ["SELECT `A\"B`"]     (sut/format {:select (keyword "A\"B")} {:dialect :mysql})))
+  (is (= ["SELECT `A``B`"]     (sut/format {:select (keyword "A`B")} {:dialect :mysql})))
+  (is (= ["SELECT \"A\"\"B\""] (sut/format {:select (keyword "A\"B")} {:dialect :oracle}))))

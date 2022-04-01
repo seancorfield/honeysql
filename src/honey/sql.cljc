@@ -87,15 +87,20 @@
                 order))
       (conj order clause))))
 
+(defn- strop
+  "Escape any embedded closing strop characters."
+  [s x e]
+  (str s (str/replace x (str e) (str e e)) e))
+
 (def ^:private dialects
   (reduce-kv (fn [m k v]
                (assoc m k (assoc v :dialect k)))
              {}
-             {:ansi      {:quote #(str \" % \")}
-              :sqlserver {:quote #(str \[ % \])}
-              :mysql     {:quote #(str \` % \`)
+             {:ansi      {:quote #(strop \" % \")}
+              :sqlserver {:quote #(strop \[ % \])}
+              :mysql     {:quote #(strop \` % \`)
                           :clause-order-fn #(add-clause-before % :set :where)}
-              :oracle    {:quote #(str \" % \") :as false}}))
+              :oracle    {:quote #(strop \" % \") :as false}}))
 
 ; should become defonce
 (def ^:private default-dialect (atom (:ansi dialects)))
