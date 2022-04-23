@@ -1098,7 +1098,10 @@
   (let [[sql-x & params-x] (format-expr x {:nested true})
         [sql-y & params-y] (format-expr y {:nested true})
         values             (unwrap (first params-y) {})]
-    (when *caching*
+    ;; #396: prevent caching IN () when named parameter is used:
+    (when (and (meta (first params-y))
+               (::wrapper (meta (first params-y)))
+               *caching*)
       (throw (ex-info "SQL that includes IN () expressions cannot be cached" {})))
     (when-not (= :none *checking*)
       (when (or (and (sequential? y)      (empty? y))
