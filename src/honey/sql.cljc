@@ -402,10 +402,18 @@
   This is intended to be used when writing your own formatters to
   extend the DSL supported by HoneySQL."
   [exprs & [opts]]
+  (when-not (sequential? exprs)
+    (throw (ex-info (str "format-expr-list expects a sequence of expressions, found: "
+                         (type exprs))
+                    {:exprs exprs})))
   (reduce (fn [[sql params] [sql' & params']]
             [(conj sql sql') (if params' (into params params') params)])
           [[] []]
           (map #(format-expr % opts) exprs)))
+
+(comment
+  (format-expr-list :?tags)
+  )
 
 (defn- format-columns [k xs]
   (let [[sqls params] (format-expr-list xs {:drop-ns (= :columns k)})]

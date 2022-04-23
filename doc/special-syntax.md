@@ -19,6 +19,27 @@ of that sequence (as SQL parameters):
 ;;=> ["ARRAY[?, ?, ?, ?, ?]" 0 1 2 3 4]
 ```
 
+> Note: you cannot provide a named parameter as the argument for `:array` because the generated SQL depends on the number of elements in the sequence, so the following throws an exception:
+
+``` clj
+(sql/format {:select [[[:array :?tags] :arr]]} {:params {:tags [1 2 3]}})
+```
+
+You can do the following instead:
+
+```clojure
+(let [tags [1 2 3]]
+  (sql/format {:select [[[:array tags] :arr]]} {:inline true}))
+;;=> ["SELECT ARRAY[1, 2, 3] AS arr"]
+```
+
+In addition, the argument to `:array` is treated as a literal sequence of Clojure values and is **not** interpreted as a HoneySQL expression, so you must use the `{:inline true}` formatting option as shown above rather than try to inline the values like this:
+
+```clojure
+(sql/format {:select [[[:array [:inline [1 2 3]]] :arr]]})
+;;=> ["SELECT ARRAY[inline, (?, ?, ?)] AS arr" 1 2 3]
+```
+
 ## between
 
 Accepts three arguments: an expression, a lower bound, and
