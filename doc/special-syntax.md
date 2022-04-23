@@ -21,7 +21,8 @@ of that sequence (as SQL parameters):
 
 > Note: you cannot provide a named parameter as the argument for `:array` because the generated SQL depends on the number of elements in the sequence, so the following throws an exception:
 
-``` clj
+<!-- :test-doc-blocks/skip -->
+```clojure
 (sql/format {:select [[[:array :?tags] :arr]]} {:params {:tags [1 2 3]}})
 ```
 
