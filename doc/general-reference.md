@@ -126,6 +126,8 @@ are two possible approaches:
 
 As of 2.2.858, `format` can cache the SQL and parameters produced from the data structure so that it does not need to be computed on every call. This functionality is available only in Clojure and depends on [`org.clojure/core.cache`](https://github.com/clojure/core.cache) being on your classpath. If you are repeatedly building the same complex SQL statements over and over again, this can be a good way to provide a performance boost but there are some caveats.
 
+> Caution: if you use `:in` or `:not-in` expressions, they will be cached with a fixed number of parameters causing errors for subsequent clauses that match that SQL. See [#396](https://github.com/seancorfield/honeysql/issues/396) for details.
+
 * You need `core.cache` as a dependency: `org.clojure/core.cache {:mvn/version "1.0.225"}` was the latest as of January 20th, 2022,
 * You need to create one or more caches yourself, from the various factory functions in the [`clojure.core.cache.wrapped` namespace](http://clojure.github.io/core.cache/#clojure.core.cache.wrapped),
 * You should use named parameters in your SQL DSL data structure, e.g., `:?foo` or `'?foo`, and pass the actual parameter values via the `:params` option to `format`.
