@@ -80,7 +80,7 @@ Everything is built on top of maps representing SQL queries:
 ```clojure
 (def sqlmap {:select [:a :b :c]
              :from   [:foo]
-             :where  [:= :f.a "baz"]})
+             :where  [:= :foo.a "baz"]})
 ```
 
 Column names can be provided as keywords or symbols (but not strings -- HoneySQL treats strings as values that should be lifted out of the SQL as parameters).
@@ -91,11 +91,11 @@ Column names can be provided as keywords or symbols (but not strings -- HoneySQL
 
 ```clojure
 (sql/format sqlmap)
-=> ["SELECT a, b, c FROM foo WHERE f.a = ?" "baz"]
+=> ["SELECT a, b, c FROM foo WHERE foo.a = ?" "baz"]
 ;; sqlmap as symbols instead of keywords:
-(-> '{select (a, b, c) from (foo) where (= f.a "baz")}
+(-> '{select (a, b, c) from (foo) where (= foo.a "baz")}
     (sql/format))
-=> ["SELECT a, b, c FROM foo WHERE f.a = ?" "baz"]
+=> ["SELECT a, b, c FROM foo WHERE foo.a = ?" "baz"]
 ```
 
 HoneySQL is a relatively "pure" library, it does not manage your JDBC connection
@@ -113,7 +113,7 @@ If you want to format the query as a string with no parameters (e.g. to use the 
 
 ```clojure
 (sql/format sqlmap {:inline true})
-=> ["SELECT a, b, c FROM foo WHERE f.a = 'baz'"]
+=> ["SELECT a, b, c FROM foo WHERE foo.a = 'baz'"]
 ```
 
 Namespace-qualified keywords (and symbols) are generally treated as table-qualified columns: `:foo/bar` becomes `foo.bar`, except in contexts where that would be illegal (such as the list of columns in an `INSERT` statement). This approach is likely to be more compatible with code that uses libraries like [`next.jdbc`](https://github.com/seancorfield/next-jdbc) and [`seql`](https://github.com/exoscale/seql), as well as being more convenient in a world of namespace-qualified keywords, following the example of `clojure.spec` etc.
@@ -146,8 +146,8 @@ function in the `honey.sql.helpers` namespace:
 ```clojure
 (-> (select :a :b :c)
     (from :foo)
-    (where [:= :f.a "baz"]))
-=> {:select [:a :b :c] :from [:foo] :where [:= :f.a "baz"]}
+    (where [:= :foo.a "baz"]))
+=> {:select [:a :b :c] :from [:foo] :where [:= :foo.a "baz"]}
 ```
 
 Order doesn't matter (for independent clauses):
@@ -162,7 +162,7 @@ When using the vanilla helper functions, repeated clauses will be merged into ex
 
 ```clojure
 (-> sqlmap (select :d))
-=> {:from [:foo], :where [:= :f.a "baz"], :select [:a :b :c :d]}
+=> {:from [:foo], :where [:= :foo.a "baz"], :select [:a :b :c :d]}
 ```
 
 If you want to replace a clause, you can `dissoc` the existing clause first, since this is all data:
@@ -173,7 +173,7 @@ If you want to replace a clause, you can `dissoc` the existing clause first, sin
     (select :*)
     (where [:> :b 10])
     sql/format)
-=> ["SELECT * FROM foo WHERE (f.a = ?) AND (b > ?)" "baz" 10]
+=> ["SELECT * FROM foo WHERE (foo.a = ?) AND (b > ?)" "baz" 10]
 ```
 
 > Note: the helpers always produce keywords so you can rely on `dissoc` with the desired keyword to remove. If you are building the data DSL "manually" and using symbols instead of keywords, you'll need to `dissoc` the symbol form instead.
