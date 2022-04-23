@@ -123,6 +123,8 @@
 (def ^:private ^:dynamic *checking* :none)
 ;; the current DSL hash map being formatted (for contains-clause?):
 (def ^:private ^:dynamic *dsl* nil)
+;; caching data to detect expressions that cannot be cached:
+(def ^:private ^:dynamic *caching* nil)
 
 ;; clause helpers
 
@@ -1096,6 +1098,8 @@
   (let [[sql-x & params-x] (format-expr x {:nested true})
         [sql-y & params-y] (format-expr y {:nested true})
         values             (unwrap (first params-y) {})]
+    (when *caching*
+      (throw (ex-info "SQL that includes IN () expressions cannot be cached" {})))
     (when-not (= :none *checking*)
       (when (or (and (sequential? y)      (empty? y))
                 (and (sequential? values) (empty? values)))
@@ -1438,6 +1442,7 @@
          dialect? (contains? opts :dialect)
          dialect  (when dialect? (get dialects (check-dialect (:dialect opts))))]
      (binding [*dialect* (if dialect? dialect @default-dialect)
+               *caching* cache
                *checking* (if (contains? opts :checking)
                             (:checking opts)
                             :none)

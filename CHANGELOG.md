@@ -7,6 +7,7 @@
   * Address [#400](https://github.com/seancorfield/honeysql/issues/400) by adding `:table` clause.
   * Address [#399](https://github.com/seancorfield/honeysql/issues/399) by correcting multi-column `RETURNING` clauses in docs and tests.
   * Fix [#398](https://github.com/seancorfield/honeysql/issues/398) by adding `honey.sql.pg-ops` namespace that registers PostgreSQL JSON and regex operators and provides symbolic names for "unwritable" operators (that contain `@`, `#`, or `~`).
+  * Address [#396](https://github.com/seancorfield/honeysql/issues/396) by throwing an exception if you try to cache a SQL statement that includes an `IN ()` expression.
   * Fix [#394](https://github.com/seancorfield/honeysql/issues/394) by restoring HoneySQL 1.x's behavior when quoting.
   * Fix [#387](https://github.com/seancorfield/honeysql/issues/387) again.
   * Update CI to reflect Clojure 1.11 release (master -> 1.11; new master is 1.12).

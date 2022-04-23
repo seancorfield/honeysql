@@ -126,15 +126,13 @@ are two possible approaches:
 
 As of 2.2.858, `format` can cache the SQL and parameters produced from the data structure so that it does not need to be computed on every call. This functionality is available only in Clojure and depends on [`org.clojure/core.cache`](https://github.com/clojure/core.cache) being on your classpath. If you are repeatedly building the same complex SQL statements over and over again, this can be a good way to provide a performance boost but there are some caveats.
 
-> Caution: if you use `:in` or `:not-in` expressions, they will be cached with a fixed number of parameters causing errors for subsequent clauses that match that SQL. See [#396](https://github.com/seancorfield/honeysql/issues/396) for details.
-
 * You need `core.cache` as a dependency: `org.clojure/core.cache {:mvn/version "1.0.225"}` was the latest as of January 20th, 2022,
 * You need to create one or more caches yourself, from the various factory functions in the [`clojure.core.cache.wrapped` namespace](http://clojure.github.io/core.cache/#clojure.core.cache.wrapped),
 * You should use named parameters in your SQL DSL data structure, e.g., `:?foo` or `'?foo`, and pass the actual parameter values via the `:params` option to `format`.
 
 You can then pass the (atom containing the) cache to `format` using the `:cache` option. The call to `format` then looks in that cache for a match for the data structure passed in, i.e., the entire data structure is used as a key into the cache, including any literal parameter values. If the cache contains a match, the corresponding vector of a SQL string and parameters is used, otherwise the data structure is parsed as usual and the SQL string (and parameters) generated from it (and stored in the cache for the next call). Finally, named parameters in the vector are replaced by their values from the `:params` option.
 
-The code that _builds_ the DSL data structure will be run in all cases, so any conditional logic and helper function calls will still happen, since that is how the data structure is created and then passed to `format`. If you want to avoid overhead, you'd need to take steps to build the data structure separately and store it somewhere for reuse in the call to `format`.
+The code that _builds_ the DSL data structure will be run in all cases, so any conditional logic and helper function calls will still happen, since that is how the data structure is created and then passed to `format`. If you want to also avoid that overhead, you'd need to take steps to build the data structure separately and store it somewhere for reuse in the call to `format`.
 
 Since the data structure is used as the key into the cache, literal parameter values will lead to different keys:
 
@@ -149,6 +147,8 @@ Since the data structure is used as the key into the cache, literal parameter va
 ```
 
 Since HoneySQL accepts any of the `clojure.core.cache.wrapped` caches and runs every data structure through the provided `:cache`, it's up to you to ensure that your cache is appropriate for that usage: a "basic" cache will keep every entry until the cache is explicitly emptied; a TTL cache will keep each entry for a specific period of time; and so on.
+
+> Note: because `IN ()` expressions are inlined, you cannot cache SQL that includes them. If you try to `format` a statement that includes an `IN ()` expression when you provide the `:cache` option, you will get an exception. See [#396](https://github.com/seancorfield/honeysql/issues/396) for details of why this doesn't work.
 
 ## Other Sections Will Be Added!
 
