@@ -65,7 +65,7 @@ Requiring the namespace automatically registers these operators for use in expre
 user=> (require '[honey.sql.pg-ops :refer [regex]])
 nil
 user=> (sql/format {:select [[[regex :straw [:inline "needle"]] :match]] :from :haystack})
-["SELECT straw ~ 'needle` AS match FROM haystack"]
+["SELECT straw ~ 'needle' AS match FROM haystack"]
 ```
 
 ## JSON/JSONB
