@@ -10,6 +10,49 @@ Everything that the nilenso library provided (in 0.4.112) is implemented
 directly in HoneySQL 2.x although a few things have a
 slightly different syntax.
 
+## Code Examples
+
+The code examples herein assume:
+```clojure
+(refer-clojure :exclude '[update set])
+(require '[honey.sql :as sql]
+         '[honey.sql.helpers :refer [select from where
+                                     update set
+                                     insert-into values
+                                     create-table with-columns create-view create-extension
+                                     add-column alter-table add-index
+                                     modify-column rename-column rename-table
+                                     drop-table drop-column drop-index drop-extension
+                                     upsert returning on-conflict on-constraint
+                                     do-update-set do-nothing]])
+```
+
+Clojure users can opt for the shorter `(require '[honey.sql :as sql] '[honey.sql.helpers :refer :all])` but this syntax is not available to ClojureScript users.
+
+## Working with Arrays
+
+HoneySQL supports `:array` as special syntax to produce `ARRAY[..]` expressions
+but PostgreSQL also has an "array constructor" for creating arrays from subquery results.
+
+```sql
+SELECT ARRAY(SELECT oid FROM pg_proc WHERE proname LIKE 'bytea%');
+```
+
+In order to produce that SQL, you can use HoneySQL's "as-is" function syntax to circumvent
+the special syntax:
+
+```clojure
+user=> (sql/format {:select [[[:'ARRAY {:select :oid :from :pg_proc :where [:like :proname [:inline "bytea%"]]}]]]})
+["SELECT ARRAY (SELECT oid FROM pg_proc WHERE proname LIKE 'bytea%')"]
+```
+
+Compare this with the `ARRAY[..]` syntax:
+
+```clojure
+user=> (sql/format {:select [[[:array [1 2 3]] :a]]})
+["SELECT ARRAY[?, ?, ?] AS a" 1 2 3]
+```
+
 ## Operators with @
 
 A number of PostgreSQL operators contain `@` which is not legal in a Clojure keyword or symbol (as literal syntax). The recommendation is to `def` your own name for these
@@ -31,25 +74,6 @@ HoneySQL not to do that. There are two possible approaches:
 
 1. Use named parameters (e.g., `[:param :myval]`) instead of having the values directly in the DSL structure and then pass `{:params {:myval some-json}}` as part of the options in the call to `format`, or
 2. Use `[:lift ..]` wrapped around any structured values which tells HoneySQL not to interpret the vector or hash map value as a DSL: `[:lift some-json]`.
-
-## Code Examples
-
-The code examples herein assume:
-```clojure
-(refer-clojure :exclude '[update set])
-(require '[honey.sql :as sql]
-         '[honey.sql.helpers :refer [select from where
-                                     update set
-                                     insert-into values
-                                     create-table with-columns create-view create-extension
-                                     add-column alter-table add-index
-                                     modify-column rename-column rename-table
-                                     drop-table drop-column drop-index drop-extension
-                                     upsert returning on-conflict on-constraint
-                                     do-update-set do-nothing]])
-```
-
-Clojure users can opt for the shorter `(require '[honey.sql :as sql] '[honey.sql.helpers :refer :all])` but this syntax is not available to ClojureScript users.
 
 ## Upsert
 
