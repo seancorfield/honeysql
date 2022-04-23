@@ -172,6 +172,16 @@
     (is (or (= res ["INSERT INTO foo (id, bar) VALUES (?, ?), (?, NULL)" 1 "quux" 2])
             (= res ["INSERT INTO foo (bar, id) VALUES (?, ?), (NULL, ?)" "quux" 1 2])))))
 
+(deftest insert-into-functions
+  ;; needs [[:raw ..]] because it's the columns case:
+  (is (= (format {:insert-into [[[:raw "My-Table Name"]] {:select [:bar] :from [:baz]}]})
+         ["INSERT INTO My-Table Name SELECT bar FROM baz"]))
+  ;; this variant only needs [:raw ..]
+  (is (= (format {:insert-into [[:raw "My-Table Name"]] :values [{:foo/id 1}]})
+         ["INSERT INTO My-Table Name (id) VALUES (?)" 1]))
+  (is (= (format {:insert-into [:foo :bar] :values [{:foo/id 1}]})
+         ["INSERT INTO foo AS bar (id) VALUES (?)" 1])))
+
 (deftest exists-test
   ;; EXISTS should never have been implemented as SQL syntax: it's an operator!
   #_(is (= (format {:exists {:select [:a] :from [:foo]}})
