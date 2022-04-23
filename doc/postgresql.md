@@ -53,16 +53,19 @@ user=> (sql/format {:select [[[:array [1 2 3]] :a]]})
 ["SELECT ARRAY[?, ?, ?] AS a" 1 2 3]
 ```
 
-## Operators with @
+## Operators with @, #, and ~
 
-A number of PostgreSQL operators contain `@` which is not legal in a Clojure keyword or symbol (as literal syntax). The recommendation is to `def` your own name for these
-operators, using `at` in place of `@`, with an explicit call to `keyword` (or `symbol`), and then use that `def`'d name when registering new operators and when writing
-your DSL expressions:
+A number of PostgreSQL operators contain `@`, `#`, or `~` which are not legal in a Clojure keyword or symbol (as literal syntax). The namespace `honey.sql.pg-ops` provides convenient symbolic names for these JSON and regex operators, substituting `at` for `@`, `hash` for `#`, and `tilde` for `~`.
+
+The regex operators also have more memorable aliases: `regex` for `~`, `iregex` for `~*`, `!regex` for `!~`, and `!iregex` for `!~*`.
+
+Requiring the namespace automatically registers these operators for use in expressions:
 
 ```clojure
-(def <at (keyword "<@"))
-;; then register it: (sql/register-op! <at)
-;; and use it in expressions: [<at :submitted [:range :begin :end]]
+user=> (require '[honey.sql.pg-ops :refer [regex]])
+nil
+user=> (sql/format {:select [[[regex :straw [:inline "needle"]] :match]] :from :haystack})
+["SELECT straw ~ 'needle` AS match FROM haystack"]
 ```
 
 ## JSON/JSONB

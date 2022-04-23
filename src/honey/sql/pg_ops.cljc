@@ -1,18 +1,27 @@
 ;; copyright (c) 2022 sean corfield, all rights reserved
 
-(ns honey.sql.pg-json
+(ns honey.sql.pg-ops
   "Register all the PostgreSQL JSON/JSONB operators
   and provide convenient Clojure names for those ops.
+  In addition, provide names for the PostgreSQL
+  regex operators as well.
 
-  For the seven that cannot be written directly as
-  symbols, use mnemonic names: hash for # and at for @.
+  For the eleven that cannot be written directly as
+  symbols, use mnemonic names: hash for #, at for @,
+  and tilde for ~.
 
-  For the four of those that cannot be written as
+  For the six of those that cannot be written as
   keywords, invoke the `keyword` function instead.
 
-  Those latter four (`at>`, `<at`, `at?`, and `atat`)
-  are the only ones that should really be needed in the
-  DSL. The other names are provided for completeness."
+  Those latter eight (`at>`, `<at`, `at?`, `atat`,
+  `tilde`, `tilde*`, `!tilde`, and `!tilde*`) are
+  the only ones that should really be needed in the
+  DSL. The other names are provided for completeness.
+
+  `regex` and `iregex` are provided as aliases for the
+  regex operators `tilde` and `tilde*` respectively.
+  `!regex` and `!iregex` are provided as aliases for the
+  regex operators `!tilde` and `!tilde*` respectively."
   (:refer-clojure :exclude [-> ->> -])
   (:require [honey.sql :as sql]))
 
@@ -33,6 +42,16 @@
 (def at?    "The @? operator."  (keyword "@?"))
 (def atat   "The @@ operator."  (keyword "@@"))
 
+(def tilde   "The case-sensitive regex match operator."   (keyword "~"))
+(def tilde*  "The case-insensitive regex match operator." (keyword "~*"))
+(def !tilde  "The case-sensitive regex unmatch operator."   (keyword "!~"))
+(def !tilde* "The case-insensitive regex unmatch operator." (keyword "!~*"))
+;; aliases:
+(def regex   tilde)
+(def iregex  tilde*)
+(def !regex  !tilde)
+(def !iregex !tilde*)
+
 (sql/register-op! :-> :variadic true)
 (sql/register-op! :->>)
 (sql/register-op! :#>)
@@ -48,3 +67,8 @@
 (sql/register-op! :#-)
 (sql/register-op! at?)
 (sql/register-op! atat)
+
+(sql/register-op! tilde)
+(sql/register-op! tilde*)
+(sql/register-op! !tilde)
+(sql/register-op! !tilde*)

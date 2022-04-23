@@ -1,9 +1,9 @@
-;; copyright (c) 2020-2021 sean corfield, all rights reserved
+;; copyright (c) 2022 sean corfield, all rights reserved
 
-(ns honey.sql.pg-json-test
+(ns honey.sql.pg-ops-test
   (:require [clojure.test :refer [deftest is testing]]
             [honey.sql :as sql]
-            [honey.sql.pg-json :as sut]))
+            [honey.sql.pg-ops :as sut]))
 
 (deftest pg-op-tests
   (testing "built-in ops"

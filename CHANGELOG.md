@@ -1,9 +1,12 @@
 # Changes
 
 * 2.2.next in progress
+  * Address [#404](https://github.com/seancorfield/honeysql/issues/404) by documenting PostgreSQL's `ARRAY` constructor syntax and how to produce it.
+  * Address parts of [#403](https://github.com/seancorfield/honeysql/issues/403) by improving the documentation for `:array` and also improving the exception that was thrown when it was misused.
+  * Fix [#402](https://github.com/seancorfield/honeysql/issues/402) by allowing for expressions in `:insert-into` table.
   * Address [#400](https://github.com/seancorfield/honeysql/issues/400) by adding `:table` clause.
   * Address [#399](https://github.com/seancorfield/honeysql/issues/399) by correcting multi-column `RETURNING` clauses in docs and tests.
-  * Address [#398](https://github.com/seancorfield/honeysql/issues/398) by adding `honey.sql.pg-json` namespace that registers PostgreSQL JSON operators and provides symbolic names for "unwritable" operators (that contain `@` or `#`).
+  * Fix [#398](https://github.com/seancorfield/honeysql/issues/398) by adding `honey.sql.pg-ops` namespace that registers PostgreSQL JSON and regex operators and provides symbolic names for "unwritable" operators (that contain `@`, `#`, or `~`).
   * Fix [#394](https://github.com/seancorfield/honeysql/issues/394) by restoring HoneySQL 1.x's behavior when quoting.
   * Fix [#387](https://github.com/seancorfield/honeysql/issues/387) again.
   * Update CI to reflect Clojure 1.11 release (master -> 1.11; new master is 1.12).
