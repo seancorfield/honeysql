@@ -1,5 +1,8 @@
 # Changes
 
+* 2.3.next in progress
+  * Address [#401](https://github.com/seancorfield/honeysql/issues/401) by adding `register-dialect!` and `get-dialect`, and also making `add-clause-before` and `strop` public so that new dialects are easier to construct.
+
 * 2.2.891 -- 2022-04-23
   * Address [#404](https://github.com/seancorfield/honeysql/issues/404) by documenting PostgreSQL's `ARRAY` constructor syntax and how to produce it.
   * Address parts of [#403](https://github.com/seancorfield/honeysql/issues/403) by improving the documentation for `:array` and also improving the exception that was thrown when it was misused.

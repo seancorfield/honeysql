@@ -65,7 +65,7 @@
    :returning
    :with-data])
 
-(defn- add-clause-before
+(defn add-clause-before
   "Low-level helper just to insert a new clause.
 
   If the clause is already in the list, this moves it to the end."
@@ -87,23 +87,24 @@
                 order))
       (conj order clause))))
 
-(defn- strop
+(defn strop
   "Escape any embedded closing strop characters."
   [s x e]
   (str s (str/replace x (str e) (str e e)) e))
 
 (def ^:private dialects
-  (reduce-kv (fn [m k v]
-               (assoc m k (assoc v :dialect k)))
-             {}
-             {:ansi      {:quote #(strop \" % \")}
-              :sqlserver {:quote #(strop \[ % \])}
-              :mysql     {:quote #(strop \` % \`)
-                          :clause-order-fn #(add-clause-before % :set :where)}
-              :oracle    {:quote #(strop \" % \") :as false}}))
+  (atom
+   (reduce-kv (fn [m k v]
+                (assoc m k (assoc v :dialect k)))
+              {}
+              {:ansi      {:quote #(strop \" % \")}
+               :sqlserver {:quote #(strop \[ % \])}
+               :mysql     {:quote #(strop \` % \`)
+                           :clause-order-fn #(add-clause-before % :set :where)}
+               :oracle    {:quote #(strop \" % \") :as false}})))
 
 ; should become defonce
-(def ^:private default-dialect (atom (:ansi dialects)))
+(def ^:private default-dialect (atom (:ansi @dialects)))
 (def ^:private default-quoted (atom nil))
 
 (def ^:private ^:dynamic *dialect* nil)
@@ -219,7 +220,7 @@
   (for [v [:foo-bar "foo-bar" ; symbol is the same as keyword
            :f-o.b-r :f-o/b-r]
         a [true false] d [true false] q [true false]]
-    (binding [*dialect* (:mysql dialects) *quoted* q]
+    (binding [*dialect* (:mysql @dialects) *quoted* q]
       (if q
         [v a d (format-entity v {:aliased a :drop-ns d})
          (binding [*quoted-snake* true]
@@ -1406,9 +1407,9 @@
           ["?" expr])))
 
 (defn- check-dialect [dialect]
-  (when-not (contains? dialects dialect)
+  (when-not (contains? @dialects dialect)
     (throw (ex-info (str "Invalid dialect: " dialect)
-                    {:valid-dialects (vec (sort (keys dialects)))})))
+                    {:valid-dialects (vec (sort (keys @dialects)))})))
   dialect)
 
 (def through-opts
@@ -1443,7 +1444,7 @@
   ([data opts]
    (let [cache    (:cache opts)
          dialect? (contains? opts :dialect)
-         dialect  (when dialect? (get dialects (check-dialect (:dialect opts))))]
+         dialect  (when dialect? (get @dialects (check-dialect (:dialect opts))))]
      (binding [*dialect* (if dialect? dialect @default-dialect)
                *caching* cache
                *checking* (if (contains? opts :checking)
@@ -1482,7 +1483,7 @@
 
   Dialects are always applied to the base order to create the current order."
   [dialect & {:keys [quoted]}]
-  (reset! default-dialect (get dialects (check-dialect dialect)))
+  (reset! default-dialect (get @dialects (check-dialect dialect)))
   (when-let [f (:clause-order-fn @default-dialect)]
     (reset! current-clause-order (f @base-clause-order)))
   (reset! default-quoted quoted))
@@ -1523,6 +1524,38 @@
       (swap! base-clause-order add-clause-before clause before)
       (swap! current-clause-order add-clause-before clause before)
       (swap! clause-format assoc clause f))))
+
+(defn register-dialect!
+  "Register a new dialect. Accepts a dialect name (keyword) and a hash
+  map that must contain at least a `:quoted` key whose value is a unary
+  function that accepts a string and returns it quoted per the dialect.
+
+  It may also contain a `:clause-order-fn` key whose value is a unary
+  function that accepts a list of SQL clauses (keywords) in order of
+  precedence and returns an updated list of SQL clauses in order. It
+  may use `add-clause-before` to achieve this. Currently, the only
+  dialect that does this is MySQL, whose `SET` clause (`:set`) has a
+  non-standard precedence, compared to other SQL dialects."
+  [dialect dialect-spec]
+  (when-not (keyword? dialect)
+    (throw (ex-info "Dialect must be a keyword" {:dialect dialect})))
+  (when-not (map? dialect-spec)
+    (throw (ex-info "Dialect spec must be a hash map containing at least a :quoted function"
+                    {:dialect-spec dialect-spec})))
+  (when-not (fn? (:quoted dialect-spec))
+    (throw (ex-info "Dialect spec is missing a :quoted function"
+                    {:dialect-spec dialect-spec})))
+  (when-let [cof (:clause-order-fn dialect-spec)]
+    (when-not (fn? cof)
+      (throw (ex-info "Dialect spec contains :clause-order-fn but it is not a function"
+                      {:dialect-spec dialect-spec}))))
+  (swap! dialects assoc dialect (assoc dialect-spec :dialect dialect)))
+
+(defn get-dialect
+  "Given a dialect name (keyword), return its definition.
+  Returns `nil` if the dialect is unknown."
+  [dialect]
+  (get @dialects dialect))
 
 (defn register-fn!
   "Register a new function (as special syntax). The `formatter` is either
