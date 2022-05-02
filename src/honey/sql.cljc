@@ -158,10 +158,17 @@
 ;; way we'd expect.
 ;;
 ;; Use this instead of `str/upper-case` as it will always use Locale/US.
-(def ^:private ^{:arglists '([s])} upper-case
-  ;; TODO - not sure if there's a JavaScript equivalent here we should be using as well
-  #?(:clj (fn [^String s] (.. s toString (toUpperCase (java.util.Locale/US))))
-     :cljs str/upper-case))
+#?(:clj
+   (defn upper-case
+     "Upper-case a string in Locale/US to avoid locale-specific capitalization."
+     [^String s]
+     (.. s toString (toUpperCase (java.util.Locale/US))))
+   ;; TODO - not sure if there's a JavaScript equivalent here we should be using as well
+   :cljs
+   (defn upper-case
+     "In ClojureScript, just an alias for cljs.string/upper-case."
+     [s]
+     (str/upper-case s)))
 
 (defn- dehyphen
   "Replace _embedded_ hyphens with spaces.
@@ -1540,14 +1547,18 @@
   (when-not (keyword? dialect)
     (throw (ex-info "Dialect must be a keyword" {:dialect dialect})))
   (when-not (map? dialect-spec)
-    (throw (ex-info "Dialect spec must be a hash map containing at least a :quoted function"
+    (throw (ex-info "Dialect spec must be a hash map containing at least a :quote function"
                     {:dialect-spec dialect-spec})))
-  (when-not (fn? (:quoted dialect-spec))
-    (throw (ex-info "Dialect spec is missing a :quoted function"
+  (when-not (fn? (:quote dialect-spec))
+    (throw (ex-info "Dialect spec is missing a :quote function"
                     {:dialect-spec dialect-spec})))
   (when-let [cof (:clause-order-fn dialect-spec)]
     (when-not (fn? cof)
       (throw (ex-info "Dialect spec contains :clause-order-fn but it is not a function"
+                      {:dialect-spec dialect-spec}))))
+  (when-some [as (:as dialect-spec)]
+    (when-not (boolean? as)
+      (throw (ex-info "Dialect spec contains :as but it is not a boolean"
                       {:dialect-spec dialect-spec}))))
   (swap! dialects assoc dialect (assoc dialect-spec :dialect dialect)))
 

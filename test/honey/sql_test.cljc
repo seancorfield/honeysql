@@ -750,6 +750,14 @@ ORDER BY id = ? DESC
   (testing "that registering a clause by name works"
     (is (map? (sut/register-clause! :qualify :having :window)))))
 
+(deftest issue-401-dialect
+  (testing "registering a dialect that upper-cases idents"
+    (sut/register-dialect! ::MYSQL (update (sut/get-dialect :mysql) :quote comp sut/upper-case))
+    (is (= ["SELECT `foo` FROM `bar`"]
+           (sut/format {:select :foo :from :bar} {:dialect :mysql})))
+    (is (= ["SELECT `FOO` FROM `BAR`"]
+           (sut/format {:select :foo :from :bar} {:dialect ::MYSQL})))))
+
 (deftest issue-321-linting
   (testing "empty IN is ignored by default"
     (is (= ["WHERE x IN ()"]

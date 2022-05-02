@@ -156,3 +156,38 @@ of it and would call `sql/format-expr` on each argument:
 ;; produces:
 ;;=> ["SELECT * FROM table WHERE FOO(a + ?)" 1]
 ```
+
+## Registering a new Dialect
+
+_New in HoneySQL 2.3.x_
+
+The built-in dialects that HoneySQL supports are:
+* `:ansi` -- the default, that quotes identifiers with double-quotes, like `"this"`
+* `:mysql` -- quotes identifiers with backticks, and changes the precedence of `SET` in `UPDATE`
+* `:oracle` -- quotes identifiers like `:ansi`, and does not use `AS` in aliases
+* `:sqlserver` -- quotes identifiers with brackets, like `[this]`
+
+A dialect spec is a hash map containing at least `:quote` but also optionally `:clause-order-fn` and/or `:as`:
+* `:quote` -- a unary function that takes a string and returns the quoted version of it
+* `:clause-order-fn` -- a unary function that takes a sequence of clause names (keywords) and returns an updated sequence of clause names; this defines the precedence of clauses in the DSL parser
+* `:as` -- a boolean that indicates whether `AS` should be present in aliases (the default, if `:as` is omitted) or not (by specifying `:as false`)
+
+To make writing new dialects easier, the following helper functions in `honey.sql` are available:
+* `add-clause-before` -- a function that accepts the sequence of clause names, the (new) clause to add, and the clause to add it before (`nil` means add at the end)
+* `get-dialect` -- a function that accepts an existing dialect name (keyword) and returns its spec (hash map)
+* `strop` -- a function that accepts an opening quote, a string, and a closing quote and returns the quoted string, doubling-up any closing quote characters inside the string to make it legal SQL
+* `upper-case` -- a locale-insensitive version of `clojure.string/upper-case`
+
+For example, to add a variant of the `:ansi` dialect that forces names to be upper-case as well as double-quoting them:
+
+```clojure
+(sql/register-dialect! ::ANSI (update (sql/get-dialect :ansi) :quote comp sql/upper-case))
+;; or you could do this:
+(sql/register-dialect! ::ANSI {:quote #(sql/strop \" (sql/upper-case %) \")})
+
+(sql/format {:select :foo :from :bar} {:dialect :ansi})
+;;=> ["SELECT \"foo\" FROM \"bar\""]
+
+(sql/format {:select :foo :from :bar} {:dialect ::ANSI})
+;;=> ["SELECT \"FOO\" FROM \"BAR\""]
+```
