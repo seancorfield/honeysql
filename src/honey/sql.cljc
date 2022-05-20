@@ -1235,6 +1235,7 @@
                              ">")])
     :array
     (fn [_ [arr]]
+      ;; allow for (unwrap arr) here?
       (let [[sqls params] (format-expr-list arr)]
         (into [(str "ARRAY[" (str/join ", " sqls) "]")] params)))
     :between

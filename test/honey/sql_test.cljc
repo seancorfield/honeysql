@@ -207,7 +207,13 @@
   (is (= (format {:insert-into :foo
                   :columns [:baz]
                   :values [[[:array ["one" "two" "three"]]]]})
-         ["INSERT INTO foo (baz) VALUES (ARRAY[?, ?, ?])" "one" "two" "three"])))
+         ["INSERT INTO foo (baz) VALUES (ARRAY[?, ?, ?])" "one" "two" "three"]))
+  #_ ;; requested feature -- does not work yet
+  (is (= (format {:insert-into :foo
+                  :columns [:baz]
+                  :values [[[:array :?vals]]]}
+                 {:params {:vals [1 2 3 4]}})
+         ["INSERT INTO foo (baz) VALUES (ARRAY[?, ?, ?, ?])" 1 2 3 4])))
 
 (deftest union-test
   ;; UNION and INTERSECT subexpressions should not be parenthesized.
