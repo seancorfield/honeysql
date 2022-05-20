@@ -233,7 +233,7 @@
          (binding [*quoted-snake* true]
            (format-entity v {:aliased a :drop-ns d}))]
         [v a d (format-entity v {:aliased a :drop-ns d})])))
-  .)
+  )
 
 (defn sql-kw
   "Given a keyword, return a SQL representation of it as a string.
