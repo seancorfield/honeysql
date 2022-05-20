@@ -48,10 +48,15 @@
 
 (defn test "Run basic tests." [opts]
   (-> opts
-      (assoc :aliases [:1.11])
+      (update :aliases (fnil conj []) :1.11)
       (bb/run-tests)))
 
-(defn ci "Run the CI pipeline of tests (and build the JAR)." [opts]
+(defn ci
+  "Run the CI pipeline of tests (and build the JAR).
+
+  Default Clojure version is 1.9.0 (:1.9) so :elide
+  tests for #409 on that version."
+  [opts]
   (-> opts
       (bb/clean)
       (assoc :lib lib :version (if (:snapshot opts) snapshot version))
@@ -59,13 +64,13 @@
             (reduce (fn [opts alias]
                       (run-doc-tests (assoc opts :aliases [alias])))
                     opts
-                    [:cljs :1.9 :1.10 :1.11 :master]))
+                    [:cljs :elide :1.10 :1.11 :master]))
       (eastwood)
       (as-> opts
             (reduce (fn [opts alias]
                       (bb/run-tests (assoc opts :aliases [alias])))
                     opts
-                    [:cljs :1.9 :1.10 :1.11 :master]))
+                    [:cljs :elide :1.10 :1.11 :master]))
       (bb/clean)
       (assoc :src-pom "template/pom.xml")
       (bb/jar)))

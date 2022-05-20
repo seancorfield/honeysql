@@ -1025,8 +1025,10 @@
 
 #?(:clj
    (do
-     ;; ensure #295 stays true (all public functions have docstring):
-     (assert (empty? (->> (ns-publics *ns*) (vals) (c/filter (comp not :doc meta)))))
+     ;; #409 this assert is only valid when :doc metadata is not elided:
+     (when (-> #'generic-helper-unary meta :doc)
+       ;; ensure #295 stays true (all public functions have docstring):
+       (assert (empty? (->> (ns-publics *ns*) (vals) (c/filter (comp not :doc meta))))))
      ;; ensure all public functions match clauses:
      (assert (= (clojure.core/set (conj @@#'honey.sql/base-clause-order
                                         :composite :filter :lateral :over :within-group
