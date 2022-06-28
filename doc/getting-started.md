@@ -345,41 +345,6 @@ HoneySQL supports quite a few [PostgreSQL extensions](postgresql.md).
 
 > Note: the [nilenso/honeysql-postgres](https://github.com/nilenso/honeysql-postgres) library which provided PostgreSQL support for HoneySQL 1.x does not work with HoneySQL 2.x. However, HoneySQL 2.x includes all of the functionality from that library (up to 0.4.112) out of the box!
 
-## Format Options
-
-In addition to the `:quoted` and `:dialect` options described above,
-`format` also accepts `:checking`, `:inline`, and `:params`.
-As of 2.2.858, `format` accepts a `:cache` option -- see the
-[**Caching** section of the **General Reference**](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT/doc/getting-started/general-reference#caching)
-for details.
-
-The `:params` option was mentioned above and is used to specify
-the values of named parameters in the DSL.
-
-The `:inline` option suppresses the generation of parameters in
-the SQL string and instead tries to inline all the values directly
-into the SQL string. The behavior is as if each value in the DSL
-was wrapped in `[:inline `..`]`:
-
-* `nil` becomes the SQL value `NULL`,
-* Clojure strings become inline SQL strings with single quotes (so `"foo"` becomes `'foo'`),
-* keywords and symbols become SQL keywords (uppercase, with `-` replaced by a space),
-* everything else is just turned into a string (by calling `str`) and added to the SQL string.
-
-The `:checking` option defaults to `:none`. If `:checking :basic` is
-specified, certain obvious errors -- such as `IN` with an empty collection
-or `SELECT` with an empty list of columns --
-are treated as an error and an exception is thrown. If `:checking :strict`
-is specified, certain dubious constructs -- such as `IN` with a collection
-containing `NULL` values -- are also treated as an error and an exception is
-thrown. It is expected that this feature will be expanded over time
-to help avoid generating illegal SQL.
-
-`format` accepts options as either a single hash map argument or
-as named arguments (alternating keys and values). If you are using
-Clojure 1.11 (or later) you can mix'n'match, providing some options
-as named arguments followed by other options in a hash map.
-
 ## Reference Documentation
 
 The full list of supported SQL clauses is documented in the

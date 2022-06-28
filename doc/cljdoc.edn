@@ -6,6 +6,7 @@
    ["SQL Clause Reference" {:file "doc/clause-reference.md"}]
    ["SQL Operator Reference" {:file "doc/operator-reference.md"}]
    ["SQL 'Special Syntax'" {:file "doc/special-syntax.md"}]
-   ["PostgreSQL Support" {:file "doc/postgresql.md"}]
-   ["Extending HoneySQL" {:file "doc/extending-honeysql.md"}]]
+   ["PostgreSQL Support" {:file "doc/postgresql.md"}]]
+  ["All the Options" {:file "doc/options.md"}]
+  ["Extending HoneySQL" {:file "doc/extending-honeysql.md"}]
   ["Differences from 1.x" {:file "doc/differences-from-1-x.md"}]]}
