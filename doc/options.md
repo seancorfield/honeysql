@@ -28,8 +28,15 @@ See below for the interaction between `:dialect` and `:quoted`.
 
 ## `:cache`
 
+Providing a `:cache` option -- an atom containing a `core.cache` style cache data structure -- causes `format` to try to cache the
+generated SQL string, based on the value of the DSL data structure.
+When you use `:cache`, you should generally use named parameters
+(names that start with `?`) instead of regular values.
+
 See the [**Caching** section of the **General Reference**](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT/doc/getting-started/general-reference#caching)
 for details.
+
+> Note: you cannot use named parameters with `:in` when using `:cache` because `:in` "unrolls" the parameter and that will break the cache lookup rules.
 
 Added in 2.2.858.
 
@@ -46,6 +53,21 @@ to help avoid generating illegal SQL.
 
 ## `:dialect`
 
+If `:dialect` is provided, `:quoted` will default to `true` for this call. You can still specify `:quoted false` to turn that back off.
+
+Valid dialects are:
+
+* `:ansi`
+* `:mysql`
+* `:oracle`
+* `:sqlserver`
+
+New dialects can be created with the `register-dialect!` call.
+
+By default, `:ansi` is the dialect used. `set-dialect!` can
+set a different default dialect. The `:dialect` option only affects
+the current call to `format`.
+
 ## `:inline`
 
 The `:inline` option suppresses the generation of parameters in
@@ -60,13 +82,68 @@ was wrapped in `[:inline `..`]`:
 
 ## `:params`
 
-The `:params` option is used to specify
-the values of named parameters in the DSL.
+The `:params` option provides a mapping from named parameters
+to values for this call to `format`. For example:
+
+```clojure
+(require '[honey.sql :as sql])
+
+(-> {:select :* :from :table :where [:= :id :?id]}
+    (sql/format {:params {:id 42}}))
+;;=> ["SELECT * FROM table WHERE id = ?" 42]
+(-> '{select * from table where (= id ?id)}
+    (sql/format {:params {:id 42}}))
+;;=> ["SELECT * FROM table WHERE id = ?" 42]
+```
 
 ## `:quoted`
 
+If `:quoted true`, or `:dialect` is provided (and `:quoted` is not
+specified as `false`), identifiers that represent
+tables and columns will be quoted (stropped) according to the
+selected dialect.
+
+If `:quoted false`, identifiers that represent tables and columns
+will not be quoted. If those identifiers are reserved words in
+SQL, the generated SQL will be invalid.
+
+The quoting (stropping) is dialect-dependent:
+* `:ansi` -- uses double quotes
+* `:mysql` -- uses backticks
+* `:oracle` -- uses double quotes
+* `:sqlserver` -- user square brackets
+
 ## `:quoted-snake`
 
+Where strings are used to identify table or column names, they are
+treated as-is. If `:quoted true` (or a `:dialect` is specified),
+those identifiers are quoted as-is.
+
+Where keywords or symbols are used to identify table or column
+names, and `:quoted true` is provided, those identifiers are
+quoted as-is.
+
+If `:quoted-snake true` is provided, those identifiers are quoted
+but any `-` in them are replaced by `_` -- that replacement is the
+default in unquoted identifiers.
+
+This allows quoting to be used but still maintain the Clojure
+(kebab case) to SQL (snake case) mappings.
+
 ## `:values-default-columns`
+
+This option determines the behavior of the `:values` clause, when
+column values are missing from one or more of the hash maps passed
+in.
+
+By default, missing column values are replaced with `NULL` in the
+generated SQL. `:values-default-columns` can specify a set of
+column names that should instead be given the value `DEFAULT` if
+their column value is missing from one or more hash maps.
+
+That in turn should cause their declared default value to be used
+(from the column definition in the table) and is useful for
+situations where `NULL` is not an appropriate default for a missing
+column value.
 
 Added in 2.1.818.

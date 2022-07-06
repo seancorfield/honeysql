@@ -11,6 +11,8 @@
               "doc/extending-honeysql.md"
               "doc/general-reference.md"
               "doc/getting-started.md"
+              ;;"doc/operator-reference.md"
+              "doc/options.md"
               "doc/postgresql.md"
               "doc/special-syntax.md"]
         regen-reason (if (not (fs/exists? success-marker))
