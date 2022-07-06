@@ -1,6 +1,7 @@
 # Changes
 
 * 2.3.next in progress
+  * Address [#412](https://github.com/seancorfield/honeysql/issues/412) by documenting options in a separate page and reorganizing the ToC structure.
   * Address [#409](https://github.com/seancorfield/honeysql/issues/409) by making docstring check for public helpers conditional.
   * Address [#401](https://github.com/seancorfield/honeysql/issues/401) by adding `register-dialect!` and `get-dialect`, and also making `add-clause-before`, `strop`, and `upper-case` public so that new dialects are easier to construct.
 
