@@ -815,6 +815,12 @@ user=> (sql/format {:select [:*] :from :table
                     ;; expression without direction is still wrapped:
                     :order-by [:status, [[:year :created-date]]]})
 ["SELECT * FROM table ORDER BY status ASC, YEAR(created_date) ASC"]
+;; a more complex order by with case (and direction):
+user=> (sql/format {:select [:*] :from :table
+                    :order-by [[[:case [:< [:now] :expiry-date]
+                                 :created-date :else :expiry-date]
+                                :desc]]})
+["SELECT * FROM table ORDER BY CASE WHEN NOW() < expiry_date THEN created_date ELSE expiry_date END DESC"]
 ```
 
 ## limit, offset, fetch
