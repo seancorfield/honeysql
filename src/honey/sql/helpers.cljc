@@ -1030,7 +1030,7 @@
        ;; ensure #295 stays true (all public functions have docstring):
        (assert (empty? (->> (ns-publics *ns*) (vals) (c/filter (comp not :doc meta))))))
      ;; ensure all public functions match clauses:
-     (assert (= (clojure.core/set (conj @@#'honey.sql/base-clause-order
+     (assert (= (clojure.core/set (conj @#'honey.sql/default-clause-order
                                         :composite :filter :lateral :over :within-group
                                         :upsert
                                         :generic-helper-variadic :generic-helper-unary))
