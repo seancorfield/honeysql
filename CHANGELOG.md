@@ -1,6 +1,7 @@
 # Changes
 
 * 2.3.next in progress
+  * Address [#418](https://github.com/seancorfield/honeysql/issues/418) by documenting a potential "gotcha" with multi-column `IN` expressions (a change from HoneySQL 1.x).
   * Address [#414](https://github.com/seancorfield/honeysql/issues/414) by providing an example of `ORDER BY` with a `CASE` expression.
   * Address [#412](https://github.com/seancorfield/honeysql/issues/412) by documenting options in a separate page and reorganizing the ToC structure.
   * Address [#409](https://github.com/seancorfield/honeysql/issues/409) by making docstring check for public helpers conditional.
