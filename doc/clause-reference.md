@@ -32,7 +32,7 @@ See [Column Descriptors in Special Syntax](special-syntax.md#column-descriptors)
 
 > Google BigQuery support: `[:bigquery/array :string]` as a column type produces `ARRAY<STRING>` and `[:bigquery/struct col1-spec col2-spec]` as a column type produces `STRUCT<col1, col2>` (where `colN-spec` is a vector specifying a named column).
 
-## alter-table, add-column, drop-column, modify-column, rename-column
+## alter-table, add-column, drop-column, alter-column, modify-column, rename-column
 
 `:alter-table` can accept either a single table name or
 a sequence that begins with a table name and is followed
@@ -55,8 +55,8 @@ user=> (sql/format {:alter-table :fruit
                     :drop-column [:if-exists :ident]})
 ["ALTER TABLE fruit DROP COLUMN IF EXISTS ident"]
 user=> (sql/format {:alter-table :fruit
-                    :modify-column [:id :int :unsigned nil]})
-["ALTER TABLE fruit MODIFY COLUMN id INT UNSIGNED NULL"]
+                    :alter-column [:id :int :unsigned nil]})
+["ALTER TABLE fruit ALTER COLUMN id INT UNSIGNED NULL"]
 user=> (sql/format {:alter-table :fruit
                     :rename-column [:look :appearance]})
 ["ALTER TABLE fruit RENAME COLUMN look TO appearance"]
@@ -75,19 +75,21 @@ user=> (sql/format {:alter-table [:fruit
                                   {:add-column [:id :int [:not nil]]}
                                   {:add-column [:name [:varchar 32]]}
                                   {:drop-column :ident}
-                                  {:modify-column [:appearance :text]}]})
-["ALTER TABLE fruit ADD COLUMN id INT NOT NULL, ADD COLUMN name VARCHAR(32), DROP COLUMN ident, MODIFY COLUMN appearance TEXT"]
+                                  {:alter-column [:appearance :text]}]})
+["ALTER TABLE fruit ADD COLUMN id INT NOT NULL, ADD COLUMN name VARCHAR(32), DROP COLUMN ident, ALTER COLUMN appearance TEXT"]
 user=> (sql/format {:alter-table [:fruit
                                   {:add-column [:id :int [:not nil] :if-not-exists]}
                                   {:drop-column [:if-exists :ident]}]})
 ["ALTER TABLE fruit ADD COLUMN IF NOT EXISTS id INT NOT NULL, DROP COLUMN IF EXISTS ident"]
 ```
 
-As can be seen above, `:add-column` and `:modify-column`
+As can be seen above, `:add-column` and `:alter-column`
 both accept a column description (as a sequence of simple
 expressions); `:drop-column` accepts a single column name,
 and `:rename-column` accepts a sequence with two column
 names: the "from" and the "to" names.
+
+> Note: `:modify-column` is MySQL-specific and should be considered legacy and deprecated. `:alter-column` will produce `MODIFY COLUMN` when the MySQL dialect is selected.
 
 ### add-index, drop-index
 

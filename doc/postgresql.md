@@ -21,7 +21,7 @@ The code examples herein assume:
                                      insert-into values
                                      create-table with-columns create-view create-extension
                                      add-column alter-table add-index
-                                     modify-column rename-column rename-table
+                                     alter-column rename-column rename-table
                                      drop-table drop-column drop-index drop-extension
                                      upsert returning on-conflict on-constraint
                                      do-update-set do-nothing]])
@@ -361,11 +361,11 @@ user=> (-> (alter-table :fruit)
            (drop-column :skin)
            sql/format)
 ["ALTER TABLE fruit DROP COLUMN skin"]
-;; alter table modify column:
+;; alter table alter column:
 user=> (-> (alter-table :fruit)
-           (modify-column :name [:varchar 64] [:not nil])
+           (alter-column :name [:varchar 64] [:not nil])
            sql/format)
-["ALTER TABLE fruit MODIFY COLUMN name VARCHAR(64) NOT NULL"]
+["ALTER TABLE fruit ALTER COLUMN name VARCHAR(64) NOT NULL"]
 ;; alter table rename column:
 user=> (-> (alter-table :fruit)
            (rename-column :cost :price)

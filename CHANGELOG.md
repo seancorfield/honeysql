@@ -6,6 +6,7 @@
   * Address [#414](https://github.com/seancorfield/honeysql/issues/414) by providing an example of `ORDER BY` with a `CASE` expression.
   * Address [#412](https://github.com/seancorfield/honeysql/issues/412) by documenting options in a separate page and reorganizing the ToC structure.
   * Address [#409](https://github.com/seancorfield/honeysql/issues/409) by making docstring check for public helpers conditional.
+  * Fix [#406](https://github.com/seancorfield/honeysql/issues/406) by adding `:alter-column` (which produces `MODIFY COLUMN` when the MySQL dialect is selected) and deprecating `:modify-column`.
   * Address [#401](https://github.com/seancorfield/honeysql/issues/401) by adding `register-dialect!` and `get-dialect`, and also making `add-clause-before`, `strop`, and `upper-case` public so that new dialects are easier to construct.
 
 * 2.2.891 -- 2022-04-23

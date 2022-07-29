@@ -4,7 +4,7 @@ This section lists the function-like expressions that
 HoneySQL supports out of the box which are formatted
 as special syntactic forms.
 
-The first group are used for SQL expressions. The second (last group) are used primarily in column definitions (as part of `:with-columns` and `:add-column` / `:modify-column`).
+The first group are used for SQL expressions. The second (last group) are used primarily in column definitions (as part of `:with-columns` and `:add-column` / `:alter-column`).
 
 ## array
 

@@ -42,7 +42,8 @@
 (def ^:private default-clause-order
   "The (default) order for known clauses. Can have items added and removed."
   [;; DDL comes first (these don't really have a precedence):
-   :alter-table :add-column :drop-column :modify-column :rename-column
+   :alter-table :add-column :drop-column
+   :alter-column :modify-column :rename-column
    :add-index :drop-index :rename-table
    :create-table :create-table-as :with-columns
    :create-view :create-materialized-view :create-extension
@@ -943,6 +944,10 @@
   (atom {:alter-table     #'format-alter-table
          :add-column      #'format-add-item
          :drop-column     #'format-drop-items
+         :alter-column    (fn [k spec]
+                            (format-add-item
+                             (if (mysql?) :modify-column k)
+                             spec))
          :modify-column   #'format-add-item
          :rename-column   #'format-rename-item
          ;; so :add-index works with both [:index] and [:unique]

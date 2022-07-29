@@ -179,11 +179,22 @@
   [& args]
   (generic-1 :drop-column args))
 
+(defn alter-column
+  "Like add-column, accepts any number of SQL elements
+  that describe the new column definition:
+
+  (alter-column :name [:varchar 64] [:not nil])"
+  [& col-elems]
+  (generic :alter-column col-elems))
+
 (defn modify-column
   "Like add-column, accepts any number of SQL elements
   that describe the new column definition:
 
-  (modify-column :name [:varchar 64] [:not nil])"
+  (modify-column :name [:varchar 64] [:not nil])
+
+  MySQL-specific, deprecated. Use `alter-column` and
+  specify the MySQL dialect to get `MODIFY COLUMN`."
   [& col-elems]
   (generic :modify-column col-elems))
 
