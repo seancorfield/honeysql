@@ -278,7 +278,7 @@
   #?@(:clj [java.util.UUID
             ;; issue 385: quoted UUIDs for PostgreSQL/ANSI
             (sqlize [x] (str \' x \'))])
-  #?(:clj Object :cljs js/Object)
+  #?(:clj Object :cljs default)
   (sqlize [x] (str x)))
 
 (defn- sqlize-value [x] (p/sqlize x))
