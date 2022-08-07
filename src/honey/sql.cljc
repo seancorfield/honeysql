@@ -267,7 +267,7 @@
 (extend-protocol p/InlineValue
   nil
   (sqlize [_] "NULL")
-  String
+  #?(:clj String :cljs js/String)
   (sqlize [x] (str \' (str/replace x "'" "''") \'))
   #?(:clj clojure.lang.Keyword :cljs Keyword)
   (sqlize [x] (sql-kw x))
@@ -278,7 +278,7 @@
   #?@(:clj [java.util.UUID
             ;; issue 385: quoted UUIDs for PostgreSQL/ANSI
             (sqlize [x] (str \' x \'))])
-  Object
+  #?(:clj Object :cljs js/Object)
   (sqlize [x] (str x)))
 
 (defn- sqlize-value [x] (p/sqlize x))
