@@ -42,14 +42,17 @@ Added in 2.2.858.
 
 ## `:checking`
 
-The `:checking` option defaults to `:none`. If `:checking :basic` is
-specified, certain obvious errors -- such as `IN` with an empty collection
-or `SELECT` with an empty list of columns --
-are treated as an error and an exception is thrown. If `:checking :strict`
-is specified, certain dubious constructs -- such as `IN` with a collection
-containing `NULL` values -- are also treated as an error and an exception is
-thrown. It is expected that this feature will be expanded over time
+The `:checking` option defaults to `:none`.
+If `:checking :basic` is specified, certain obvious errors
+are treated as an error and an exception is thrown.
+If `:checking :strict` is specified, certain dubious constructs are also treated as an error and an exception is
+thrown.
+It is expected that this feature will be expanded over time
 to help avoid generating illegal SQL.
+
+Here are the checks for each level:
+* `:basic` -- `DELETE` and `DELETE FROM` without a `WHERE` clause; `IN` with an empty collection; `SELECT` with an empty list of columns; `UPDATE` without a `WHERE` clause.
+* `:strict` -- (all the `:basic` checks plus) `IN` with a collection containing `NULL` values (since this will not match rows).
 
 ## `:dialect`
 

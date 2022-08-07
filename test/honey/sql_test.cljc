@@ -796,7 +796,21 @@ ORDER BY id = ? DESC
                                   {:checking :strict})))
     (is (thrown-with-msg? ExceptionInfo #"does not match"
                           (format {:where [:in :x :?y]}
-                                  {:params {:y [nil]} :checking :strict})))))
+                                  {:params {:y [nil]} :checking :strict}))))
+  (testing "empty WHERE clauses ignored with none"
+    (is (= ["DELETE FROM foo"]
+           (format {:delete-from :foo})))
+    (is (= ["DELETE foo"]
+           (format {:delete :foo})))
+    (is (= ["UPDATE foo SET x = ?" 1]
+           (format {:update :foo :set {:x 1}}))))
+  (testing "empty WHERE clauses flagged in basic mode"
+    (is (thrown-with-msg? ExceptionInfo #"without a non-empty"
+                          (format {:delete-from :foo} {:checking :basic})))
+    (is (thrown-with-msg? ExceptionInfo #"without a non-empty"
+                          (format {:delete :foo} {:checking :basic})))
+    (is (thrown-with-msg? ExceptionInfo #"without a non-empty"
+                          (format {:update :foo :set {:x 1}} {:checking :basic})))))
 
 (deftest quoting-:%-syntax
   (testing "quoting of expressions in functions shouldn't depend on syntax"

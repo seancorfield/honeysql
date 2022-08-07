@@ -926,6 +926,17 @@
       (into [(str/join sqls)] params))
     [s]))
 
+(defn- check-where
+  "Given a formatter function, performs a pre-flight check that there is
+  a non-empty where clause if at least basic checking is enabled."
+  [formatter]
+  (fn [k xs]
+    (when-not (= :none *checking*)
+      (when-not (seq (:where *dsl*))
+        (throw (ex-info (str (sql-kw k) " without a non-empty WHERE clause is dangerous")
+                        {:clause k :where (:where *dsl*)}))))
+    (formatter k xs)))
+
 (def ^:private base-clause-order
   "The (base) order for known clauses. Can have items added and removed.
 
@@ -985,9 +996,9 @@
          :into            #'format-select-into
          :bulk-collect-into #'format-select-into
          :insert-into     #'format-insert
-         :update          #'format-selector
-         :delete          #'format-selects
-         :delete-from     #'format-selector
+         :update          (check-where #'format-selector)
+         :delete          (check-where #'format-selects)
+         :delete-from     (check-where #'format-selector)
          :truncate        #'format-selector
          :columns         #'format-columns
          :set             #'format-set-exprs

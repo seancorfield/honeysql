@@ -1,5 +1,8 @@
 # Changes
 
+* 2.3.next in progress
+  * Address [#413](https://github.com/seancorfield/honeysql/issues/413) by flagging a lack of `WHERE` clause for `DELETE`, `DELETE FROM`, and `UPDATE` when `:checking :basic` (or `:checking :strict`).
+
 * 2.3.911 -- 2022-07-29
   * Address [#418](https://github.com/seancorfield/honeysql/issues/418) by documenting a potential "gotcha" with multi-column `IN` expressions (a change from HoneySQL 1.x).
   * Fix [#416](https://github.com/seancorfield/honeysql/issues/416) via PR [#417](https://github.com/seancorfield/honeysql/issues/417) from [@corasaurus-hex](https://github.com/corasaurus-hex) -- using the internal default state for the integrity assertion.
