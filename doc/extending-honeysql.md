@@ -14,6 +14,23 @@ many more. Built in operators include: `:=`, `:+`, `:mod`.
 Built in functions (special syntax) include: `:array`, `:case`,
 `:cast`, `:inline`, `:raw` and many more.
 
+## Extending what `:inline` can do
+
+By default, the `:inline` option can convert a fairly
+basic set of values/types to SQL strings:
+* `nil`
+* strings
+* keywords and symbols
+* vectors
+* UUIDs (Clojure only)
+
+Everything is naively converted by calling `str`.
+
+You can extend `honey.sql.protocols/InlineValue` to
+other types and defining how the `sqlize` function
+should behave. It takes a single argument, the value
+to be inlined (converted to a SQL string).
+
 ## Registering a New Clause Formatter
 
 `honey.sql/register-clause!` accepts a keyword (or a symbol)

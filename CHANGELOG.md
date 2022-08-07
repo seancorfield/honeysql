@@ -1,6 +1,7 @@
 # Changes
 
 * 2.3.next in progress
+  * Address [#419](https://github.com/seancorfield/honeysql/issues/419) by adding `honey.sql.protocols` and `InlineValue` with a `sqlize` function.
   * Address [#413](https://github.com/seancorfield/honeysql/issues/413) by flagging a lack of `WHERE` clause for `DELETE`, `DELETE FROM`, and `UPDATE` when `:checking :basic` (or `:checking :strict`).
 
 * 2.3.911 -- 2022-07-29

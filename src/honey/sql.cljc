@@ -28,7 +28,8 @@
   * `sql-kw` -- turns a Clojure keyword (or symbol) into SQL code (makes
         it uppercase and replaces - with space). "
   (:refer-clojure :exclude [format])
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [honey.sql.protocols :as p]))
 
 ;; default formatting for known clauses
 
@@ -263,16 +264,24 @@
       (keyword (name s)))
     s))
 
-(defn- sqlize-value [x]
-  (cond
-    (nil? x)     "NULL"
-    (string? x)  (str \' (str/replace x "'" "''") \')
-    (ident? x)   (sql-kw x)
-    (vector? x)  (str "[" (str/join ", " (map #'sqlize-value x)) "]")
-    ;; issue 385: quoted UUIDs for PostgreSQL/ANSI
-    #?(:clj (instance? java.util.UUID x) :cljs false)
-    (str \' x \') ; UUID cannot contain quotes
-    :else        (str x)))
+(extend-protocol p/InlineValue
+  nil
+  (sqlize [_] "NULL")
+  String
+  (sqlize [x] (str \' (str/replace x "'" "''") \'))
+  #?(:clj clojure.lang.Keyword :cljs Keyword)
+  (sqlize [x] (sql-kw x))
+  #?(:clj clojure.lang.Symbol :cljs Symbol)
+  (sqlize [x] (sql-kw x))
+  #?(:clj clojure.lang.IPersistentVector :cljs PersistentVector)
+  (sqlize [x] (str "[" (str/join ", " (map p/sqlize x)) "]"))
+  #?@(:clj [java.util.UUID
+            ;; issue 385: quoted UUIDs for PostgreSQL/ANSI
+            (sqlize [x] (str \' x \'))])
+  Object
+  (sqlize [x] (str x)))
+
+(defn- sqlize-value [x] (p/sqlize x))
 
 (defn- param-value [k]
   (if (contains? *params* k)

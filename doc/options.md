@@ -83,6 +83,8 @@ was wrapped in `[:inline `..`]`:
 * keywords and symbols become SQL keywords (uppercase, with `-` replaced by a space),
 * everything else is just turned into a string (by calling `str`) and added to the SQL string.
 
+> Note: you can provide additional inline formatting by extending the `InlineValue` protocol from `honey.sql.protocols` to new types.
+
 ## `:params`
 
 The `:params` option provides a mapping from named parameters
