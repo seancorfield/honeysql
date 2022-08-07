@@ -267,7 +267,7 @@
 (extend-protocol p/InlineValue
   nil
   (sqlize [_] "NULL")
-  #?(:clj String :cljs js/String)
+  #?(:clj String :cljs string)
   (sqlize [x] (str \' (str/replace x "'" "''") \'))
   #?(:clj clojure.lang.Keyword :cljs Keyword)
   (sqlize [x] (sql-kw x))
