@@ -521,18 +521,20 @@
       (into [(str (format-entity (first x)) " " sql)] params))
     [(format-entity x)]))
 
-(defn- format-with [k xs]
+(defn- format-with [k xs as-fn]
   ;; TODO: a sequence of pairs -- X AS expr -- where X is either [entity expr]
   ;; or just entity, as far as I can tell...
   (let [[sqls params]
-        (reduce-sql (map (fn [[x expr]]
-                           (let [[sql & params]   (format-with-part x)
-                                 [sql' & params'] (format-dsl expr)]
-                         ;; according to docs, CTE should _always_ be wrapped:
-                             (cond-> [(str sql " AS " (str "(" sql' ")"))]
-                               params  (into params)
-                               params' (into params'))))
-                         xs))]
+        (reduce-sql
+         (map
+          (fn [[x expr :as with]]
+            (let [[sql & params] (format-with-part x)
+                  [sql' & params'] (format-dsl expr)]
+              ;; according to docs, CTE should _always_ be wrapped:
+              (cond-> [(str sql " " (as-fn with) " " (str "(" sql' ")"))]
+                params  (into params)
+                params' (into params'))))
+          xs))]
     (into [(str (sql-kw k) " " (str/join ", " sqls))] params)))
 
 (defn- format-selector [k xs]
@@ -989,8 +991,15 @@
          :nest            (fn [_ x]
                             (let [[sql & params] (format-dsl x {:nested true})]
                               (into [sql] params)))
-         :with            #'format-with
-         :with-recursive  #'format-with
+         :with            (let [as-fn
+                                (fn [[_ _ materialization]]
+                                  (condp = materialization
+                                    :materialized "AS MATERIALIZED"
+                                    :not-materialized "AS NOT MATERIALIZED"
+                                    "AS"))]
+                            (fn [k xs] (format-with k xs as-fn)))
+         :with-recursive  (let [as-fn (constantly "AS")]
+                            (fn [k xs] (format-with k xs as-fn)))
          :intersect       #'format-on-set-op
          :union           #'format-on-set-op
          :union-all       #'format-on-set-op
