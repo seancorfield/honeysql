@@ -124,6 +124,12 @@
 (deftest test-cte
   (is (= (format {:with [[:query {:select [:foo] :from [:bar]}]]})
          ["WITH query AS (SELECT foo FROM bar)"]))
+  (is (= (format {:with [[:query {:select [:foo] :from [:bar]} :materialized]]})
+         ["WITH query AS MATERIALIZED (SELECT foo FROM bar)"]))
+  (is (= (format {:with [[:query {:select [:foo] :from [:bar]} :not-materialized]]})
+         ["WITH query AS NOT MATERIALIZED (SELECT foo FROM bar)"]))
+  (is (= (format {:with [[:query {:select [:foo] :from [:bar]} :unknown]]})
+         ["WITH query AS (SELECT foo FROM bar)"]))
   (is (= (format {:with [[:query1 {:select [:foo] :from [:bar]}]
                          [:query2 {:select [:bar] :from [:quux]}]]
                   :select [:query1.id :query2.name]
