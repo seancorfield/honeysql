@@ -3,6 +3,7 @@
 * 2.3.next in progress
   * Address [#419](https://github.com/seancorfield/honeysql/issues/419) by adding `honey.sql.protocols` and `InlineValue` with a `sqlize` function.
   * Address [#413](https://github.com/seancorfield/honeysql/issues/413) by flagging a lack of `WHERE` clause for `DELETE`, `DELETE FROM`, and `UPDATE` when `:checking :basic` (or `:checking :strict`).
+  * Fix [#392](https://github.com/seancorfield/honeysql/issues/392) by adding support for `WITH` / (`NOT`) `MATERIALIZED` -- via PR [#420](https://github.com/seancorfield/honeysql/issues/420) [@robhanlon22](https://github.com/robhanlon22).
 
 * 2.3.911 -- 2022-07-29
   * Address [#418](https://github.com/seancorfield/honeysql/issues/418) by documenting a potential "gotcha" with multi-column `IN` expressions (a change from HoneySQL 1.x).
