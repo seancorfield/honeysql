@@ -210,13 +210,25 @@
   (let [col-fn      (if (or *quoted* (string? e))
                       (if *quoted-snake* name-_ name)
                       name-_)
-        quote-fn    (if (or *quoted* (string? e)) (:quote *dialect*) identity)
+        col-e       (col-fn e)
+        dialect-q   (:quote *dialect* identity)
+        quote-fn    (cond (or *quoted* (string? e))
+                          dialect-q
+                          ;; #422: if default quoting and "unusual"
+                          ;; characters in entity, then quote it:
+                          (nil? *quoted*)
+                          (fn opt-quote [part]
+                            (if (re-find #"^[A-Za-z0-9_]+$" part)
+                              part
+                              (dialect-q part)))
+                          :else
+                          identity)
         parts       (if-let [n (when-not (or drop-ns (string? e))
                                  (namespace-_ e))]
-                      [n (col-fn e)]
+                      [n col-e]
                       (if aliased
-                        [(col-fn e)]
-                        (str/split (col-fn e) #"\.")))
+                        [col-e]
+                        (str/split col-e #"\.")))
         entity      (str/join "." (map #(cond-> % (not= "*" %) (quote-fn)) parts))
         suspicious #";"]
     (when-not *allow-suspicious-entities*

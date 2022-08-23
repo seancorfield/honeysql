@@ -936,3 +936,15 @@ ORDER BY id = ? DESC
   (is (= ["SELECT `A\"B`"]     (sut/format {:select (keyword "A\"B")} {:dialect :mysql})))
   (is (= ["SELECT `A``B`"]     (sut/format {:select (keyword "A`B")} {:dialect :mysql})))
   (is (= ["SELECT \"A\"\"B\""] (sut/format {:select (keyword "A\"B")} {:dialect :oracle}))))
+
+(deftest issue-422-quoting
+  ;; default quote if strange entity:
+  (is (= ["SELECT A, \"B C\""] (sut/format {:select [:A (keyword "B C")]})))
+  ;; default don't quote normal entity:
+  (is (= ["SELECT A, B_C"]     (sut/format {:select [:A (keyword "B_C")]})))
+  ;; quote all entities when quoting enabled:
+  (is (= ["SELECT \"A\", \"B C\""] (sut/format {:select [:A (keyword "B C")]}
+                                               {:quoted true})))
+  ;; don't quote if quoting disabled (illegal SQL):
+  (is (= ["SELECT A, B C"]     (sut/format {:select [:A (keyword "B C")]}
+                                           {:quoted false}))))
