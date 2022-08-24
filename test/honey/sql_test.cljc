@@ -738,6 +738,8 @@ ORDER BY id = ? DESC
                               :enabled enabled}]})))))
 
 (deftest issue-316-test
+  ;; this is a pretty naive test -- there are other tricks to perform injection
+  ;; that are not detected by HoneySQL and you should generally use :quoted true
   (testing "SQL injection via keyword is detected"
     (let [sort-column "foo; select * from users"]
       (try

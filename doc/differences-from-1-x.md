@@ -106,7 +106,7 @@ You can now select a non-ANSI dialect of SQL using the new `honey.sql/set-dialec
 
 The `:quoting <dialect>` option has superseded by the new dialect machinery and a new `:quoted` option that turns quoting on or off. You either use `:dialect <dialect>` instead or set a default dialect (via `set-dialect!`) and then use `:quoted true` in `format` calls where you want quoting.
 
-Identifiers are automatically quoted if you specify a `:dialect` option to `format`, unless you also specify `:quoted false`.
+SQL entity names are automatically quoted if you specify a `:dialect` option to `format`, unless you also specify `:quoted false`.
 
 The following options are no longer supported:
 * `:allow-dashed-names?` -- if you provide dashed-names in 2.x, they will be left as-is if quoting is enabled, else they will be converted to snake_case (so you will either get `"dashed-names"` with quoting or `dashed_names` without). If you want dashed-names to be converted to snake_case when `:quoted true`, you also need to specify `:quoted-snake true`.

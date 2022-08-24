@@ -298,6 +298,8 @@ Most databases use `"` for quoting (the `:ansi` and `:oracle` dialects).
 The `:sqlserver` dialect uses `[`..`]` and the `:mysql` dialect uses
 ```..```. In addition, the `:oracle` dialect disables `AS` in aliases.
 
+> Note: by default, quoting is **off** which produces cleaner-looking SQL and assumes you control all the symbols/keywords used as table, column, and function names -- the "SQL entities". If you are building any SQL or DDL where the table, column, or function names could be provided by an external source, **you should specify `:quoted true` to ensure all SQL entities are safely quoted**. As of 2.3.next, if you do _not_ specify `:quoted` as an option, HoneySQL will automatically quote any SQL entities that seem unusual, i.e., that contain any characters that are not alphanumeric or underscore. Purely alphanumeric entities will not be quoted (no entities were quoted by default prior to 2.3.next). You can prevent that auto-quoting by explicitly passing `:quoted false` into the `format` call but, from a security point of view, you should think very carefully before you do that: quoting entity names helps protect you from injection attacks!
+
 Currently, the only dialect that has substantive differences from
 the others is `:mysql` for which the `:set` clause
 has a different precedence than ANSI SQL.
@@ -309,10 +311,11 @@ before you call `format` for the first time.
 You can change the dialect for a single `format` call by
 specifying the `:dialect` option in that call.
 
-SQL entities are not quoted by default but if you specify the
+Alphanumeric SQL entities are not quoted by default but if you specify the
 dialect in a `format` call, they will be quoted. If you don't
 specify a dialect in the `format` call, you can specify
-`:quoted true` to have SQL entities quoted.
+`:quoted true` to have SQL entities quoted. You can also enable quoting
+globally via the `set-dialect!` function.
 
 <!-- Reminder to doc author:
      Reset dialect to default so other blocks are not affected for test-doc-blocks -->

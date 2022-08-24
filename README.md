@@ -703,11 +703,11 @@ INSERT INTO sample
 0.291 32.621 4325]
 ```
 
-#### Identifiers
+#### Entity Names
 
-To quote identifiers, pass the `:quoted true` option to `format` and they will
+To quote SQL entity names, pass the `:quoted true` option to `format` and they will
 be quoted according to the selected dialect. If you override the dialect in a
-`format` call, by passing the `:dialect` option, identifiers will be automatically
+`format` call, by passing the `:dialect` option, SQL entity names will be automatically
 quoted. You can override the dialect and turn off quoting by passing `:quoted false`.
 Valid `:dialect` options are `:ansi` (the default, use this for PostgreSQL),
 `:mysql`, `:oracle`, or `:sqlserver`:

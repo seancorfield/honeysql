@@ -20,8 +20,8 @@ All options may be omitted. The default behavior of each option is described in 
 * `:dialect` -- a keyword that identifies a dialect to be used for this specific call to `format`; the default is to use what was specified in `set-dialect!` or `:ansi` if no other dialect has been set,
 * `:inline` -- a Boolean indicating whether or not to inline parameter values, rather than use `?` placeholders and a sequence of parameter values; the default is `false` -- values are not inlined,
 * `:params` -- a hash map providing values for named parameters, identified by names (keywords or symbols) that start with `?` in the DSL; the default is that any such named parameters will have `nil` values,
-* `:quoted` -- a Boolean indicating whether or not to quote (strop) identifiers (table and column names); the default is `false` -- identifiers are not quoted,
-* `:quoted-snake` -- a Boolean indicating whether or not quoted and string identifiers should have `-` replaced by `_`; the default is `false` -- quoted and string identifiers are left exactly as-is,
+* `:quoted` -- a Boolean indicating whether or not to quote (strop) SQL entity names (table and column names); the default is `nil` -- alphanumeric SQL entity names are not quoted but (as of 2.3.next) "unusual" SQL entity names are quoted; a `false` value turns off all quoting,
+* `:quoted-snake` -- a Boolean indicating whether or not quoted and string SQL entity names should have `-` replaced by `_`; the default is `false` -- quoted and string SQL entity names are left exactly as-is,
 * `:values-default-columns` -- a sequence of column names that should have `DEFAULT` values instead of `NULL` values if used in a `VALUES` clause with no associated matching value in the hash maps passed in; the default behavior is for such missing columns to be given `NULL` values.
 
 See below for the interaction between `:dialect` and `:quoted`.
@@ -104,12 +104,12 @@ to values for this call to `format`. For example:
 ## `:quoted`
 
 If `:quoted true`, or `:dialect` is provided (and `:quoted` is not
-specified as `false`), identifiers that represent
+specified as `false`), SQL entity names that represent
 tables and columns will be quoted (stropped) according to the
 selected dialect.
 
-If `:quoted false`, identifiers that represent tables and columns
-will not be quoted. If those identifiers are reserved words in
+If `:quoted false`, SQL entity names that represent tables and columns
+will not be quoted. If those SQL entity names are reserved words in
 SQL, the generated SQL will be invalid.
 
 The quoting (stropping) is dialect-dependent:
@@ -118,19 +118,23 @@ The quoting (stropping) is dialect-dependent:
 * `:oracle` -- uses double quotes
 * `:sqlserver` -- user square brackets
 
+As of 2.3.next, if `:quoted` and `:dialect` are not provided, and no
+default quoting strategy has been specified (via `set-dialect!`) then
+alphanumeric SQL entity names will not be quoted but "unusual" SQL entity names will
+
 ## `:quoted-snake`
 
 Where strings are used to identify table or column names, they are
 treated as-is. If `:quoted true` (or a `:dialect` is specified),
-those identifiers are quoted as-is.
+those SQL entity names are quoted as-is.
 
 Where keywords or symbols are used to identify table or column
-names, and `:quoted true` is provided, those identifiers are
+names, and `:quoted true` is provided, those SQL entity names are
 quoted as-is.
 
-If `:quoted-snake true` is provided, those identifiers are quoted
+If `:quoted-snake true` is provided, those SQL entity names are quoted
 but any `-` in them are replaced by `_` -- that replacement is the
-default in unquoted identifiers.
+default in unquoted SQL entity names.
 
 This allows quoting to be used but still maintain the Clojure
 (kebab case) to SQL (snake case) mappings.
