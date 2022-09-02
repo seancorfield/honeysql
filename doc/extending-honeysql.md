@@ -179,10 +179,10 @@ of it and would call `sql/format-expr` on each argument:
 _New in HoneySQL 2.3.x_
 
 The built-in dialects that HoneySQL supports are:
-* `:ansi` -- the default, that quotes identifiers with double-quotes, like `"this"`
-* `:mysql` -- quotes identifiers with backticks, and changes the precedence of `SET` in `UPDATE`
-* `:oracle` -- quotes identifiers like `:ansi`, and does not use `AS` in aliases
-* `:sqlserver` -- quotes identifiers with brackets, like `[this]`
+* `:ansi` -- the default, that quotes SQL entity names with double-quotes, like `"this"`
+* `:mysql` -- quotes SQL entity names with backticks, and changes the precedence of `SET` in `UPDATE`
+* `:oracle` -- quotes SQL entity names like `:ansi`, and does not use `AS` in aliases
+* `:sqlserver` -- quotes SQL entity names with brackets, like `[this]`
 
 A dialect spec is a hash map containing at least `:quote` but also optionally `:clause-order-fn` and/or `:as`:
 * `:quote` -- a unary function that takes a string and returns the quoted version of it

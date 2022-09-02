@@ -210,13 +210,25 @@
   (let [col-fn      (if (or *quoted* (string? e))
                       (if *quoted-snake* name-_ name)
                       name-_)
-        quote-fn    (if (or *quoted* (string? e)) (:quote *dialect*) identity)
+        col-e       (col-fn e)
+        dialect-q   (:quote *dialect* identity)
+        quote-fn    (cond (or *quoted* (string? e))
+                          dialect-q
+                          ;; #422: if default quoting and "unusual"
+                          ;; characters in entity, then quote it:
+                          (nil? *quoted*)
+                          (fn opt-quote [part]
+                            (if (re-find #"^[A-Za-z0-9_]+$" part)
+                              part
+                              (dialect-q part)))
+                          :else
+                          identity)
         parts       (if-let [n (when-not (or drop-ns (string? e))
                                  (namespace-_ e))]
-                      [n (col-fn e)]
+                      [n col-e]
                       (if aliased
-                        [(col-fn e)]
-                        (str/split (col-fn e) #"\.")))
+                        [col-e]
+                        (str/split col-e #"\.")))
         entity      (str/join "." (map #(cond-> % (not= "*" %) (quote-fn)) parts))
         suspicious #";"]
     (when-not *allow-suspicious-entities*
@@ -687,59 +699,74 @@
                 (str " " (sql-kw nowait))))))]))
 
 (defn- format-values [k xs]
-  (cond (sequential? (first xs))
-        ;; [[1 2 3] [4 5 6]]
-        (let [n-1 (map count xs)
-              ;; issue #291: ensure all value sequences are the same length
-              xs' (if (apply = n-1)
-                    xs
-                    (let [n-n (apply max n-1)]
-                      (map (fn [x] (take n-n (concat x (repeat nil)))) xs)))
-              [sqls params]
-              (reduce (fn [[sql params] [sqls' params']]
-                        [(conj sql (str "(" (str/join ", " sqls') ")"))
-                         (into params params')])
-                      [[] []]
-                      (map #'format-expr-list xs'))]
-          (into [(str (sql-kw k) " " (str/join ", " sqls))] params))
+  (let [first-xs (when (sequential? xs) (first (drop-while ident? xs)))]
+    (cond (contains? #{:default 'default} xs)
+          [(str (sql-kw xs) " " (sql-kw k))]
+          (empty? xs)
+          [(str (sql-kw k) " ()")]
+          (sequential? first-xs)
+          ;; [[1 2 3] [4 5 6]]
+          (let [n-1 (map count (filter sequential? xs))
+                ;; issue #291: ensure all value sequences are the same length
+                xs' (if (apply = n-1)
+                      xs
+                      (let [n-n (when (seq n-1) (apply max n-1))]
+                        (map (fn [x]
+                               (if (sequential? x)
+                                 (take n-n (concat x (repeat nil)))
+                                 x))
+                             xs)))
+                [sqls params]
+                (reduce (fn [[sql params] [sqls' params']]
+                          [(conj sql
+                                 (if (sequential? sqls')
+                                   (str "(" (str/join ", " sqls') ")")
+                                   sqls'))
+                           (into params params')])
+                        [[] []]
+                        (map #(if (sequential? %)
+                                (format-expr-list %)
+                                [(sql-kw %)])
+                             xs'))]
+            (into [(str (sql-kw k) " " (str/join ", " sqls))] params))
 
-        (map? (first xs))
-        ;; [{:a 1 :b 2 :c 3}]
-        (let [cols-1 (keys (first xs))
-              ;; issue #291: check for all keys in all maps but still
-              ;; use the keys from the first map if they match so that
-              ;; users can rely on the key ordering if they want to,
-              ;; e.g., see test that uses array-map for the first row
-              cols-n (into #{} (mapcat keys) xs)
-              cols   (if (= (set cols-1) cols-n) cols-1 cols-n)
-              [sqls params]
-              (reduce (fn [[sql params] [sqls' params']]
-                        [(conj sql (str "(" (str/join ", " sqls') ")"))
-                         (if params' (into params params') params')])
-                      [[] []]
-                      (map (fn [m]
-                             (format-expr-list
-                              (map #(get m
-                                         %
+          (map? first-xs)
+          ;; [{:a 1 :b 2 :c 3}]
+          (let [cols-1 (keys (first xs))
+                ;; issue #291: check for all keys in all maps but still
+                ;; use the keys from the first map if they match so that
+                ;; users can rely on the key ordering if they want to,
+                ;; e.g., see test that uses array-map for the first row
+                cols-n (into #{} (mapcat keys) xs)
+                cols   (if (= (set cols-1) cols-n) cols-1 cols-n)
+                [sqls params]
+                (reduce (fn [[sql params] [sqls' params']]
+                          [(conj sql (str "(" (str/join ", " sqls') ")"))
+                           (if params' (into params params') params')])
+                        [[] []]
+                        (map (fn [m]
+                               (format-expr-list
+                                (map #(get m
+                                           %
                                          ;; issue #366: use NULL or DEFAULT
                                          ;; for missing column values:
-                                         (if (contains? *values-default-columns* %)
-                                           [:default]
-                                           nil))
-                                   cols)))
-                           xs))]
-          (into [(str "("
-                      (str/join ", "
-                                (map #(format-entity % {:drop-ns true}) cols))
-                      ") "
-                      (sql-kw k)
-                      " "
-                      (str/join ", " sqls))]
-                params))
+                                           (if (contains? *values-default-columns* %)
+                                             [:default]
+                                             nil))
+                                     cols)))
+                             xs))]
+            (into [(str "("
+                        (str/join ", "
+                                  (map #(format-entity % {:drop-ns true}) cols))
+                        ") "
+                        (sql-kw k)
+                        " "
+                        (str/join ", " sqls))]
+                  params))
 
-        :else
-        (throw (ex-info ":values expects sequences or maps"
-                        {:first (first xs)}))))
+          :else
+          (throw (ex-info ":values expects sequences or maps"
+                          {:first (first xs)})))))
 
 (comment
   (into #{} (mapcat keys) [{:a 1 :b 2} {:b 3 :c 4}])

@@ -198,6 +198,8 @@ that represents a time unit. Produces an `INTERVAL` expression:
 ;;=> ["DATE_ADD(NOW(), INTERVAL ? DAYS)" 30]
 ```
 
+> Note: PostgreSQL has an `INTERVAL` data type which is unrelated to this syntax. In PostgreSQL, the closet equivalent would be `[:cast "30 days" :interval]` which will lift `"30 days"` out as a parameter. In DDL, for PostgreSQL, you can use `:interval` to produce the `INTERVAL` data type (without wrapping it in a vector).
+
 ## lateral
 
 Accepts a single argument that can be a (`SELECT`) clause or

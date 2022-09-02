@@ -106,7 +106,7 @@ You can now select a non-ANSI dialect of SQL using the new `honey.sql/set-dialec
 
 The `:quoting <dialect>` option has superseded by the new dialect machinery and a new `:quoted` option that turns quoting on or off. You either use `:dialect <dialect>` instead or set a default dialect (via `set-dialect!`) and then use `:quoted true` in `format` calls where you want quoting.
 
-Identifiers are automatically quoted if you specify a `:dialect` option to `format`, unless you also specify `:quoted false`.
+SQL entity names are automatically quoted if you specify a `:dialect` option to `format`, unless you also specify `:quoted false`.
 
 The following options are no longer supported:
 * `:allow-dashed-names?` -- if you provide dashed-names in 2.x, they will be left as-is if quoting is enabled, else they will be converted to snake_case (so you will either get `"dashed-names"` with quoting or `dashed_names` without). If you want dashed-names to be converted to snake_case when `:quoted true`, you also need to specify `:quoted-snake true`.
@@ -131,7 +131,7 @@ The following new syntax has been added:
 * `:default` -- for `DEFAULT` values (in inserts) and for declaring column defaults in table definitions,
 * `:escape` -- used to wrap a regular expression so that non-standard escape characters can be provided,
 * `:inline` -- used as a function to replace the `sql/inline` / `#sql/inline` machinery,
-* `:interval` -- used as a function to support `INTERVAL <n> <units>`, e.g., `[:interval 30 :days]`,
+* `:interval` -- used as a function to support `INTERVAL <n> <units>`, e.g., `[:interval 30 :days]` for databases that support it (e.g., MySQL),
 * `:lateral` -- used to wrap a statement or expression, to provide a `LATERAL` join,
 * `:lift` -- used as a function to prevent interpretation of a Clojure data structure as DSL syntax (e.g., when passing a vector or hash map as a parameter value) -- this should mostly be a replacement for `honeysql.format/value`,
 * `:nest` -- used as a function to add an extra level of nesting (parentheses) around an expression,

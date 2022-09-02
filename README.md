@@ -530,6 +530,8 @@ vectors where the first element is either a keyword or a symbol:
 => ["SELECT * FROM foo WHERE date_created > DATE_ADD(NOW(), INTERVAL ? HOURS)" 24]
 ```
 
+> Note: The above example may be specific to MySQL but the general principle of vectors for function calls applies to all dialects.
+
 A shorthand syntax also exists for simple function calls:
 keywords that begin with `%` are interpreted as SQL function calls:
 
@@ -703,11 +705,11 @@ INSERT INTO sample
 0.291 32.621 4325]
 ```
 
-#### Identifiers
+#### Entity Names
 
-To quote identifiers, pass the `:quoted true` option to `format` and they will
+To quote SQL entity names, pass the `:quoted true` option to `format` and they will
 be quoted according to the selected dialect. If you override the dialect in a
-`format` call, by passing the `:dialect` option, identifiers will be automatically
+`format` call, by passing the `:dialect` option, SQL entity names will be automatically
 quoted. You can override the dialect and turn off quoting by passing `:quoted false`.
 Valid `:dialect` options are `:ansi` (the default, use this for PostgreSQL),
 `:mysql`, `:oracle`, or `:sqlserver`:
