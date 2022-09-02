@@ -737,6 +737,25 @@ ORDER BY id = ? DESC
                     :values [{:name name
                               :enabled enabled}]})))))
 
+(deftest issue-425-default-values-test
+  (testing "default values"
+    (is (= ["INSERT INTO table (a, b, c) DEFAULT VALUES"]
+           (format {:insert-into [:table [:a :b :c]] :values :default}))))
+  (testing "values with default row"
+    (is (= ["INSERT INTO table (a, b, c) VALUES (1, 2, 3), DEFAULT, (4, 5, 6)"]
+           (format {:insert-into [:table [:a :b :c]]
+                    :values [[1 2 3] :default [4 5 6]]}
+                   {:inline true}))))
+  (testing "values with default column"
+    (is (= ["INSERT INTO table (a, b, c) VALUES (1, DEFAULT, 3), DEFAULT"]
+           (format {:insert-into [:table [:a :b :c]]
+                    :values [[1 [:default] 3] :default]}
+                   {:inline true}))))
+  (testing "empty values"
+    (is (= ["INSERT INTO table (a, b, c) VALUES ()"]
+           (format {:insert-into [:table [:a :b :c]]
+                    :values []})))))
+
 (deftest issue-316-test
   ;; this is a pretty naive test -- there are other tricks to perform injection
   ;; that are not detected by HoneySQL and you should generally use :quoted true
