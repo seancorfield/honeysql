@@ -530,6 +530,8 @@ vectors where the first element is either a keyword or a symbol:
 => ["SELECT * FROM foo WHERE date_created > DATE_ADD(NOW(), INTERVAL ? HOURS)" 24]
 ```
 
+> Note: The above example may be specific to MySQL but the general principle of vectors for function calls applies to all dialects.
+
 A shorthand syntax also exists for simple function calls:
 keywords that begin with `%` are interpreted as SQL function calls:
 

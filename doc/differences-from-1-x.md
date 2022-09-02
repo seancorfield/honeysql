@@ -131,7 +131,7 @@ The following new syntax has been added:
 * `:default` -- for `DEFAULT` values (in inserts) and for declaring column defaults in table definitions,
 * `:escape` -- used to wrap a regular expression so that non-standard escape characters can be provided,
 * `:inline` -- used as a function to replace the `sql/inline` / `#sql/inline` machinery,
-* `:interval` -- used as a function to support `INTERVAL <n> <units>`, e.g., `[:interval 30 :days]`,
+* `:interval` -- used as a function to support `INTERVAL <n> <units>`, e.g., `[:interval 30 :days]` for databases that support it (e.g., MySQL),
 * `:lateral` -- used to wrap a statement or expression, to provide a `LATERAL` join,
 * `:lift` -- used as a function to prevent interpretation of a Clojure data structure as DSL syntax (e.g., when passing a vector or hash map as a parameter value) -- this should mostly be a replacement for `honeysql.format/value`,
 * `:nest` -- used as a function to add an extra level of nesting (parentheses) around an expression,
