@@ -737,23 +737,28 @@
                 ;; use the keys from the first map if they match so that
                 ;; users can rely on the key ordering if they want to,
                 ;; e.g., see test that uses array-map for the first row
-                cols-n (into #{} (mapcat keys) xs)
+                cols-n (into #{} (mapcat keys) (filter map? xs))
                 cols   (if (= (set cols-1) cols-n) cols-1 cols-n)
                 [sqls params]
                 (reduce (fn [[sql params] [sqls' params']]
-                          [(conj sql (str "(" (str/join ", " sqls') ")"))
+                          [(conj sql
+                                 (if (sequential? sqls')
+                                   (str "(" (str/join ", " sqls') ")")
+                                   sqls'))
                            (if params' (into params params') params')])
                         [[] []]
                         (map (fn [m]
-                               (format-expr-list
-                                (map #(get m
-                                           %
-                                         ;; issue #366: use NULL or DEFAULT
-                                         ;; for missing column values:
-                                           (if (contains? *values-default-columns* %)
-                                             [:default]
-                                             nil))
-                                     cols)))
+                               (if (map? m)
+                                 (format-expr-list
+                                  (map #(get m
+                                             %
+                                             ;; issue #366: use NULL or DEFAULT
+                                             ;; for missing column values:
+                                             (if (contains? *values-default-columns* %)
+                                               [:default]
+                                               nil))
+                                       cols))
+                                 [(sql-kw m)]))
                              xs))]
             (into [(str "("
                         (str/join ", "

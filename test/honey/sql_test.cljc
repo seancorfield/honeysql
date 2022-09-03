@@ -751,6 +751,16 @@ ORDER BY id = ? DESC
            (format {:insert-into [:table [:a :b :c]]
                     :values [[1 [:default] 3] :default]}
                    {:inline true}))))
+  (testing "map values with default row, no columns"
+    (is (= ["INSERT INTO table (a, b, c) VALUES (1, 2, 3), DEFAULT, (4, 5, 6)"]
+           (format {:insert-into :table
+                    :values [{:a 1 :b 2 :c 3} :default {:a 4 :b 5 :c 6}]}
+                   {:inline true}))))
+  (testing "map values with default column, no columns"
+    (is (= ["INSERT INTO table (a, b, c) VALUES (1, DEFAULT, 3), DEFAULT"]
+           (format {:insert-into :table
+                    :values [{:a 1 :b [:default] :c 3} :default]}
+                   {:inline true}))))
   (testing "empty values"
     (is (= ["INSERT INTO table (a, b, c) VALUES ()"]
            (format {:insert-into [:table [:a :b :c]]
