@@ -912,6 +912,7 @@ In the former case, all of the rows are augmented to have
 either `NULL` or `DEFAULT` values for any missing keys (columns).
 By default, `NULL` is used but you can specify a set of columns
 to get `DEFAULT` values, via the `:values-default-columns` option.
+You can also be explicit and use `[:default]` as a value to generate `DEFAULT`.
 In the latter case -- a sequence of sequences --
 all of the rows are padded to the same length by adding `nil`
 values if needed (since `:values` does not know how or if column
@@ -935,6 +936,32 @@ user=> (sql/format '{insert-into table
 ```
 
 > Note: the `:values-default-columns` option must match how the columns are specified, i.e., as symbols or keywords.
+
+For databases that allow it, you can insert an entire row of default values,
+if appropriate, using one of the following syntaxes:
+
+```clojure
+user=> (sql/format {:insert-into :table :values []})
+["INSERT INTO table VALUES ()"]
+user=> (sql/format {:insert-into :table :values :default})
+["INSERT INTO table DEFAULT VALUES"]
+```
+
+Some databases support the empty `VALUES` clause, some support `DEFAULT VALUES`, some support neither. Consult your database's documentation to see which approach to use.
+
+For databases that allow it, when specifying multiple rows you use `:default` in
+place of a row to insert default values for that row:
+
+```clojure
+user=> (sql/format {:insert-into :table
+                    :values [{:a 1 :b 2 :c 3}
+                             :default
+                             {:a 4 :b 5 :c 6}]})
+["INSERT INTO table (a, b, c) VALUES (?, ?, ?), DEFAULT, (?, ?, ?)" 6 5 4]
+user=> (sql/format {:insert-into :table
+                    :values [[1 2 3] :default [4 5 6]]})
+["INSERT INTO table VALUES (?, ?, ?), DEFAULT, (?, ?, ?)" 1 2 3 4 5 6]
+```
 
 ## on-conflict, on-constraint, do-nothing, do-update-set
 
