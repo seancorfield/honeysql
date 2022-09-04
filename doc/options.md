@@ -20,7 +20,7 @@ All options may be omitted. The default behavior of each option is described in 
 * `:dialect` -- a keyword that identifies a dialect to be used for this specific call to `format`; the default is to use what was specified in `set-dialect!` or `:ansi` if no other dialect has been set,
 * `:inline` -- a Boolean indicating whether or not to inline parameter values, rather than use `?` placeholders and a sequence of parameter values; the default is `false` -- values are not inlined,
 * `:params` -- a hash map providing values for named parameters, identified by names (keywords or symbols) that start with `?` in the DSL; the default is that any such named parameters will have `nil` values,
-* `:quoted` -- a Boolean indicating whether or not to quote (strop) SQL entity names (table and column names); the default is `nil` -- alphanumeric SQL entity names are not quoted but (as of 2.3.next) "unusual" SQL entity names are quoted; a `false` value turns off all quoting,
+* `:quoted` -- a Boolean indicating whether or not to quote (strop) SQL entity names (table and column names); the default is `nil` -- alphanumeric SQL entity names are not quoted but (as of 2.3.928) "unusual" SQL entity names are quoted; a `false` value turns off all quoting,
 * `:quoted-snake` -- a Boolean indicating whether or not quoted and string SQL entity names should have `-` replaced by `_`; the default is `false` -- quoted and string SQL entity names are left exactly as-is,
 * `:values-default-columns` -- a sequence of column names that should have `DEFAULT` values instead of `NULL` values if used in a `VALUES` clause with no associated matching value in the hash maps passed in; the default behavior is for such missing columns to be given `NULL` values.
 
@@ -118,7 +118,7 @@ The quoting (stropping) is dialect-dependent:
 * `:oracle` -- uses double quotes
 * `:sqlserver` -- user square brackets
 
-As of 2.3.next, if `:quoted` and `:dialect` are not provided, and no
+As of 2.3.928, if `:quoted` and `:dialect` are not provided, and no
 default quoting strategy has been specified (via `set-dialect!`) then
 alphanumeric SQL entity names will not be quoted but "unusual" SQL entity names will
 

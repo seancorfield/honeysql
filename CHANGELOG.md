@@ -1,6 +1,6 @@
 # Changes
 
-* 2.3.next in progress
+* 2.3.928 in progress
   * Address [#425](https://github.com/seancorfield/honeysql/issues/425) by clarifying that `INTERVAL` as special syntax may be MySQL-specific and PostgreSQL uses difference syntax (because `INTERVAL` is a data type there).
   * Address [#423](https://github.com/seancorfield/honeysql/issues/423) by supporting `DEFAULT` values and `DEFAULT` rows in `VALUES`.
   * Address [#422](https://github.com/seancorfield/honeysql/issues/422) by auto-quoting unusual entity names when `:quoted` (and `:dialect`) are not specified, making HoneySQL more secure by default.
