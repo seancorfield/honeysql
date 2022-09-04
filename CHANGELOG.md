@@ -4,6 +4,7 @@
   * Address [#425](https://github.com/seancorfield/honeysql/issues/425) by clarifying that `INTERVAL` as special syntax may be MySQL-specific and PostgreSQL uses difference syntax (because `INTERVAL` is a data type there).
   * Address [#423](https://github.com/seancorfield/honeysql/issues/423) by supporting `DEFAULT` values and `DEFAULT` rows in `VALUES`.
   * Address [#422](https://github.com/seancorfield/honeysql/issues/422) by auto-quoting unusual entity names when `:quoted` (and `:dialect`) are not specified, making HoneySQL more secure by default.
+  * Fix [#421](https://github.com/seancorfield/honeysql/issues/421) by adding `:replace-into` for `:mysql` dialect.
   * Address [#419](https://github.com/seancorfield/honeysql/issues/419) by adding `honey.sql.protocols` and `InlineValue` with a `sqlize` function.
   * Address [#413](https://github.com/seancorfield/honeysql/issues/413) by flagging a lack of `WHERE` clause for `DELETE`, `DELETE FROM`, and `UPDATE` when `:checking :basic` (or `:checking :strict`).
   * Fix [#392](https://github.com/seancorfield/honeysql/issues/392) by adding support for `WITH` / (`NOT`) `MATERIALIZED` -- via PR [#420](https://github.com/seancorfield/honeysql/issues/420) [@robhanlon22](https://github.com/robhanlon22).

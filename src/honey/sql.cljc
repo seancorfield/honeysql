@@ -94,6 +94,8 @@
   [s x e]
   (str s (str/replace x (str e) (str e e)) e))
 
+(declare register-clause!)
+
 (def ^:private dialects
   (atom
    (reduce-kv (fn [m k v]
@@ -102,7 +104,10 @@
               {:ansi      {:quote #(strop \" % \")}
                :sqlserver {:quote #(strop \[ % \])}
                :mysql     {:quote #(strop \` % \`)
-                           :clause-order-fn #(add-clause-before % :set :where)}
+                           :clause-order-fn
+                           #(do
+                              (register-clause! :replace-into :insert-into :insert-into)
+                              (add-clause-before % :set :where))}
                :oracle    {:quote #(strop \" % \") :as false}})))
 
 ; should become defonce

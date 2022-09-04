@@ -439,7 +439,7 @@ user=> (sql/format '{select * bulk-collect-into [arrv 100] from mytable})
 ["SELECT * BULK COLLECT INTO arrv LIMIT ? FROM mytable" 100]
 ```
 
-## insert-into
+## insert-into, replace-into
 
 There are three use cases with `:insert-into`.
 
@@ -456,6 +456,9 @@ or a table/column specifier and a SQL query.
 
 For the first and second cases, you'll use the `:values` clause
 to specify rows of values to insert.
+
+`:replace-into` is part of the `:mysql` dialect that produces a `REPLACE INTO`
+statement but otherwise has identical syntax to `:insert-into`.
 
 ```clojure
 ;; first case -- table specifier:
