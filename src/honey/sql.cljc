@@ -43,26 +43,37 @@
 (def ^:private default-clause-order
   "The (default) order for known clauses. Can have items added and removed."
   [;; DDL comes first (these don't really have a precedence):
-   :alter-table :add-column :drop-column
+   :alter-table :add-column :drop-column :clear-column :comment-column
    :alter-column :modify-column :rename-column
-   :add-index :drop-index :rename-table
+   :alter-partition :alter-setting :alter-user :alter-quota :alter-role
+   :alter-settings-profile :alter-policy
+   :add-index :drop-index :rename-table :rename-type
    :create-table :create-table-as :with-columns
-   :create-view :create-materialized-view :create-extension
-   :drop-table :drop-view :drop-materialized-view :drop-extension
+   :create-view :create-materialized-view :create-live-view :create-window-view
+   :create-extension :create-database :create-function :create-user :create-role
+   :create-row-policy :create-quota :create-settings-profile :create-dictionary
+   :drop-table :drop-view :drop-materialized-view :drop-extension :drop-database
+   :drop-dictionary :drop-user :drop-role :drop-quota :drop-function :drop-row-policy
+   :drop-settings-profile
    :refresh-materialized-view
+   :watch :show :grant :revoke :explain :attach :detach :exists
    ;; then SQL clauses in priority order:
    :raw :nest :with :with-recursive :intersect :union :union-all :except :except-all
    :table
    :select :select-distinct :select-distinct-on :select-top :select-distinct-top
    :into :bulk-collect-into
-   :insert-into :update :delete :delete-from :truncate
-   :columns :set :from :using
+   :insert-into :update :delete :delete-from :delete-where :truncate :truncate-if-exists
+   :columns :set :from :using :on-cluster :to-name
+   :inner-engine :engine :watermark :allowed-lateness
+   :populate :clickhouse-comment :modify-comment :with-timeout :with-refresh :events
+   :sample :default-role
    :join-by
    :join :left-join :right-join :inner-join :outer-join :full-join
    :cross-join
-   :where :group-by :having
+   :prewhere
+   :where :group-by :limit-by :having
    :window :partition-by
-   :order-by :limit :offset :fetch :for :lock :values
+   :order-by :limit :offset :fetch :for :lock :into-outfile :clickhouse-format :values
    :on-conflict :on-constraint :do-nothing :do-update-set :on-duplicate-key-update
    :returning
    :with-data])
@@ -101,14 +112,15 @@
    (reduce-kv (fn [m k v]
                 (assoc m k (assoc v :dialect k)))
               {}
-              {:ansi      {:quote #(strop \" % \")}
-               :sqlserver {:quote #(strop \[ % \])}
-               :mysql     {:quote #(strop \` % \`)
-                           :clause-order-fn
-                           #(do
-                              (register-clause! :replace-into :insert-into :insert-into)
-                              (add-clause-before % :set :where))}
-               :oracle    {:quote #(strop \" % \") :as false}})))
+              {:ansi       {:quote #(strop \" % \")}
+               :sqlserver  {:quote #(strop \[ % \])}
+               :mysql      {:quote #(strop \` % \`)
+                            :clause-order-fn
+                            #(do
+                               (register-clause! :replace-into :insert-into :insert-into)
+                               (add-clause-before % :set :where))}
+               :oracle     {:quote #(strop \" % \") :as false}
+               :clickhouse {:quote #(strop "" % "")}})))
 
 ; should become defonce
 (def ^:private default-dialect (atom (:ansi @dialects)))
@@ -155,6 +167,11 @@
   "Helper to detect if SQL Server is the current dialect."
   []
   (= :sqlserver (:dialect *dialect*)))
+
+(defn- clickhouse?
+  "Helper to detect if Clickhouse is the current dialect."
+  []
+  (= :clickhouse (:dialect *dialect*)))
 
 ;; String.toUpperCase() or `str/upper-case` for that matter converts the
 ;; string to uppercase for the DEFAULT LOCALE. Normally this does what you'd
@@ -319,7 +336,9 @@
     (cond (= \% (first c))
           (let [[f & args] (str/split (subs c 1) #"\.")
                 quoted-args (map #(format-entity (keyword %) opts) args)]
-            [(str (upper-case (str/replace f "-" "_"))
+            [(str (if (clickhouse?)
+                    (str/replace f "-" "_")
+                    (upper-case (str/replace f "-" "_")))
                   "(" (str/join ", " quoted-args) ")")])
           (= \? (first c))
           (let [k (keyword (subs c 1))]
@@ -545,10 +564,17 @@
         (reduce-sql
          (map
           (fn [[x expr :as with]]
-            (let [[sql & params] (format-with-part x)
-                  [sql' & params'] (format-dsl expr)]
+            (let [[sql & params]   (format-with-part x)
+                  [sql' & params'] (if (and (clickhouse?)
+                                            (not (map? expr)))
+                                     (format-expr expr)
+                                     (format-dsl expr))]
               ;; according to docs, CTE should _always_ be wrapped:
-              (cond-> [(str sql " " (as-fn with) " " (str "(" sql' ")"))]
+              (cond-> [(if (clickhouse?)
+                         (if (map? expr)
+                           (str (str "(" sql' ")") " AS " sql)
+                           (str sql' " AS " sql))
+                         (str sql " " (as-fn with) " " (str "(" sql' ")")))]
                 params  (into params)
                 params' (into params'))))
           xs))]
@@ -673,6 +699,63 @@
       (into [(str (sql-kw k) " " sql)] params))
     []))
 
+(defn format-prewhere
+  "Given a sequence with two arguments where the first is a single argument or a
+  sequence of arguments for the prewhere clause and the second is a hash map
+  representing a SQL statement."
+  [k [xs dsl]]
+  (let [[sql params] (format-dsl dsl)]
+    (into [(str (sql-kw k)
+                (if (sequential? xs)
+                  (str "("
+                       (reduce (fn [ret x]
+                                 (if (clojure.string/blank? ret)
+                                   (name x)
+                                   (str ret ", " (name x)))) "" xs)
+                       ")")
+                  (str " " (name xs)))
+                " IN "
+                "(" sql ")")])))
+
+(defn- format-sample
+  "Given x, a fraction/number or a sequence with two arguments,
+  where the first is the fraction of data where the query is executed
+  and, the second is the offset which is applied as a fraction before
+  the data."
+  [k [x]]
+  (if (sequential? x)
+    (let [[n m] x]
+      (into [(str (sql-kw k) " " n " OFFSET " (or m 0))]))
+    (into [(str (sql-kw k) " " x)])))
+
+(defn- format-clickhouse-on-expr
+  "This function receives arguments similar to `format-selects` and
+  returns an almost equal result but allows extra modifiers which are
+  conjoined to the result."
+  [k e]
+  (if (or (not (sequential? e)) (seq e))
+    (let [extra-mods?    (when (and (sequential? e) (= (count e) 3)) (last e))
+          e              (if extra-mods? (butlast e) e)
+          [sql & params] (format-expr e)
+          plain-sql      (if (sequential? e) (subs sql 1 (dec (count sql))) sql)]
+      (into [(str (sql-kw k)
+                  " "
+                  plain-sql
+                  (if extra-mods?
+                    (str " " (sql-kw extra-mods?))
+                    ""))] params))
+    []))
+
+(defn- format-limit-by [k xs]
+  (let [[e by] xs
+        [sql & params] (format-clickhouse-on-expr :limit e)]
+    (when (nil? by)
+      (throw (ex-info "limit by expects an expression"
+                      {:first (first xs)})))
+    (if (sequential? by)
+      (into [(str sql " BY " (clojure.string/join ", " (map name by)))] params)
+      (into [(str sql " BY " (name by))] params))))
+
 (defn- format-group-by [k xs]
   (let [[sqls params] (format-expr-list xs)]
     (into [(str (sql-kw k) " " (str/join ", " sqls))] params)))
@@ -680,10 +763,16 @@
 (defn- format-order-by [k xs]
   (let [dirs (map #(when (sequential? %) (second %)) xs)
         [sqls params]
-        (format-expr-list (map #(if (sequential? %) (first %) %) xs))]
+        (format-expr-list   (map #(if (sequential? %) (first %) %) xs))
+        clickhouse-variant? (and (clickhouse?) (contains-clause? :create-table))];; 'order-by' in clickhouse
+    ;; has different formats in 'create-table' and 'select'
     (into [(str (sql-kw k) " "
                 (str/join ", " (map (fn [sql dir]
-                                      (str sql " " (sql-kw (or dir :asc))))
+                                      (if clickhouse-variant?
+                                        (if dir
+                                          (str "(" sql "," (sql-kw dir) ")")
+                                          (str sql))
+                                        (str sql " " (sql-kw (or dir :asc)))))
                                     sqls
                                     dirs)))] params)))
 
@@ -888,7 +977,18 @@
         opts (drop-while tab? params)
         ine  (last coll)
         [prequel table ine]
-        (if (= :if-not-exists (sym->kw ine))
+        (if (or (= :if-not-exists (sym->kw ine))
+                (and (= :or-replace (sym->kw ine))
+                     (clickhouse?)
+                     (or (contains-clause? :create-user)
+                         (contains-clause? :create-role)
+                         (contains-clause? :create-row-policy)
+                         (contains-clause? :create-quota)
+                         (contains-clause? :create-settings-profile)))
+                (and (or (= :all-except (sym->kw ine))
+                         (= :all (sym->kw ine)))
+                     (clickhouse?)
+                     (contains-clause? :alter-user)))
           [(butlast (butlast coll)) (last (butlast coll)) ine]
           [(butlast coll) (last coll) nil])]
     (into [(str/join " " (map sql-kw prequel))
@@ -934,7 +1034,11 @@
 (defn- format-drop-items
   [k params]
   (let [[if-exists tables & more] (destructure-drop-items params "DROP options")]
-    [(str/join " " (remove nil? (into [(sql-kw k) if-exists tables] more)))]))
+    [(str/join " " (remove nil? (into [(sql-kw k)
+                                       if-exists
+                                       (when (and (clickhouse?) (= k :alter-settings-profile))
+                                         "TO")
+                                       tables] more)))]))
 
 (def ^:private ^:dynamic *formatted-column* (atom false))
 
@@ -943,8 +1047,9 @@
   (str/join " " (cons (format-simple-expr (first xs) "column operation")
                       (map #(binding [*formatted-column* (atom false)]
                               (cond-> (format-simple-expr % "column operation")
-                                (not @*formatted-column*)
-                                (upper-case)))
+                                      (and (not @*formatted-column*)
+                                           (not (clickhouse?)))
+                                      (upper-case)))
                            (rest xs)))))
 
 (defn- format-table-columns [_ xs]
@@ -957,8 +1062,140 @@
     [(str (sql-kw k) " " (sql-kw :if-not-exists) " " (format-single-column (butlast spec)))]
     [(str (sql-kw k) " " (format-single-column spec))]))
 
-(defn- format-rename-item [k [x y]]
-  [(str (sql-kw k) " " (format-entity x) " TO " (format-entity y))])
+(defn- format-rename-item [k [x y if-exists]]
+  [(str (sql-kw k)
+        (if (contains? #{:if-exists 'if-exists} if-exists)
+          (str " " (sql-kw :if-exists))
+          "")
+        " "
+        (format-entity x)
+        " TO "
+        (format-entity y))])
+
+(defn- format-clear-item [k [x y if-exists]]
+  [(str (sql-kw k)
+        (if (contains? #{:if-exists 'if-exists} if-exists)
+          (str " " (sql-kw :if-exists))
+          "")
+        " "
+        (format-entity x)
+        " IN PARTITION "
+        (format-entity y))])
+
+(defn- format-comment-item [k [x y if-exists]]
+  [(str (sql-kw k)
+        (if (contains? #{:if-exists 'if-exists} if-exists)
+          (str " " (sql-kw :if-exists))
+          "")
+        " "
+        (format-entity x)
+        " '"
+        (format-entity y)
+        "'")])
+
+(defn format-alter-setting
+  [k [op xs]]
+  (let [op-n #(cond (string? %) (str "'" % "'")
+                    (number? %) %
+                    :else (format-entity %))
+        sql (reduce (fn [ret [s v]]
+                      (str (when ret (str ret ", "))
+                           (op-n s)
+                           (when (= :modify op) "=")
+                           (when (= :modify op)(op-n v))))
+                    nil
+                    xs)]
+    [(str (sql-kw op) " SETTING " sql)]))
+
+(defn format-alter-partition
+  [k [n m opts]]
+  (let [[sql params] (format-add-item m [:PARTITION n])
+        more-xs      (map (fn [[k v]] (first (format-add-item k [v]))) (seq opts))
+        more         (str/join " " more-xs)]
+    (into [(str sql (when (not (str/blank? more)) (str " " more)))] params)))
+
+(defn format-show
+  [k [item name {:keys [create? pre more]}]]
+  [(clojure.string/join
+     " "
+     (remove nil? (into [(sql-kw :show)
+                         (when create?
+                           (sql-kw :create))
+                         (cond (and pre (ident? pre)) (sql-kw pre)
+                               (sequential? pre) (-> pre format-expr first))
+                         (sql-kw item)
+                         (when name
+                           (format-entity name))
+                         (when (map? more)
+                           (first (format-ddl-options [more] "SHOW options")))])))])
+
+(defn format-grant
+  [k [privilege {:keys [pre role user table columns more]}]]
+  [(clojure.string/join
+     " "
+     (remove nil? (into [(sql-kw k)
+                         (when (map? pre)
+                           (first (format-ddl-options [pre] "GRANT options")))
+                         (-> privilege format-expr first)
+                         (when (map? columns)
+                           (first (format-ddl-options [columns] "GRANT options")))
+                         (when table
+                           "ON")
+                         (when table
+                           (-> table format-expr first))
+                         (when (or user role)
+                           (if (= :grant k) "TO" "FROM"))
+                         (when (or user role)
+                           (-> (or user role) format-expr first))
+                         (when (map? more)
+                           (first (format-ddl-options [more] "GRANT options")))])))])
+
+(defn format-explain
+  [k [type {:keys [settings data more]}]]
+  [(clojure.string/join
+     " "
+     (remove nil? (into [(sql-kw k)
+                         (when type (sql-kw type))
+                         (when (map? settings)
+                           (-> [settings] (format-ddl-options "GRANT options") first))
+                         (when (map? data)
+                           (-> [data] (format-ddl-options "GRANT options") first))
+                         (when (map? more)
+                           (-> [more] (format-ddl-options "GRANT options") first))])))])
+
+(defn format-default-role
+  [_ x]
+  (let [set-role? (= :set (first x))]
+    (format-create (if set-role? :set-default :default) :role (if set-role? (rest x) x) nil)))
+
+(defn format-rename-type
+  [_ [type previous to]]
+  [(clojure.string/join
+     " "
+     (remove nil? (into [(sql-kw :rename)
+                         (sql-kw type)
+                         (format-entity previous)
+                         "TO"
+                         (format-entity to)])))])
+
+(defn format-into-outfile
+  [_ [file-name {:keys [compression level]}]]
+  [(str (sql-kw :into-outfile) " " (name file-name)
+        (if compression
+          (str " COMPRESSION " (name compression))
+          "")
+        (if level
+          (str " LEVEL " level)
+          ""))])
+
+(defn format-with-refresh
+  [_ x]
+  (let [[sql params] (format-expr x)]
+    (into [(str (if (contains-clause? :with-timeout)
+                  (str (sql-kw :and) " " (sql-kw :refresh))
+                  (sql-kw :with-refresh))
+                " "
+                sql)] params)))
 
 (defn- raw-render [s]
   (if (sequential? s)
@@ -1000,103 +1237,180 @@
 (def ^:private clause-format
   "The (default) behavior for each known clause. Can also have items added
   and removed."
-  (atom {:alter-table     #'format-alter-table
-         :add-column      #'format-add-item
-         :drop-column     #'format-drop-items
-         :alter-column    (fn [k spec]
-                            (format-add-item
-                             (if (mysql?) :modify-column k)
-                             spec))
-         :modify-column   #'format-add-item
-         :rename-column   #'format-rename-item
+  (atom {:alter-table               #'format-alter-table
+         :add-column                #'format-add-item
+         :drop-column               #'format-drop-items
+         :alter-column              (fn [k spec]
+                                      (format-add-item
+                                        (if (mysql?) :modify-column k)
+                                        spec))
+         :alter-partition           #'format-alter-partition
+         :alter-setting             #'format-alter-setting
+         :alter-user                #'format-drop-items
+         :alter-quota               #'format-drop-items
+         :alter-role                #'format-drop-items
+         :alter-policy              #'format-drop-items
+         :alter-settings-profile    #'format-drop-items
+         :modify-column             #'format-add-item
+         :rename-column             #'format-rename-item
+         :clear-column              #'format-clear-item
+         :comment-column            #'format-comment-item
          ;; so :add-index works with both [:index] and [:unique]
-         :add-index       (fn [_ x] (format-on-expr :add x))
-         :drop-index      #'format-selector
-         :rename-table    (fn [_ x] (format-selector :rename-to x))
-         :create-table    (fn [_ x] (format-create :create :table x nil))
-         :create-table-as (fn [_ x] (format-create :create :table x :as))
-         :create-extension (fn [_ x] (format-create :create :extension x nil))
-         :with-columns    #'format-table-columns
-         :create-view     (fn [_ x] (format-create :create :view x :as))
-         :create-materialized-view (fn [_ x] (format-create :create :materialized-view x :as))
-         :drop-table      #'format-drop-items
-         :drop-extension  #'format-drop-items
-         :drop-view       #'format-drop-items
-         :drop-materialized-view #'format-drop-items
+         :add-index                 (fn [_ x] (format-on-expr :add x))
+         :drop-index                #'format-selector
+         :rename-table              (fn [_ x] (format-selector :rename-to x))
+         :rename-type               #'format-rename-type
+         :create-database           (fn [_ x] (format-create :create :database x nil))
+         :create-function           (fn [_ x] (format-create :create :function x :as))
+         :create-user               (fn [_ x] (format-create :create :user x nil))
+         :create-role               (fn [_ x] (format-create :create :role x nil))
+         :create-row-policy         (fn [_ x] (format-create :create :row-policy x nil))
+         :create-quota              (fn [_ x] (format-create :create :quota x nil))
+         :create-settings-profile   (fn [_ x] (format-create :create :settings-profile x nil))
+         :create-dictionary         (fn [_ x] (format-create :create :dictionary x nil))
+         :create-table              (fn [_ x] (format-create :create :table x nil))
+         :create-table-as           (fn [_ x] (format-create :create :table x :as))
+         :create-extension          (fn [_ x] (format-create :create :extension x nil))
+         :watch                     (fn [_ x] [(str (sql-kw :watch) " " (format-entity x))])
+         :with-columns              #'format-table-columns
+         :create-view               (fn [_ x] (format-create :create :view x :as))
+         :create-materialized-view  (fn [_ x] (format-create :create :materialized-view x :as))
+         :create-live-view          (fn [_ x] (format-create :create :live-view x :as))
+         :create-window-view        (fn [_ x] (format-create :create :window-view x :as))
+         :drop-table                #'format-drop-items
+         :drop-extension            #'format-drop-items
+         :drop-view                 #'format-drop-items
+         :drop-materialized-view    #'format-drop-items
+         :drop-database             #'format-drop-items
+         :drop-dictionary           #'format-drop-items
+         :drop-user                 #'format-drop-items
+         :drop-role                 #'format-drop-items
+         :drop-quota                #'format-drop-items
+         :drop-function             #'format-drop-items
+         :drop-row-policy           #'format-drop-items
+         :drop-settings-profile     #'format-drop-items
          :refresh-materialized-view (fn [_ x] (format-create :refresh :materialized-view x nil))
-         :raw             (fn [_ x] (raw-render x))
-         :nest            (fn [_ x]
-                            (let [[sql & params] (format-dsl x {:nested true})]
-                              (into [sql] params)))
-         :with            (let [as-fn
-                                (fn [[_ _ materialization]]
-                                  (condp = materialization
-                                    :materialized "AS MATERIALIZED"
-                                    :not-materialized "AS NOT MATERIALIZED"
-                                    "AS"))]
+         :show                      #'format-show
+         :grant                     #'format-grant
+         :attach                    (fn [k xs]
+                                      (format-create k (first xs) (rest xs) nil))
+         :detach                    (fn [k xs]
+                                      (format-drop-items
+                                        (keyword (str (format-entity k) "-" (-> xs first format-entity)))
+                                        (rest xs)))
+         :exists                    (fn [k xs]
+                                      (if (= (first xs) :temporary)
+                                        (format-create :exists-temporary (second xs) (-> xs rest rest) nil)
+                                        (format-create :exists (first xs) (rest xs) nil)))
+         :revoke                    #'format-grant
+         :explain                   #'format-explain
+         :on-cluster                #'format-selector
+         :to-name                   #(format-selector :to %2)
+         :inner-engine              (fn [k x] (format-add-item k [:= x]))
+         :engine                    (fn [k x] (format-add-item k [:= x]))
+         :watermark                 (fn [k x] (format-add-item k [:= x]))
+         :allowed-lateness          (fn [k x] (format-add-item k [:= x]))
+         :populate                  (fn [_ _]
+                                      [(str (sql-kw :populate))])
+         :clickhouse-comment        #(format-selector :comment %2)
+         :modify-comment            #'format-selector
+         :with-timeout              #'format-selector
+         :with-refresh              #'format-with-refresh
+         :events                    (fn [_ _]
+                                      [(str (sql-kw :events))])
+         :raw                       (fn [_ x] (raw-render x))
+         :nest                      (fn [_ x]
+                                      (let [[sql & params] (format-dsl x {:nested true})]
+                                        (into [sql] params)))
+         :with                     (let [as-fn
+                                         (fn [[_ _ materialization]]
+                                           (condp = materialization
+                                             :materialized "AS MATERIALIZED"
+                                             :not-materialized "AS NOT MATERIALIZED"
+                                             "AS"))]
                             (fn [k xs] (format-with k xs as-fn)))
-         :with-recursive  (let [as-fn (constantly "AS")]
-                            (fn [k xs] (format-with k xs as-fn)))
-         :intersect       #'format-on-set-op
-         :union           #'format-on-set-op
-         :union-all       #'format-on-set-op
-         :except          #'format-on-set-op
-         :except-all      #'format-on-set-op
-         :table           #'format-selector
-         :select          #'format-selects
-         :select-distinct #'format-selects
-         :select-distinct-on #'format-selects-on
-         :select-top      #'format-select-top
-         :select-distinct-top #'format-select-top
-         :into            #'format-select-into
-         :bulk-collect-into #'format-select-into
-         :insert-into     #'format-insert
-         :update          (check-where #'format-selector)
-         :delete          (check-where #'format-selects)
-         :delete-from     (check-where #'format-selector)
-         :truncate        #'format-selector
-         :columns         #'format-columns
-         :set             #'format-set-exprs
-         :from            #'format-selects
-         :using           #'format-selects
-         :join-by         #'format-join-by
-         :join            #'format-join
-         :left-join       #'format-join
-         :right-join      #'format-join
-         :inner-join      #'format-join
-         :outer-join      #'format-join
-         :full-join       #'format-join
-         :cross-join      #'format-selects
-         :where           #'format-on-expr
-         :group-by        #'format-group-by
-         :having          #'format-on-expr
-         :window          #'format-selector
-         :partition-by    #'format-selects
-         :order-by        #'format-order-by
-         :limit           #'format-on-expr
-         :offset          (fn [_ x]
-                            (if (or (contains-clause? :fetch) (sql-server?))
-                              (let [[sql & params] (format-on-expr :offset x)
-                                    rows (if (and (number? x) (== 1 x)) :row :rows)]
-                                (into [(str sql " " (sql-kw rows))] params))
-                              ;; format in the old style:
-                              (format-on-expr :offset x)))
-         :fetch           (fn [_ x]
-                            (let [which (if (contains-clause? :offset) :fetch-next :fetch-first)
-                                  rows  (if (and (number? x) (== 1 x)) :row-only :rows-only)
-                                  [sql & params] (format-on-expr which x)]
-                              (into [(str sql " " (sql-kw rows))] params)))
-         :for             #'format-lock-strength
-         :lock            #'format-lock-strength
-         :values          #'format-values
-         :on-conflict     #'format-on-conflict
-         :on-constraint   #'format-selector
-         :do-nothing      (fn [k _] (vector (sql-kw k)))
-         :do-update-set   #'format-do-update-set
+         :with-recursive           (let [as-fn (constantly "AS")]
+                                     (fn [k xs] (format-with k xs as-fn)))
+         :intersect                 #'format-on-set-op
+         :union                     #'format-on-set-op
+         :union-all                 #'format-on-set-op
+         :except                    #'format-on-set-op
+         :except-all                #'format-on-set-op
+         :table                     #'format-selector
+         :select                    #'format-selects
+         :select-distinct           #'format-selects
+         :select-distinct-on        #'format-selects-on
+         :select-top                #'format-select-top
+         :select-distinct-top       #'format-select-top
+         :into                      #'format-select-into
+         :bulk-collect-into         #'format-select-into
+         :insert-into               #'format-insert
+         :update                    (check-where #'format-selector)
+         :delete                    (check-where #'format-selects)
+         :delete-from               (check-where #'format-selector)
+         :delete-where              (check-where #'format-selects)
+         :truncate                  #'format-selector
+         :truncate-if-exists        (fn [k xs]
+                                      (format-drop-items :truncate-table xs))
+         :columns                   #'format-columns
+         :set                       #'format-set-exprs
+         :from                      #'format-selects
+         :using                     #'format-selects
+         :sample                    #'format-sample
+         :default-role              #'format-default-role
+         :join-by                   #'format-join-by
+         :join                      #'format-join
+         :left-join                 #'format-join
+         :right-join                #'format-join
+         :inner-join                #'format-join
+         :outer-join                #'format-join
+         :full-join                 #'format-join
+         :cross-join                #'format-selects
+         :prewhere                  #'format-prewhere
+         :where                     #'format-on-expr
+         :group-by                  #'format-group-by
+         :limit-by                  #'format-limit-by
+         :having                    #'format-on-expr
+         :window                    #'format-selector
+         :partition-by              #'format-selects
+         :order-by                  #'format-order-by
+         :limit                     (fn [_ x]
+                                      (if (clickhouse?)
+                                        (format-clickhouse-on-expr :limit x)
+                                        (format-on-expr :limit x)))
+         :offset                    (fn [_ x]
+                                      (if (or (contains-clause? :fetch) (sql-server?))
+                                        (let [[sql & params] (format-on-expr :offset x)
+                                              rows           (if (and (number? x) (== 1 x)) :row :rows)]
+                                          (into [(str sql " " (sql-kw rows))] params))
+                                        ;; format in the old style:
+                                        (format-on-expr :offset x)))
+         :fetch                     (fn [_ x]
+                                      (let [with-mod?      (when (and (clickhouse?) (sequential? x)) (last x))
+                                            _              (when (and with-mod? (or (not (keyword? with-mod?)) (not= (count x) 2)))
+                                                            (throw (ex-info (str "Modifier provided should be a keyword, not " with-mod?)
+                                                                            {})))
+                                            x              (if with-mod? (first x) x)
+                                            which          (if (contains-clause? :offset) :fetch-next :fetch-first)
+                                            rows           (cond
+                                                             with-mod?                  :rows-with-ties
+                                                             (and (number? x) (== 1 x)) :row-only
+                                                             :else                      :rows-only)
+                                            [sql & params] (format-on-expr which x)]
+                                        (into [(str sql " " (sql-kw rows))] params)))
+         :for                       #'format-lock-strength
+         :lock                      #'format-lock-strength
+         :into-outfile              #'format-into-outfile
+         :clickhouse-format         #(format-selector :format %2)
+         :values                    #'format-values
+         :on-conflict               #'format-on-conflict
+         :on-constraint             #'format-selector
+         :do-nothing                (fn [k _] (vector (sql-kw k)))
+         :do-update-set             #'format-do-update-set
          ;; MySQL-specific but might as well be always enabled:
-         :on-duplicate-key-update #'format-do-update-set
-         :returning       #'format-selects
-         :with-data       #'format-with-data}))
+         :on-duplicate-key-update   #'format-do-update-set
+         :returning                 #'format-selects
+         :with-data                 #'format-with-data}))
 
 (assert (= (set @base-clause-order)
            (set @current-clause-order)
@@ -1127,7 +1441,7 @@
                                    xs
                                    (let [s (kw->sym k)]
                                      (get leftover s)))]
-                      (let [formatter (k @clause-format)
+                      (let [formatter        (k @clause-format)
                             [sql' & params'] (formatter k xs)]
                         [(conj sql sql')
                          (if params' (into params params') params)
@@ -1464,7 +1778,9 @@
                   :else
                   (let [args          (rest expr)
                         [sqls params] (format-expr-list args)]
-                    (into [(str (sql-kw op)
+                    (into [(str (if (clickhouse?)
+                                  (name op)
+                                  (sql-kw op))
                                 (if (and (= 1 (count args))
                                          (map? (first args))
                                          (= 1 (count sqls)))

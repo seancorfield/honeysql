@@ -172,12 +172,14 @@
   (generic :add-column col-elems))
 
 (defn drop-column
-  "Takes a single column name (use with `alter-table`).
+  "Takes a single column name and an optional
+  flag to trigger IF EXISTS (use with `alter-table`).
 
-  (alter-table :foo (drop-column :bar))"
-  {:arglists '([col])}
+  (alter-table :foo (drop-column :bar))
+  (alter-table :foo (drop-column :if-exists :bar))"
+  {:arglists '([col] [if-exists col])}
   [& args]
-  (generic-1 :drop-column args))
+  (generic :drop-column args))
 
 (defn alter-column
   "Like add-column, accepts any number of SQL elements
@@ -200,12 +202,114 @@
 
 (defn rename-column
   "Accepts two column names: the original name and the
-  new name to which it should be renamed:
+  new name to which it should be renamed, and an optional
+  flag to trigger IF EXISTS
 
-  (rename-column :name :full-name)"
-  {:arglists '([old-col new-col])}
+  (rename-column :name :full-name)
+  (rename-column :name :full-name :if-exists)"
+  {:arglists '([old-col new-col] [old-col new-col if-exists])}
   [& args]
   (generic :rename-column args))
+
+(defn clear-column
+  "Accepts a column name, a partition and an optional
+  flag to trigger IF EXISTS
+
+  (clear-column :name :partition_name)
+  (clear-column :name :partition_name :if-exists)"
+  {:arglists '([old-col new-col] [old-col new-col if-exists])}
+  [& args]
+  (generic :clear-column args))
+
+(defn comment-column
+  "Accepts a column name, a comment and an optional
+  flag to trigger IF EXISTS
+
+  (comment-column :name \"Text comment\")
+  (comment-column :name \"Text comment\" :if-exists)"
+  {:arglists '([old-col new-col] [old-col new-col if-exists])}
+  [& args]
+  (generic :comment-column args))
+
+
+(defn alter-partition
+  "Accepts a partition name and a partition operation. An option map
+  can be passed to enable passing of extra params.
+
+  (alter-partition :partition_expr :attach)
+  (alter-partition :partition_expr :move {:to-table :table_dest})
+
+  Produces
+  ATTACH PARTITION partition_expr
+  MOVE PARTITION partition_expr TO TABLE table_dest"
+  {:arglists '([partition operation] [partition operation more])}
+  [& args]
+  (generic :alter-partition args))
+
+(defn alter-setting
+  "Accepts an operation and a sequence of vectors of two children each.
+  The first child is converted to a setting name and the second child
+  the value of the setting.
+
+  (alter-setting :modify [[:max_part_loading_threads 8] [:max_parts_in_total 500]])
+  (alter-setting :replace [[:max_parts_in_total] [:max_part_loading_threads]])
+
+  Produces
+  MODIFY SETTING max_part_loading_threads=8, max_parts_in_total=500
+  REPLACE SETTING max_parts_in_total, max_part_loading_threads"
+  {:arglists '([operation [name value]] [operation [name value]])}
+  [& args]
+  (generic :alter-setting args))
+
+(defn alter-user
+  "Accepts a user name to change and optionally a
+  flag to trigger IF EXISTS:
+
+  (alter-user :name)
+  (alter-user :if-exists :name)"
+  {:arglists '([if-exists name])}
+  [& args]
+  (generic :alter-user args))
+
+(defn alter-quota
+  "Accepts a quota to change and optionally a
+  flag to trigger IF EXISTS:
+
+  (alter-quota :quota)
+  (alter-quota :if-exists :quota)"
+  {:arglists '([if-exists quota])}
+  [& args]
+  (generic :alter-quota args))
+
+(defn alter-role
+  "Accepts a role to change and optionally a
+  flag to trigger IF EXISTS:
+
+  (alter-role :role)
+  (alter-role :if-exists :role)"
+  {:arglists '([if-exists role])}
+  [& args]
+  (generic :alter-role args))
+
+(defn alter-policy
+  "Accepts a row policy to change and optionally a
+  flag to trigger IF EXISTS:
+
+  (alter-policy :policy)
+  (alter-policy :if-exists :policy)"
+  {:arglists '([if-exists policy])}
+  [& args]
+  (generic :alter-policy args))
+
+(defn alter-settings-profile
+  "Accepts a setting profile to change and optionally a
+  flag to trigger IF EXISTS:
+
+  (alter-settings-profile :profile)
+  (alter-settings-profile :if-exists :profile)"
+  {:arglists '([if-exists profile])}
+  [& args]
+  (generic :alter-settings-profile args))
 
 (defn add-index
   "Like add-column, this accepts any number of SQL
@@ -235,6 +339,88 @@
   {:arglists '([new-table])}
   [& args]
   (generic-1 :rename-table args))
+
+(defn rename-type
+  "Requires three arguments, the entity type, previous name
+  and the name to rename to. This is currently intended for
+  Clickhouse databases.
+
+  (rename-type :dictionary :previous :after)
+
+  Produces: RENAME DICTIONARY previous TO after"
+  {:arglists '([type previous after])}
+  [& args]
+  (generic :rename-type args))
+
+(defn create-database
+  "Accepts a database name to create and optionally a
+  flag to trigger IF NOT EXISTS:
+
+  (create-database :foo)
+  (create-database :foo :if-not-exists)"
+  [& args]
+  (generic :create-database args))
+
+(defn create-user
+  "Accepts a user name to create and optionally a
+  flag to trigger IF NOT EXISTS/OR REPLACE:
+
+  (create-user :foo)
+  (create-user :foo :if-not-exists)
+  (create-user :foo :or-replace)"
+  [& args]
+  (generic :create-user args))
+
+(defn create-role
+  "Accepts a role to create and optionally a
+  flag to trigger IF NOT EXISTS/OR REPLACE:
+
+  (create-role :role)
+  (create-role :role :if-not-exists)
+  (create-role :role :or-replace)"
+  [& args]
+  (generic :create-role args))
+
+(defn create-row-policy
+  "Accepts a row policy to create and optionally a
+  flag to trigger IF NOT EXISTS/OR REPLACE:
+
+  (create-row-policy :policy)
+  (create-row-policy :policy :if-not-exists)
+  (create-row-policy :policy :or-replace)"
+  [& args]
+  (generic :create-row-policy args))
+
+(defn create-quota
+  "Accepts a quota to create and optionally a
+  flag to trigger IF NOT EXISTS/OR REPLACE:
+
+  (create-quota :quota)
+  (create-quota :quota :if-not-exists)
+  (create-quota :quota :or-replace)"
+  [& args]
+  (generic :create-quota args))
+
+(defn create-settings-profile
+  "Accepts a quota to create and optionally a
+  flag to trigger IF NOT EXISTS/OR REPLACE:
+
+  (create-settings-profile :profile)
+  (create-settings-profile :profile :if-not-exists)
+  (create-settings-profile :profile :or-replace)"
+  [& args]
+  (generic :create-settings-profile args))
+
+(defn create-dictionary
+  "Accepts a dictionary to create and optionally a
+  flag to trigger IF NOT EXISTS/OR REPLACE:
+
+  (create-dictionary :dictionary)
+  (create-dictionary :dictionary :if-not-exists)
+  (create-dictionary :or-replace :dictionary :if-not-exists)
+  (create-dictionary :dictionary :or-replace)"
+  [& args]
+  (generic :create-dictionary args))
 
 (defn create-table
   "Accepts a table name to create and optionally a
@@ -315,6 +501,36 @@
   [& args]
   (generic :create-materialized-view args))
 
+(defn create-live-view
+  "Accepts a single view name to create.
+
+  (-> (create-live-view :cities)
+      (select :*) (from :city))
+      (with-data true)"
+  {:arglists '([view])}
+  [& args]
+  (generic :create-live-view args))
+
+(defn create-window-view
+  "Accepts a single view name to create.
+
+  (-> (create-window-view :cities)
+      (select :*) (from :city))
+      (with-data true)"
+  {:arglists '([view])}
+  [& args]
+  (generic :create-window-view args))
+
+(defn create-function
+  "Accepts a single function name to create.
+
+  (-> (create-function :cities)
+      (select :*) (from :city))
+      (with-data true)"
+  {:arglists '([function])}
+  [& args]
+  (generic :create-function args))
+
 (defn drop-table
   "Accepts one or more table names to drop.
 
@@ -336,6 +552,62 @@
   "Accepts one or more materialied view names to drop."
   [& views]
   (generic :drop-materialized-view views))
+
+(defn drop-database
+  "Accepts a database name to drop.
+
+  (drop-database :foo)"
+  [& database]
+  (generic :drop-database database))
+
+(defn drop-dictionary
+  "Accepts a dictionary name to drop.
+
+  (drop-dictionary :foo)"
+  [& database]
+  (generic :drop-dictionary database))
+
+(defn drop-user
+  "Accepts a user name to drop.
+
+  (drop-user :foo)"
+  [& database]
+  (generic :drop-user database))
+
+(defn drop-role
+  "Accepts a role name to delete.
+
+  (drop-role :foo)"
+  [& database]
+  (generic :drop-role database))
+
+(defn drop-quota
+  "Accepts a quota name to delete.
+
+  (drop-quota :foo)"
+  [& database]
+  (generic :drop-quota database))
+
+(defn drop-function
+  "Accepts a function name to delete.
+
+  (drop-function :foo)"
+  [& database]
+  (generic :drop-function database))
+
+(defn drop-row-policy
+  "Accepts a row policy to delete.
+
+  (drop-row-policy :foo)"
+  [& database]
+  (generic :drop-row-policy database))
+
+(defn drop-settings-profile
+  "Accepts a settings profile to delete.
+
+  (drop-settings-profile :foo)"
+  [& database]
+  (generic :drop-settings-profile database))
 
 (defn refresh-materialized-view
   "Accepts a materialied view name to refresh."
@@ -503,11 +775,34 @@
   [& args]
   (generic :delete-from args))
 
+(defn delete-where
+  "For deleting data matching the specified filtering
+  expression. Accepts a single filtering expression.
+  This is intended for clickhouse databases and does not
+  refer to the sql `delete .... where condition`. In clickhouse
+  the expression must be of type UInt8
+
+  (-> (delete-where 233))
+
+  Produces
+  DELETE WHERE 233"
+  {:arglists '([table])}
+  [& args]
+  (generic :delete-where args))
+
 (defn truncate
   "Accepts a single table name to truncate."
   {:arglists '([table])}
   [& args]
   (generic-1 :truncate args))
+
+(defn truncate-if-exists
+  "Accepts a single table name to truncate and an optional
+  flag to trigger IF EXISTS.
+  This function is intended for Clickhouse."
+  {:arglists '([table] [if-exists table])}
+  [& args]
+  (generic :truncate-if-exists args))
 
 (defn columns
   "To be used with `insert-into` to specify the list of
@@ -678,6 +973,22 @@
   [& args]
   (generic :cross-join args))
 
+(defn prewhere
+  "Accepts a Clickhouse database pre-where expression.
+  An expression is specified as a pair of arguments,
+  where the first one is the column name (or a sequence of
+  column names) and the second one is a hash map representing
+  a SQL statement:
+
+  (prewhere [:v.a :v.b] {:select [:a :b], :from [:table], :where [:= :camp :que]})
+  (prewhere :v.a {:select [:a], :from [:table], :where [:= :camp :que]})
+
+  Produces:
+  PREWHERE(v.a, v.b) IN (SELECT a, b FROM table WHERE camp = que)
+  PREWHERE v.a IN (SELECT a FROM table WHERE camp = que)"
+  [& exprs]
+  (generic :prewhere exprs))
+
 (defn where
   "Accepts one or more SQL expressions (conditions) and
   combines them with AND (by default):
@@ -776,15 +1087,41 @@
   Produces: LIMIT ?
   Parameters: 40
 
-  The two-argument syntax is not supported: use `offset`
-  instead:
+  The two-argument syntax is not supported unless using Clickhouse:
+  use `offset` instead:
 
   `LIMIT 20,10` is equivalent to `LIMIT 10 OFFSET 20`
 
-  (-> (limit 10) (offset 20))"
+  (-> (limit 10) (offset 20))
+
+  For clickhouse dialect:
+  (limit [2, 10 :with-ties])
+
+  Produces: LIMIT 2, 10 WITH TIES
+  Parameters: 2, 10
+  "
   {:arglists '([limit])}
   [& args]
   (generic-1 :limit args))
+
+(defn limit-by
+  "Specific to Clickhouse,
+  accepts a single SQL expression:
+
+  (limit-by 40 :id)
+  (limit-by [10, 40] :id)
+  (limit-by [10, 40] [:id :ds])
+
+  Produces:
+   LIMIT 40 BY id
+   LIMIT 10, 40 BY id
+   LIMIT 10, 40 BY id, ds
+  Parameters:
+   40
+   10, 40"
+  ;{:arglists '([limit-by])}
+  [& args]
+  (generic :limit-by args))
 
 (defn offset
   "Accepts a single SQL expression:
@@ -803,7 +1140,17 @@
   (fetch 10)
 
   Produces: FETCH ? ONLY
-  Parameters: 10"
+  Parameters: 10
+
+  When using the Clickhouse dialect, the expression provided can be a
+  vector which contains a number as the first item and a key as the second.
+  The second expression, a modifier replaces the `only` option.
+
+  (fetch [10 :rows-with-ties])
+
+  Produces: FETCH ? ONLY
+  Parameters: 10
+  "
   {:arglists '([limit])}
   [& args]
   (generic-1 :fetch args))
@@ -1013,6 +1360,274 @@
                                {:fields do-update-set
                                 :where  where}
                                do-update-set))))))
+
+(defn sample
+  "Accepts similar arguments to `select` as part of
+  a Clickhouse Sample clause. Instead of keywords for
+  table names like in select, the arguments should be
+  decimals or a number.
+
+  (format-sample :sample 0.2)
+  (format-sample :sample 100000)
+  (format-sample :sample [0.2 0.4])
+
+  Produces:
+  SAMPLE 0.2
+  SAMPLE 100000
+  SAMPLE 0.2 OFFSET 0.4"
+  [& args]
+  (generic :sample args))
+
+(defn watch
+  "This clause returns the WATCH query for clickhouse.
+
+  (watch :db.live_view)
+
+  Produces:
+  WATCH db.live_view"
+  [& args]
+  (generic-1 :watch args))
+
+(defn on-cluster
+  "Accepts one expression to create Clickhouse ON CLUSTER clause.
+
+  (on-cluster :cluster)
+
+  Produces:
+  ON CLUSTER cluster"
+  [& args]
+  (generic-1 :on-cluster args))
+
+(defn to-name
+  "Accepts one expression to create Clickhouse TO clause.
+
+  (to-name :db.name)
+
+  Produces:
+  TO db.name"
+  [& args]
+  (generic-1 :to-name args))
+
+(defn engine
+  "Accepts one expression to create Clickhouse Engine clause.
+
+  (engine :engine)
+
+  Produces:
+  ENGINE engine"
+  [& args]
+  (generic-1 :engine args))
+
+(defn inner-engine
+  "Accepts one expression to create Clickhouse INNER ENGINE clause.
+
+  (inner-engine :engine)
+
+  Produces:
+  INNER ENGINE = engine"
+  [& args]
+  (generic-1 :inner-engine args))
+
+(defn watermark
+  "Accepts one expression to create Clickhouse WATERMARK clause.
+
+  (watermark :strategy)
+
+  Produces:
+  WATERMARK = strategy"
+  [& args]
+  (generic-1 :watermark args))
+
+(defn allowed-lateness
+  "Accepts one expression to create Clickhouse WATERMARK clause.
+
+  (allowed-lateness :allowed-lateness)
+
+  Produces:
+  ALLOWED LATENESS = interval"
+  [& args]
+  (generic-1 :allowed-lateness args))
+
+(defn populate
+  "This clause returns the POPULATE clause for clickhouse.
+
+  (populate )
+
+  Produces:
+  POPULATE"
+  [& args]
+  (generic :populate args))
+
+(defn events
+  "This clause returns the EVENTS clause for clickhouse.
+
+  (events)
+
+  Produces:
+  EVENTS"
+  [& args]
+  (generic :events args))
+
+(defn clickhouse-comment
+  "Accepts one expression to create Clickhouse COMMENT clause.
+
+  (clickhouse-comment \"comment\")
+
+  Produces:
+  COMMENT 'comment'"
+  [& args]
+  (generic-1 :clickhouse-comment args))
+
+(defn modify-comment
+  "Accepts a string to create the Clickhouse MODIFY COMMENT clause.
+
+  (modify-comment \"comment\")
+
+  Produces:
+  MODIFY COMMENT 'comment'"
+  [& args]
+  (generic-1 :modify-comment args))
+
+(defn with-timeout
+  "Accepts one expression to create Clickhouse WITH TIMEOUT clause.
+
+  (with-timeout :234)
+
+  Produces:
+  WITH TIMEOUT 234"
+  [& args]
+  (generic-1 :with-timeout args))
+
+(defn with-refresh
+  "Accepts one expression to create Clickhouse WITH REFRESH clause.
+
+  (with-refresh :234)
+  (-> (with-timeout :456) (with-refresh :234))
+
+  Produces:
+  WITH REFRESH 234
+  WITH TIMEOUT 456 AND REFRESH 234"
+  [& args]
+  (generic-1 :with-refresh args))
+
+(defn show
+  "Accepts expressions to create SHOW statements.
+  These are intended for Clickhouse dialect."
+  {:arglists '([table name {:keys [create? pre more]}])}
+  [& args]
+  (generic :show args))
+
+(defn grant
+  "Accepts expressions to create GRANT statements.
+  These are intended for Clickhouse dialect.
+
+  (grant :privilege)
+
+  Produces:
+  GRANT privilege"
+  {:arglists '([privilege] [privilege {:keys [pre role user table columns mods]}])}
+  [& args]
+  (generic :grant args))
+
+(defn revoke
+  "Accepts expressions like `grant` to create REVOKE statements.
+  These are intended for Clickhouse dialect.
+
+  (revoke :privilege)
+
+  Produces:
+  REVOKE privilege"
+  {:arglists '([privilege] [privilege {:keys [pre role user table columns mods]}])}
+  [& args]
+  (generic :revoke args))
+
+(defn attach
+  "Accepts expressions to create ATTACH statements.
+  These are intended for Clickhouse dialect.
+
+  (attach :type :db.name :if-not-exists)
+
+  Produces:
+  ATTACH TYPE IF NOT EXISTS db.name ON CLUSTER cluster_name"
+  {:arglists '([table database] [table database if-not-exists])}
+  [& args]
+  (generic :attach args))
+
+(defn detach
+  "Accepts expressions to create ATTACH statements.
+  These are intended for Clickhouse dialect.
+
+  (detach :type :if-exists :db.name)
+
+  Produces:
+  DETACH TYPE IF EXISTS db.name ON CLUSTER cluster_name"
+  {:arglists '([table database] [table database if-not-exists])}
+  [& args]
+  (generic :detach args))
+
+(defn exists
+  "Accepts expressions to create EXISTS statements.
+  These are intended for Clickhouse dialect.
+
+  (exists :table :db.name (on-cluster :cluster_name))
+  (exists :temporary :dictionary :db.name (on-cluster :cluster_name))
+
+  Produces:
+  EXISTS TABLE db.name ON CLUSTER cluster_name
+  EXISTS TEMPORARY DICTIONARY db.name ON CLUSTER cluster_name"
+  {:arglists '([type name] [temporary type name])}
+  [& args]
+  (generic :exists args))
+
+(defn explain
+  "Accepts expressions to create EXPLAIN statements.
+  These are intended for Clickhouse dialect.
+
+  (explain :type {})
+
+  Produces:
+  EXPLAIN type"
+  {:arglists '([type {:keys [settings data more]}])}
+  [& args]
+  (generic :explain args))
+
+(defn default-role
+  "Accepts a role an optional flag triggering ALL or ALL EXCEPT and
+  and extra flag to add `SET` for SET DEFAULT ROLE clause
+
+  (-> (alter-user :user) (default-role :role :all-except))
+
+  Produces:
+  ALTER USER user DEFAULT ROLE ALL EXCEPT role"
+  {:arglists '([role] [set role] [role flag] [set role flag])}
+  [& args]
+  (generic :default-role args))
+
+(defn into-outfile
+  "Accepts one or more expressions to format to into outfile clause
+  for clickhouse.
+
+  The first argument is the filename while the second is a map that
+  receives extra options, namely the compression type and level.
+
+  (into-outfile :file)
+  (into-outfile :file {:compression :gzip :level 1})
+
+  Produces:
+  INTO OUTFILE file
+  INTO OUTFILE file COMPRESSION gzip LEVEL 1"
+  [& args]
+  (generic :into-outfile args))
+
+(defn clickhouse-format
+  "Accepts one expression.
+
+  (clickhouse-format :CSV)
+
+  Produces:
+  FORMAT CSV"
+  [& args]
+  (generic-1 :clickhouse-format args))
 
 (defn generic-helper-variadic
   "Most clauses that accept a sequence of items can be implemented

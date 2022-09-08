@@ -13,6 +13,364 @@
          (sut/format {:select [:*] :from [:table] :where [:= :id 1]}
                      {:dialect :mysql}))))
 
+(deftest clickhouse-tests
+  (is (= ["SELECT * FROM table WHERE id = 1"]
+         (sut/format {:select [:*] :from [:table] :where [:= :id 1]}
+                     {:dialect :clickhouse
+                      :inline  true})))
+  (is (= ["SELECT number FROM numbers(20) WHERE y IS NULL"]
+         (-> (h/select :number)
+             (h/from :%numbers.20)
+             (h/where [:is :y nil])
+             (sut/format {:dialect :clickhouse
+                          :inline  true}))))
+  (is (= ["SELECT number FROM numbers(20) WHERE (type = 'sale') AND (productid = 123)"]
+         (-> (h/select :number)
+             (h/from :%numbers.20)
+             (h/where (sut/map= {:type "sale" :productid 123}))
+             (format {:dialect :clickhouse
+                      :inline  true}))))
+  (is (= ["SELECT number FROM numbers(20) WHERE (type = 'sale') AND (productid = 123) UNION SELECT number FROM numbers(20) WHERE (type = 'sale') AND (productid = 123)"]
+         (-> (h/union
+               (-> (h/select :number)
+                   (h/from :%numbers.20)
+                   (h/where (sut/map= {:type "sale" :productid 123})))
+               (-> (h/select :number)
+                   (h/from :%numbers.20)
+                   (h/where (sut/map= {:type "sale" :productid 123}))))
+             (format {:dialect :clickhouse
+                      :inline  true}))))
+  (is (= ["SELECT number FROM numbers(20) WHERE (type = 'sale') AND (productid = 123) UNION ALL SELECT number FROM numbers(20) WHERE (type = 'sale') AND (productid = 123)"]
+         (-> (h/union-all
+               (-> (h/select :number)
+                   (h/from :%numbers.20)
+                   (h/where (sut/map= {:type "sale" :productid 123})))
+               (-> (h/select :number)
+                   (h/from :%numbers.20)
+                   (h/where (sut/map= {:type "sale" :productid 123}))))
+             (format {:dialect :clickhouse
+                      :inline  true}))))
+  (is (= ["SELECT year, month, day, count(*) FROM t GROUP BY y"]
+         (-> (h/select :year :month :day :%count.*)
+             (h/from :t)
+             (h/group-by :y)
+             (format {:dialect :clickhouse
+                      :inline  true}))))
+  (is (= ["SELECT year, month, day, count(*) FROM t GROUP BY ROLLUP(year, month, day)"]
+         (-> (h/select :year :month :day :%count.*)
+             (h/from :t)
+             (h/group-by [:ROLLUP :year :month :day])
+             (format {:dialect :clickhouse
+                      :inline  true}))))
+  (is (= ["SELECT * FROM t LIMIT 10"]
+         (-> (h/select :*)
+             (h/from :t)
+             (h/limit 10)
+             (format {:dialect :clickhouse
+                      :inline  true}))))
+  (is (= ["SELECT * FROM t LIMIT 2, 10"]
+         (-> (h/select :*)
+             (h/from :t)
+             (h/limit [2 10])
+             (format {:dialect :clickhouse
+                      :inline  true}))))
+  (is (= ["SELECT * FROM t LIMIT 2, 10 WITH TIES"]
+         (-> (h/select :*)
+             (h/from :t)
+             (h/limit [2 10 :with-ties])
+             (format {:dialect :clickhouse
+                      :inline  true}))))
+  (is (= ["SELECT year, month, day, count(*) FROM t ORDER BY y ASC"]
+         (-> (h/select :year :month :day :%count.*)
+             (h/from :t)
+             (h/order-by :y)
+             (format {:dialect :clickhouse
+                      :inline  true}))))
+  (is (= ["SELECT year, month, day, count(*) FROM t ORDER BY y DESC"]
+         (-> (h/select :year :month :day :%count.*)
+             (h/from :t)
+             (h/order-by [:y :desc])
+             (format {:dialect :clickhouse
+                      :inline  true}))))
+  (is (= ["CREATE TABLE IF NOT EXISTS t (a String, b String, c String) ORDER BY (b,DESC)"]
+         (-> (h/create-table :t :if-not-exists)
+             (h/with-columns
+               [[:a :String]
+                [:b :String]
+                [:c :String]])
+             (h/order-by [:b :desc])
+             (format {:dialect :clickhouse}))))
+  (is (= ["CREATE TABLE IF NOT EXISTS t (a String, b String, c String) PARTITION BY b"]
+         (-> (h/create-table :t :if-not-exists)
+             (h/with-columns
+               [[:a :String]
+                [:b :String]
+                [:c :String]])
+             (h/partition-by :b)
+             (format {:dialect :clickhouse}))))
+  (is (= ["PREWHERE v.b IN (SELECT a, b FROM table WHERE d = e)"]
+         (-> (h/prewhere :v.b
+                         (-> (h/select :a :b)
+                             (h/from :table)
+                             (h/where [:= :d :e])))
+             (format {:dialect :clickhouse
+                      :inline  true}))))
+  (is (= ["SELECT u.username, s.name FROM user AS u LEFT JOIN status AS s ON u.statusid = s.id WHERE s.id = 2"]
+         (-> (h/select :u.username :s.name)
+             (h/from [:user :u])
+             (h/left-join [:status :s] [:= :u.statusid :s.id])
+             (h/where [:= :s.id 2])
+             (format {:dialect :clickhouse
+                      :inline  true}))))
+  (is (= ["SELECT u.username, s.name FROM user AS u INNER JOIN status AS s ON u.statusid = s.id WHERE s.id = 2"]
+         (-> (h/select :u.username :s.name)
+             (h/from [:user :u])
+             (h/join [:status :s] [:= :u.statusid :s.id])
+             (h/where [:= :s.id 2])
+             (format {:dialect :clickhouse
+                      :inline  true}))))
+  (is (= ["SAMPLE 0.2"]
+         (-> (h/sample 0.2)
+             (format {:dialect :clickhouse}))))
+  (is (= ["SAMPLE 0.2 OFFSET 0.4"]
+         (-> (h/sample [0.2 0.4])
+             (format {:dialect :clickhouse}))))
+  (is (= ["LIMIT ? BY id" 2]
+         (-> (h/limit-by 2 :id)
+             (format {:dialect :clickhouse}))))
+  (is (= ["LIMIT ?, ? BY id" 2 10]
+         (-> (h/limit-by [2 10] :id)
+             (format {:dialect :clickhouse}))))
+  (is (= ["FETCH FIRST ? ROWS WITH TIES" 10]
+         (-> (h/fetch [10 :with-ties])
+             (format {:dialect :clickhouse}))))
+  (is (= ["FORMAT csv"]
+         (-> (h/clickhouse-format :csv)
+             (format {:dialect :clickhouse}))))
+  (is (= ["INTO OUTFILE file"]
+         (-> (h/into-outfile :file)
+             (format {:dialect :clickhouse}))))
+  (is (= ["INTO OUTFILE file COMPRESSION gzip LEVEL 1"]
+         (-> (h/into-outfile :file {:compression :gzip :level 1})
+             (format {:dialect :clickhouse}))))
+  (is (= ["CREATE DATABASE database ON CLUSTER cluster ENGINE = memory() COMMENT 'Comment'"]
+         (-> (h/create-database :database)
+             (h/on-cluster :cluster)
+             (h/engine [:memory ])
+             (h/clickhouse-comment "Comment")
+             (format {:dialect :clickhouse :inline true}))))
+  (is (= ["MODIFY COMMENT 'cluster'"]
+         (-> (h/modify-comment "cluster")
+             (format {:dialect :clickhouse :inline true}))))
+  (is (= ["CREATE MATERIALIZED VIEW IF NOT EXISTS table-name ON CLUSTER cluster TO db.name ENGINE = engine POPULATE AS SELECT * FROM city"]
+         (-> (h/create-materialized-view
+               :table-name
+               :if-not-exists
+               (-> (h/on-cluster :cluster)
+                   (h/to-name :db.name)
+                   (h/engine :engine)
+                   (h/populate)))
+             (h/select :*) (h/from :city)
+             (format {:dialect :clickhouse}))))
+  (is (= ["CREATE LIVE VIEW table-name WITH REFRESH 234 AS SELECT * FROM city"]
+         (-> (h/create-live-view
+               :table-name
+               (h/with-refresh :234))
+             (h/select :*) (h/from :city)
+             (format {:dialect :clickhouse}))))
+  (is (= ["CREATE LIVE VIEW table-name WITH TIMEOUT 234 AS SELECT * FROM city"]
+         (-> (h/create-live-view
+               :table-name
+               (h/with-timeout :234))
+             (h/select :*) (h/from :city)
+             (format {:dialect :clickhouse}))))
+  (is (= ["CREATE LIVE VIEW table-name WITH TIMEOUT 456 AND REFRESH 234 AS SELECT * FROM city"]
+         (-> (h/create-live-view
+               :table-name
+               (-> (h/with-refresh :234) (h/with-timeout :456)))
+             (h/select :*) (h/from :city)
+             (format {:dialect :clickhouse}))))
+  (is (= ["CREATE LIVE VIEW db.live_view EVENTS AS SELECT * FROM city"]
+         (-> (h/create-live-view :db.live_view (h/events))
+             (h/select :*) (h/from :city)
+             (format {:dialect :clickhouse}))))
+  (is (= ["WATCH db.live_view EVENTS LIMIT 10 FORMAT CSV"]
+         (-> (h/watch :db.live_view)
+             (h/events)
+             (h/limit 10)
+             (h/clickhouse-format :CSV)
+             (format {:dialect :clickhouse :inline true}))))
+  (is (= ["CREATE WINDOW VIEW IF NOT EXISTS db.live_view TO db.table_name INNER ENGINE = engine ENGINE = engine WATERMARK = strategy ALLOWED LATENESS = interval POPULATE AS SELECT * FROM city"]
+         (-> (h/create-window-view
+               :db.live_view
+               :if-not-exists
+               (-> (h/to-name :db.table_name)
+                   (h/inner-engine :engine)
+                   (h/engine :engine)
+                   (h/watermark :strategy)
+                   (h/allowed-lateness :interval)
+                   (h/populate)))
+             (h/select :*) (h/from :city)
+             (format {:dialect :clickhouse}))))
+  (is (= ["CREATE FUNCTION name ON CLUSTER cluster AS (x, k, b) -> k*x + b"]
+         (-> (h/create-function :name (h/on-cluster :cluster))
+             (assoc :raw ["(x, k, b)" " -> " "k*x + b"])
+             (format {:dialect :clickhouse}))))
+  (is (= ["CREATE ROLE OR REPLACE name1"]
+         (-> (h/create-role :name1 :or-replace)
+             (format {:dialect :clickhouse}))))
+  (is (=  ["CREATE ROW POLICY OR REPLACE name1 ON CLUSTER cluster_name"]
+         (-> (h/create-row-policy
+               :name1
+               :or-replace
+               (h/on-cluster :cluster_name))
+             (format {:dialect :clickhouse}))))
+  (is (=  ["CREATE QUOTA OR REPLACE name1 ON CLUSTER cluster_name"]
+          (-> (h/create-quota :name1 :or-replace (h/on-cluster :cluster_name))
+              (format {:dialect :clickhouse}))))
+  (is (=  ["CREATE SETTINGS PROFILE OR REPLACE name1 ON CLUSTER cluster_name"]
+          (-> (h/create-settings-profile :name1 :or-replace (h/on-cluster :cluster_name))
+              (format {:dialect :clickhouse}))))
+  (is (=  ["CREATE DICTIONARY name1 ON CLUSTER cluster_name"]
+          (-> (h/create-dictionary :name1 (h/on-cluster :cluster_name))
+              (format {:dialect :clickhouse}))))
+  (is (=  ["ALTER TABLE foo ADD COLUMN IF NOT EXISTS id int AFTER NestedColumn"]
+          (-> (h/alter-table :foo)
+              (h/add-column :id :int :AFTER :NestedColumn :if-not-exists)
+              (format {:dialect :clickhouse}))))
+  (is (=  ["DROP COLUMN IF EXISTS name"]
+          (-> (h/drop-column :if-exists :name)
+              (format {:dialect :clickhouse}))))
+  (is (=  ["RENAME COLUMN IF EXISTS name TO name2"]
+          (-> (h/rename-column :name :name2 :if-exists)
+              (format {:dialect :clickhouse}))))
+  (is (=  ["CLEAR COLUMN IF EXISTS name IN PARTITION partition_name"]
+          (-> (h/clear-column :name :partition_name :if-exists)
+              (format {:dialect :clickhouse}))))
+  (is (=  ["COMMENT COLUMN IF EXISTS name 'Text comment'"]
+          (-> (h/comment-column :name "Text comment" :if-exists)
+              (format {:dialect :clickhouse}))))
+  (is (=  ["ALTER TABLE table2 ON CLUSTER cluster REPLACE PARTITION partition_expr FROM table1"]
+          (-> (h/alter-table :table2 (h/on-cluster :cluster))
+              (h/alter-partition :partition_expr :replace)
+              (h/from :table1)
+              (format {:dialect :clickhouse}))))
+  (is (=  ["ALTER TABLE table2 ON CLUSTER cluster MOVE PARTITION partition_expr TO TABLE table_dest"]
+          (-> (h/alter-table :table2 (h/on-cluster :cluster))
+              (h/alter-partition :partition_expr :move {:to-table :table_dest})
+              (format {:dialect :clickhouse}))))
+  (is (=  ["ALTER TABLE table2 ON CLUSTER cluster FREEZE PARTITION partition_expr WITH NAME 'backup_name'"]
+          (-> (h/alter-table :table2 (h/on-cluster :cluster))
+              (h/alter-partition :partition_expr :freeze {:with-name "backup_name"})
+              (format {:dialect :clickhouse}))))
+  (is (=  ["MODIFY SETTING max_part_loading_threads=8, max_parts_in_total=500"]
+          (-> (h/alter-setting :modify [[:max_part_loading_threads 8] [:max_parts_in_total 500]])
+              (format {:dialect :clickhouse}))))
+  (is (=  ["REPLACE SETTING max_part_loading_threads, max_parts_in_total"]
+          (-> (h/alter-setting :replace [[:max_part_loading_threads 8] [:max_parts_in_total 500]])
+              (format {:dialect :clickhouse}))))
+  (is (=  ["ALTER USER IF EXISTS name ON CLUSTER cluster"]
+          (-> (h/alter-user :if-exists :name (h/on-cluster :cluster))
+              (format {:dialect :clickhouse}))))
+  (is (=  ["ALTER USER user DEFAULT ROLE ALL EXCEPT role"]
+          (-> (h/alter-user :user)
+              (h/default-role :role :all-except)
+              (format {:dialect :clickhouse}))))
+  (is (=  ["ALTER USER user SET DEFAULT ROLE ALL role"]
+          (-> (h/alter-user :user)
+              (h/default-role :set :role :all)
+              (format {:dialect :clickhouse}))))
+  (is (=  ["ALTER QUOTA IF EXISTS quota"]
+          (-> (h/alter-quota :if-exists :quota)
+              (format {:dialect :clickhouse}))))
+  (is (=  ["ALTER ROLE IF EXISTS foo"]
+          (-> (h/alter-role :if-exists :foo)
+              (format {:dialect :clickhouse}))))
+  (is (=  ["ALTER POLICY IF EXISTS foo"]
+          (-> (h/alter-policy :if-exists :foo)
+              (format {:dialect :clickhouse}))))
+  (is (=  ["ALTER SETTINGS PROFILE IF EXISTS TO foo"]
+          (-> (h/alter-settings-profile :if-exists :foo)
+              (format {:dialect :clickhouse}))))
+  (is (=  ["SHOW CREATE TEMPORARY TABLE db.table INTO OUTFILE filename"]
+          (-> (h/show :table :db.table {:create? true
+                                        :pre     :temporary
+                                        :more    (h/into-outfile :filename)})
+              (format {:dialect :clickhouse}))))
+  (is (=  ["SHOW DICTIONARY db.table"]
+          (-> (h/show :dictionary :db.table)
+              (format {:dialect :clickhouse}))))
+  (is (=  ["GRANT ON CLUSTER cluster_name privilege (column1, column2) ON db.table TO dev WITH GRANT OPTION"]
+          (-> (h/grant
+                :privilege
+                {:pre     (h/on-cluster :cluster_name)
+                 :columns (h/with-columns [:column1]
+                                          [:column2])
+                 :more    {:raw ["WITH GRANT OPTION"]}
+                 :table   :db.table
+                 :user    :dev})
+              (format {:dialect :clickhouse}))))
+  (is (=  ["EXPLAIN AST SETTING1 = value, SETTING2 = value SELECT * FROM table FORMAT csv"]
+          (-> (h/explain
+                :ast
+                {:settings {:raw ["SETTING1 = value, SETTING2 = value"]}
+                 :data     (-> (h/select :*)
+                               (h/from :table))
+                 :more     (h/clickhouse-format :csv)})
+              (format {:dialect :clickhouse}))))
+  (is (=  ["REVOKE ON CLUSTER cluster_name privilege (column1, column2) ON db.table FROM dev ALL EXCEPT"]
+          (-> (h/revoke
+                :privilege
+                {:pre     (h/on-cluster :cluster_name)
+                 :columns (h/with-columns [:column1]
+                                          [:column2])
+                 :more    {:raw ["ALL EXCEPT"]}
+                 :table   :db.table
+                 :user    :dev})
+              (format {:dialect :clickhouse}))))
+  (is (=  ["ATTACH TABLE IF NOT EXISTS db.name ON CLUSTER cluster"]
+          (-> (h/attach :table :db.name :if-not-exists (h/on-cluster :cluster))
+              (format {:dialect :clickhouse}))))
+  (is (=  ["DROP DATABASE IF EXISTS table ON CLUSTER cluster_name"]
+          (-> (h/drop-database :if-exists :table (h/on-cluster :cluster_name))
+              (format {:dialect :clickhouse}))))
+  (is (=  ["DROP DICTIONARY IF EXISTS table ON CLUSTER cluster_name"]
+          (-> (h/drop-dictionary :if-exists :table (h/on-cluster :cluster_name))
+              (format {:dialect :clickhouse}))))
+  (is (=  ["DROP USER IF EXISTS table ON CLUSTER cluster_name"]
+          (-> (h/drop-user :if-exists :table (h/on-cluster :cluster_name))
+              (format {:dialect :clickhouse}))))
+  (is (=  ["DROP ROLE IF EXISTS table ON CLUSTER cluster_name"]
+          (-> (h/drop-role :if-exists :table (h/on-cluster :cluster_name))
+              (format {:dialect :clickhouse}))))
+  (is (=  ["DROP QUOTA IF EXISTS table ON CLUSTER cluster_name"]
+          (-> (h/drop-quota :if-exists :table (h/on-cluster :cluster_name))
+              (format {:dialect :clickhouse}))))
+  (is (=  ["DROP FUNCTION IF EXISTS table ON CLUSTER cluster_name"]
+          (-> (h/drop-function :if-exists :table (h/on-cluster :cluster_name))
+              (format {:dialect :clickhouse}))))
+  (is (=  ["DROP ROW POLICY IF EXISTS table ON CLUSTER cluster_name"]
+          (-> (h/drop-row-policy :if-exists :table (-> (h/on-cluster :cluster_name)))
+              (format {:dialect :clickhouse}))))
+  (is (=  ["DROP SETTINGS PROFILE IF EXISTS table ON CLUSTER cluster_name"]
+          (-> (h/drop-settings-profile :if-exists :table (-> (h/on-cluster :cluster_name)))
+              (format {:dialect :clickhouse}))))
+  (is (=  ["DETACH DICTIONARY IF EXISTS db.name ON CLUSTER cluster"]
+          (-> (h/detach :dictionary :if-exists :db.name (h/on-cluster :cluster))
+              (format {:dialect :clickhouse}))))
+  (is (=  ["EXISTS TEMPORARY DICTIONARY db.name ON CLUSTER cluster"]
+          (-> (h/exists :temporary :dictionary :db.name (h/on-cluster :cluster))
+              (format {:dialect :clickhouse}))))
+  (is (=  ["EXISTS TABLE db.name"]
+          (-> (h/exists :table :db.name)
+              (format {:dialect :clickhouse}))))
+  (is (=  ["TRUNCATE TABLE IF EXISTS table"]
+          (-> (h/truncate-if-exists :if-exists :table)
+              (format {:dialect :clickhouse}))))
+  (is (=  ["RENAME DICTIONARY prev TO after"]
+          (-> (h/rename-type :dictionary :prev :after)
+              (format {:dialect :clickhouse})))))
+
 (deftest expr-tests
   ;; special-cased = nil:
   (is (= ["id IS NULL"]
