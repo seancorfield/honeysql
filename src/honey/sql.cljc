@@ -1563,16 +1563,17 @@
   Can be: `:ansi` (the default), `:mysql`, `:oracle`, or `:sqlserver`.
 
   Can optionally accept `:quoted true` (or `:quoted false`) to set the
-  default global quoting strategy. Note that calling `set-options!` can
-  override this default.
+  default global quoting strategy. Without `:quoted`, the default global
+  quoting strategy will be reset (only quoting unusual entity names).
+
+  Note that calling `set-options!` can override this default.
 
   Dialects are always applied to the base order to create the current order."
-  [dialect & {:as opts}]
+  [dialect & {:keys [quoted]}]
   (reset! default-dialect (get @dialects (check-dialect dialect)))
   (when-let [f (:clause-order-fn @default-dialect)]
     (reset! current-clause-order (f @base-clause-order)))
-  (when (contains? opts :quoted)
-    (reset! default-quoted (:quoted opts))))
+  (reset! default-quoted quoted))
 
 (defn set-options!
   "Set default values for any or all of the following options:

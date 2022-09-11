@@ -339,6 +339,8 @@ globally via the `set-dialect!` function.
 ;; and reset back to the default of :ansi
 (sql/set-dialect! :ansi)
 ;;=> nil
+;; which also resets the quoting default (back to nil)
+;; so only unusual entity names get quoted:
 (sql/format '{select (id) from (table)} {:quoted true})
 ;;=> ["SELECT \"id\" FROM \"table\""]
 ```
