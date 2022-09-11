@@ -113,14 +113,17 @@
 ; should become defonce
 (def ^:private default-dialect (atom (:ansi @dialects)))
 (def ^:private default-quoted (atom nil))
+(def ^:private default-quoted-snake (atom nil))
+(def ^:private default-inline (atom nil))
+(def ^:private default-checking (atom :none))
 
 (def ^:private ^:dynamic *dialect* nil)
 ;; nil would be a better default but that makes testing individual
 ;; functions harder than necessary:
 (def ^:private ^:dynamic *clause-order* default-clause-order)
-(def ^:private ^:dynamic *quoted* nil)
-(def ^:private ^:dynamic *quoted-snake* nil)
-(def ^:private ^:dynamic *inline* nil)
+(def ^:private ^:dynamic *quoted* @default-quoted)
+(def ^:private ^:dynamic *quoted-snake* @default-quoted-snake)
+(def ^:private ^:dynamic *inline* @default-inline)
 (def ^:private ^:dynamic *params* nil)
 (def ^:private ^:dynamic *values-default-columns* nil)
 ;; there is no way, currently, to enable suspicious characters
@@ -128,7 +131,7 @@
 ;; can be added to format to turn this on:
 (def ^:private ^:dynamic *allow-suspicious-entities* false)
 ;; "linting" mode (:none, :basic, :strict):
-(def ^:private ^:dynamic *checking* :none)
+(def ^:private ^:dynamic *checking* @default-checking)
 ;; the current DSL hash map being formatted (for contains-clause?):
 (def ^:private ^:dynamic *dsl* nil)
 ;; caching data to detect expressions that cannot be cached:
@@ -1528,22 +1531,24 @@
                *caching* cache
                *checking* (if (contains? opts :checking)
                             (:checking opts)
-                            :none)
+                            @default-checking)
                *clause-order* (if dialect?
                                 (if-let [f (:clause-order-fn dialect)]
                                   (f @base-clause-order)
                                   @current-clause-order)
                                 @current-clause-order)
-               *inline*  (when (contains? opts :inline)
-                           (:inline opts))
+               *inline*  (if (contains? opts :inline)
+                           (:inline opts)
+                           @default-inline)
                *quoted*  (cond (contains? opts :quoted)
                                (:quoted opts)
                                dialect?
                                true
                                :else
                                @default-quoted)
-               *quoted-snake* (when (contains? opts :quoted-snake)
-                                (:quoted-snake opts))
+               *quoted-snake* (if (contains? opts :quoted-snake)
+                                (:quoted-snake opts)
+                                @default-quoted-snake)
                *params* (:params opts)
                *values-default-columns* (:values-default-columns opts)]
        (if cache
@@ -1558,14 +1563,38 @@
   Can be: `:ansi` (the default), `:mysql`, `:oracle`, or `:sqlserver`.
 
   Can optionally accept `:quoted true` (or `:quoted false`) to set the
-  default global quoting strategy.
+  default global quoting strategy. Note that calling `set-options!` can
+  override this default.
 
   Dialects are always applied to the base order to create the current order."
-  [dialect & {:keys [quoted]}]
+  [dialect & {:as opts}]
   (reset! default-dialect (get @dialects (check-dialect dialect)))
   (when-let [f (:clause-order-fn @default-dialect)]
     (reset! current-clause-order (f @base-clause-order)))
-  (reset! default-quoted quoted))
+  (when (contains? opts :quoted)
+    (reset! default-quoted (:quoted opts))))
+
+(defn set-options!
+  "Set default values for any or all of the following options:
+  * :checking
+  * :inline
+  * :quoted
+  * :quoted-snake
+  Note that calling `set-dialect!` can override the default for `:quoted`."
+  [opts]
+  (let [unknowns (dissoc opts :checking :inline :quoted :quoted-snake)]
+    (when (seq unknowns)
+      (throw (ex-info (str (str/join ", " (keys unknowns))
+                           " are not options that can be set globally.")
+                      unknowns)))
+    (when (contains? opts :checking)
+      (reset! default-checking (:checking opts)))
+    (when (contains? opts :inline)
+      (reset! default-checking (:inline opts)))
+    (when (contains? opts :quoted)
+      (reset! default-checking (:quoted opts)))
+    (when (contains? opts :quoted-snake)
+      (reset! default-checking (:quoted-snake opts)))))
 
 (defn clause-order
   "Return the current order that known clauses will be applied when

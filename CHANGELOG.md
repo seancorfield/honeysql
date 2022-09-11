@@ -1,5 +1,8 @@
 # Changes
 
+* 2.3.next in progress
+  * Address [#427](https://github.com/seancorfield/honeysql/issues/427) by adding `set-options!` -- NEEDS DOCUMENTATION!
+
 * 2.3.928 -- 2022-09-04
   * Address [#425](https://github.com/seancorfield/honeysql/issues/425) by clarifying that `INTERVAL` as special syntax may be MySQL-specific and PostgreSQL uses difference syntax (because `INTERVAL` is a data type there).
   * Address [#423](https://github.com/seancorfield/honeysql/issues/423) by supporting `DEFAULT` values and `DEFAULT` rows in `VALUES`.
