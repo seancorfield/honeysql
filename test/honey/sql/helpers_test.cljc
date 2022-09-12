@@ -633,8 +633,13 @@
          ["ALTER TABLE fruit ADD COLUMN id INT NOT NULL"]))
   (is (= (sql/format (alter-table :fruit
                                   (add-column :id :int [:not nil])
-                                  (drop-column :ident)))
-         ["ALTER TABLE fruit ADD COLUMN id INT NOT NULL, DROP COLUMN ident"])))
+                                  (drop-column :ident)
+                                  (drop-column :if-exists :another)))
+         ["ALTER TABLE fruit ADD COLUMN id INT NOT NULL, DROP COLUMN ident, DROP COLUMN IF EXISTS another"]))
+  (is (= (sql/format (alter-table :fruit
+                                  (drop-column :a :b :if-exists :c :d)
+                                  (drop-column :if-exists :e)))
+         ["ALTER TABLE fruit DROP COLUMN a, DROP COLUMN b, DROP COLUMN IF EXISTS c, DROP COLUMN d, DROP COLUMN IF EXISTS e"])))
 
 (deftest issue-293-insert-into-data
   ;; insert into as (and other tests) based on :insert-into

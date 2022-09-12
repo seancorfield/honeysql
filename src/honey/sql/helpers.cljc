@@ -172,12 +172,15 @@
   (generic :add-column col-elems))
 
 (defn drop-column
-  "Takes a single column name (use with `alter-table`).
+  "Takes one or more column names (use with `alter-table`).
 
-  (alter-table :foo (drop-column :bar))"
+  Accepts an `IF EXISTS` flag (keyword or symbol) before
+  any column names.
+
+  (alter-table :foo (drop-column :bar :if-exists :quux))"
   {:arglists '([col])}
-  [& args]
-  (generic-1 :drop-column args))
+  [& col-elems]
+  (generic :drop-column col-elems))
 
 (defn alter-column
   "Like add-column, accepts any number of SQL elements

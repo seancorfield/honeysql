@@ -85,7 +85,8 @@ user=> (sql/format {:alter-table [:fruit
 
 As can be seen above, `:add-column` and `:alter-column`
 both accept a column description (as a sequence of simple
-expressions); `:drop-column` accepts a single column name,
+expressions); `:drop-column` accepts one or more column names
+optionally prefixed by `:if-exists`,
 and `:rename-column` accepts a sequence with two column
 names: the "from" and the "to" names.
 

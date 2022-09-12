@@ -981,6 +981,32 @@
       (into [(str/join sqls)] params))
     [s]))
 
+(defn- destructure-drop-columns [tables]
+  (let [params
+        (if (sequential? tables)
+          tables
+          [tables])
+        _    (when-not (every? ident? params)
+               (throw (ex-info "DROP COLUMNS expects just column names"
+                               {:tables tables})))]
+    (loop [if-exists false coll params sqls []]
+      (if (seq coll)
+        (if (#{:if-exists 'if-exists} (first coll))
+          (recur true (rest coll) sqls)
+          (recur false (rest coll)
+                 (conj sqls (cond->> (format-entity (first coll))
+                              if-exists
+                              (str (sql-kw :if-exists) " ")))))
+        (if if-exists
+          (throw (ex-info (str "DROP COLUMNS: missing column name after IF EXISTS")
+                          {:tables tables}))
+          sqls)))))
+
+(defn- format-drop-columns
+  [k params]
+  (let [tables (destructure-drop-columns params)]
+    [(str/join ", " (mapv #(str (sql-kw k) " " %) tables))]))
+
 (defn- check-where
   "Given a formatter function, performs a pre-flight check that there is
   a non-empty where clause if at least basic checking is enabled."
@@ -1009,7 +1035,7 @@
   and removed."
   (atom {:alter-table     #'format-alter-table
          :add-column      #'format-add-item
-         :drop-column     #'format-drop-items
+         :drop-column     #'format-drop-columns
          :alter-column    (fn [k spec]
                             (format-add-item
                              (if (mysql?) :modify-column k)
