@@ -314,6 +314,8 @@
     {::wrapper
      (fn [fk _] (param-value (fk)))}))
 
+(def ^:private ^:dynamic *formatted-column* (atom false))
+
 (defn- format-var [x & [opts]]
   ;; rather than name/namespace, we want to allow
   ;; for multiple / in the %fun.call case so that
@@ -329,6 +331,10 @@
             (if *inline*
               [(sqlize-value (param-value k))]
               ["?" (->param k)]))
+          (= \' (first c))
+          (do
+            (reset! *formatted-column* true)
+            [(subs c 1)])
           :else
           [(format-entity x opts)])))
 
@@ -938,8 +944,6 @@
   [k params]
   (let [[if-exists tables & more] (destructure-drop-items params "DROP options")]
     [(str/join " " (remove nil? (into [(sql-kw k) if-exists tables] more)))]))
-
-(def ^:private ^:dynamic *formatted-column* (atom false))
 
 (defn- format-single-column [xs]
   (reset! *formatted-column* true)
