@@ -152,7 +152,11 @@ The `:with-columns` clause is formatted as if `{:inline true}`
 was specified so nothing is parameterized. In addition,
 everything except the first element of a column description
 will be uppercased (mostly to give the appearance of separating
-the column name from the SQL keywords).
+the column name from the SQL keywords) -- except for keywords
+that with `'` which will be transcribed into the SQL exactly
+as-is, with no case or character conversion at all. This
+"escape hatch" is intended to allow for SQL dialects that are
+case sensitive and/or have other unusual syntax constraints.
 
 Various function-like expressions can be specified, as shown
 in the example above, that allow things like `CHECK` for a

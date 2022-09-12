@@ -1,7 +1,7 @@
 # Changes
 
 * 2.3.next in progress
-  * Address [#430](https://github.com/seancorfield/honeysql/issues/430) by treating `:'` as introducing a name that should be treating literally and not formatted as a SQL entity (which respects quoting, dot-splitting, etc); this expands the "escape hatch" introduced in [#352](https://github.com/seancorfield/honeysql/issues/352) in 2.2.868.
+  * Address [#430](https://github.com/seancorfield/honeysql/issues/430) by treating `:'` as introducing a name that should be treating literally and not formatted as a SQL entity (which respects quoting, dot-splitting, etc); this effectively expands the "escape hatch" introduced via [#352](https://github.com/seancorfield/honeysql/issues/352) in 2.2.868. _Note that the function context behavior formats as a SQL entity, rather than the usual SQL "keyword", whereas this new context is a literal transcription rather than as a SQL entity!_
   * Address [#427](https://github.com/seancorfield/honeysql/issues/427) by adding `set-options!`.
 
 * 2.3.928 -- 2022-09-04
@@ -38,7 +38,7 @@
 * 2.2.868 -- 2022-02-21
   * Address [#387](https://github.com/seancorfield/honeysql/issues/387) by making the function simpler.
   * Fix [#385](https://github.com/seancorfield/honeysql/issues/385) by quoting inlined UUIDs.
-  * Address [#352](https://github.com/seancorfield/honeysql/issues/352) by treating `:'` as introducing a function name that should not be formatted as a SQL entity (which respects quoting, dot-splitting, etc).
+  * Address [#352](https://github.com/seancorfield/honeysql/issues/352) by treating `:'` as introducing a function name that should be formatted as a SQL entity (which respects quoting, dot-splitting, etc), rather than as a SQL "keyword".
 
 * 2.2.861 -- 2022-01-30
   * Address [#382](https://github.com/seancorfield/honeysql/issues/382) by adding `:case-expr` for BigQuery support.

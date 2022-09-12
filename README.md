@@ -596,6 +596,8 @@ unless you have quoting enabled:
 => ["SELECT * FROM `foo` WHERE `my-schema`.`SomeFunction`(`bar`, ?)" 0]
 ```
 
+> Note: in non-function contexts, if a keyword begins with `'`, it is transcribed into the SQL exactly as-is, with no case or character conversion at all.
+
 ### Bindable parameters
 
 Keywords that begin with `?` are interpreted as bindable parameters:
