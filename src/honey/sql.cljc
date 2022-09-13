@@ -959,10 +959,14 @@
         (str/join ", " (map #'format-single-column xs))
         ")")])
 
-(defn- format-add-item [k spec]
+(defn- format-add-single-item [k spec]
   (if (contains? #{:if-not-exists 'if-not-exists} (last spec))
-    [(str (sql-kw k) " " (sql-kw :if-not-exists) " " (format-single-column (butlast spec)))]
-    [(str (sql-kw k) " " (format-single-column spec))]))
+    (str (sql-kw k) " " (sql-kw :if-not-exists) " " (format-single-column (butlast spec)))
+    (str (sql-kw k) " " (format-single-column spec))))
+
+(defn- format-add-item [k spec]
+  (let [items (if (and (sequential? spec) (sequential? (first spec))) spec [spec])]
+    [(str/join ", " (for [item items] (format-add-single-item k item)))]))
 
 (defn- format-rename-item [k [x y]]
   [(str (sql-kw k) " " (format-entity x) " TO " (format-entity y))])

@@ -138,6 +138,12 @@
       (helper-merge data k args))
     (helper-merge {} k args)))
 
+(defn- generic-grouped [k args]
+  (if (map? (first args))
+    (let [[data & args] args]
+      (helper-merge data k [args]))
+    (helper-merge {} k [args])))
+
 (defn- generic-1 [k [data arg]]
   (if (map? data)
     (assoc data k arg)
@@ -169,7 +175,7 @@
 
   (add-column :name [:varchar 32] [:not nil])"
   [& col-elems]
-  (generic :add-column col-elems))
+  (generic-grouped :add-column col-elems))
 
 (defn drop-column
   "Takes one or more column names (use with `alter-table`).
@@ -188,7 +194,7 @@
 
   (alter-column :name [:varchar 64] [:not nil])"
   [& col-elems]
-  (generic :alter-column col-elems))
+  (generic-grouped :alter-column col-elems))
 
 (defn modify-column
   "Like add-column, accepts any number of SQL elements
@@ -199,7 +205,7 @@
   MySQL-specific, deprecated. Use `alter-column` and
   specify the MySQL dialect to get `MODIFY COLUMN`."
   [& col-elems]
-  (generic :modify-column col-elems))
+  (generic-grouped :modify-column col-elems))
 
 (defn rename-column
   "Accepts two column names: the original name and the

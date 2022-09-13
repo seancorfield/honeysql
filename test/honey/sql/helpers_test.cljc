@@ -631,6 +631,11 @@
   (is (= (sql/format (-> (alter-table :fruit)
                          (add-column :id :int [:not nil])))
          ["ALTER TABLE fruit ADD COLUMN id INT NOT NULL"]))
+  (is (= (sql/format (-> (alter-table :fruit)
+                         (add-column :id :int [:not nil])
+                         (add-column :a1 :int nil)
+                         (add-column :be :text [:not nil])))
+         ["ALTER TABLE fruit ADD COLUMN id INT NOT NULL, ADD COLUMN a1 INT NULL, ADD COLUMN be TEXT NOT NULL"]))
   (is (= (sql/format (alter-table :fruit
                                   (add-column :id :int [:not nil])
                                   (drop-column :ident)
