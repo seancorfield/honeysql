@@ -127,7 +127,7 @@
 
 (defn- helper-merge [data k args]
   (if-let [merge-fn (special-merges k)]
-    (if-let [clause (merge-fn (get data k) args)]
+    (if-some [clause (merge-fn (get data k) args)]
       (assoc data k clause)
       data)
     (clojure.core/update data k default-merge args)))
