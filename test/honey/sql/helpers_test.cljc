@@ -887,3 +887,8 @@
            {:with [[:a]],
             :insert-into [[:quux [:x :y]]
                           {:select [:id], :from [:table]}]}))))
+
+(deftest issue-431
+  (testing "where false should not be ignored"
+    (is (= {:where false}
+           (where false)))))
