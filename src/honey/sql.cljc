@@ -159,6 +159,11 @@
   []
   (= :sqlserver (:dialect *dialect*)))
 
+(defn- clickhouse?
+  "Helper to detect if Clickhouse is the current dialect."
+  []
+  (= :clickhouse (:dialect *dialect*)))
+
 ;; String.toUpperCase() or `str/upper-case` for that matter converts the
 ;; string to uppercase for the DEFAULT LOCALE. Normally this does what you'd
 ;; expect but things like `inner join` get converted to `İNNER JOİN` (dot over
@@ -552,15 +557,20 @@
   ;; or just entity, as far as I can tell...
   (let [[sqls params]
         (reduce-sql
-         (map
-          (fn [[x expr :as with]]
-            (let [[sql & params] (format-with-part x)
-                  [sql' & params'] (format-dsl expr)]
-              ;; according to docs, CTE should _always_ be wrapped:
-              (cond-> [(str sql " " (as-fn with) " " (str "(" sql' ")"))]
-                params  (into params)
-                params' (into params'))))
-          xs))]
+          (map
+            (fn [[x expr :as with]]
+              (let [[sql & params]   (format-with-part x)
+                    [sql' & params'] (if (and (clickhouse?)   ;;in clickhouse the expression can be
+                                              (not (map? expr))) ;; a string arranged as `with expr as ident`
+                                       (format-expr expr)
+                                       (format-dsl expr))]
+                ;; according to docs, CTE should _always_ be wrapped:
+                (cond-> [(if (and (clickhouse?) (not (map? expr)))
+                           (str sql' " AS " sql)
+                           (str sql " " (as-fn with) " " (str "(" sql' ")")))]
+                        params  (into params)
+                        params' (into params'))))
+            xs))]
     (into [(str (sql-kw k) " " (str/join ", " sqls))] params)))
 
 (defn- format-selector [k xs]
