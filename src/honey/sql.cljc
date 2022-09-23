@@ -555,11 +555,18 @@
          (map
           (fn [[x expr :as with]]
             (let [[sql & params] (format-with-part x)
-                  [sql' & params'] (format-dsl expr)]
-              ;; according to docs, CTE should _always_ be wrapped:
-              (cond-> [(str sql " " (as-fn with) " " (str "(" sql' ")"))]
-                params  (into params)
-                params' (into params'))))
+                  non-query-expr? (or (ident? expr) (string? expr))
+                  [sql' & params'] (if non-query-expr?
+                                     (format-expr expr)
+                                     (format-dsl expr))]
+              (if non-query-expr?
+                (cond-> [(str sql' " AS " sql)]
+                        params' (into params')
+                        params  (into params))
+                ;; according to docs, CTE should _always_ be wrapped:
+                (cond-> [(str sql " " (as-fn with) " " (str "(" sql' ")"))]
+                        params  (into params)
+                        params' (into params')))))
           xs))]
     (into [(str (sql-kw k) " " (str/join ", " sqls))] params)))
 
