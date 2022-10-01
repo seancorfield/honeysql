@@ -144,7 +144,30 @@
                    {:values [[1 2] [4 5 6]]}]]
            :select [:*]
            :from [:static]})
-         ["WITH static (a, b, c) AS (VALUES (?, ?, NULL), (?, ?, ?)) SELECT * FROM static" 1 2 4 5 6])))
+         ["WITH static (a, b, c) AS (VALUES (?, ?, NULL), (?, ?, ?)) SELECT * FROM static" 1 2 4 5 6]))
+  (testing "When the expression passed to WITH clause is a string or `ident?` the syntax of WITH clause is `with expr AS ident`"
+    (is (= (format
+             {:with   [[:ts_upper_bound "2019-08-01 15:23:00"]]
+              :select [:*]
+              :from   [:hits]
+              :where  [:= :EventDate :ts_upper_bound]})
+           ["WITH ? AS ts_upper_bound SELECT * FROM hits WHERE EventDate = ts_upper_bound" "2019-08-01 15:23:00"]))
+    (is (= (format
+             {:with   [[:ts_upper_bound :2019-08-01]]
+              :select [:*]
+              :from   [:hits]
+              :where  [:= :EventDate :ts_upper_bound]})
+           ["WITH 2019_08_01 AS ts_upper_bound SELECT * FROM hits WHERE EventDate = ts_upper_bound"])))
+  (testing "Mixing the syntax of WITH in the resulting clause"
+    (is (= (format
+             {:with   [[:ts_upper_bound "2019-08-01 15:23:00"]
+                       [:stuff {:select [:*]
+                                :from [:songs]}]]
+              :select [:*]
+              :from   [:hits :stuff]
+              :where  [:= :EventDate :ts_upper_bound]})
+           ["WITH ? AS ts_upper_bound, stuff AS (SELECT * FROM songs) SELECT * FROM hits, stuff WHERE EventDate = ts_upper_bound"
+            "2019-08-01 15:23:00"]))))
 
 (deftest insert-into
   (is (= (format {:insert-into :foo})

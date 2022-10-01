@@ -321,7 +321,8 @@ order they would appear in a valid SQL statement).
 
 These provide CTE support for SQL Server. The argument to
 `:with` (or `:with-recursive`) is a sequences of pairs, each of
-a result set name (or description) and a basic SQL statement.
+a result set name (or description) and either of; a basic SQL 
+statement, a string, a keyword or a symbol.
 The result set can either be a SQL entity (a simple name)
 or a pair of a SQL entity and a set of column names.
 
@@ -332,6 +333,34 @@ user=> (sql/format '{with ((stuff {select (:*) from (foo)}),
                      from (stuff, nonsense)
                      where (= status 0)})
 ["WITH stuff AS (SELECT * FROM foo), nonsense AS (SELECT * FROM bar) SELECT foo.id, bar.name FROM stuff, nonsense WHERE status = ?" 0]
+```
+
+When the expression is a basic SQL statement in any of the pairs,
+the resulting syntax of the pair is `with ident AS expr` as shown above. 
+However, when the expression is a string, a keyword or a symbol, the resulting
+syntax of the pair is of the form `with expr AS ident` like this:
+
+```clojure
+user=> (sql/format '{with ((ts_upper_bound "2019-08-01 15:23:00"))
+                     select :*
+                     from (hits)
+                     where (= EventDate ts_upper_bound)})
+["WITH ? AS ts_upper_bound SELECT * FROM hits WHERE EventDate = ts_upper_bound" "2019-08-01 15:23:00"]
+```
+
+The syntax only varies for each pair and so you can use both SQL statements 
+and keywords/strings/symbols in the same WITH clause like this:
+
+```clojure
+user=> (sql/format '{with   ((ts_upper_bound "2019-08-01 15:23:00")
+                             (review :awesome)
+                             (stuff {select (:*) from (songs)}))
+                     select :*
+                     from   (hits, stuff)
+                     where  (and (= EventDate ts_upper_bound)
+                                 (= EventReview review))})
+["WITH ? AS ts_upper_bound, awesome AS review, stuff AS (SELECT * FROM songs) SELECT * FROM hits, stuff WHERE (EventDate = ts_upper_bound) AND (EventReview = review)"
+ "2019-08-01 15:23:00"]
 ```
 
 You can specify a list of columns for the CTE like this:
