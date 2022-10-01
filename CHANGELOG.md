@@ -1,6 +1,7 @@
 # Changes
 
 * 2.3.next in progress
+  * Address [#435](https://github.com/seancorfield/honeysql/issues/435) by showing `CREATE TEMP TABLE` etc.
   * Fix [#431](https://github.com/seancorfield/honeysql/issues/431).
   * Address [#430](https://github.com/seancorfield/honeysql/issues/430) by treating `:'` as introducing a name that should be treating literally and not formatted as a SQL entity (which respects quoting, dot-splitting, etc); this effectively expands the "escape hatch" introduced via [#352](https://github.com/seancorfield/honeysql/issues/352) in 2.2.868. _Note that the function context behavior formats as a SQL entity, rather than the usual SQL "keyword", whereas this new context is a literal transcription rather than as a SQL entity!_
   * Address [#427](https://github.com/seancorfield/honeysql/issues/427) by adding `set-options!`.

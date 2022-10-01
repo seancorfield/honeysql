@@ -133,10 +133,9 @@ user=> (sql/format {:alter-table :fruit :rename-table :vegetable})
 
 ## create-table, with-columns
 
-`:create-table` can accept a single table name or a pair
+`:create-table` can accept a single table name or a sequence
 containing a table name and a flag indicating the creation
-should be conditional (`:if-not-exists` or the symbol `if-not-exists`,
-although any truthy value will work). `:create-table` should
+should be conditional (`:if-not-exists` or the symbol `if-not-exists`). `:create-table` should
 be used with `:with-columns` to specify the actual columns
 in the table:
 
@@ -148,6 +147,21 @@ user=> (sql/format {:create-table :fruit
                      [:cost :float :null]]})
 ["CREATE TABLE fruit (id INT NOT NULL, name VARCHAR(32) NOT NULL, cost FLOAT NULL)"]
 ```
+
+Any keywords (or symbols) preceding the table name will be
+turned into SQL keywords (this is true for all of the `create-*`
+DSL identifiers):
+
+```clojure
+user=> (sql/format {:create-table [:my :fancy :fruit :if-not-exists]
+                    :with-columns
+                    [[:id :int [:not nil]]
+                     [:name [:varchar 32] [:not nil]]
+                     [:cost :float :null]]})
+["CREATE MY FANCY TABLE IF NOT EXISTS fruit (id INT NOT NULL, name VARCHAR(32) NOT NULL, cost FLOAT NULL)"]
+```
+
+This lets you write SQL like `CREATE TEMP TABLE foo ...` etc.
 
 The `:with-columns` clause is formatted as if `{:inline true}`
 was specified so nothing is parameterized. In addition,
@@ -216,10 +230,20 @@ WITH NO DATA
 " "y"]
 ```
 
+As above, any keywords (or symbols) preceding the table name
+will be turned into SQL keywords (this is true for all of the
+`create-*` DSL identifiers) so you can write:
+
+```
+{:create-table-as [:temp :metro :if-not-exists [..]] ..}
+```
+
+to produce `CREATE TEMP TABLE IF NOT EXISTS metro ..`.
+
 ## create-extension
 
-`:create-extension` can accept a single extension name or a pair
-of the extension name, followed by
+`:create-extension` can accept a single extension name or a
+sequence of the extension name, followed by
 a flag indicating the creation should be conditional
 (`:if-not-exists` or the symbol `if-not-exists`).
 See the [PostgreSQL](postgresql.md) section for examples.

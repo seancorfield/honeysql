@@ -891,4 +891,6 @@
 (deftest issue-431
   (testing "where false should not be ignored"
     (is (= {:where false}
-           (where false)))))
+           (where false)))
+    (is (= ["SELECT * FROM table WHERE FALSE"]
+           (sql/format {:select [:*] :from [:table] :where false})))))
