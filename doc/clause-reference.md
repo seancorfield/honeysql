@@ -321,7 +321,7 @@ order they would appear in a valid SQL statement).
 
 These provide CTE support for SQL Server. The argument to
 `:with` (or `:with-recursive`) is a sequences of pairs, each of
-a result set name (or description) and either of; a basic SQL 
+a result set name (or description) and either of; a basic SQL
 statement, a string, a keyword or a symbol.
 The result set can either be a SQL entity (a simple name)
 or a pair of a SQL entity and a set of column names.
@@ -336,7 +336,7 @@ user=> (sql/format '{with ((stuff {select (:*) from (foo)}),
 ```
 
 When the expression is a basic SQL statement in any of the pairs,
-the resulting syntax of the pair is `with ident AS expr` as shown above. 
+the resulting syntax of the pair is `with ident AS expr` as shown above.
 However, when the expression is a string, a keyword or a symbol, the resulting
 syntax of the pair is of the form `with expr AS ident` like this:
 
@@ -348,7 +348,7 @@ user=> (sql/format '{with ((ts_upper_bound "2019-08-01 15:23:00"))
 ["WITH ? AS ts_upper_bound SELECT * FROM hits WHERE EventDate = ts_upper_bound" "2019-08-01 15:23:00"]
 ```
 
-The syntax only varies for each pair and so you can use both SQL statements 
+The syntax only varies for each pair and so you can use both SQL statements
 and keywords/strings/symbols in the same WITH clause like this:
 
 ```clojure
@@ -590,11 +590,14 @@ user=> (sql/format {:delete [:order :item]
 
 ## truncate
 
-`:truncate` accepts a simple SQL entity (table name):
+`:truncate` accepts a simple SQL entity (table name)
+or a table name followed by various options:
 
 ```clojure
 user=> (sql/format '{truncate transport})
 ["TRUNCATE transport"]
+user=> (sql/format '{truncate (transport restart identity)})
+["TRUNCATE transport RESTART IDENTITY"]
 ```
 
 ## columns

@@ -519,6 +519,9 @@
 (deftest truncate-test
   (is (= ["TRUNCATE `foo`"]
          (-> {:truncate :foo}
+             (format {:dialect :mysql}))))
+  (is (= ["TRUNCATE `foo` CONTINUE IDENTITY"]
+         (-> {:truncate [:foo :continue :identity]}
              (format {:dialect :mysql})))))
 
 (deftest inlined-values-are-stringified-correctly

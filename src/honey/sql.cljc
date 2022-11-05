@@ -894,14 +894,14 @@
           :else
           (sql-kw opt))))
 
-(defn- destructure-create-item [table context]
+(defn- destructure-ddl-item [table context]
   (let [params
         (if (sequential? table)
           table
           [table])
         tab? #(or (ident? %) (string? %))
         coll (take-while tab? params)
-        opts (drop-while tab? params)
+        opts (filter some? (drop-while tab? params))
         ine  (last coll)
         [prequel table ine]
         (if (= :if-not-exists (sym->kw ine))
@@ -910,11 +910,26 @@
     (into [(str/join " " (map sql-kw prequel))
            (format-entity table)
            (when ine (sql-kw ine))]
-          (format-ddl-options opts context))))
+          (when opts
+            (format-ddl-options opts context)))))
+
+(defn- format-truncate [k xs]
+  (let [[table & options] (if (sequential? xs) xs [xs])
+        [pre table ine options] (destructure-ddl-item [table options] "truncate")]
+    (when (seq pre) (throw (ex-info "TRUNCATE syntax error" {:unexpected pre})))
+    (when (seq ine) (throw (ex-info "TRUNCATE syntax error" {:unexpected ine})))
+    [(str/join " " (cond-> [(sql-kw k) table]
+                     (seq options)
+                     (conj options)))]))
+
+(comment
+  (destructure-ddl-item [:foo [:abc [:continue :wibble] :identity]] "test")
+  (destructure-ddl-item [:foo] "test")
+  (format-truncate :truncate [:foo]))
 
 (defn- format-create [q k item as]
   (let [[pre entity ine & more]
-        (destructure-create-item item (str (sql-kw q) " options"))]
+        (destructure-ddl-item item (str (sql-kw q) " options"))]
     [(str/join " " (remove nil?
                            (-> [(sql-kw q)
                                 (when (and (= :create q) (seq pre)) pre)
@@ -1098,7 +1113,7 @@
          :update          (check-where #'format-selector)
          :delete          (check-where #'format-selects)
          :delete-from     (check-where #'format-selector)
-         :truncate        #'format-selector
+         :truncate        #'format-truncate
          :columns         #'format-columns
          :set             #'format-set-exprs
          :from            #'format-selects
