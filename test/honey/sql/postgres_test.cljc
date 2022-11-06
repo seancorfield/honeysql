@@ -185,7 +185,7 @@
                               [:location :point]])
                sql/format))))
   (testing "create table with foreign key reference"
-    (is (= ["CREATE TABLE weather (city VARCHAR(80) REFERENCES CITIES(CITY), temp_lo INT, temp_hi INT, prcp REAL, date DATE)"]
+    (is (= ["CREATE TABLE weather (city VARCHAR(80) REFERENCES cities(city), temp_lo INT, temp_hi INT, prcp REAL, date DATE)"]
            (-> (create-table :weather)
                (with-columns [[:city [:varchar :80] [:references :cities :city]]
                               [:temp_lo :int]
@@ -194,7 +194,7 @@
                               [:date :date]])
                sql/format))))
   (testing "creating table with table level constraint"
-    (is (= ["CREATE TABLE films (code CHAR(5), title VARCHAR(40), did INTEGER, date_prod DATE, kind VARCHAR(10), CONSTRAINT code_title PRIMARY KEY(CODE, TITLE))"]
+    (is (= ["CREATE TABLE films (code CHAR(5), title VARCHAR(40), did INTEGER, date_prod DATE, kind VARCHAR(10), CONSTRAINT code_title PRIMARY KEY(code, title))"]
            (-> (create-table :films)
                (with-columns [[:code [:char 5]]
                               [:title [:varchar 40]]
@@ -204,7 +204,7 @@
                               [[:constraint :code_title] [:primary-key :code :title]]])
                sql/format))))
   (testing "creating table with column level constraint"
-    (is (= ["CREATE TABLE films (code CHAR(5) CONSTRAINT FIRSTKEY PRIMARY KEY, title VARCHAR(40) NOT NULL, did INTEGER NOT NULL, date_prod DATE, kind VARCHAR(10))"]
+    (is (= ["CREATE TABLE films (code CHAR(5) CONSTRAINT firstkey PRIMARY KEY, title VARCHAR(40) NOT NULL, did INTEGER NOT NULL, date_prod DATE, kind VARCHAR(10))"]
            (-> (create-table :films)
                (with-columns [[:code [:char 5] [:constraint :firstkey] [:primary-key]]
                               [:title [:varchar 40] [:not nil]]
@@ -213,13 +213,13 @@
                               [:kind [:varchar 10]]])
                sql/format))))
   (testing "creating table with columns with default values"
-    (is (= ["CREATE TABLE distributors (did INTEGER PRIMARY KEY DEFAULT NEXTVAL('SERIAL'), name VARCHAR(40) NOT NULL)"]
+    (is (= ["CREATE TABLE distributors (did INTEGER PRIMARY KEY DEFAULT NEXTVAL('serial'), name VARCHAR(40) NOT NULL)"]
            (-> (create-table :distributors)
                (with-columns [[:did :integer [:primary-key] [:default [:nextval "serial"]]]
                               [:name [:varchar 40] [:not nil]]])
                sql/format))))
   (testing "creating table with column checks"
-    (is (= ["CREATE TABLE products (product_no INTEGER, name TEXT, price NUMERIC CHECK(PRICE > 0), discounted_price NUMERIC, CHECK((discounted_price > 0) AND (price > discounted_price)))"]
+    (is (= ["CREATE TABLE products (product_no INTEGER, name TEXT, price NUMERIC CHECK(price > 0), discounted_price NUMERIC, CHECK((discounted_price > 0) AND (price > discounted_price)))"]
            (-> (create-table :products)
                (with-columns [[:product_no :integer]
                               [:name :text]
@@ -227,6 +227,32 @@
                               [:discounted_price :numeric]
                               [[:check [:and [:> :discounted_price 0] [:> :price :discounted_price]]]]])
                sql/format)))))
+
+(deftest references-issue-386
+  (is (= ["CREATE TABLE IF NOT EXISTS user (id VARCHAR(255) NOT NULL PRIMARY KEY, company_id INT NOT NULL, name VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL, created_time DATETIME DEFAULT CURRENT_TIMESTAMP, updated_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, FOREIGN KEY(company_id) REFERENCES company(id))"]
+         (-> {:create-table [:user :if-not-exists]
+              :with-columns
+              [[:id [:varchar 255] [:not nil] [:primary-key]]
+               [:company-id :int [:not nil]]
+               [:name [:varchar 255] [:not nil]]
+               [:password [:varchar 255] [:not nil]]
+               [:created-time :datetime [:default :CURRENT_TIMESTAMP]]
+               [:updated-time :datetime [:default :CURRENT_TIMESTAMP]
+                :on :update :CURRENT_TIMESTAMP]
+               [[:foreign-key :company-id] [:references :company :id]]]}
+             (sql/format)))))
+
+(deftest create-table-issue-437
+  (is (= ["CREATE TABLE bar (did UUID DEFAULT GEN_RANDOM_UUID(), foo_id VARCHAR NOT NULL, PRIMARY KEY(did, foo_id), FOREIGN KEY(foo_id) REFERENCES foo(id) ON DELETE CASCADE)"]
+         (-> (create-table :bar)
+             (with-columns
+               [[:did :uuid [:default [:gen_random_uuid]]]
+                [:foo-id :varchar [:not nil]]
+                [[:primary-key :did :foo-id]]
+                [[:foreign-key :foo-id]
+                 [:references :foo :id]
+                 :on-delete :cascade]])
+             (sql/format)))))
 
 (deftest over-test
   (testing "window function over on select statemt"

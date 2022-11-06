@@ -875,6 +875,17 @@
             (str " " (str/join ", " (map #(format-simple-clause % "column/index operations") clauses)))))]
     [(str (sql-kw k) " " (format-entity x))]))
 
+(def ^:private special-ddl-keywords
+  "If these are found in DDL, they should map to the given
+  SQL string instead of what sql-kw would do."
+  {:auto-increment "AUTO_INCREMENT"})
+
+(defn- sql-kw-ddl
+  "Handle SQL keywords in DDL (allowing for special/exceptions)."
+  [id]
+  (or (get special-ddl-keywords (sym->kw id))
+      (sql-kw id)))
+
 (defn- format-ddl-options
   "Given a sequence of options for a DDL statement (the part that
   comes between the entity name being created/dropped and the
@@ -888,11 +899,14 @@
           (str/join " "
                     (map (fn [e]
                            (if (ident? e)
-                             (sql-kw e)
+                             (sql-kw-ddl e)
                              (format-simple-expr e context)))
                          opt))
+          (ident? opt)
+          (sql-kw-ddl opt)
           :else
-          (sql-kw opt))))
+          (throw (ex-info "expected symbol or keyword"
+                          {:unexpected opt})))))
 
 (defn- destructure-ddl-item [table context]
   (let [params
@@ -908,7 +922,7 @@
           [(butlast (butlast coll)) (last (butlast coll)) ine]
           [(butlast coll) (last coll) nil])]
     (into [(str/join " " (map sql-kw prequel))
-           (format-entity table)
+           (when table (format-entity table))
            (when ine (sql-kw ine))]
           (when opts
             (format-ddl-options opts context)))))
@@ -925,7 +939,10 @@
 (comment
   (destructure-ddl-item [:foo [:abc [:continue :wibble] :identity]] "test")
   (destructure-ddl-item [:foo] "test")
-  (format-truncate :truncate [:foo]))
+  (destructure-ddl-item [:id [:int :unsigned :auto-increment]] "test")
+  (destructure-ddl-item [[[:foreign-key :bar]] :quux [[:wibble :wobble]]] "test")
+  (format-truncate :truncate [:foo])
+  )
 
 (defn- format-create [q k item as]
   (let [[pre entity ine & more]
@@ -968,13 +985,27 @@
     [(str/join " " (remove nil? (into [(sql-kw k) if-exists tables] more)))]))
 
 (defn- format-single-column [xs]
-  (reset! *formatted-column* true)
-  (str/join " " (cons (format-simple-expr (first xs) "column operation")
-                      (map #(binding [*formatted-column* (atom false)]
-                              (cond-> (format-simple-expr % "column operation")
-                                (not @*formatted-column*)
-                                (upper-case)))
-                           (rest xs)))))
+  (let [[col & options] (if (ident? (first xs)) xs (cons nil xs))
+        [pre col ine & options]
+        (destructure-ddl-item [col options] "column operation")]
+    (when (seq pre) (throw (ex-info "column syntax error" {:unexpected pre})))
+    (when (seq ine) (throw (ex-info "column syntax error" {:unexpected ine})))
+    (str/join " " (filter seq (cons col options)))))
+
+(comment
+  (destructure-ddl-item [:foo [:abc [:continue :wibble] :identity]] "test")
+  (destructure-ddl-item [:foo] "test")
+  (destructure-ddl-item [:id [:int :unsigned :auto-increment]] "test")
+  (format-single-column [:id :int :unsigned :auto-increment])
+  (format-single-column [[:constraint :code_title] [:primary-key :code :title]])
+  (destructure-ddl-item [[[:foreign-key :bar]] :quux [[:wibble :wobble]]] "test")
+
+  (format-truncate :truncate [:foo])
+
+  (destructure-ddl-item [:address [:text]] "test")
+  (format-single-column [:address :text])
+  (format-single-column [:did :uuid [:default [:gen_random_uuid]]])
+  )
 
 (defn- format-table-columns [_ xs]
   [(str "("
@@ -989,6 +1020,12 @@
 (defn- format-add-item [k spec]
   (let [items (if (and (sequential? spec) (sequential? (first spec))) spec [spec])]
     [(str/join ", " (for [item items] (format-add-single-item k item)))]))
+
+(comment
+  (format-add-item :add-column [:address :text])
+  (format-add-single-item :add-column [:address :text])
+  (format-single-column [:address :text])
+  )
 
 (defn- format-rename-item [k [x y]]
   [(str (sql-kw k) " " (format-entity x) " TO " (format-entity y))])
@@ -1357,7 +1394,7 @@
     ;; bigquery column types:
     :bigquery/array (fn [_ spec]
                       [(str "ARRAY<"
-                            (str/join " " (map #(format-simple-expr % "column operation") spec))
+                            (str/join " " (map #(sql-kw %) spec))
                             ">")])
     :bigquery/struct (fn [_ spec]
                        [(str "STRUCT<"

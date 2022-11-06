@@ -316,14 +316,14 @@ user=> (-> (create-table :cities)
 ;; default values for columns:
 user=> (-> (create-table :distributors)
            (with-columns [[:did :integer [:primary-key]
-                                         ;; "serial" is inlined as 'SERIAL':
+                                         ;; "serial" is inlined as 'serial':
                                          [:default [:nextval "serial"]]]
                           [:name [:varchar 40] [:not nil]]])
            (sql/format {:pretty true}))
 ;; newlines inserted for readability:
 ["
 CREATE TABLE distributors
-(did INTEGER PRIMARY KEY DEFAULT NEXTVAL('SERIAL'), name VARCHAR(40) NOT NULL)
+(did INTEGER PRIMARY KEY DEFAULT NEXTVAL('serial'), name VARCHAR(40) NOT NULL)
 "]
 ;; PostgreSQL CHECK constraint is supported:
 user=> (-> (create-table :products)
@@ -335,7 +335,7 @@ user=> (-> (create-table :products)
            (sql/format {:pretty true}))
 ["
 CREATE TABLE products
-(product_no INTEGER, name TEXT, price NUMERIC CHECK(PRICE > 0), discounted_price NUMERIC, CHECK((discounted_price > 0) AND (price > discounted_price)))
+(product_no INTEGER, name TEXT, price NUMERIC CHECK(price > 0), discounted_price NUMERIC, CHECK((discounted_price > 0) AND (price > discounted_price)))
 "]
 ;; conditional creation:
 user=> (-> (create-table :products :if-not-exists)
