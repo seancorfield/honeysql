@@ -10,14 +10,14 @@ For the Clojure CLI, add the following dependency to your `deps.edn` file:
 
 <!-- :test-doc-blocks/skip -->
 ```clojure
-    com.github.seancorfield/honeysql {:mvn/version "2.3.928"}
+    com.github.seancorfield/honeysql {:mvn/version "2.4.947"}
 ```
 
 For Leiningen, add the following dependency to your `project.clj` file:
 
 <!-- :test-doc-blocks/skip -->
 ```clojure
-    [com.github.seancorfield/honeysql "2.3.928"]
+    [com.github.seancorfield/honeysql "2.4.947"]
 ```
 
 HoneySQL produces SQL statements but does not execute them.
@@ -298,7 +298,7 @@ Most databases use `"` for quoting (the `:ansi` and `:oracle` dialects).
 The `:sqlserver` dialect uses `[`..`]` and the `:mysql` dialect uses
 ```..```. In addition, the `:oracle` dialect disables `AS` in aliases.
 
-> Note: by default, quoting is **off** which produces cleaner-looking SQL and assumes you control all the symbols/keywords used as table, column, and function names -- the "SQL entities". If you are building any SQL or DDL where the table, column, or function names could be provided by an external source, **you should specify `:quoted true` to ensure all SQL entities are safely quoted**. As of 2.3.928, if you do _not_ specify `:quoted` as an option, HoneySQL will automatically quote any SQL entities that seem unusual, i.e., that contain any characters that are not alphanumeric or underscore. Purely alphanumeric entities will not be quoted (no entities were quoted by default prior to 2.3.928). You can prevent that auto-quoting by explicitly passing `:quoted false` into the `format` call but, from a security point of view, you should think very carefully before you do that: quoting entity names helps protect you from injection attacks! As of 2.3.next, you can change the default setting of `:quoted` from `nil` to `true` (or `false`) via the `set-options!` function.
+> Note: by default, quoting is **off** which produces cleaner-looking SQL and assumes you control all the symbols/keywords used as table, column, and function names -- the "SQL entities". If you are building any SQL or DDL where the table, column, or function names could be provided by an external source, **you should specify `:quoted true` to ensure all SQL entities are safely quoted**. As of 2.3.928, if you do _not_ specify `:quoted` as an option, HoneySQL will automatically quote any SQL entities that seem unusual, i.e., that contain any characters that are not alphanumeric or underscore. Purely alphanumeric entities will not be quoted (no entities were quoted by default prior to 2.3.928). You can prevent that auto-quoting by explicitly passing `:quoted false` into the `format` call but, from a security point of view, you should think very carefully before you do that: quoting entity names helps protect you from injection attacks! As of 2.4.947, you can change the default setting of `:quoted` from `nil` to `true` (or `false`) via the `set-options!` function.
 
 Currently, the only dialect that has substantive differences from
 the others is `:mysql` for which the `:set` clause

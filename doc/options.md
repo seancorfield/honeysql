@@ -24,7 +24,7 @@ All options may be omitted. The default behavior of each option is described in 
 * `:quoted-snake` -- a Boolean indicating whether or not quoted and string SQL entity names should have `-` replaced by `_`; the default is `false` -- quoted and string SQL entity names are left exactly as-is,
 * `:values-default-columns` -- a sequence of column names that should have `DEFAULT` values instead of `NULL` values if used in a `VALUES` clause with no associated matching value in the hash maps passed in; the default behavior is for such missing columns to be given `NULL` values.
 
-As of 2.3.next, you can call `set-options!` with an options hash map to change the
+As of 2.4.947, you can call `set-options!` with an options hash map to change the
 global defaults of certain options:
 
 * `:checking` -- can be `:basic` or `:strict`; specify `:none` to reset to the default,
