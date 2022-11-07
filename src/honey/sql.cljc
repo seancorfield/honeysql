@@ -106,8 +106,12 @@
                :mysql     {:quote #(strop \` % \`)
                            :clause-order-fn
                            #(do
+                              ;; side-effect: updates global clauses...
                               (register-clause! :replace-into :insert-into :insert-into)
-                              (add-clause-before % :set :where))}
+                              (-> %
+                                  (add-clause-before :set :where)
+                                  ;; ...but not in-flight clauses:
+                                  (add-clause-before :replace-into :insert-into)))}
                :oracle    {:quote #(strop \" % \") :as false}})))
 
 ; should become defonce
