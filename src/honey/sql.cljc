@@ -795,7 +795,7 @@
                   params))
 
           :else
-          (throw (ex-info ":values expects sequences or maps"
+          (throw (ex-info ":values expects a sequence of rows (maps) or column values (sequences)"
                           {:first (first xs)})))))
 
 (comment
