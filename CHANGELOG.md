@@ -1,6 +1,7 @@
 # Changes
 
 * 2.4.next in progress
+  * Fix [#434](https://github.com/seancorfield/honeysql/issues/434) by special-casing `:'ARRAY`.
   * Fix [#441](https://github.com/seancorfield/honeysql/issues/441) by adding `:replace-into` to in-flight clause order (as well as registering it for the `:mysql` dialect).
 
 * 2.4.947 -- 2022-11-05

@@ -1015,3 +1015,7 @@ ORDER BY id = ? DESC
   ;; don't quote if quoting disabled (illegal SQL):
   (is (= ["SELECT A, B C"]     (sut/format {:select [:A (keyword "B C")]}
                                            {:quoted false}))))
+
+(deftest issue-434-case-quoting
+  (is (= ["SELECT ARRAY (SELECT \"oid\" FROM \"pg_proc\" WHERE \"proname\" LIKE 'bytea%')"]
+         (sut/format {:select [[[:'ARRAY {:select :oid :from :pg_proc :where [:like :proname [:inline "bytea%"]]}]]]} :quoted true))))

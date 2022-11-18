@@ -275,7 +275,10 @@
   [k]
   (let [n (str/replace (name k) "?" "??")]
     (if (= \' (first n))
-      (format-entity (keyword (subs n 1 (count n))))
+      (let [ident   (subs n 1 (count n))
+            ident-l (str/lower-case ident)]
+        (binding [*quoted* (when-not (contains? #{"array"} ident-l) *quoted*)]
+          (format-entity (keyword ident))))
       (-> n (dehyphen) (upper-case)))))
 
 (defn- sym->kw
