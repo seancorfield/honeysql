@@ -249,10 +249,19 @@
                (sql/format))))))
 
 (deftest test-cast
-  (is (= ["SELECT foo, CAST(bar AS integer)"]
+  (is (= ["SELECT foo, CAST(bar AS INTEGER)"]
          (sql/format {:select [:foo [[:cast :bar :integer]]]})))
-  (is (= ["SELECT foo, CAST(bar AS integer)"]
-         (sql/format {:select [:foo [[:cast :bar 'integer]]]}))))
+  (is (= ["SELECT foo, CAST(bar AS INTEGER)"]
+         (sql/format {:select [:foo [[:cast :bar 'integer]]]})))
+  (is (= ["SELECT foo, CAST(bar AS DOUBLE PRECISION)"] ;; Postgres example
+         (sql/format {:select [:foo [[:cast :bar :double-precision]]]})))
+  (is (= ["SELECT \"foo\", CAST(\"bar\" AS INTEGER)"]
+         (sql/format {:select [:foo [[:cast :bar :integer]]]} {:quoted true})))
+  (is (= ["SELECT `foo`, CAST(`bar` AS INTEGER)"]
+         (sql/format {:select [:foo [[:cast :bar :integer]]]} {:dialect :mysql})))
+  (is (= ["SELECT `foo`, CAST(`bar` AS CHAR(10))"]
+         (sql/format {:select [:foo [[:cast :bar [:char 10]]]]} {:dialect :mysql
+                                                                 :inline true}))))
 
 (deftest test-value
   (is (= ["INSERT INTO foo (bar) VALUES (?)" {:baz "my-val"}]

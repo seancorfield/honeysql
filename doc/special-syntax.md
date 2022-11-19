@@ -79,7 +79,7 @@ that produces a SQL type:
 
 ```clojure
 (sql/format-expr [:cast :a :int])
-;;=> ["CAST(a AS int)"]
+;;=> ["CAST(a AS INT)"]
 ```
 
 ## composite

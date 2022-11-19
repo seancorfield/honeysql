@@ -1426,7 +1426,9 @@
     :cast
     (fn [_ [x type]]
       (let [[sql & params]   (format-expr x)
-            [sql' & params'] (format-expr type)]
+            [sql' & params'] (if (ident? type)
+                               [(sql-kw type)]
+                               (format-expr type))]
         (-> [(str "CAST(" sql " AS " sql' ")")]
             (into params)
             (into params'))))
