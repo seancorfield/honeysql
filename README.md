@@ -702,7 +702,7 @@ have a lot of function calls needed in code:
     (sql/format {:pretty true}))
 => ["
 INSERT INTO sample
-(location) VALUES (ST_SETSRID(ST_MAKEPOINT(?, ?), CAST(? AS integer)))
+(location) VALUES (ST_SETSRID(ST_MAKEPOINT(?, ?), CAST(? AS INTEGER)))
 "
 0.291 32.621 4325]
 ```
