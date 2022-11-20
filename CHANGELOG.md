@@ -1,8 +1,9 @@
 # Changes
 
 * 2.4.next in progress
-  * Fix [#434](https://github.com/seancorfield/honeysql/issues/434) by special-casing `:'ARRAY`.
+  * Fix `:cast` formatting when quoting is enabled, via PR [#443](https://github.com/seancorfield/honeysql/pull/443) [duddlf23](https://github.com/duddlf23).
   * Fix [#441](https://github.com/seancorfield/honeysql/issues/441) by adding `:replace-into` to in-flight clause order (as well as registering it for the `:mysql` dialect).
+  * Fix [#434](https://github.com/seancorfield/honeysql/issues/434) by special-casing `:'ARRAY`.
 
 * 2.4.947 -- 2022-11-05
   * Fix [#439](https://github.com/seancorfield/honeysql/issues/439) by rewriting how DDL options are processed; also fixes [#386](https://github.com/seancorfield/honeysql/issues/386) and [#437](https://github.com/seancorfield/honeysql/issues/437); **Whilst this is intended to be purely a bug fix, it has the potential to be a breaking change -- hence the version jump to 2.4!**
