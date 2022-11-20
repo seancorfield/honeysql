@@ -319,7 +319,8 @@ order they would appear in a valid SQL statement).
 
 ## with, with-recursive
 
-These provide CTE support for SQL Server. The argument to
+These provide CTE support for several databases.
+In the most common form, the argument to
 `:with` (or `:with-recursive`) is a sequences of pairs, each of
 a result set name (or description) and either of; a basic SQL
 statement, a string, a keyword or a symbol.
@@ -336,9 +337,9 @@ user=> (sql/format '{with ((stuff {select (:*) from (foo)}),
 ```
 
 When the expression is a basic SQL statement in any of the pairs,
-the resulting syntax of the pair is `with ident AS expr` as shown above.
+the resulting syntax of the pair is `WITH ident AS expr` as shown above.
 However, when the expression is a string, a keyword or a symbol, the resulting
-syntax of the pair is of the form `with expr AS ident` like this:
+syntax of the pair is of the form `WITH expr AS ident` like this:
 
 ```clojure
 user=> (sql/format '{with ((ts_upper_bound "2019-08-01 15:23:00"))
@@ -349,7 +350,7 @@ user=> (sql/format '{with ((ts_upper_bound "2019-08-01 15:23:00"))
 ```
 
 The syntax only varies for each pair and so you can use both SQL statements
-and keywords/strings/symbols in the same WITH clause like this:
+and keywords/strings/symbols in the same `WITH` clause like this:
 
 ```clojure
 user=> (sql/format '{with   ((ts_upper_bound "2019-08-01 15:23:00")
