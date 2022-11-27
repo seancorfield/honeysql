@@ -871,11 +871,11 @@ Or perhaps your database supports syntax like `a BETWIXT b AND c`, in which case
 ;; sequence of the arguments provided to it (so you can write any arity ops):
 (sql/register-fn! :betwixt
                   (fn [op [a b c]]
-                    (let [[sql-a & params-a] (sql/format-expr a)
-                          [sql-b & params-b] (sql/format-expr b)
-                          [sql-c & params-c] (sql/format-expr c)]
-                      (-> [(str sql-a " " (sql/sql-kw op) " "
-                                sql-b " AND " sql-c)]
+                    (let [[sql-a & params-a] (sql/-format-expr a)
+                          [sql-b & params-b] (sql/-format-expr b)
+                          [sql-c & params-c] (sql/-format-expr c)]
+                      (-> [(vector sql-a " " (sql/sql-kw op) " "
+                                   sql-b " AND " sql-c)]
                           (c/into params-a)
                           (c/into params-b)
                           (c/into params-c)))))
@@ -894,9 +894,9 @@ You can also register SQL clauses, specifying the keyword, the formatting functi
                       (fn [clause x]
                         (let [[sql & params]
                               (if (ident? x)
-                                (sql/format-expr x)
+                                (sql/-format-expr x)
                                 (sql/format-dsl x))]
-                          (c/into [(str (sql/sql-kw clause) " " sql)] params)))
+                          (c/into [(vector (sql/sql-kw clause) " " sql)] params)))
                       :from) ; SELECT ... FOOBAR ... FROM ...
 ;; example usage:
 (sql/format {:select [:a :b] :foobar :baz})

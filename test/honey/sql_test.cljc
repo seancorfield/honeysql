@@ -70,7 +70,8 @@
 
 (deftest where-test
   (is (= ["WHERE id = ?" 1]
-         (#'sut/format-on-expr :where [:= :id 1]))))
+         (-> (#'sut/format-on-expr :where [:= :id 1])
+             (#'sut/internal->sql)))))
 
 (deftest general-tests
   (is (= ["SELECT * FROM \"table\" WHERE \"id\" = ?" 1]
