@@ -164,8 +164,8 @@ of it and would call `sql/format-expr` on each argument:
 
 ```clojure
 (defn- foo-formatter [f [x]]
-  (let [[sql & params] (sql/format-expr x)]
-    (into [(str (sql/sql-kw f) "(" sql ")")] params)))
+  (let [[sql & params] (sql/-format-expr x)]
+    (into [(vector (sql/sql-kw f) "(" sql ")")] params)))
 
 (sql/register-fn! :foo foo-formatter)
 
