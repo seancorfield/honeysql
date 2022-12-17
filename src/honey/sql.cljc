@@ -326,13 +326,13 @@
   (let [n (count (swap! *numbered* conj v))]
     [(str "$" n) (with-meta (constantly (dec n))
                    {::wrapper
-                    (fn [fk _] (get *numbered* (fk)))})]))
+                    (fn [fk _] (get @*numbered* (fk)))})]))
 
 (defn ->numbered-param [k]
   (let [n (count (swap! *numbered* conj k))]
     [(str "$" n) (with-meta (constantly k)
                    {::wrapper
-                    (fn [fk _] (param-value (get *numbered* (fk))))})]))
+                    (fn [fk _] (param-value (get @*numbered* (fk))))})]))
 
 (def ^:private ^:dynamic *formatted-column* (atom false))
 
