@@ -140,6 +140,7 @@
 (def ^:private ^:dynamic *dsl* nil)
 ;; caching data to detect expressions that cannot be cached:
 (def ^:private ^:dynamic *caching* nil)
+(def ^:private ^:dynamic *numbered* nil)
 
 ;; clause helpers
 
@@ -321,6 +322,18 @@
     {::wrapper
      (fn [fk _] (param-value (fk)))}))
 
+(defn ->numbered [v]
+  (let [n (count (swap! *numbered* conj v))]
+    [(str "$" n) (with-meta (constantly (dec n))
+                   {::wrapper
+                    (fn [fk _] (get *numbered* (fk)))})]))
+
+(defn ->numbered-param [k]
+  (let [n (count (swap! *numbered* conj k))]
+    [(str "$" n) (with-meta (constantly k)
+                   {::wrapper
+                    (fn [fk _] (param-value (get *numbered* (fk))))})]))
+
 (def ^:private ^:dynamic *formatted-column* (atom false))
 
 (defn- format-var [x & [opts]]
@@ -335,9 +348,12 @@
                   "(" (str/join ", " quoted-args) ")")])
           (= \? (first c))
           (let [k (keyword (subs c 1))]
-            (if *inline*
-              [(sqlize-value (param-value k))]
-              ["?" (->param k)]))
+            (cond *inline*
+                  [(sqlize-value (param-value k))]
+                  *numbered*
+                  (->numbered-param k)
+                  :else
+                  ["?" (->param k)]))
           (= \' (first c))
           (do
             (reset! *formatted-column* true)
@@ -1295,7 +1311,10 @@
                      (and (sequential? values) (some nil? values))))
         (throw (ex-info "IN (NULL) does not match"
                         {:clause [in x y]}))))
-    (if (and (= "?" sql-y) (= 1 (count params-y)) (coll? values))
+    ;; TODO: numbered params!?!?
+    (if (and (= "?" sql-y)
+             (= 1 (count params-y))
+             (coll? values))
       (let [sql (str "(" (str/join ", " (repeat (count values) "?")) ")")]
         (-> [(str sql-x " " (sql-kw in) " " sql)]
             (into params-x)
@@ -1465,13 +1484,16 @@
           (into [(str "LATERAL " sql)] params))))
     :lift
     (fn [_ [x]]
-      (if *inline*
-        ;; this is pretty much always going to be wrong,
-        ;; but it could produce a valid result so we just
-        ;; assume that the user knows what they are doing:
-        [(sqlize-value x)]
-        ["?" (with-meta (constantly x)
-               {::wrapper (fn [fx _] (fx))})]))
+      (cond *inline*
+            ;; this is pretty much always going to be wrong,
+            ;; but it could produce a valid result so we just
+            ;; assume that the user knows what they are doing:
+            [(sqlize-value x)]
+            *numbered*
+            (->numbered x)
+            :else
+            ["?" (with-meta (constantly x)
+                   {::wrapper (fn [fx _] (fx))})]))
     :nest
     (fn [_ [x]]
       (let [[sql & params] (format-expr x)]
@@ -1503,9 +1525,12 @@
         (into [(str/join ", " sqls)] params)))
     :param
     (fn [_ [k]]
-      (if *inline*
-        [(sqlize-value (param-value k))]
-        ["?" (->param k)]))
+      (cond *inline*
+            [(sqlize-value (param-value k))]
+            *numbered*
+            (->numbered-param k)
+            :else
+            ["?" (->param k)]))
     :raw
     (fn [_ [xs]]
       (raw-render xs))
@@ -1586,9 +1611,12 @@
         ["NULL"]
 
         :else
-        (if *inline*
-          [(sqlize-value expr)]
-          ["?" expr])))
+        (cond *inline*
+              [(sqlize-value expr)]
+              *numbered*
+              (->numbered expr)
+              :else
+              ["?" expr])))
 
 (defn- check-dialect [dialect]
   (when-not (contains? @dialects dialect)
@@ -1642,6 +1670,8 @@
                *inline*  (if (contains? opts :inline)
                            (:inline opts)
                            @default-inline)
+               *numbered* (when (:numbered opts)
+                            (atom []))
                *quoted*  (cond (contains? opts :quoted)
                                (:quoted opts)
                                dialect?
