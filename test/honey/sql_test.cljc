@@ -884,7 +884,13 @@ ORDER BY id = ? DESC
                    {:params {:y [nil]}})))
     (is (= ["WHERE x IN (?)" nil]
            (format {:where [:in :x :?y]}
-                   {:params {:y [nil]} :checking :basic}))))
+                   {:params {:y [nil]} :checking :basic})))
+    (is (= ["WHERE x IN ($2)" nil nil]
+           (format {:where [:in :x :?y]}
+                   {:params {:y [nil]} :numbered true})))
+    (is (= ["WHERE x IN ($2)" nil nil]
+           (format {:where [:in :x :?y]}
+                   {:params {:y [nil]} :checking :basic :numbered true}))))
   (testing "IN NULL is flagged in strict mode"
     (is (thrown-with-msg? ExceptionInfo #"does not match"
                           (format {:where [:in :x [nil]]}
