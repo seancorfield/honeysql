@@ -330,7 +330,7 @@
 
 (defn ->numbered-param [k]
   (let [n (count (swap! *numbered* conj k))]
-    [(str "$" n) (with-meta (constantly k)
+    [(str "$" n) (with-meta (constantly (dec n))
                    {::wrapper
                     (fn [fk _] (param-value (get @*numbered* (fk))))})]))
 
@@ -1295,33 +1295,44 @@
 (defn- format-in [in [x y]]
   (let [[sql-x & params-x] (format-expr x {:nested true})
         [sql-y & params-y] (format-expr y {:nested true})
-        values             (unwrap (first params-y) {})]
+        [v1 :as values]    (map #(unwrap % {}) params-y)]
     ;; #396: prevent caching IN () when named parameter is used:
     (when (and (meta (first params-y))
                (::wrapper (meta (first params-y)))
                *caching*)
       (throw (ex-info "SQL that includes IN () expressions cannot be cached" {})))
     (when-not (= :none *checking*)
-      (when (or (and (sequential? y)      (empty? y))
-                (and (sequential? values) (empty? values)))
+      (when (or (and (sequential? y)  (empty? y))
+                (and (sequential? v1) (empty? v1)))
         (throw (ex-info "IN () empty collection is illegal"
                         {:clause [in x y]})))
       (when (and (= :strict *checking*)
-                 (or (and (sequential? y)      (some nil? y))
-                     (and (sequential? values) (some nil? values))))
+                 (or (and (sequential? y)  (some nil? y))
+                     (and (sequential? v1) (some nil? v1))))
         (throw (ex-info "IN (NULL) does not match"
                         {:clause [in x y]}))))
-    ;; TODO: numbered params!?!?
-    (if (and (= "?" sql-y)
-             (= 1 (count params-y))
-             (coll? values))
-      (let [sql (str "(" (str/join ", " (repeat (count values) "?")) ")")]
-        (-> [(str sql-x " " (sql-kw in) " " sql)]
-            (into params-x)
-            (into values)))
-      (-> [(str sql-x " " (sql-kw in) " " sql-y)]
-          (into params-x)
-          (into params-y)))))
+    (cond (and (not *numbered*)
+               (= "?" sql-y)
+               (= 1 (count params-y))
+               (coll? v1))
+          (let [sql (str "(" (str/join ", " (repeat (count v1) "?")) ")")]
+            (-> [(str sql-x " " (sql-kw in) " " sql)]
+                (into params-x)
+                (into v1)))
+          (and *numbered*
+               (= (str "$" (count @*numbered*)) sql-y)
+               (= 1 (count params-y))
+               (coll? v1))
+          (let [vs  (for [v v1] (->numbered v))
+                sql (str "(" (str/join ", " (map first vs)) ")")]
+            (-> [(str sql-x " " (sql-kw in) " " sql)]
+                (into params-x)
+                (conj nil)
+                (into (map second vs))))
+          :else
+          (-> [(str sql-x " " (sql-kw in) " " sql-y)]
+              (into params-x)
+              (into (if *numbered* values params-y))))))
 
 (defn- function-0 [k xs]
   [(str (sql-kw k)
