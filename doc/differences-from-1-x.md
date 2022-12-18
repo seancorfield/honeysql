@@ -63,7 +63,7 @@ Supported Clojure versions: 1.7 and later.
 In `deps.edn`:
 <!-- :test-doc-blocks/skip -->
 ```clojure
-com.github.seancorfield/honeysql {:mvn/version "2.4.947"}
+com.github.seancorfield/honeysql {:mvn/version "2.4.962"}
 ```
 
 Required as:
@@ -112,7 +112,7 @@ The following options are no longer supported:
 * `:allow-dashed-names?` -- if you provide dashed-names in 2.x, they will be left as-is if quoting is enabled, else they will be converted to snake_case (so you will either get `"dashed-names"` with quoting or `dashed_names` without). If you want dashed-names to be converted to snake_case when `:quoted true`, you also need to specify `:quoted-snake true`.
 * `:allow-namespaced-names?` -- this supported `foo/bar` column names in SQL which I'd like to discourage.
 * `:namespace-as-table?` -- this is the default in 2.x: `:foo/bar` will be treated as `foo.bar` which is more in keeping with `next.jdbc`.
-* `:parameterizer` -- this would add a lot of complexity to the formatting engine and I do not know how widely it was used (especially in its arbitrarily extensible form). _[As of 2.4.next, the ability to generated SQL with numbered parameters, i.e., `$1` instead of positional parameters, `?`, has been added via the `:numbered true` option]_
+* `:parameterizer` -- this would add a lot of complexity to the formatting engine and I do not know how widely it was used (especially in its arbitrarily extensible form). _[As of 2.4.962, the ability to generated SQL with numbered parameters, i.e., `$1` instead of positional parameters, `?`, has been added via the `:numbered true` option]_
 * `:return-param-names` -- this was added to 1.x back in 2013 without an associated issue or PR so I've no idea what use case this was intended to support.
 
 > Note: I expect some push back on those first three options and the associated behavior changes.

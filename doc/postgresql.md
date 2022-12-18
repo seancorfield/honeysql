@@ -13,7 +13,7 @@ slightly different syntax.
 If you are using HoneySQL with the Node.js PostgreSQL driver, it
 only accepts numbered placeholders, not positional placeholders,
 so you will need to specify the `:numbered true` option that was
-added in 2.4.next. You may find it convenient to set this option
+added in 2.4.962. You may find it convenient to set this option
 globally, via `set-options!`.
 
 ## Code Examples

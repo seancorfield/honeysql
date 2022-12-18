@@ -4,7 +4,7 @@ SQL as Clojure data structures. Build queries programmatically -- even at runtim
 
 ## Build
 
-[![Clojars Project](https://clojars.org/com.github.seancorfield/honeysql/latest-version.svg)](https://clojars.org/com.github.seancorfield/honeysql) [![cljdoc badge](https://cljdoc.org/badge/com.github.seancorfield/honeysql?2.4.947)](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT)
+[![Clojars Project](https://clojars.org/com.github.seancorfield/honeysql/latest-version.svg)](https://clojars.org/com.github.seancorfield/honeysql) [![cljdoc badge](https://cljdoc.org/badge/com.github.seancorfield/honeysql?2.4.962)](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT)
 
 This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINOR provide some relative indication of the size of the change, but do not follow semantic versioning. In general, all changes endeavor to be non-breaking (by moving to new names rather than by breaking existing names). COMMITS is an ever-increasing counter of commits since the beginning of this repository.
 
@@ -116,7 +116,7 @@ If you want to format the query as a string with no parameters (e.g. to use the 
 => ["SELECT a, b, c FROM foo WHERE foo.a = 'baz'"]
 ```
 
-As seen above, the default parameterization uses positional parameters (`?`) with the order of values in the generated vector matching the order of those placeholders in the SQL. As of 2.4.next, you can specified `:numbered true` as an option to produce numbered parameters (`$1`, `$2`, etc):
+As seen above, the default parameterization uses positional parameters (`?`) with the order of values in the generated vector matching the order of those placeholders in the SQL. As of 2.4.962, you can specified `:numbered true` as an option to produce numbered parameters (`$1`, `$2`, etc):
 
 ```clojure
 (sql/format sqlmap {:numbered true})

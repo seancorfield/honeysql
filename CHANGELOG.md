@@ -1,6 +1,6 @@
 # Changes
 
-* 2.4.next in progress
+* 2.4.962 -- 2022-12-17
   * Fix `set-options!` (only `:checking` worked in 2.4.947).
   * Fix `:cast` formatting when quoting is enabled, via PR [#443](https://github.com/seancorfield/honeysql/pull/443) [duddlf23](https://github.com/duddlf23).
   * Fix [#441](https://github.com/seancorfield/honeysql/issues/441) by adding `:replace-into` to in-flight clause order (as well as registering it for the `:mysql` dialect).
