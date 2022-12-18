@@ -116,6 +116,13 @@ If you want to format the query as a string with no parameters (e.g. to use the 
 => ["SELECT a, b, c FROM foo WHERE foo.a = 'baz'"]
 ```
 
+As seen above, the default parameterization uses positional parameters (`?`) with the order of values in the generated vector matching the order of those placeholders in the SQL. As of 2.4.next, you can specified `:numbered true` as an option to produce numbered parameters (`$1`, `$2`, etc):
+
+```clojure
+(sql/format sqlmap {:numbered true})
+=> ["SELECT a, b, c FROM foo WHERE foo.a = $1" "baz"]
+```
+
 Namespace-qualified keywords (and symbols) are generally treated as table-qualified columns: `:foo/bar` becomes `foo.bar`, except in contexts where that would be illegal (such as the list of columns in an `INSERT` statement). This approach is likely to be more compatible with code that uses libraries like [`next.jdbc`](https://github.com/seancorfield/next-jdbc) and [`seql`](https://github.com/exoscale/seql), as well as being more convenient in a world of namespace-qualified keywords, following the example of `clojure.spec` etc.
 
 ```clojure
@@ -388,6 +395,19 @@ INSERT INTO comp_table
 VALUES (?, (?, ?)), (?, (?, ?))
 "
 "small" 1 "inch" "large" 10 "feet"]
+;; with numbered parameters:
+(-> (insert-into :comp_table)
+    (columns :name :comp_column)
+    (values
+     [["small" (composite 1 "inch")]
+      ["large" (composite 10 "feet")]])
+    (sql/format {:pretty true :numbered true}))
+=> ["
+INSERT INTO comp_table
+(name, comp_column)
+VALUES ($1, ($2, $3)), ($4, ($5, $6))
+"
+"small" 1 "inch" "large" 10 "feet"]
 ;; or as pure data DSL:
 (-> {:insert-into [:comp_table],
      :columns [:name :comp_column],
@@ -608,6 +628,12 @@ Keywords that begin with `?` are interpreted as bindable parameters:
     (where [:= :a :?baz])
     (sql/format {:params {:baz "BAZ"}}))
 => ["SELECT id FROM foo WHERE a = ?" "BAZ"]
+;; or with numbered parameters:
+(-> (select :id)
+    (from :foo)
+    (where [:= :a :?baz])
+    (sql/format {:params {:baz "BAZ"} :numbered true}))
+=> ["SELECT id FROM foo WHERE a = $1" "BAZ"]
 ;; or as pure data DSL:
 (-> {:select [:id], :from [:foo], :where [:= :a :?baz]}
     (sql/format {:params {:baz "BAZ"}}))
@@ -832,6 +858,24 @@ LIMIT ?
 OFFSET ?
 "
 "bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10]
+;; with numbered parameters:
+(sql/format big-complicated-map
+            {:params {:param1 "gabba" :param2 2}
+             :pretty true :numbered true})
+=> ["
+SELECT DISTINCT f.*, b.baz, c.quux, b.bla AS \"bla-bla\", NOW(), @x := 10
+FROM foo AS f, baz AS b
+INNER JOIN draq ON f.b = draq.x INNER JOIN eldr ON f.e = eldr.t
+LEFT JOIN clod AS c ON f.a = c.d
+RIGHT JOIN bock ON bock.z = c.e
+WHERE ((f.a = $1) AND (b.baz <> $2)) OR (($3 < $4) AND ($5 < $6)) OR (f.e IN ($7, $8, $9)) OR f.e BETWEEN $10 AND $11
+GROUP BY f.a, c.e
+HAVING $12 < f.e
+ORDER BY b.baz DESC, c.quux ASC, f.a NULLS FIRST
+LIMIT $13
+OFFSET $14
+"
+"bort" "gabba" 1 2 2 3 1 2 3 10 20 0 50 10]
 ```
 ```clojure
 ;; Printable and readable
@@ -882,7 +926,12 @@ Or perhaps your database supports syntax like `a BETWIXT b AND c`, in which case
 ;; example usage:
 (-> (select :a) (where [:betwixt :a 1 10]) sql/format)
 => ["SELECT a WHERE a BETWIXT ? AND ?" 1 10]
+;; with numbered parameters:
+(-> (select :a) (where [:betwixt :a 1 10]) (sql/format {:numbered true}))
+=> ["SELECT a WHERE a BETWIXT $1 AND $2" 1 10]
 ```
+
+> Note: the generation of positional placeholders (`?`) or numbered placeholders (`$1`, `$2`, etc) is handled automatically by `format-expr` so you get this behavior "for free" in your extensions, as long as you use the public API for `honey.sql`. You should avoid writing extensions that generate placeholders directly if you want them to work with numbered parameters.
 
 You can also register SQL clauses, specifying the keyword, the formatting function, and an existing clause that this new clause should be processed before:
 
@@ -909,6 +958,6 @@ If you find yourself registering an operator, a function (syntax), or a new clau
 
 ## License
 
-Copyright (c) 2020-2021 Sean Corfield. HoneySQL 1.x was copyright (c) 2012-2020 Justin Kramer and Sean Corfield.
+Copyright (c) 2020-2022 Sean Corfield. HoneySQL 1.x was copyright (c) 2012-2020 Justin Kramer and Sean Corfield.
 
 Distributed under the Eclipse Public License, the same as Clojure.

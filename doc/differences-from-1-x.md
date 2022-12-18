@@ -104,7 +104,7 @@ You can now select a non-ANSI dialect of SQL using the new `honey.sql/set-dialec
 
 ## Option Changes
 
-The `:quoting <dialect>` option has superseded by the new dialect machinery and a new `:quoted` option that turns quoting on or off. You either use `:dialect <dialect>` instead or set a default dialect (via `set-dialect!`) and then use `:quoted true` in `format` calls where you want quoting.
+The `:quoting <dialect>` option has been superseded by the new dialect machinery and a new `:quoted` option that turns quoting on or off. You either use `:dialect <dialect>` instead (which turns on quoting by default) or set a default dialect (via `set-dialect!`) and then use `:quoted true` in `format` calls where you want quoting.
 
 SQL entity names are automatically quoted if you specify a `:dialect` option to `format`, unless you also specify `:quoted false`.
 
@@ -112,7 +112,7 @@ The following options are no longer supported:
 * `:allow-dashed-names?` -- if you provide dashed-names in 2.x, they will be left as-is if quoting is enabled, else they will be converted to snake_case (so you will either get `"dashed-names"` with quoting or `dashed_names` without). If you want dashed-names to be converted to snake_case when `:quoted true`, you also need to specify `:quoted-snake true`.
 * `:allow-namespaced-names?` -- this supported `foo/bar` column names in SQL which I'd like to discourage.
 * `:namespace-as-table?` -- this is the default in 2.x: `:foo/bar` will be treated as `foo.bar` which is more in keeping with `next.jdbc`.
-* `:parameterizer` -- this would add a lot of complexity to the formatting engine and I do not know how widely it was used (especially in its arbitrarily extensible form).
+* `:parameterizer` -- this would add a lot of complexity to the formatting engine and I do not know how widely it was used (especially in its arbitrarily extensible form). _[As of 2.4.next, the ability to generated SQL with numbered parameters, i.e., `$1` instead of positional parameters, `?`, has been added via the `:numbered true` option]_
 * `:return-param-names` -- this was added to 1.x back in 2013 without an associated issue or PR so I've no idea what use case this was intended to support.
 
 > Note: I expect some push back on those first three options and the associated behavior changes.

@@ -1,4 +1,4 @@
-;; copyright (c) 2020-2021 sean corfield, all rights reserved
+;; copyright (c) 2020-2022 sean corfield, all rights reserved
 
 (ns honey.sql.helpers-test
   (:refer-clojure :exclude [filter for group-by partition-by set update])

@@ -120,6 +120,7 @@
 (def ^:private default-quoted-snake (atom nil))
 (def ^:private default-inline (atom nil))
 (def ^:private default-checking (atom :none))
+(def ^:private default-numbered (atom false))
 
 (def ^:private ^:dynamic *dialect* nil)
 ;; nil would be a better default but that makes testing individual
@@ -1667,7 +1668,10 @@
   ([data opts]
    (let [cache    (:cache opts)
          dialect? (contains? opts :dialect)
-         dialect  (when dialect? (get @dialects (check-dialect (:dialect opts))))]
+         dialect  (when dialect? (get @dialects (check-dialect (:dialect opts))))
+         numbered (if (contains? opts :numbered)
+                    (:numbered opts)
+                    @default-numbered)]
      (binding [*dialect* (if dialect? dialect @default-dialect)
                *caching* cache
                *checking* (if (contains? opts :checking)
@@ -1681,7 +1685,7 @@
                *inline*  (if (contains? opts :inline)
                            (:inline opts)
                            @default-inline)
-               *numbered* (when (:numbered opts)
+               *numbered* (when numbered
                             (atom []))
                *quoted*  (cond (contains? opts :quoted)
                                (:quoted opts)
@@ -1722,11 +1726,12 @@
   "Set default values for any or all of the following options:
   * :checking
   * :inline
+  * :numbered
   * :quoted
   * :quoted-snake
   Note that calling `set-dialect!` can override the default for `:quoted`."
   [opts]
-  (let [unknowns (dissoc opts :checking :inline :quoted :quoted-snake)]
+  (let [unknowns (dissoc opts :checking :inline :numbered :quoted :quoted-snake)]
     (when (seq unknowns)
       (throw (ex-info (str (str/join ", " (keys unknowns))
                            " are not options that can be set globally.")
@@ -1734,11 +1739,13 @@
     (when (contains? opts :checking)
       (reset! default-checking (:checking opts)))
     (when (contains? opts :inline)
-      (reset! default-checking (:inline opts)))
+      (reset! default-inline (:inline opts)))
+    (when (contains? opts :numbered)
+      (reset! default-numbered (:numbered opts)))
     (when (contains? opts :quoted)
-      (reset! default-checking (:quoted opts)))
+      (reset! default-quoted (:quoted opts)))
     (when (contains? opts :quoted-snake)
-      (reset! default-checking (:quoted-snake opts)))))
+      (reset! default-quoted-snake (:quoted-snake opts)))))
 
 (defn clause-order
   "Return the current order that known clauses will be applied when
