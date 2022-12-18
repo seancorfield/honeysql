@@ -1,10 +1,12 @@
 # Changes
 
 * 2.4.next in progress
+  * Fix `set-options!` (only `:checking` worked in 2.4.947).
   * Fix `:cast` formatting when quoting is enabled, via PR [#443](https://github.com/seancorfield/honeysql/pull/443) [duddlf23](https://github.com/duddlf23).
   * Fix [#441](https://github.com/seancorfield/honeysql/issues/441) by adding `:replace-into` to in-flight clause order (as well as registering it for the `:mysql` dialect).
   * Fix [#434](https://github.com/seancorfield/honeysql/issues/434) by special-casing `:'ARRAY`.
   * Fix [#433](https://github.com/seancorfield/honeysql/issues/433) by supporting additional `WITH` syntax, via PR [#432](https://github.com/seancorfield/honeysql/issues/432), [@MawiraIke](https://github.com/MawiraIke). _[Technically, this was in 2.4.947, but I kept the issue open while I wordsmithed the documentation]_
+  * Address [#405](https://github.com/seancorfield/honeysql/issues/405) by adding `:numbered` option, which can also be set globally using `set-options!`.
 
 * 2.4.947 -- 2022-11-05
   * Fix [#439](https://github.com/seancorfield/honeysql/issues/439) by rewriting how DDL options are processed; also fixes [#386](https://github.com/seancorfield/honeysql/issues/386) and [#437](https://github.com/seancorfield/honeysql/issues/437); **Whilst this is intended to be purely a bug fix, it has the potential to be a breaking change -- hence the version jump to 2.4!**

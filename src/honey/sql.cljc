@@ -120,6 +120,7 @@
 (def ^:private default-quoted-snake (atom nil))
 (def ^:private default-inline (atom nil))
 (def ^:private default-checking (atom :none))
+(def ^:private default-numbered (atom false))
 
 (def ^:private ^:dynamic *dialect* nil)
 ;; nil would be a better default but that makes testing individual
@@ -140,6 +141,7 @@
 (def ^:private ^:dynamic *dsl* nil)
 ;; caching data to detect expressions that cannot be cached:
 (def ^:private ^:dynamic *caching* nil)
+(def ^:private ^:dynamic *numbered* nil)
 
 ;; clause helpers
 
@@ -321,6 +323,18 @@
     {::wrapper
      (fn [fk _] (param-value (fk)))}))
 
+(defn ->numbered [v]
+  (let [n (count (swap! *numbered* conj v))]
+    [(str "$" n) (with-meta (constantly (dec n))
+                   {::wrapper
+                    (fn [fk _] (get @*numbered* (fk)))})]))
+
+(defn ->numbered-param [k]
+  (let [n (count (swap! *numbered* conj k))]
+    [(str "$" n) (with-meta (constantly (dec n))
+                   {::wrapper
+                    (fn [fk _] (param-value (get @*numbered* (fk))))})]))
+
 (def ^:private ^:dynamic *formatted-column* (atom false))
 
 (defn- format-var [x & [opts]]
@@ -335,9 +349,12 @@
                   "(" (str/join ", " quoted-args) ")")])
           (= \? (first c))
           (let [k (keyword (subs c 1))]
-            (if *inline*
-              [(sqlize-value (param-value k))]
-              ["?" (->param k)]))
+            (cond *inline*
+                  [(sqlize-value (param-value k))]
+                  *numbered*
+                  (->numbered-param k)
+                  :else
+                  ["?" (->param k)]))
           (= \' (first c))
           (do
             (reset! *formatted-column* true)
@@ -1279,30 +1296,44 @@
 (defn- format-in [in [x y]]
   (let [[sql-x & params-x] (format-expr x {:nested true})
         [sql-y & params-y] (format-expr y {:nested true})
-        values             (unwrap (first params-y) {})]
+        [v1 :as values]    (map #(unwrap % {}) params-y)]
     ;; #396: prevent caching IN () when named parameter is used:
     (when (and (meta (first params-y))
                (::wrapper (meta (first params-y)))
                *caching*)
       (throw (ex-info "SQL that includes IN () expressions cannot be cached" {})))
     (when-not (= :none *checking*)
-      (when (or (and (sequential? y)      (empty? y))
-                (and (sequential? values) (empty? values)))
+      (when (or (and (sequential? y)  (empty? y))
+                (and (sequential? v1) (empty? v1)))
         (throw (ex-info "IN () empty collection is illegal"
                         {:clause [in x y]})))
       (when (and (= :strict *checking*)
-                 (or (and (sequential? y)      (some nil? y))
-                     (and (sequential? values) (some nil? values))))
+                 (or (and (sequential? y)  (some nil? y))
+                     (and (sequential? v1) (some nil? v1))))
         (throw (ex-info "IN (NULL) does not match"
                         {:clause [in x y]}))))
-    (if (and (= "?" sql-y) (= 1 (count params-y)) (coll? values))
-      (let [sql (str "(" (str/join ", " (repeat (count values) "?")) ")")]
-        (-> [(str sql-x " " (sql-kw in) " " sql)]
-            (into params-x)
-            (into values)))
-      (-> [(str sql-x " " (sql-kw in) " " sql-y)]
-          (into params-x)
-          (into params-y)))))
+    (cond (and (not *numbered*)
+               (= "?" sql-y)
+               (= 1 (count params-y))
+               (coll? v1))
+          (let [sql (str "(" (str/join ", " (repeat (count v1) "?")) ")")]
+            (-> [(str sql-x " " (sql-kw in) " " sql)]
+                (into params-x)
+                (into v1)))
+          (and *numbered*
+               (= (str "$" (count @*numbered*)) sql-y)
+               (= 1 (count params-y))
+               (coll? v1))
+          (let [vs  (for [v v1] (->numbered v))
+                sql (str "(" (str/join ", " (map first vs)) ")")]
+            (-> [(str sql-x " " (sql-kw in) " " sql)]
+                (into params-x)
+                (conj nil)
+                (into (map second vs))))
+          :else
+          (-> [(str sql-x " " (sql-kw in) " " sql-y)]
+              (into params-x)
+              (into (if *numbered* values params-y))))))
 
 (defn- function-0 [k xs]
   [(str (sql-kw k)
@@ -1465,13 +1496,16 @@
           (into [(str "LATERAL " sql)] params))))
     :lift
     (fn [_ [x]]
-      (if *inline*
-        ;; this is pretty much always going to be wrong,
-        ;; but it could produce a valid result so we just
-        ;; assume that the user knows what they are doing:
-        [(sqlize-value x)]
-        ["?" (with-meta (constantly x)
-               {::wrapper (fn [fx _] (fx))})]))
+      (cond *inline*
+            ;; this is pretty much always going to be wrong,
+            ;; but it could produce a valid result so we just
+            ;; assume that the user knows what they are doing:
+            [(sqlize-value x)]
+            *numbered*
+            (->numbered x)
+            :else
+            ["?" (with-meta (constantly x)
+                   {::wrapper (fn [fx _] (fx))})]))
     :nest
     (fn [_ [x]]
       (let [[sql & params] (format-expr x)]
@@ -1503,9 +1537,12 @@
         (into [(str/join ", " sqls)] params)))
     :param
     (fn [_ [k]]
-      (if *inline*
-        [(sqlize-value (param-value k))]
-        ["?" (->param k)]))
+      (cond *inline*
+            [(sqlize-value (param-value k))]
+            *numbered*
+            (->numbered-param k)
+            :else
+            ["?" (->param k)]))
     :raw
     (fn [_ [xs]]
       (raw-render xs))
@@ -1586,9 +1623,12 @@
         ["NULL"]
 
         :else
-        (if *inline*
-          [(sqlize-value expr)]
-          ["?" expr])))
+        (cond *inline*
+              [(sqlize-value expr)]
+              *numbered*
+              (->numbered expr)
+              :else
+              ["?" expr])))
 
 (defn- check-dialect [dialect]
   (when-not (contains? @dialects dialect)
@@ -1628,7 +1668,10 @@
   ([data opts]
    (let [cache    (:cache opts)
          dialect? (contains? opts :dialect)
-         dialect  (when dialect? (get @dialects (check-dialect (:dialect opts))))]
+         dialect  (when dialect? (get @dialects (check-dialect (:dialect opts))))
+         numbered (if (contains? opts :numbered)
+                    (:numbered opts)
+                    @default-numbered)]
      (binding [*dialect* (if dialect? dialect @default-dialect)
                *caching* cache
                *checking* (if (contains? opts :checking)
@@ -1642,6 +1685,8 @@
                *inline*  (if (contains? opts :inline)
                            (:inline opts)
                            @default-inline)
+               *numbered* (when numbered
+                            (atom []))
                *quoted*  (cond (contains? opts :quoted)
                                (:quoted opts)
                                dialect?
@@ -1681,11 +1726,12 @@
   "Set default values for any or all of the following options:
   * :checking
   * :inline
+  * :numbered
   * :quoted
   * :quoted-snake
   Note that calling `set-dialect!` can override the default for `:quoted`."
   [opts]
-  (let [unknowns (dissoc opts :checking :inline :quoted :quoted-snake)]
+  (let [unknowns (dissoc opts :checking :inline :numbered :quoted :quoted-snake)]
     (when (seq unknowns)
       (throw (ex-info (str (str/join ", " (keys unknowns))
                            " are not options that can be set globally.")
@@ -1693,11 +1739,13 @@
     (when (contains? opts :checking)
       (reset! default-checking (:checking opts)))
     (when (contains? opts :inline)
-      (reset! default-checking (:inline opts)))
+      (reset! default-inline (:inline opts)))
+    (when (contains? opts :numbered)
+      (reset! default-numbered (:numbered opts)))
     (when (contains? opts :quoted)
-      (reset! default-checking (:quoted opts)))
+      (reset! default-quoted (:quoted opts)))
     (when (contains? opts :quoted-snake)
-      (reset! default-checking (:quoted-snake opts)))))
+      (reset! default-quoted-snake (:quoted-snake opts)))))
 
 (defn clause-order
   "Return the current order that known clauses will be applied when

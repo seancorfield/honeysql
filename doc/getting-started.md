@@ -110,6 +110,8 @@ Some "functions" are considered to be operators. In general,
 `42` and `"c"` lifted out into the overall vector result
 (with a SQL string followed by all its parameters).
 
+> Note: you can use the `:numbered true` option to `format` to produce SQL containing numbered placeholders, like `FOO(a, $1, $2)`, instead of positional placeholders (`?`).
+
 Operators can be strictly binary or variadic (most are strictly binary).
 Special syntax can have zero or more arguments and each form is
 described in the [Special Syntax](special-syntax.md) section.
@@ -179,12 +181,20 @@ expression requires an extra level of nesting:
 
 As indicated in the preceding sections, values found in the DSL data structure
 that are not keywords or symbols are lifted out as positional parameters.
-They are replaced by `?` in the generated SQL string and added to the
+By default, they are replaced by `?` in the generated SQL string and added to the
 parameter list in order:
 
 <!-- :test-doc-blocks/skip -->
 ```clojure
 [:between :size 10 20] ;=> "size BETWEEN ? AND ?" with parameters 10 and 20
+```
+
+If you specify the `:numbered true` option to `format`, numbered placeholders (`$1`, `$2`, etc) will be used instead of positional placeholders (`?`).
+
+<!-- :test-doc-blocks/skip -->
+```clojure
+;; with :numbered true option:
+[:between :size 10 20] ;=> "size BETWEEN $1 AND $2" with parameters 10 and 20
 ```
 
 HoneySQL also supports named parameters. There are two ways
@@ -204,6 +214,18 @@ call as the `:params` key of the options hash map.
              :where [:= :a [:param :x]]}
             {:params {:x 42}})
 ;;=> ["SELECT * FROM table WHERE a = ?" 42]
+```
+
+Or with `:numbered true`:
+```clojure
+(sql/format {:select [:*] :from [:table]
+             :where [:= :a :?x]}
+            {:params {:x 42} :numbered true})
+;;=> ["SELECT * FROM table WHERE a = $1" 42]
+(sql/format {:select [:*] :from [:table]
+             :where [:= :a [:param :x]]}
+            {:params {:x 42} :numbered true})
+;;=> ["SELECT * FROM table WHERE a = $1" 42]
 ```
 
 ## Functional Helpers

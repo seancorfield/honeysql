@@ -1,4 +1,4 @@
-;; copyright (c) 2020-2021 sean corfield, all rights reserved
+;; copyright (c) 2020-2022 sean corfield, all rights reserved
 
 (ns honey.sql.helpers-test
   (:refer-clojure :exclude [filter for group-by partition-by set update])
@@ -322,7 +322,17 @@
                (sql/format {:select [:*]
                             :from [:customers]
                             :where [:in :id :?ids]}
-                           {:params {:ids values}})))))))
+                           {:params {:ids values}})))
+        (is (= ["SELECT * FROM customers WHERE id IN ($1, $2)" "1" "2"]
+               (sql/format {:select [:*]
+                            :from [:customers]
+                            :where [:in :id values]}
+                           {:numbered true})))
+        (is (= ["SELECT * FROM customers WHERE id IN ($2, $3)" nil "1" "2"]
+               (sql/format {:select [:*]
+                            :from [:customers]
+                            :where [:in :id :?ids]}
+                           {:params {:ids values} :numbered true})))))))
 
 (deftest test-case
   (is (= ["SELECT CASE WHEN foo < ? THEN ? WHEN (foo > ?) AND ((foo MOD ?) = ?) THEN foo / ? ELSE ? END FROM bar"

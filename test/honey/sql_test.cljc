@@ -94,6 +94,38 @@
   (is (= ["SELECT * FROM \"table\" WHERE \"id\" IN (?, ?, ?, ?)" 1 2 3 4]
          (sut/format {:select [:*] :from [:table] :where [:in :id [1 2 3 4]]} {:quoted true}))))
 
+(deftest general-numbered-tests
+  (is (= ["SELECT * FROM \"table\" WHERE \"id\" = $1" 1]
+         (sut/format {:select [:*] :from [:table] :where [:= :id 1]}
+                     {:quoted true :numbered true})))
+  (is (= ["SELECT * FROM \"table\" WHERE \"id\" = $1" 1]
+         (sut/format {:select [:*] :from [:table] :where (sut/map= {:id 1})}
+                     {:quoted true :numbered true})))
+  (is (= ["SELECT \"t\".* FROM \"table\" AS \"t\" WHERE \"id\" = $1" 1]
+         (sut/format {:select [:t.*] :from [[:table :t]] :where [:= :id 1]}
+                     {:quoted true :numbered true})))
+  (is (= ["SELECT * FROM \"table\" GROUP BY \"foo\", \"bar\""]
+         (sut/format {:select [:*] :from [:table] :group-by [:foo :bar]}
+                     {:quoted true :numbered true})))
+  (is (= ["SELECT * FROM \"table\" GROUP BY DATE(\"bar\")"]
+         (sut/format {:select [:*] :from [:table] :group-by [[:date :bar]]}
+                     {:quoted true :numbered true})))
+  (is (= ["SELECT * FROM \"table\" ORDER BY \"foo\" DESC, \"bar\" ASC"]
+         (sut/format {:select [:*] :from [:table] :order-by [[:foo :desc] :bar]}
+                     {:quoted true :numbered true})))
+  (is (= ["SELECT * FROM \"table\" ORDER BY DATE(\"expiry\") DESC, \"bar\" ASC"]
+         (sut/format {:select [:*] :from [:table] :order-by [[[:date :expiry] :desc] :bar]}
+                     {:quoted true :numbered true})))
+  (is (= ["SELECT * FROM \"table\" WHERE DATE_ADD(\"expiry\", INTERVAL $1 DAYS) < NOW()" 30]
+         (sut/format {:select [:*] :from [:table] :where [:< [:date_add :expiry [:interval 30 :days]] [:now]]}
+                     {:quoted true :numbered true})))
+  (is (= ["SELECT * FROM `table` WHERE `id` = $1" 1]
+         (sut/format {:select [:*] :from [:table] :where [:= :id 1]}
+                     {:dialect :mysql :numbered true})))
+  (is (= ["SELECT * FROM \"table\" WHERE \"id\" IN ($1, $2, $3, $4)" 1 2 3 4]
+         (sut/format {:select [:*] :from [:table] :where [:in :id [1 2 3 4]]}
+                     {:quoted true :numbered true}))))
+
 ;; issue-based tests
 
 (deftest subquery-alias-263
@@ -852,7 +884,13 @@ ORDER BY id = ? DESC
                    {:params {:y [nil]}})))
     (is (= ["WHERE x IN (?)" nil]
            (format {:where [:in :x :?y]}
-                   {:params {:y [nil]} :checking :basic}))))
+                   {:params {:y [nil]} :checking :basic})))
+    (is (= ["WHERE x IN ($2)" nil nil]
+           (format {:where [:in :x :?y]}
+                   {:params {:y [nil]} :numbered true})))
+    (is (= ["WHERE x IN ($2)" nil nil]
+           (format {:where [:in :x :?y]}
+                   {:params {:y [nil]} :checking :basic :numbered true}))))
   (testing "IN NULL is flagged in strict mode"
     (is (thrown-with-msg? ExceptionInfo #"does not match"
                           (format {:where [:in :x [nil]]}

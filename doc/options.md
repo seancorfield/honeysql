@@ -19,6 +19,7 @@ All options may be omitted. The default behavior of each option is described in 
 * `:checking` -- `:none` (default), `:basic`, or `:strict` to control the amount of lint-like checking that HoneySQL performs,
 * `:dialect` -- a keyword that identifies a dialect to be used for this specific call to `format`; the default is to use what was specified in `set-dialect!` or `:ansi` if no other dialect has been set,
 * `:inline` -- a Boolean indicating whether or not to inline parameter values, rather than use `?` placeholders and a sequence of parameter values; the default is `false` -- values are not inlined,
+* `:numbered` -- a Boolean indicating whether to generate numbered placeholders in the generated SQL (`$1`, `$2`, etc) or positional placeholders (`?`); the default is `false` (positional placeholders); this option was added in 2.4.next,
 * `:params` -- a hash map providing values for named parameters, identified by names (keywords or symbols) that start with `?` in the DSL; the default is that any such named parameters will have `nil` values,
 * `:quoted` -- a Boolean indicating whether or not to quote (strop) SQL entity names (table and column names); the default is `nil` -- alphanumeric SQL entity names are not quoted but (as of 2.3.928) "unusual" SQL entity names are quoted; a `false` value turns off all quoting,
 * `:quoted-snake` -- a Boolean indicating whether or not quoted and string SQL entity names should have `-` replaced by `_`; the default is `false` -- quoted and string SQL entity names are left exactly as-is,
@@ -29,6 +30,7 @@ global defaults of certain options:
 
 * `:checking` -- can be `:basic` or `:strict`; specify `:none` to reset to the default,
 * `:inline` -- can be `true` but consider the security issues this causes by not using parameterized SQL statements; specify `false` (or `nil`) to reset to the default,
+* `:numbered` -- can be `true` or `false`; specify `false` to reset to the default,
 * `:quoted` -- can be `true` or `false`; specify `nil` to reset to the default; calling `set-dialect!` or providing a `:dialect` option to `format` will override the global default,
 * `:quoted-snake` -- can be `true`; specify `false` (or `nil`) to reset to the default.
 
@@ -95,6 +97,13 @@ was wrapped in `[:inline `..`]`:
 * everything else is just turned into a string (by calling `str`) and added to the SQL string.
 
 > Note: you can provide additional inline formatting by extending the `InlineValue` protocol from `honey.sql.protocols` to new types.
+
+## `:numbered`
+
+By default, HoneySQL generates SQL using positional placeholders (`?`).
+Specifying `:numbered true` tells HoneySQL to generate SQL using
+numbered placeholders instead (`$1`, `$2`, etc). This can be set
+globally using `set-options!`.
 
 ## `:params`
 
