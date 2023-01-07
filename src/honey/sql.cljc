@@ -112,7 +112,16 @@
                                   (add-clause-before :set :where)
                                   ;; ...but not in-flight clauses:
                                   (add-clause-before :replace-into :insert-into)))}
-               :oracle    {:quote #(strop \" % \") :as false}})))
+               :oracle    {:quote #(strop \" % \") :as false}
+               :sqlite    {:quote #(strop \" % \")
+                           :clause-order-fn
+                           #(do
+                              ;; side-effect: updates global clauses...
+                              (register-clause! :replace-into :insert-into :insert-into)
+                              (-> %
+                                  (add-clause-before :set :where)
+                                  ;; ...but not in-flight clauses:
+                                  (add-clause-before :replace-into :insert-into)))}})))
 
 ; should become defonce
 (def ^:private default-dialect (atom (:ansi @dialects)))
@@ -1707,7 +1716,7 @@
 (defn set-dialect!
   "Set the default dialect for formatting.
 
-  Can be: `:ansi` (the default), `:mysql`, `:oracle`, or `:sqlserver`.
+  Can be: `:ansi` (the default), `:mysql`, `:oracle`, `:sqlserver` or `:sqlite`.
 
   Can optionally accept `:quoted true` (or `:quoted false`) to set the
   default global quoting strategy. Without `:quoted`, the default global
