@@ -68,6 +68,10 @@
   (is (= ["INTERVAL ? DAYS" 30]
          (sut/format-expr [:interval 30 :days]))))
 
+(deftest issue-455-null
+  (is (= ["WHERE (abc + ?) IS NULL" "abc"]
+         (sut/format {:where [:= [:+ :abc "abc"] nil]}))))
+
 (deftest where-test
   (is (= ["WHERE id = ?" 1]
          (#'sut/format-on-expr :where [:= :id 1]))))
