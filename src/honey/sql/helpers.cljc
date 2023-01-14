@@ -486,6 +486,19 @@
       (generic :insert-into [data [table cols] statement])
       (generic :insert-into args'))))
 
+(defn replace-into
+  "Accepts a table name or a table/alias pair. That
+  can optionally be followed by a collection of
+  column names. That can optionally be followed by
+  a (select) statement clause.
+
+  The arguments are identical to insert-into.
+  The REPLACE INTO statement is only supported by
+  MySQL and SQLite."
+  {:arglists '([table] [table cols] [table statement] [table cols statement])}
+  [& args]
+  (apply insert-into args))
+
 (defn update
   "Accepts either a table name or a table/alias pair.
 

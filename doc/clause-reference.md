@@ -556,7 +556,8 @@ or a table/column specifier and a SQL query.
 For the first and second cases, you'll use the `:values` clause
 to specify rows of values to insert.
 
-`:replace-into` is part of the `:mysql` dialect that produces a `REPLACE INTO`
+`:replace-into` is only supported by MySQL and SQLite but is
+part of HoneySQL's "core" dialect anyway. It produces a `REPLACE INTO`
 statement but otherwise has identical syntax to `:insert-into`.
 
 ```clojure

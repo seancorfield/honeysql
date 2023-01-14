@@ -55,7 +55,7 @@
    :table
    :select :select-distinct :select-distinct-on :select-top :select-distinct-top
    :into :bulk-collect-into
-   :insert-into :update :delete :delete-from :truncate
+   :insert-into :replace-into :update :delete :delete-from :truncate
    :columns :set :from :using
    :join-by
    :join :left-join :right-join :inner-join :outer-join :full-join
@@ -105,13 +105,7 @@
                :sqlserver {:quote #(strop \[ % \])}
                :mysql     {:quote #(strop \` % \`)
                            :clause-order-fn
-                           #(do
-                              ;; side-effect: updates global clauses...
-                              (register-clause! :replace-into :insert-into :insert-into)
-                              (-> %
-                                  (add-clause-before :set :where)
-                                  ;; ...but not in-flight clauses:
-                                  (add-clause-before :replace-into :insert-into)))}
+                           #(add-clause-before % :set :where)}
                :oracle    {:quote #(strop \" % \") :as false}})))
 
 ; should become defonce
@@ -1171,6 +1165,7 @@
          :into            #'format-select-into
          :bulk-collect-into #'format-select-into
          :insert-into     #'format-insert
+         :replace-into    #'format-insert
          :update          (check-where #'format-selector)
          :delete          (check-where #'format-selects)
          :delete-from     (check-where #'format-selector)
