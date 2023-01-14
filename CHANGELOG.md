@@ -1,6 +1,7 @@
 # Changes
 
 * 2.4.next in progress
+  * Address [#451](https://github.com/seancorfield/honeysql/issues/451) by adding a test for it, showing how `:nest` produces the desired result.
   * Address [#447](https://github.com/seancorfield/honeysql/issues/447) by updating GitHub Actions and dependencies.
   * Address [#445](https://github.com/seancorfield/honeysql/issues/445) and [#453](https://github.com/seancorfield/honeysql/issues/453) by adding key/constraint examples to `CREATE TABLE` docs.
 
