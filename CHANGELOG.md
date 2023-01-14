@@ -1,5 +1,8 @@
 # Changes
 
+* 2.4.next in progress
+  * Address [#447](https://github.com/seancorfield/honeysql/issues/447) by updating GitHub Actions and dependencies.
+
 * 2.4.962 -- 2022-12-17
   * Fix `set-options!` (only `:checking` worked in 2.4.947).
   * Fix `:cast` formatting when quoting is enabled, via PR [#443](https://github.com/seancorfield/honeysql/pull/443) [duddlf23](https://github.com/duddlf23).
