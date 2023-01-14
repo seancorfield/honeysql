@@ -1279,7 +1279,7 @@
       (atom)))
 
 (def ^:private op-ignore-nil (atom #{:and :or}))
-(def ^:private op-variadic   (atom #{:and :or :+ :* :|| :&&}))
+(def ^:private op-variadic   (atom #{:and :or :+ :* :- :|| :&&}))
 
 (defn- unwrap [x opts]
   (if-let [m (meta x)]
