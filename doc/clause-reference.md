@@ -168,7 +168,7 @@ was specified so nothing is parameterized. In addition,
 everything except the first element of a column description
 will be uppercased (mostly to give the appearance of separating
 the column name from the SQL keywords) -- except for keywords
-that with `'` which will be transcribed into the SQL exactly
+that start with `'` which will be transcribed into the SQL exactly
 as-is, with no case or character conversion at all. This
 "escape hatch" is intended to allow for SQL dialects that are
 case sensitive and/or have other unusual syntax constraints.
@@ -177,6 +177,46 @@ Various function-like expressions can be specified, as shown
 in the example above, that allow things like `CHECK` for a
 constraint, `FOREIGN KEY` (with a column name), `REFERENCES`
 (with a pair of column names). See [Column Descriptors in Special Syntax](special-syntax.md#column-descriptors) for more details.
+
+For example:
+
+```clojure
+user=> (-> {:create-table :foo
+            :with-columns
+            [[:a :int]
+             [:b :int]
+             [[:primary-key :a :b]]]}
+           (sql/format))
+["CREATE TABLE foo (a INT, b INT, PRIMARY KEY(a, b))"]
+```
+
+or:
+
+```clojure
+user=> (-> {:create-table [:bar]
+            :with-columns
+            [[:a :integer]
+             [:b :integer]
+             [[:constraint :foo_natural_key] :unique [:composite :a :b]]]}
+           (sql/format))
+["CREATE TABLE bar (a INTEGER, b INTEGER, CONSTRAINT foo_natural_key UNIQUE (a, b))"]
+```
+
+or a mix of column constraints and table constraints:
+
+```clojure
+user=> (-> '{create-table quux
+             with-columns
+             ((a integer (constraint a_pos) (check (> a 0)))
+              (b integer)
+              ((constraint a_bigger) (check (< b a))))}
+           (sql/format {:pretty true}))
+["
+CREATE TABLE quux
+(a INTEGER CONSTRAINT a_pos CHECK(a > 0), b INTEGER, CONSTRAINT a_bigger CHECK(b < a))
+"]
+```
+
 
 ## create-table-as
 

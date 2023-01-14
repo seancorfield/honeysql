@@ -2,6 +2,7 @@
 
 * 2.4.next in progress
   * Address [#447](https://github.com/seancorfield/honeysql/issues/447) by updating GitHub Actions and dependencies.
+  * Address [#445](https://github.com/seancorfield/honeysql/issues/445) and [#453](https://github.com/seancorfield/honeysql/issues/453) by adding key/constraint examples to `CREATE TABLE` docs.
 
 * 2.4.962 -- 2022-12-17
   * Fix `set-options!` (only `:checking` worked in 2.4.947).

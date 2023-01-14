@@ -405,3 +405,21 @@
     (is (= ["DROP EXTENSION \"uuid-ossp\""]
            (-> (drop-extension :uuid-ossp)
                (sql/format {:quoted true}))))))
+
+(deftest issue-453-constraint
+  (testing "standalone constraint"
+    (is (= ["CREATE TABLE bar (a INTEGER, b INTEGER, CONSTRAINT foo_natural_key UNIQUE (a, b))"]
+           (-> {:create-table [:bar]
+                :with-columns
+                [[:a :integer]
+                 [:b :integer]
+                 [[:constraint :foo_natural_key] :unique [:composite :a :b]]]}
+               (sql/format)))))
+  (testing "inline constraint"
+    (is (= ["CREATE TABLE foo (a INTEGER CONSTRAINT a_pos CHECK(a > 0), b INTEGER, CONSTRAINT a_bigger CHECK(b < a))"]
+           (-> '{create-table foo
+                 with-columns
+                 ((a integer (constraint a_pos) (check (> a 0)))
+                  (b integer)
+                  ((constraint a_bigger) (check (< b a))))}
+               (sql/format))))))
