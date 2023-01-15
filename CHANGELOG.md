@@ -1,6 +1,6 @@
 # Changes
 
-* 2.4.next in progress
+* 2.4.969 -- 2023-01-14
   * Fix [#454](https://github.com/seancorfield/honeysql/issues/454) by allowing `-` to be variadic.
   * Address [#452](https://github.com/seancorfield/honeysql/pull/452) by adding `:replace-into` to the core SQL supported, instead of just for the MySQL and SQLite dialects (so the latter is not needed yet).
   * Address [#451](https://github.com/seancorfield/honeysql/issues/451) by adding a test for it, showing how `:nest` produces the desired result.
