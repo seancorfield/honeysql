@@ -3,8 +3,9 @@
  :deps {org.clojure/clojure {:mvn/version "1.9.0"}}
  :aliases
  {;; for help: clojure -A:deps -T:build help/doc
-  :build {:deps {io.github.seancorfield/build-clj
-                 {:git/tag "v0.9.1" :git/sha "831c70f"}}
+  :build {:deps {io.github.clojure/tools.build
+                 {:git/tag "v0.9.2" :git/sha "fe6b140"}
+                 slipset/deps-deploy {:mvn/version "0.2.0"}}
           :ns-default build}
 
   ;; versions to test against:
@@ -22,6 +23,7 @@
    :extra-deps  {io.github.cognitect-labs/test-runner
                  {:git/tag "v0.5.1" :git/sha "dfb30dd"}
                  org.clojure/core.cache {:mvn/version "RELEASE"}}
+   :main-opts   ["-m" "cognitect.test-runner"]
    :exec-fn     cognitect.test-runner.api/test}
 
   ;; various "runners" for tests/CI:

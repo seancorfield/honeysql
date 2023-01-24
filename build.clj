@@ -13,19 +13,36 @@
 
   clojure -A:deps -T:build help/doc"
   (:refer-clojure :exclude [test])
-  (:require [clojure.tools.build.api :as b]
-            [org.corfield.build :as bb]))
+  (:require [clojure.string :as str]
+            [clojure.tools.build.api :as b]
+            [clojure.tools.deps :as t]
+            [deps-deploy.deps-deploy :as dd]))
 
 (def lib 'com.github.seancorfield/honeysql)
 (defn- the-version [patch] (format "2.4.%s" patch))
 (def version (the-version (b/git-count-revs nil)))
 (def snapshot (the-version "999-SNAPSHOT"))
+(def class-dir "target/classes")
+
+(defn- run-task [aliases]
+  (println "\nRunning task for" (str/join "," (map name aliases)))
+  (let [basis    (b/create-basis {:aliases aliases})
+        combined (t/combine-aliases basis aliases)
+        cmds     (b/java-command
+                  {:basis basis
+                   :java-opts (:jvm-opts combined)
+                   :main      'clojure.main
+                   :main-args (:main-opts combined)})
+        {:keys [exit]} (b/process cmds)]
+    (when-not (zero? exit) (throw "Task failed"))))
 
 (defn eastwood "Run Eastwood." [opts]
-  (-> opts (bb/run-task [:eastwood])))
+  (run-task [:eastwood])
+  opts)
 
 (defn gen-doc-tests "Generate tests from doc code blocks." [opts]
-  (-> opts (bb/run-task [:gen-doc-tests])))
+  (run-task [:gen-doc-tests])
+  opts)
 
 (defn run-doc-tests
   "Generate and run doc tests.
@@ -38,18 +55,28 @@
   [:cljs] -- test against ClojureScript"
   [{:keys [aliases] :as opts}]
   (gen-doc-tests opts)
-  (bb/run-tests (assoc opts :aliases
-                       (-> [:test-doc]
-                           (into aliases)
-                           (into (if (some #{:cljs} aliases)
-                                   [:test-doc-cljs]
-                                   [:test-doc-clj])))))
+  (run-task (-> [:test :test-doc]
+                (into aliases)
+                (into (if (some #{:cljs} aliases)
+                        [:test-doc-cljs]
+                        [:test-doc-clj]))))
   opts)
 
 (defn test "Run basic tests." [opts]
-  (-> opts
-      (update :aliases (fnil conj []) :1.11)
-      (bb/run-tests)))
+  (run-task [:test :1.11])
+  opts)
+
+(defn- jar-opts [opts]
+  (let [version (if (:snapshot opts) snapshot version)]
+    (assoc opts
+           :lib lib :version version
+           :jar-file (format "target/%s-%s.jar" lib version)
+           :scm {:tag (str "v" version)}
+           :basis (b/create-basis {})
+           :class-dir class-dir
+           :target "target"
+           :src-dirs ["src"]
+           :src-pom "template/pom.xml")))
 
 (defn ci
   "Run the CI pipeline of tests (and build the JAR).
@@ -57,25 +84,25 @@
   Default Clojure version is 1.9.0 (:1.9) so :elide
   tests for #409 on that version."
   [opts]
-  (-> opts
-      (bb/clean)
-      (assoc :lib lib :version (if (:snapshot opts) snapshot version))
-      (as-> opts
-            (reduce (fn [opts alias]
-                      (run-doc-tests (assoc opts :aliases [alias])))
-                    opts
-                    [:cljs :elide :1.10 :1.11 :master]))
-      (eastwood)
-      (as-> opts
-            (reduce (fn [opts alias]
-                      (bb/run-tests (assoc opts :aliases [alias])))
-                    opts
-                    [:cljs :elide :1.10 :1.11 :master]))
-      (bb/clean)
-      (assoc :src-pom "template/pom.xml")
-      (bb/jar)))
+  (let [aliases [:cljs :elide :1.10 :1.11 :master]
+        opts    (jar-opts opts)]
+    (b/delete {:path "target"})
+    (doseq [alias aliases]
+      (run-doc-tests {:aliases [alias]}))
+    (eastwood opts)
+    (doseq [alias aliases]
+      (run-task [:test alias]))
+    (b/delete {:path "target"})
+    (println "\nWriting pom.xml...")
+    (b/write-pom opts)
+    (println "\nCopying source...")
+    (b/copy-dir {:src-dirs ["src"] :target-dir class-dir})
+    (println "\nBuilding JAR...")
+    (b/jar opts))
+  opts)
 
 (defn deploy "Deploy the JAR to Clojars." [opts]
-  (-> opts
-      (assoc :lib lib :version (if (:snapshot opts) snapshot version))
-      (bb/deploy)))
+  (let [{:keys [jar-file] :as opts} (jar-opts opts)]
+    (dd/deploy {:installer :remote :artifact (b/resolve-path jar-file)
+                :pom-file (b/pom-path (select-keys opts [:lib :class-dir]))}))
+  opts)
