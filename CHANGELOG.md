@@ -1,7 +1,7 @@
 # Changes
 
-* 2.4.next in progress
-  * Address [#456](https://github.com/seancorfield/honeysql/issues/456) by allowing `format` to handling expressions (via `format-expr`) as well as statements (via `format-dsl` per previous versions).
+* 2.4.972 -- 2023-02-02
+  * Address [#456](https://github.com/seancorfield/honeysql/issues/456) by allowing `format` to handle expressions (like 1.x could) as well as statements. This should aid with migration from 1.x to 2.x.
 
 * 2.4.969 -- 2023-01-14
   * Fix [#454](https://github.com/seancorfield/honeysql/issues/454) by allowing `-` to be variadic.
