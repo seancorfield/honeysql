@@ -1058,3 +1058,7 @@ ORDER BY id = ? DESC
 (deftest issue-434-case-quoting
   (is (= ["SELECT ARRAY (SELECT \"oid\" FROM \"pg_proc\" WHERE \"proname\" LIKE 'bytea%')"]
          (sut/format {:select [[[:'ARRAY {:select :oid :from :pg_proc :where [:like :proname [:inline "bytea%"]]}]]]} :quoted true))))
+
+(deftest issue-456-format-expr
+  (is (= ["`x` + ?" 1]
+         (sut/format [:+ :x 1] {:dialect :mysql}))))

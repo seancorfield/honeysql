@@ -34,7 +34,7 @@
                    :main      'clojure.main
                    :main-args (:main-opts combined)})
         {:keys [exit]} (b/process cmds)]
-    (when-not (zero? exit) (throw "Task failed"))))
+    (when-not (zero? exit) (throw (ex-info "Task failed" {})))))
 
 (defn eastwood "Run Eastwood." [opts]
   (run-task [:eastwood])

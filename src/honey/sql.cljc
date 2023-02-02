@@ -1655,18 +1655,23 @@
   This is the primary API for HoneySQL and handles dialects, quoting,
   and named parameters.
 
+  If the data DSL is a hash map, it will be treated as a SQL statement
+  and formatted via `format-dsl`, otherwise it will be treated as a SQL
+  expression and formatted via `format-expr`.
+
   `format` accepts options as either a single hash map argument or
   as named arguments (alternating keys and values). If you are using
   Clojure 1.11 (or later) you can mix'n'match, providing some options
   as named arguments followed by other options in a hash map."
   ([data] (format data {}))
   ([data opts]
-   (let [cache    (:cache opts)
-         dialect? (contains? opts :dialect)
-         dialect  (when dialect? (get @dialects (check-dialect (:dialect opts))))
-         numbered (if (contains? opts :numbered)
-                    (:numbered opts)
-                    @default-numbered)]
+   (let [cache     (:cache opts)
+         dialect?  (contains? opts :dialect)
+         dialect   (when dialect? (get @dialects (check-dialect (:dialect opts))))
+         numbered  (if (contains? opts :numbered)
+                     (:numbered opts)
+                     @default-numbered)
+         formatter (if (map? data) #'format-dsl #'format-expr)]
      (binding [*dialect* (if dialect? dialect @default-dialect)
                *caching* cache
                *checking* (if (contains? opts :checking)
@@ -1694,9 +1699,9 @@
                *params* (:params opts)
                *values-default-columns* (:values-default-columns opts)]
        (if cache
-         (->> (through-opts opts cache data (fn [_] (format-dsl data (dissoc opts :cache))))
+         (->> (through-opts opts cache data (fn [_] (formatter data (dissoc opts :cache))))
               (mapv #(unwrap % opts)))
-         (mapv #(unwrap % opts) (format-dsl data opts))))))
+         (mapv #(unwrap % opts) (formatter data opts))))))
   ([data k v & {:as opts}] (format data (assoc opts k v))))
 
 (defn set-dialect!

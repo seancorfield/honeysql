@@ -1,5 +1,8 @@
 # Changes
 
+* 2.4.next in progress
+  * Address [#456](https://github.com/seancorfield/honeysql/issues/456) by allowing `format` to handling expressions (via `format-expr`) as well as statements (via `format-dsl` per previous versions).
+
 * 2.4.969 -- 2023-01-14
   * Fix [#454](https://github.com/seancorfield/honeysql/issues/454) by allowing `-` to be variadic.
   * Address [#452](https://github.com/seancorfield/honeysql/pull/452) by adding `:replace-into` to the core SQL supported, instead of just for the MySQL and SQLite dialects (so the latter is not needed yet).
