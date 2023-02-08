@@ -189,6 +189,26 @@ user=> (sql/format {:select [[[:exists {:select [:a] :from [:foo]}] :x]]})
 ["SELECT EXISTS (SELECT a FROM foo) AS x"]
 ```
 
+### `ORDER BY` with `NULLS FIRST` or `NULLS LAST`
+
+In HoneySQL 1.x, if you wanted to generate SQL like
+
+```sql
+ORDER BY ... DESC NULLS LAST
+```
+
+you needed to pass `:nulls-last` as a separate keyword, after `:asc` or `:desc`:
+
+```clj
+{:order-by [[:my-column :desc :nulls-last]]}
+```
+
+In HoneySQL 2.x, the direction and the null ordering rule are now combined into a single keyword:
+
+```clj
+{:order-by [[:my-column :desc-nulls-last]]}
+```
+
 ## Extensibility
 
 The protocols and multimethods in 1.x have all gone away. The primary extension point is `honey.sql/register-clause!` which lets you specify the new clause (keyword), the formatter function for it, and the existing clause that it should be ranked before (`format` processes the DSL in clause order).
