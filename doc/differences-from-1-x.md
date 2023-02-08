@@ -201,7 +201,6 @@ you needed to pass `:nulls-last` as a separate keyword, after `:asc` or `:desc`:
 
 ```clj
 {:order-by [[:my-column :desc :nulls-last]]}
-;; =>
 ```
 
 In HoneySQL 2.x, the direction and the null ordering rule are now combined into a single keyword:
