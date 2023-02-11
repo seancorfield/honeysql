@@ -893,11 +893,9 @@ If your database supports `<=>` as an operator, you can tell HoneySQL about it u
 
 ```clojure
 (sql/register-op! :<=>)
-;; default is a binary operator:
+;; all operators are assumed to be variadic:
 (-> (select :a) (where [:<=> :a "foo"]) sql/format)
 => ["SELECT a WHERE a <=> ?" "foo"]
-;; you can declare that an operator is variadic:
-(sql/register-op! :<=> :variadic true)
 (-> (select :a) (where [:<=> "food" :a "fool"]) sql/format)
 => ["SELECT a WHERE ? <=> a <=> ?" "food" "fool"]
 ```

@@ -1062,3 +1062,12 @@ ORDER BY id = ? DESC
 (deftest issue-456-format-expr
   (is (= ["`x` + ?" 1]
          (sut/format [:+ :x 1] {:dialect :mysql}))))
+
+(deftest issue-459-variadic-ops
+  (sut/register-op! :op)
+  (is (= ["SELECT OP a"]
+         (sut/format {:select [[[:op :a]]]})))
+  (is (= ["SELECT a OP b"]
+         (sut/format {:select [[[:op :a :b]]]})))
+  (is (= ["SELECT a OP b OP c"]
+         (sut/format {:select [[[:op :a :b :c]]]}))))

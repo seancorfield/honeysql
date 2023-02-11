@@ -112,7 +112,8 @@ Some "functions" are considered to be operators. In general,
 
 > Note: you can use the `:numbered true` option to `format` to produce SQL containing numbered placeholders, like `FOO(a, $1, $2)`, instead of positional placeholders (`?`).
 
-Operators can be strictly binary or variadic (most are strictly binary).
+Operators are all treated as variadic (except for `:=` and
+`:<>` / `:!=` / `:not=` which are binary and require exactly two operands).
 Special syntax can have zero or more arguments and each form is
 described in the [Special Syntax](special-syntax.md) section.
 

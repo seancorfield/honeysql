@@ -52,7 +52,7 @@
 (def !regex  !tilde)
 (def !iregex !tilde*)
 
-(sql/register-op! :-> :variadic true)
+(sql/register-op! :->)
 (sql/register-op! :->>)
 (sql/register-op! :#>)
 (sql/register-op! :#>>)

@@ -215,7 +215,7 @@ The protocols and multimethods in 1.x have all gone away. The primary extension 
 
 You can also register new "functions" that can implement special syntax (such as `:array`, `:inline`, `:raw` etc above) via `honey.sql/register-fn!`. This accepts a "function" name as a keyword and a formatter which will generally be a function of two arguments: the function name (so formatters can be reused across different names) and a vector of the arguments the function should accept.
 
-And, finally, you can register new operators that will be recognized in expressions via `honey.sql/register-op!`. This accepts an operator name as a keyword and optional named parameters to indicate whether the operator is `:variadic` (the default is strictly binary) and whether it should ignore operands that evaluate to `nil` (via `:ignore-nil`). The latter can make it easier to construct complex expressions programmatically without having to worry about conditionally removing "optional" (`nil`) values.
+And, finally, you can register new operators that will be recognized in expressions via `honey.sql/register-op!`. This accepts an operator name as a keyword and an optional named parameter to indicate whether it should ignore operands that evaluate to `nil` (via `:ignore-nil`). That can make it easier to construct complex expressions programmatically without having to worry about conditionally removing "optional" (`nil`) values.
 
 > Note: because of the changes in the extension machinery between 1.x and 2.x, it is not possible to use the [nilenso/honeysql-postgress](https://github.com/nilenso/honeysql-postgres) library with HoneySQL 2.x but the goal is to incorporate all of the syntax from that library into the core of HoneySQL.
 

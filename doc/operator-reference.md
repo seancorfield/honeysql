@@ -34,7 +34,7 @@ can simply evaluate to `nil` instead).
 
 ## in
 
-Binary predicate for checking an expression is
+Predicate for checking an expression is
 is a member of a specified set of values.
 
 The two most common forms are:
@@ -73,16 +73,21 @@ This produces `(col1, col2) IN ...`
 
 > Note: This is a change from HoneySQL 1.x which accepted a sequence of column names but required more work for arbitrary expressions.
 
-## = <> < > <= >=
+## = <>
 
 Binary comparison operators. These expect exactly
 two arguments.
 
 `not=` and `!=` are accepted as aliases for `<>`.
 
+## < > <= >=
+
+Comparison operators. These expect exactly
+two arguments.
+
 ## is, is-not
 
-Binary predicates for `NULL` and Boolean values:
+Predicates for `NULL` and Boolean values:
 
 ```clojure
 {...
@@ -106,16 +111,15 @@ Binary predicates for `NULL` and Boolean values:
 
 ## mod, xor, + - * / % | & ^
 
-Mathematical and bitwise operators. `+` and `*` are
-variadic; the rest are strictly binary operators.
+Mathematical and bitwise operators.
 
 ## like, not like, ilike, not ilike, regexp
 
-Pattern matching binary operators. `regex` is accepted
+Pattern matching operators. `regex` is accepted
 as an alias for `regexp`.
 
 `similar-to` and `not-similar-to` are also supported.
 
 ## ||
 
-Variadic string concatenation operator.
+String concatenation operator.

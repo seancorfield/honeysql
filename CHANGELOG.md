@@ -1,6 +1,7 @@
 # Changes
 
 * 2.4.next in progress
+  * Address [#459](https://github.com/seancorfield/honeysql/issues/459) by making all operators variadic (except `:=` and `:<>`).
   * Address [#458](https://github.com/seancorfield/honeysql/issues/458) by adding `registered-*?` predicates.
 
 * 2.4.972 -- 2023-02-02

@@ -1279,7 +1279,6 @@
       (atom)))
 
 (def ^:private op-ignore-nil (atom #{:and :or}))
-(def ^:private op-variadic   (atom #{:and :or :+ :* :- :|| :&&}))
 
 (defn- unwrap [x opts]
   (if-let [m (meta x)]
@@ -1558,30 +1557,20 @@
         (format-dsl expr (assoc opts :nested true))
 
         (sequential? expr)
-        (let [op (sym->kw (first expr))]
-          (if (keyword? op)
-            (cond (contains? @infix-ops op)
-                  (if (contains? @op-variadic op) ; no aliases here, no special semantics
-                    (let [x (if (contains? @op-ignore-nil op)
-                              (remove nil? expr)
-                              expr)
-                          [sqls params]
-                          (reduce-sql (map #(format-expr % {:nested true})
-                                           (rest x)))]
-                      (into [(cond-> (str/join (str " " (sql-kw op) " ") sqls)
-                               nested
-                               (as-> s (str "(" s ")")))]
-                            params))
+        (let [op' (sym->kw (first expr))
+              op  (get infix-aliases op' op')]
+          (if (keyword? op')
+            (cond (contains? @infix-ops op')
+                  (if (contains? #{:= :<>} op)
                     (let [[_ a b & y] expr
                           _           (when (seq y)
                                         (throw (ex-info (str "only binary "
-                                                             op
+                                                             op'
                                                              " is supported")
                                                         {:expr expr})))
                           [s1 & p1]   (format-expr a {:nested true})
-                          [s2 & p2]   (format-expr b {:nested true})
-                          op          (get infix-aliases op op)]
-                      (-> (if (and (#{:= :<>} op) (or (nil? a) (nil? b)))
+                          [s2 & p2]   (format-expr b {:nested true})]
+                      (-> (if (or (nil? a) (nil? b))
                             (str (if (nil? a)
                                    (if (nil? b) "NULL" s2)
                                    s1)
@@ -1591,7 +1580,22 @@
                             (as-> s (str "(" s ")")))
                           (vector)
                           (into p1)
-                          (into p2))))
+                          (into p2)))
+                    (let [x (if (contains? @op-ignore-nil op)
+                              (remove nil? expr)
+                              expr)
+                          [sqls params]
+                          (reduce-sql (map #(format-expr % {:nested true})
+                                           (rest x)))]
+                      (when-not (pos? (count sqls))
+                        (throw (ex-info (str "no operands found for " op')
+                                        {:expr expr})))
+                      (into [(cond-> (str/join (str " " (sql-kw op) " ") sqls)
+                               (= 1 (count sqls))
+                               (as-> s (str (sql-kw op) " " s))
+                               nested
+                               (as-> s (str "(" s ")")))]
+                            params)))
                   (contains? #{:in :not-in} op)
                   (let [[sql & params] (format-in op (rest expr))]
                     (into [(if nested (str "(" sql ")") sql)] params))
@@ -1855,15 +1859,13 @@
   (contains? @special-syntax (sym->kw function)))
 
 (defn register-op!
-  "Register a new infix operator. Operators can be defined to be variadic (the
-  default is that they are binary) and may choose to ignore `nil` arguments
-  (this can make it easier to programmatically construct the DSL)."
-  [op & {:keys [variadic ignore-nil]}]
+  "Register a new infix operator. All operators are variadic and may choose
+  to ignore `nil` arguments (this can make it easier to programmatically
+  construct the DSL)."
+  [op & {:keys [ignore-nil]}]
   (let [op (sym->kw op)]
     (assert (keyword? op))
     (swap! infix-ops conj op)
-    (when variadic
-      (swap! op-variadic conj op))
     (when ignore-nil
       (swap! op-ignore-nil conj op))))
 
@@ -1955,7 +1957,7 @@
   (sql/format-expr [:primary-key])
   (sql/register-op! 'y)
   (sql/format {:where '[y 2 3]})
-  (sql/register-op! :<=> :variadic true :ignore-nil true)
+  (sql/register-op! :<=> :ignore-nil true)
   ;; and then use the new operator:
   (sql/format {:select [:*], :from [:table], :where [:<=> nil :x 42]})
   (sql/register-fn! :foo (fn [f args] ["FOO(?)" (first args)]))
