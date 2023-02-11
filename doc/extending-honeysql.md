@@ -82,16 +82,13 @@ You might have:
 `honey.sql/register-op!` accepts a keyword (or a symbol) that
 should be treated as a new infix operator.
 
-By default, operators are treated as strictly binary --
-accepting just two arguments -- and an exception will be
-thrown if they are provided less than two or more than
-two arguments. You can optionally specify that an operator
-can take any number of arguments with `:variadic true`:
+All operators are treated as variadic and an exception will be
+thrown if they are provided no arguments:
 
 ```clojure
 (require '[honey.sql :as sql])
 
-(sql/register-op! :<=> :variadic true)
+(sql/register-op! :<=>)
 ;; and then use the new operator:
 (sql/format {:select [:*], :from [:table], :where [:<=> 13 :x 42]})
 ;; will produce:
@@ -106,7 +103,7 @@ such `nil` expressions. You can specify `:ignore-nil true`
 to achieve that:
 
 ```clojure
-(sql/register-op! :<=> :variadic true :ignore-nil true)
+(sql/register-op! :<=> :ignore-nil true)
 ;; and then use the new operator:
 (sql/format {:select [:*], :from [:table], :where [:<=> nil :x 42]})
 ;; will produce:
