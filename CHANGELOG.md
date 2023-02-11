@@ -1,5 +1,8 @@
 # Changes
 
+* 2.4.next in progress
+  * Address [#458](https://github.com/seancorfield/honeysql/issues/458) by adding `registered-*?` predicates.
+
 * 2.4.972 -- 2023-02-02
   * Address [#456](https://github.com/seancorfield/honeysql/issues/456) by allowing `format` to handle expressions (like 1.x could) as well as statements. This should aid with migration from 1.x to 2.x.
 

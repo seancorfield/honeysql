@@ -1784,6 +1784,11 @@
       (swap! current-clause-order add-clause-before clause before)
       (swap! clause-format assoc clause f))))
 
+(defn registered-clause?
+  "Return true if the clause is known to HoneySQL."
+  [clause]
+  (contains? @clause-format (sym->kw clause)))
+
 (defn register-dialect!
   "Register a new dialect. Accepts a dialect name (keyword) and a hash
   map that must contain at least a `:quoted` key whose value is a unary
@@ -1814,6 +1819,11 @@
                       {:dialect-spec dialect-spec}))))
   (swap! dialects assoc dialect (assoc dialect-spec :dialect dialect)))
 
+(defn registered-dialect?
+  "Return true if the dialect is known to HoneySQL."
+  [dialect]
+  (contains? @dialects dialect))
+
 (defn get-dialect
   "Given a dialect name (keyword), return its definition.
   Returns `nil` if the dialect is unknown."
@@ -1839,6 +1849,11 @@
                         {:type (type formatter)})))
       (swap! special-syntax assoc function f))))
 
+(defn registered-fn?
+  "Return true if the function is known to HoneySQL."
+  [function]
+  (contains? @special-syntax (sym->kw function)))
+
 (defn register-op!
   "Register a new infix operator. Operators can be defined to be variadic (the
   default is that they are binary) and may choose to ignore `nil` arguments
@@ -1851,6 +1866,11 @@
       (swap! op-variadic conj op))
     (when ignore-nil
       (swap! op-ignore-nil conj op))))
+
+(defn registered-op?
+  "Return true if the operator is known to HoneySQL."
+  [op]
+  (contains? @infix-ops (sym->kw op)))
 
 ;; helper functions to create HoneySQL data structures from other things
 
