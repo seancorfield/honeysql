@@ -1268,7 +1268,7 @@
 
 (def ^:private infix-ops
   (-> #{"mod" "and" "or" "xor" "<>" "<=" ">=" "||" "<->"
-        "like" "not-like" "regexp" "&&"
+        "like" "not-like" "regexp" "~" "&&"
         "ilike" "not-ilike" "similar-to" "not-similar-to"
         "is" "is-not" "not=" "!=" "regex"}
       (into (map str "+-*%|&^=<>"))
@@ -1279,6 +1279,10 @@
       (atom)))
 
 (def ^:private op-ignore-nil (atom #{:and :or}))
+(def ^:private op-can-be-unary
+  "The operators that can be unary. This is a fixed set until someone
+  identifies any new ones."
+  (atom (into #{} (map (comp keyword str) "+-~"))))
 
 (defn- unwrap [x opts]
   (if-let [m (meta x)]
@@ -1591,7 +1595,8 @@
                         (throw (ex-info (str "no operands found for " op')
                                         {:expr expr})))
                       (into [(cond-> (str/join (str " " (sql-kw op) " ") sqls)
-                               (= 1 (count sqls))
+                               (and (contains? @op-can-be-unary op)
+                                    (= 1 (count sqls)))
                                (as-> s (str (sql-kw op) " " s))
                                nested
                                (as-> s (str "(" s ")")))]

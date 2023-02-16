@@ -1065,9 +1065,37 @@ ORDER BY id = ? DESC
 
 (deftest issue-459-variadic-ops
   (sut/register-op! :op)
-  (is (= ["SELECT OP a"]
+  (is (= ["SELECT a"] ; not unary!
          (sut/format {:select [[[:op :a]]]})))
   (is (= ["SELECT a OP b"]
          (sut/format {:select [[[:op :a :b]]]})))
   (is (= ["SELECT a OP b OP c"]
          (sut/format {:select [[[:op :a :b :c]]]}))))
+
+(deftest issue-461-unary-ops
+  (is (= ["SELECT TRUE"]
+         (sut/format {:select [[[:and true]]]})))
+  (is (= ["SELECT TRUE"]
+         (sut/format {:select [[[:or true]]]})))
+  (is (= ["SELECT ?" 1]
+         (sut/format {:select [[[:* 1]]]})))
+  (is (= ["SELECT TRUE AND a AND b"]
+         (sut/format {:select [[[:and true :a :b]]]})))
+  (is (= ["SELECT TRUE OR a OR b"]
+         (sut/format {:select [[[:or true :a :b]]]})))
+  (is (= ["SELECT ? * ? * ?" 1 2 3]
+         (sut/format {:select [[[:* 1 2 3]]]})))
+  ;; but these three genuinely are unary:
+  (is (= ["SELECT + ?" 1]
+         (sut/format {:select [[[:+ 1]]]})))
+  (is (= ["SELECT - ?" 1]
+         (sut/format {:select [[[:- 1]]]})))
+  (is (= ["SELECT ~ ?" 1] ; bitwise negation
+         (sut/format {:select [[[(keyword "~") 1]]]})))
+  ;; and can still be used as variadic:
+  (is (= ["SELECT ? + ?" 1 2]
+         (sut/format {:select [[[:+ 1 2]]]})))
+  (is (= ["SELECT ? - ?" 1 2]
+         (sut/format {:select [[[:- 1 2]]]})))
+  (is (= ["SELECT ? ~ ?" "a" "b"] ; regex op
+         (sut/format {:select [[[(keyword "~") "a" "b"]]]}))))
