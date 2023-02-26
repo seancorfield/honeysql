@@ -1513,9 +1513,9 @@
       (let [[sql & params] (format-expr x {:nested true})]
         (into [(str "NOT " sql)] params)))
     :order-by
-    (fn [k [e q]]
+    (fn [k [e & qs]]
       (let [[sql-e & params-e] (format-expr e)
-            [sql-q & params-q] (format-dsl {k [q]})]
+            [sql-q & params-q] (format-dsl {k qs})]
         (-> [(str sql-e " " sql-q)]
             (into params-e)
             (into params-q))))
