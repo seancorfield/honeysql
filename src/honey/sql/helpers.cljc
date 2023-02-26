@@ -51,7 +51,11 @@
 ;; implementation helpers:
 
 (defn- default-merge [current args]
-  (c/into (vec current) args))
+  (let [current (cond
+                  (nil? current) []
+                  (sequential? current) (vec current)
+                  :else [current])]
+    (c/into current args)))
 
 (defn- sym->kw
   "Given a symbol, produce a keyword, retaining the namespace

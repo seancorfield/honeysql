@@ -255,6 +255,12 @@
              (sql/format)))))
 
 (deftest over-test
+  (testing "simple window statement"
+    (is (= ["SELECT AVG(salary) OVER w FROM employee WINDOW w AS (PARTITION BY department ORDER BY salary ASC)"]
+           (sql/format {:select [[[:over [[:avg :salary] :w]]]]
+                        :from   :employee
+                        :window [:w {:partition-by :department
+                                     :order-by     :salary}]}))))
   (testing "window function over on select statemt"
     (is (= ["SELECT id, AVG(salary) OVER (PARTITION BY department ORDER BY designation ASC) AS Average, MAX(salary) OVER w AS MaxSalary FROM employee WINDOW w AS (PARTITION BY department)"]
            ;; honeysql treats over as a function:
