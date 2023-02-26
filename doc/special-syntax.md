@@ -8,15 +8,19 @@ The first group are used for SQL expressions. The second (last group) are used p
 
 ## array
 
-Accepts a single argument, which is expected to evaluate to
-a sequence, and produces `ARRAY[?, ?, ..]` for the elements
-of that sequence (as SQL parameters):
+Accepts a single argument, which is expected to evaluate to a sequence,
+with an optional second argument specifying the type of the array,
+and produces `ARRAY[?, ?, ..]` for the elements of that sequence (as SQL parameters):
 
 ```clojure
 (require '[honey.sql :as sql])
 
 (sql/format-expr [:array (range 5)])
 ;;=> ["ARRAY[?, ?, ?, ?, ?]" 0 1 2 3 4]
+(sql/format-expr [:array (range 3) :text])
+;;=> ["ARRAY[?, ?, ?]::TEXT[]" 0 1 2]
+(sql/format-expr [:array [] :integer])
+;;=> ["ARRAY[]::INTEGER[]"]
 ```
 
 > Note: you cannot provide a named parameter as the argument for `:array` because the generated SQL depends on the number of elements in the sequence, so the following throws an exception:
