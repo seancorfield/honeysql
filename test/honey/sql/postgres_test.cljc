@@ -388,6 +388,18 @@
                  (modifiers :distinct-on :a :b)
                  (sql/format :quoting :ansi))))))
 
+(deftest select-agg-order-by-test
+  (testing "single expression in order by"
+    (is (= ["SELECT ARRAY_AGG(a ORDER BY x) FROM products"])
+        (sql/format
+          {:select [[[:array_agg [:order-by :a :x]]]]
+           :from   :products})))
+  (testing "multiple expressions in order by"
+    (is (= ["SELECT ARRAY_AGG(a ORDER BY x ASC, y DESC, z ASC) FROM products"]
+           (sql/format
+             {:select [[[:array_agg [:order-by :a [:x :asc] [:y :desc] :z]]]]
+              :from   :products})))))
+
 (deftest create-extension-test
   ;; previously, honeysql required :allow-dashed-names? true
   (testing "create extension"
