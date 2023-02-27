@@ -83,10 +83,14 @@
          (sut/format {:select [:*] :from [:table] :where (sut/map= {:id 1})} {:quoted true})))
   (is (= ["SELECT \"t\".* FROM \"table\" AS \"t\" WHERE \"id\" = ?" 1]
          (sut/format {:select [:t.*] :from [[:table :t]] :where [:= :id 1]} {:quoted true})))
+  (is (= ["SELECT * FROM \"table\" GROUP BY \"foo\""]
+         (sut/format {:select [:*] :from [:table] :group-by :foo} {:quoted true})))
   (is (= ["SELECT * FROM \"table\" GROUP BY \"foo\", \"bar\""]
          (sut/format {:select [:*] :from [:table] :group-by [:foo :bar]} {:quoted true})))
   (is (= ["SELECT * FROM \"table\" GROUP BY DATE(\"bar\")"]
          (sut/format {:select [:*] :from [:table] :group-by [[:date :bar]]} {:quoted true})))
+  (is (= ["SELECT * FROM \"table\" ORDER BY \"foo\" ASC"]
+         (sut/format {:select [:*] :from [:table] :order-by :foo} {:quoted true})))
   (is (= ["SELECT * FROM \"table\" ORDER BY \"foo\" DESC, \"bar\" ASC"]
          (sut/format {:select [:*] :from [:table] :order-by [[:foo :desc] :bar]} {:quoted true})))
   (is (= ["SELECT * FROM \"table\" ORDER BY DATE(\"expiry\") DESC, \"bar\" ASC"]

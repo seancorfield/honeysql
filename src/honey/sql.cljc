@@ -209,6 +209,9 @@
                       {:symbol x
                        :failure (str t)})))))
 
+(defn- ensure-sequential [xs]
+  (if (sequential? xs) xs [xs]))
+
 (defn format-entity
   "Given a simple SQL entity (a keyword or symbol -- or string),
   return the equivalent SQL fragment (as a string -- no parameters).
@@ -549,7 +552,7 @@
     (-> [sql'] (into params) (into params'))))
 
 (defn- format-select-into [k xs]
-  (let [[v e] (if (sequential? xs) xs [xs])
+  (let [[v e] (ensure-sequential xs)
         [sql & params] (when e (format-expr e))]
     (into [(str (sql-kw k) " " (format-entity v)
                 (when sql
@@ -708,11 +711,12 @@
     []))
 
 (defn- format-group-by [k xs]
-  (let [[sqls params] (format-expr-list xs)]
+  (let [[sqls params] (format-expr-list (ensure-sequential xs))]
     (into [(str (sql-kw k) " " (str/join ", " sqls))] params)))
 
 (defn- format-order-by [k xs]
-  (let [dirs (map #(when (sequential? %) (second %)) xs)
+  (let [xs (ensure-sequential xs)
+        dirs (map #(when (sequential? %) (second %)) xs)
         [sqls params]
         (format-expr-list (map #(if (sequential? %) (first %) %) xs))]
     (into [(str (sql-kw k) " "
@@ -722,7 +726,7 @@
                                     dirs)))] params)))
 
 (defn- format-lock-strength [k xs]
-  (let [[strength tables nowait] (if (sequential? xs) xs [xs])]
+  (let [[strength tables nowait] (ensure-sequential xs)]
     [(str (sql-kw k) " " (sql-kw strength)
           (when tables
             (str
@@ -946,7 +950,7 @@
             (format-ddl-options opts context)))))
 
 (defn- format-truncate [k xs]
-  (let [[table & options] (if (sequential? xs) xs [xs])
+  (let [[table & options] (ensure-sequential xs)
         [pre table ine options] (destructure-ddl-item [table options] "truncate")]
     (when (seq pre) (throw (ex-info "TRUNCATE syntax error" {:unexpected pre})))
     (when (seq ine) (throw (ex-info "TRUNCATE syntax error" {:unexpected ine})))

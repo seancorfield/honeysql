@@ -144,14 +144,14 @@
 (deftest select-top-tests
   (testing "Basic TOP syntax"
     (is (= ["SELECT TOP(?) foo FROM bar ORDER BY quux ASC" 10]
-           (sql/format {:select-top [10 :foo] :from :bar :order-by [:quux]})))
+           (sql/format {:select-top [10 :foo] :from :bar :order-by :quux})))
     (is (= ["SELECT TOP(?) foo FROM bar ORDER BY quux ASC" 10]
            (sql/format (-> (select-top 10 :foo)
                            (from :bar)
                            (order-by :quux))))))
   (testing "Expanded TOP syntax"
     (is (= ["SELECT TOP(?) PERCENT WITH TIES foo, baz FROM bar ORDER BY quux ASC" 10]
-           (sql/format {:select-top [[10 :percent :with-ties] :foo :baz] :from :bar :order-by [:quux]})))
+           (sql/format {:select-top [[10 :percent :with-ties] :foo :baz] :from :bar :order-by :quux})))
     (is (= ["SELECT TOP(?) PERCENT WITH TIES foo, baz FROM bar ORDER BY quux ASC" 10]
            (sql/format (-> (select-top [10 :percent :with-ties] :foo :baz)
                            (from :bar)
@@ -865,7 +865,7 @@
                                  [[:filter ; two pairs -- alias is on last pair
                                    [:avg :x [:order-by :y [:a :desc]]] {:where [:< :i 10]}
                                    [:sum :q] {:where [:= :x nil]}] :b]
-                                 [[:within-group [:foo :y] {:order-by [:x]}]]]})
+                                 [[:within-group [:foo :y] {:order-by :x}]]]})
            [(str "SELECT COUNT(*) FILTER (WHERE i > ?) AS a,"
                  " AVG(x, y ORDER BY a DESC) FILTER (WHERE i < ?),"
                  " SUM(q) FILTER (WHERE x IS NULL) AS b,"
