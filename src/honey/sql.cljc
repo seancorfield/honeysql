@@ -1441,10 +1441,11 @@
                              (str/join ", " (map format-single-column spec))
                              ">")])
     :array
-    (fn [_ [arr]]
+    (fn [_ [arr type]]
       ;; allow for (unwrap arr) here?
-      (let [[sqls params] (format-expr-list arr)]
-        (into [(str "ARRAY[" (str/join ", " sqls) "]")] params)))
+      (let [[sqls params] (format-expr-list arr)
+            type-str (when type (str "::" (sql-kw type) "[]"))]
+        (into [(str "ARRAY[" (str/join ", " sqls) "]" type-str)] params)))
     :between
     (fn [_ [x a b]]
       (let [[sql-x & params-x] (format-expr x {:nested true})

@@ -282,7 +282,12 @@
                   :columns [:baz]
                   :values [[[:array :?vals]]]}
                  {:params {:vals [1 2 3 4]}})
-         ["INSERT INTO foo (baz) VALUES (ARRAY[?, ?, ?, ?])" 1 2 3 4])))
+         ["INSERT INTO foo (baz) VALUES (ARRAY[?, ?, ?, ?])" 1 2 3 4]))
+  (testing "typed array"
+    (is (= (format {:select [[[:array [] :integer]]]})
+           ["SELECT ARRAY[]::INTEGER[]"]))
+    (is (= (format {:select [[[:array [1 2] :text]]]})
+           ["SELECT ARRAY[?, ?]::TEXT[]" 1 2]))))
 
 (deftest union-test
   ;; UNION and INTERSECT subexpressions should not be parenthesized.
