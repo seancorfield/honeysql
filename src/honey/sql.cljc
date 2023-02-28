@@ -1590,12 +1590,19 @@
                           (vector)
                           (into p1)
                           (into p2)))
-                    (let [x (if (contains? @op-ignore-nil op)
-                              (remove nil? expr)
-                              expr)
+                    (let [args (cond->> (rest expr)
+                                 (contains? @op-ignore-nil op)
+                                 (remove nil?))
+                          args (cond (seq args)
+                                     args
+                                     (= :and op)
+                                     [true]
+                                     (= :or op)
+                                     [false]
+                                     :else ; args is empty and not a special case
+                                     [])
                           [sqls params]
-                          (reduce-sql (map #(format-expr % {:nested true})
-                                           (rest x)))]
+                          (reduce-sql (map #(format-expr % {:nested true}) args))]
                       (when-not (pos? (count sqls))
                         (throw (ex-info (str "no operands found for " op')
                                         {:expr expr})))
