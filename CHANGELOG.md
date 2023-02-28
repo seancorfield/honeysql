@@ -1,5 +1,10 @@
 # Changes
 
+* 2.4.next in progress
+  * Fix [#467](https://github.com/seancorfield/honeysql/issues/467) by allowing single keywords (symbols) as a short hand for a single-element sequence in more constructs via PR [#470](https://github.com/seancorfield/honeysql/pull/470) [@p-himik](https://github.com/p-himik).
+  * Fix [#465](https://github.com/seancorfield/honeysql/issues/465) to allow multiple columns in `:order-by` special syntax via PR [#468](https://github.com/seancorfield/honeysql/pull/468) [@p-himik](https://github.com/p-himik).
+  * Fix [#464](https://github.com/seancorfield/honeysql/issues/464) by adding an optional type argument to `:array` via PR [#469](https://github.com/seancorfield/honeysql/pull/469) [@p-himik](https://github.com/p-himik).
+
 * 2.4.980 -- 2023-02-15
   * Fix [#461](https://github.com/seancorfield/honeysql/issues/461) -- a regression introduced in 2.4.979 -- by restricting unary operators to just `+`, `-`, and `~` (bitwise negation).
 
