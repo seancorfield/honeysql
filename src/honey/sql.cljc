@@ -465,6 +465,50 @@
   (let [[sqls params] (reduce-sql (map #(format-dsl %) xs))]
     (into [(str/join (str " " (sql-kw k) " ") sqls)] params)))
 
+(defn- inline-kw?
+  "Return true if the expression should be treated as an inline SQL keeyword."
+  [expr]
+  (and (ident? expr)
+       (nil? (namespace expr))
+       (re-find #"^\*[a-zA-Z]" (name expr))))
+
+(defn format-interspersed-expr-list
+  "If there are inline (SQL) keywords, use them to join the formatted
+  expressions together. Otherwise behaves like plain format-expr-list.
+
+  This allows for argument lists like:
+  * [:overlay :foo :*placing :?subs :*from 3 :*for 4]
+  * [:trim :*leading-from :bar]"
+  [args & [opts]]
+  (loop [exprs   (map #(format-expr % opts) (remove inline-kw? args))
+         args    args
+         prev-in false
+         result  []]
+    (if (seq args)
+      (let [[arg & args'] args]
+        (if (inline-kw? arg)
+          (let [sql (sql-kw (keyword (subs (name arg) 1)))]
+            (if (seq result)
+              (let [[cur & params] (peek result)]
+                (recur exprs args' true (conj (pop result)
+                                              (into [(str cur " " sql)] params))))
+              (recur exprs args' true (conj result [sql]))))
+          (if prev-in
+            (let [[cur & params]  (peek result)
+                  [sql & params'] (first exprs)]
+              (recur (rest exprs) args' false (conj (pop result)
+                                                    (-> [(str cur " " sql)]
+                                                        (into params)
+                                                        (into params')))))
+            (recur (rest exprs) args' false (conj result (first exprs))))))
+      (reduce-sql result))))
+
+(comment
+  (format-interspersed-expr-list [:foo :*placing :?subs :*from 3 :*for 4]
+                                 {:params {:subs "bar"}})
+  (format-interspersed-expr-list [:*leading-from " foo "] {})
+  )
+
 (defn format-expr-list
   "Given a sequence of expressions represented as data, return a pair
   where the first element is a sequence of SQL fragments and the second
@@ -1551,6 +1595,63 @@
       (raw-render xs))
     :within-group expr-clause-pairs}))
 
+(defn- format-equality-expr [op' op expr nested]
+  (let [[_ a b & y] expr
+        _           (when (seq y)
+                      (throw (ex-info (str "only binary "
+                                           op'
+                                           " is supported")
+                                      {:expr expr})))
+        [s1 & p1]   (format-expr a {:nested true})
+        [s2 & p2]   (format-expr b {:nested true})]
+    (-> (if (or (nil? a) (nil? b))
+          (str (if (nil? a)
+                 (if (nil? b) "NULL" s2)
+                 s1)
+               (if (= := op) " IS NULL" " IS NOT NULL"))
+          (str s1 " " (sql-kw op) " " s2))
+        (cond-> nested
+          (as-> s (str "(" s ")")))
+        (vector)
+        (into p1)
+        (into p2))))
+
+(defn- format-infix-expr [op' op expr nested]
+  (let [args (cond->> (rest expr)
+               (contains? @op-ignore-nil op)
+               (remove nil?))
+        args (cond (seq args)
+                   args
+                   (= :and op)
+                   [true]
+                   (= :or op)
+                   [false]
+                   :else ; args is empty and not a special case
+                   [])
+        [sqls params]
+        (reduce-sql (map #(format-expr % {:nested true}) args))]
+    (when-not (pos? (count sqls))
+      (throw (ex-info (str "no operands found for " op')
+                      {:expr expr})))
+    (into [(cond-> (str/join (str " " (sql-kw op) " ") sqls)
+             (and (contains? @op-can-be-unary op)
+                  (= 1 (count sqls)))
+             (as-> s (str (sql-kw op) " " s))
+             nested
+             (as-> s (str "(" s ")")))]
+          params)))
+
+(defn- format-fn-call-expr [op expr]
+  (let [args          (rest expr)
+        [sqls params] (format-interspersed-expr-list args)]
+    (into [(str (sql-kw op)
+                (if (and (= 1 (count args))
+                         (map? (first args))
+                         (= 1 (count sqls)))
+                  (str " " (first sqls))
+                  (str "(" (str/join ", " sqls) ")")))]
+          params)))
+
 (defn format-expr
   "Given a data structure that represents a SQL expression and a hash
   map of options, return a vector containing a string -- the formatted
@@ -1571,48 +1672,8 @@
           (if (keyword? op')
             (cond (contains? @infix-ops op')
                   (if (contains? #{:= :<>} op)
-                    (let [[_ a b & y] expr
-                          _           (when (seq y)
-                                        (throw (ex-info (str "only binary "
-                                                             op'
-                                                             " is supported")
-                                                        {:expr expr})))
-                          [s1 & p1]   (format-expr a {:nested true})
-                          [s2 & p2]   (format-expr b {:nested true})]
-                      (-> (if (or (nil? a) (nil? b))
-                            (str (if (nil? a)
-                                   (if (nil? b) "NULL" s2)
-                                   s1)
-                                 (if (= := op) " IS NULL" " IS NOT NULL"))
-                            (str s1 " " (sql-kw op) " " s2))
-                          (cond-> nested
-                            (as-> s (str "(" s ")")))
-                          (vector)
-                          (into p1)
-                          (into p2)))
-                    (let [args (cond->> (rest expr)
-                                 (contains? @op-ignore-nil op)
-                                 (remove nil?))
-                          args (cond (seq args)
-                                     args
-                                     (= :and op)
-                                     [true]
-                                     (= :or op)
-                                     [false]
-                                     :else ; args is empty and not a special case
-                                     [])
-                          [sqls params]
-                          (reduce-sql (map #(format-expr % {:nested true}) args))]
-                      (when-not (pos? (count sqls))
-                        (throw (ex-info (str "no operands found for " op')
-                                        {:expr expr})))
-                      (into [(cond-> (str/join (str " " (sql-kw op) " ") sqls)
-                               (and (contains? @op-can-be-unary op)
-                                    (= 1 (count sqls)))
-                               (as-> s (str (sql-kw op) " " s))
-                               nested
-                               (as-> s (str "(" s ")")))]
-                            params)))
+                    (format-equality-expr op' op expr nested)
+                    (format-infix-expr op' op expr nested))
                   (contains? #{:in :not-in} op)
                   (let [[sql & params] (format-in op (rest expr))]
                     (into [(if nested (str "(" sql ")") sql)] params))
@@ -1620,15 +1681,7 @@
                   (let [formatter (get @special-syntax op)]
                     (formatter op (rest expr)))
                   :else
-                  (let [args          (rest expr)
-                        [sqls params] (format-expr-list args)]
-                    (into [(str (sql-kw op)
-                                (if (and (= 1 (count args))
-                                         (map? (first args))
-                                         (= 1 (count sqls)))
-                                  (str " " (first sqls))
-                                  (str "(" (str/join ", " sqls) ")")))]
-                          params)))
+                  (format-fn-call-expr op expr))
             (let [[sqls params] (format-expr-list expr)]
               (into [(str "(" (str/join ", " sqls) ")")] params))))
 
