@@ -1130,3 +1130,14 @@ ORDER BY id = ? DESC
     (is (= ["SELECT XMLELEMENT(NAME \"foo$bar\", XMLATTRIBUTES('xyz' AS \"a&b\"))"]
            (sut/format {:select [[[:xmlelement :*name :foo$bar
                                    [:xmlattributes [:inline "xyz"] :*as :a&b]]]]})))))
+
+(deftest issue-474-dot-selection
+  (testing "basic dot selection"
+    (is (= ["SELECT a.b, c.d, e.f"]
+           (let [t :a c :d]
+             (sut/format {:select [[[:. t :b]] [[:. :c c]] [[:. :e :f]]]})))))
+  (testing "basic field selection from composite"
+    (is (= ["SELECT (v).*, (w).x, (Y(z)).*"]
+           (sut/format '{select (((. (nest v) *))
+                                 ((. (nest w) x))
+                                 ((. (nest (y z)) *)))})))))

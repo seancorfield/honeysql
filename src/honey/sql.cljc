@@ -1472,6 +1472,9 @@
     :primary-key #'function-0
     :references  #'function-1
     :unique      #'function-1-opt
+    :.           (fn [_ [expr col]]
+                   (let [[sql & params] (format-expr expr)]
+                     (into [(str sql "." (format-entity col))] params)))
     ;; used in DDL to force rendering as a SQL entity instead
     ;; of a SQL keyword:
     :entity      (fn [_ [e]] [(format-entity e)])

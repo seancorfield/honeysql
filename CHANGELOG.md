@@ -1,6 +1,7 @@
 # Changes
 
 * 2.4.next in progress
+  * Address [#474](https://github.com/seancorfield/honeysql/issues/474) by adding dot-selection special syntax. Documentation TBD!
   * Improve docstrings for PostgreSQL operators via PR [#473](https://github.com/seancorfield/honeysql/pull/473) [@holyjak](https://github.com/holyjak).
   * Address [#471](https://github.com/seancorfield/honeysql/issues/471) by supported interspersed SQL keywords in function calls. Documentation TBD!
   * Fix [#467](https://github.com/seancorfield/honeysql/issues/467) by allowing single keywords (symbols) as a short hand for a single-element sequence in more constructs via PR [#470](https://github.com/seancorfield/honeysql/pull/470) [@p-himik](https://github.com/p-himik).
