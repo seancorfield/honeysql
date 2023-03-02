@@ -68,6 +68,7 @@
 
 (defn- jar-opts [opts]
   (let [version (if (:snapshot opts) snapshot version)]
+    (println "\nVersion:" version)
     (assoc opts
            :lib lib :version version
            :jar-file (format "target/%s-%s.jar" lib version)
