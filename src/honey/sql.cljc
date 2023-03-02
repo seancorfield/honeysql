@@ -470,7 +470,7 @@
   [expr]
   (and (ident? expr)
        (nil? (namespace expr))
-       (re-find #"^\*[a-zA-Z]" (name expr))))
+       (re-find #"^![a-zA-Z]" (name expr))))
 
 (defn format-interspersed-expr-list
   "If there are inline (SQL) keywords, use them to join the formatted

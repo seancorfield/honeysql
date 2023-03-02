@@ -1113,23 +1113,23 @@ ORDER BY id = ? DESC
   (testing "overlay"
     (is (= ["SELECT OVERLAY(foo PLACING ? FROM ? FOR ?)"
             "bar" 3 4]
-           (sut/format {:select [[[:overlay :foo :*placing "bar" :*from 3 :*for 4]]]}))))
+           (sut/format {:select [[[:overlay :foo :!placing "bar" :!from 3 :!for 4]]]}))))
   (testing "position"
     (is (= ["SELECT POSITION(? IN bar)" "foo"]
-           (sut/format {:select [[[:position "foo" :*in :bar]]]}))))
+           (sut/format {:select [[[:position "foo" :!in :bar]]]}))))
   (testing "trim"
     (is (= ["SELECT TRIM(LEADING FROM bar)"]
-           (sut/format {:select [[[:trim :*leading :*from :bar]]]})))
+           (sut/format {:select [[[:trim :!leading :!from :bar]]]})))
     (is (= ["SELECT TRIM(LEADING FROM bar)"]
-           (sut/format {:select [[[:trim :*leading-from :bar]]]}))))
+           (sut/format {:select [[[:trim :!leading-from :bar]]]}))))
   (testing "extract"
     (is (= ["SELECT EXTRACT(CENTURY FROM TIMESTAMP '2000-12-16 12:21:13')"]
-           (sut/format {:select [[[:extract :*century :*from
-                                   :*timestamp [:inline "2000-12-16 12:21:13"]]]]}))))
+           (sut/format {:select [[[:extract :!century :!from
+                                   :!timestamp [:inline "2000-12-16 12:21:13"]]]]}))))
   (testing "xmlelement"
     (is (= ["SELECT XMLELEMENT(NAME \"foo$bar\", XMLATTRIBUTES('xyz' AS \"a&b\"))"]
-           (sut/format {:select [[[:xmlelement :*name :foo$bar
-                                   [:xmlattributes [:inline "xyz"] :*as :a&b]]]]})))))
+           (sut/format {:select [[[:xmlelement :!name :foo$bar
+                                   [:xmlattributes [:inline "xyz"] :!as :a&b]]]]})))))
 
 (deftest issue-474-dot-selection
   (testing "basic dot selection"
