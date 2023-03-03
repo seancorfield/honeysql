@@ -340,6 +340,8 @@ specify a dialect in the `format` call, you can specify
 `:quoted true` to have SQL entities quoted. You can also enable quoting
 globally via the `set-dialect!` function.
 
+If you want to use a dialect _and_ use the default quoting strategy (automatically quote any SQL entities that seem unusual), specify a `:dialect` option and set `:quoted nil`:
+
 <!-- Reminder to doc author:
      Reset dialect to default so other blocks are not affected for test-doc-blocks -->
 ```clojure
@@ -366,6 +368,9 @@ globally via the `set-dialect!` function.
 ;; so only unusual entity names get quoted:
 (sql/format '{select (id) from (table)} {:quoted true})
 ;;=> ["SELECT \"id\" FROM \"table\""]
+;; use default quoting strategy with dialect specific quotes, only unusual entities quoted
+(sql/format '{select (id, iffy##field ) from (table)} {:dialect :sqlserver :quoted nil})
+;; => ["SELECT id, [iffy##field] FROM table"]
 ```
 
 Out of the box, as part of the extended ANSI SQL support,
