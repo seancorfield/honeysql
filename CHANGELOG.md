@@ -8,6 +8,7 @@
   * Address [#466](https://github.com/seancorfield/honeysql/issues/466) by treating `[:and]` as `TRUE` and `[:or]` as `FALSE`.
   * Fix [#465](https://github.com/seancorfield/honeysql/issues/465) to allow multiple columns in `:order-by` special syntax via PR [#468](https://github.com/seancorfield/honeysql/pull/468) [@p-himik](https://github.com/p-himik).
   * Fix [#464](https://github.com/seancorfield/honeysql/issues/464) by adding an optional type argument to `:array` via PR [#469](https://github.com/seancorfield/honeysql/pull/469) [@p-himik](https://github.com/p-himik).
+  * Address [#463](https://github.com/seancorfield/honeysql/issues/463) by explaining `:quoted nil` via PR [#475](https://github.com/seancorfield/honeysql/pull/475) [@nharsch](https://github.com/nharsch).
 
 * 2.4.980 -- 2023-02-15
   * Fix [#461](https://github.com/seancorfield/honeysql/issues/461) -- a regression introduced in 2.4.979 -- by restricting unary operators to just `+`, `-`, and `~` (bitwise negation).
