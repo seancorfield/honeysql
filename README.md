@@ -538,6 +538,8 @@ There are also helpers for each of those:
 => ["SELECT * FROM foo UNION SELECT * FROM bar"]
 ```
 
+> Note: different databases have different precedence rules for these set operations when used in combination -- you may need to use `:nest` to add `(` .. `)` in order to combine these operations in a single SQL statement, if the natural order produced by HoneySQL does not work "as expected" for your database.
+
 ### Functions
 
 Function calls (and expressions with operators) can be specified as

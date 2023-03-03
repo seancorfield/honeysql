@@ -439,6 +439,8 @@ user=> (sql/format '{union [{select (id,status) from (table-a)}
 ["SELECT id, status FROM table_a UNION SELECT id, event AS status, from, table_b"]
 ```
 
+> Note: different databases have different precedence rules for these set operations when used in combination -- you may need to use `:nest` to add `(` .. `)` in order to combine these operations in a single SQL statement, if the natural order produced by HoneySQL does not work "as expected" for your database.
+
 ## select, select-distinct, table
 
 `:select` and `:select-distinct` expect a sequence of SQL entities (column names
@@ -482,7 +484,7 @@ user=> (sql/format {:select [[:* :except [:a :b] :replace [[[:inline 2] :c]]]] :
 ```
 
 The `:table` clause is equivalent to `:select :* :from` and accepts just
-a simple table name -- `:create-table-as` above for an example.
+a simple table name -- see `:create-table-as` above for an example.
 
 ## select-distinct-on
 
