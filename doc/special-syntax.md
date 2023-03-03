@@ -105,6 +105,22 @@ Accepts a single expression and prefixes it with `DISTINCT `:
 ;;=> ["SELECT COUNT(DISTINCT status) AS n FROM table"]
 ```
 
+## dot .
+
+Accepts an expression and a field (or column) selection:
+
+```clojure
+(sql/format {:select [ [[:. :t :c]] [[:. :s :t :c]] ]})
+;;=> ["SELECT t.c, s.t.c"]
+```
+
+Can be used with `:nest` for field selection from composites:
+
+```clojure
+(sql/format {:select [ [[:. [:nest :v] :*]] [[:. [:nest [:myfunc :x]] :y]] ]})
+;;=> ["SELECT (v).*, (MYFUNC(x)).y"]
+```
+
 ## entity
 
 Accepts a single keyword or symbol argument and produces a

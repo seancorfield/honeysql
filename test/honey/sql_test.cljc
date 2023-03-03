@@ -1133,11 +1133,20 @@ ORDER BY id = ? DESC
 
 (deftest issue-474-dot-selection
   (testing "basic dot selection"
-    (is (= ["SELECT a.b, c.d, e.f"]
+    (is (= ["SELECT a.b, c.d, a.d.x"]
            (let [t :a c :d]
-             (sut/format {:select [[[:. t :b]] [[:. :c c]] [[:. :e :f]]]})))))
+             (sut/format {:select [[[:. t :b]] [[:. :c c]] [[:. t c :x]]]}))))
+    (is (= ["SELECT [a].[b], [c].[d], [a].[d].[x]"]
+           (let [t :a c :d]
+             (sut/format {:select [[[:. t :b]] [[:. :c c]] [[:. t c :x]]]}
+                         {:dialect :sqlserver})))))
   (testing "basic field selection from composite"
     (is (= ["SELECT (v).*, (w).x, (Y(z)).*"]
            (sut/format '{select (((. (nest v) *))
                                  ((. (nest w) x))
-                                 ((. (nest (y z)) *)))})))))
+                                 ((. (nest (y z)) *)))})))
+    (is (= ["SELECT (`v`).*, (`w`).`x`, (Y(`z`)).*"]
+           (sut/format '{select (((. (nest v) *))
+                                 ((. (nest w) x))
+                                 ((. (nest (y z)) *)))}
+                       {:dialect :mysql})))))
