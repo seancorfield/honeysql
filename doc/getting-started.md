@@ -10,14 +10,14 @@ For the Clojure CLI, add the following dependency to your `deps.edn` file:
 
 <!-- :test-doc-blocks/skip -->
 ```clojure
-    com.github.seancorfield/honeysql {:mvn/version "2.4.980"}
+    com.github.seancorfield/honeysql {:mvn/version "2.4.1002"}
 ```
 
 For Leiningen, add the following dependency to your `project.clj` file:
 
 <!-- :test-doc-blocks/skip -->
 ```clojure
-    [com.github.seancorfield/honeysql "2.4.980"]
+    [com.github.seancorfield/honeysql "2.4.1002"]
 ```
 
 HoneySQL produces SQL statements but does not execute them.
@@ -112,7 +112,7 @@ Some "functions" are considered to be operators. In general,
 
 > Note: you can use the `:numbered true` option to `format` to produce SQL containing numbered placeholders, like `FOO(a, $1, $2)`, instead of positional placeholders (`?`).
 
-As of 2.4.next, function calls with "named" arguments are supported
+As of 2.4.1002, function calls with "named" arguments are supported
 which some databases support, e.g., MySQL and PostgreSQL both have
 `SUBSTRING()`:
 

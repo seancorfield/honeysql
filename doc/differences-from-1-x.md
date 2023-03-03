@@ -63,7 +63,7 @@ Supported Clojure versions: 1.7 and later.
 In `deps.edn`:
 <!-- :test-doc-blocks/skip -->
 ```clojure
-com.github.seancorfield/honeysql {:mvn/version "2.4.980"}
+com.github.seancorfield/honeysql {:mvn/version "2.4.1002"}
 ```
 
 Required as:
@@ -98,7 +98,7 @@ The primary API is just `honey.sql/format`. The `array`, `call`, `inline`, `para
 
 Other `honeysql.core` functions that no longer exist include: `build`, `qualify`, and `quote-identifier`. Many other public functions were essentially undocumented (neither mentioned in the README nor in the tests) and also no longer exist.
 
-> As of 2.4.next, the functionality of `qualify` can be achieved through the `:.` dot-selection special syntax.
+> As of 2.4.1002, the functionality of `qualify` can be achieved through the `:.` dot-selection special syntax.
 
 You can now select a non-ANSI dialect of SQL using the new `honey.sql/set-dialect!` function (which sets a default dialect for all `format` operations) or by passing the new `:dialect` option to the `format` function. `:ansi` is the default dialect (which will mostly incorporate PostgreSQL usage over time). Other dialects supported are `:mysql` (which has a different quoting strategy and uses a different ranking for the `:set` clause), `:oracle` (which is essentially the `:ansi` dialect but will control other things over time), and `:sqlserver` (which is essentially the `:ansi` dialect but with a different quoting strategy). Other dialects and changes may be added over time.
 
