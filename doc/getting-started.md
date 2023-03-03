@@ -112,6 +112,30 @@ Some "functions" are considered to be operators. In general,
 
 > Note: you can use the `:numbered true` option to `format` to produce SQL containing numbered placeholders, like `FOO(a, $1, $2)`, instead of positional placeholders (`?`).
 
+As of 2.4.next, function calls with "named" arguments are supported
+which some databases support, e.g., MySQL and PostgreSQL both have
+`SUBSTRING()`:
+
+<!-- :test-doc-blocks/skip -->
+```clojure
+[:substring :col 3 4]              ;=> SUBSTRING(col, 3, 4)
+;; can also be written:
+[:substring :col :!from 3 :!for 4] ;=> SUBSTRING(col FROM 3 FOR 4)
+```
+
+In a function call, any keywords (or symbols) that begin with `!` followed
+by a letter are treated as inline SQL keywords to be used instead of `,`
+between arguments -- or in front of arguments, such as for `TRIM()`:
+
+<!-- :test-doc-blocks/skip -->
+```clojure
+[:trim :!leading "x" :!from :col] ;=> TRIM(LEADING ? FROM col), with "x" parameter
+[:trim :!both :!from :col]        ;=> TRIM(BOTH FROM col), trims spaces
+;; adjacent inline SQL keywords can be combined with a hyphen:
+[:trim :!both-from :col]          ;=> TRIM(BOTH FROM col)
+;; (because - in a SQL keyword is replaced by a space)
+```
+
 Operators are all treated as variadic (except for `:=` and
 `:<>` / `:!=` / `:not=` which are binary and require exactly two operands).
 Special syntax can have zero or more arguments and each form is
