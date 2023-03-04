@@ -1150,3 +1150,23 @@ ORDER BY id = ? DESC
                                  ((. (nest w) x))
                                  ((. (nest (y z)) *)))}
                        {:dialect :mysql})))))
+
+(deftest issue-476-raw
+  (testing "single argument :raw"
+    (is (= ["@foo := 42"]
+           (sut/format [:raw "@foo := 42"])))
+    (is (= ["@foo := 42"]
+           (sut/format [:raw ["@foo := 42"]])))
+    (is (= ["@foo := 42"]
+           (sut/format [:raw ["@foo := " 42]])))
+    (is (= ["@foo := (?)" 42]
+           (sut/format [:raw ["@foo := " [42]]])))
+    (is (= ["@foo := MYFUNC(?)" 42]
+           (sut/format [:raw ["@foo := " [:myfunc 42]]]))))
+  (testing "multi-argument :raw"
+    (is (= ["@foo := 42"]
+           (sut/format [:raw "@foo := " 42])))
+    (is (= ["@foo := (?)" 42]
+           (sut/format [:raw "@foo := " [42]])))
+    (is (= ["@foo := MYFUNC(?)" 42]
+           (sut/format [:raw "@foo := " [:myfunc 42]])))))

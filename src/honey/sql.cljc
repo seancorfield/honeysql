@@ -1597,8 +1597,12 @@
             :else
             ["?" (->param k)]))
     :raw
-    (fn [_ [xs]]
-      (raw-render xs))
+    (fn [_ [& xs]]
+      ;; #476 : preserve existing single-argument behavior...
+      (if (= 1 (count xs))
+        (raw-render (first xs))
+        ;; ...but allow for multiple arguments now:
+        (raw-render xs)))
     :within-group expr-clause-pairs}))
 
 (defn- format-equality-expr [op' op expr nested]

@@ -1,5 +1,8 @@
 # Changes
 
+* 2.4.next in progress
+  * Fix [#476](https://github.com/seancorfield/honeysql/issues/476) by adding support for multiple arguments to `:raw`, essentially restoring 1.x functionality (while still allowing for embedded vectors as expressions, introduced in 2.x).
+
 * 2.4.1002 -- 2023-03-03
   * Address [#474](https://github.com/seancorfield/honeysql/issues/474) by adding dot-selection special syntax.
   * Improve docstrings for PostgreSQL operators via PR [#473](https://github.com/seancorfield/honeysql/pull/473) [@holyjak](https://github.com/holyjak).
