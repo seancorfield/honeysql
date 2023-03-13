@@ -93,14 +93,14 @@
                (upsert (-> (on-conflict (on-constraint :distributors_pkey))
                            do-nothing))
                sql/format)))
-    (is (= ["INSERT INTO foo (id, data) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET DO UPDATE SET into = ((STATE(?), MODIFIED(NOW()))) WHERE state = ?" 1 42 "enabled" "disabled"]
+    (is (= ["INSERT INTO foo (id, data) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET into = ((STATE(?), MODIFIED(NOW()))) WHERE state = ?" 1 42 "enabled" "disabled"]
            (sql/format (-> (insert-into :foo)
                            (values [{:id 1 :data 42}])
                            (upsert (-> (on-conflict :id)
                                        (do-update-set [:state "enabled"]
                                                       [:modified [:now]])
                                        (where [:= :state "disabled"])))))))
-    (is (= ["INSERT INTO foo (id, data) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET DO UPDATE SET state = ?, modified = NOW() WHERE state = ?" 1 42 "enabled" "disabled"]
+    (is (= ["INSERT INTO foo (id, data) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET state = ?, modified = NOW() WHERE state = ?" 1 42 "enabled" "disabled"]
            (sql/format (-> (insert-into :foo)
                            (values [{:id 1 :data 42}])
                            (upsert (-> (on-conflict :id)

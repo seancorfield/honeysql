@@ -902,15 +902,15 @@
                 [sets & set-params]
                 (if (map? fields)
                   (format-set-exprs k fields)
-                  [(str/join ", "
-                             (map (fn [e]
-                                    (let [e (format-entity e {:drop-ns true})]
-                                      (str e " = EXCLUDED." e)))
-                                  fields))])
+                  [(str (sql-kw k) " "
+                        (str/join ", "
+                                  (map (fn [e]
+                                         (let [e (format-entity e {:drop-ns true})]
+                                           (str e " = EXCLUDED." e)))
+                                       fields)))])
                 where (or (:where x) ('where x))
                 [sql & params] (when where (format-dsl {:where where}))]
-            (-> [(str (sql-kw k) " " sets
-                      (when sql (str " " sql)))]
+            (-> [(str sets (when sql (str " " sql)))]
                 (into set-params)
                 (into params)))
           (format-set-exprs k x))
