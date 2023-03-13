@@ -1036,7 +1036,16 @@
        (assoc :do-nothing do-nothing)
        do-update-set
        (assoc :do-update-set (if where
-                               {:fields do-update-set
+                               {:fields
+                                (cond (and (= 1 (count do-update-set))
+                                           (map? (first do-update-set)))
+                                      (first do-update-set)
+                                      (every? #(and (vector? %)
+                                                    (= 2 (count %)))
+                                              do-update-set)
+                                      (into {} do-update-set)
+                                      :else
+                                      do-update-set)
                                 :where  where}
                                do-update-set))))))
 

@@ -898,16 +898,21 @@
 (defn- format-do-update-set [k x]
   (cond (map? x)
         (if (or (contains? x :fields) (contains? x 'fields))
-          (let [sets (str/join ", "
-                               (map (fn [e]
-                                      (let [e (format-entity e {:drop-ns true})]
-                                        (str e " = EXCLUDED." e)))
-                                    (or (:fields x)
-                                        ('fields x))))
+          (let [fields (or (:fields x) ('fields x))
+                [sets & set-params]
+                (if (map? fields)
+                  (format-set-exprs k fields)
+                  [(str/join ", "
+                             (map (fn [e]
+                                    (let [e (format-entity e {:drop-ns true})]
+                                      (str e " = EXCLUDED." e)))
+                                  fields))])
                 where (or (:where x) ('where x))
                 [sql & params] (when where (format-dsl {:where where}))]
-            (into [(str (sql-kw k) " " sets
-                        (when sql (str " " sql)))] params))
+            (-> [(str (sql-kw k) " " sets
+                      (when sql (str " " sql)))]
+                (into set-params)
+                (into params)))
           (format-set-exprs k x))
         (sequential? x)
         (let [[cols clauses] (split-with (complement map?) x)]
@@ -2049,4 +2054,4 @@
   (sql/register-fn! :foo foo-formatter)
 
   (sql/format {:select [:*], :from [:table], :where [:foo [:+ :a 1]]})
-  ,)
+  )

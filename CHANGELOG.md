@@ -1,6 +1,7 @@
 # Changes
 
 * 2.4.next in progress
+  * Fix [#478](https://github.com/seancorfield/honeysql/issues/478) by handling `:do-update-set` correctly in the `upsert` helper and by handling parameters correctly in the `:do-update-set` formatter.
   * Fix [#476](https://github.com/seancorfield/honeysql/issues/476) by adding support for multiple arguments to `:raw`, essentially restoring 1.x functionality (while still allowing for embedded vectors as expressions, introduced in 2.x).
 
 * 2.4.1002 -- 2023-03-03
