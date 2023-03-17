@@ -8,7 +8,7 @@ SQL as Clojure data structures. Build queries programmatically -- even at runtim
 
 This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINOR provide some relative indication of the size of the change, but do not follow semantic versioning. In general, all changes endeavor to be non-breaking (by moving to new names rather than by breaking existing names). COMMITS is an ever-increasing counter of commits since the beginning of this repository.
 
-> Note: every commit to the **develop** branch runs CI (GitHub Actions) and successful runs push a MAJOR.MINOR.999-SNAPSHOT build to Clojars so the very latest version of HoneySQL is always available either via that [snapshot on Clojars](https://clojars.org/com.github.seancorfield/honeysql) or via a git dependency on the latest SHA.
+> Note: every commit to the **develop** branch runs CI (GitHub Actions) and successful runs push a MAJOR.MINOR.9999-SNAPSHOT build to Clojars so the very latest version of HoneySQL is always available either via that [snapshot on Clojars](https://clojars.org/com.github.seancorfield/honeysql) or via a git dependency on the latest SHA.
 
 HoneySQL 2.x requires Clojure 1.9 or later.
 
