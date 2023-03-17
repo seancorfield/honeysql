@@ -352,6 +352,12 @@ parameters from them:
 ;;=> ["SELECT a, @var := 'foo'"]
 (sql/format {:select [:a [[:raw ["@var := " ["foo"]]]]]})
 ;;=> ["SELECT a, @var := (?)" "foo"]
+;; when multiple expressions are provided, the enclosing
+;; vector can be omitted:
+(sql/format {:select [:a [[:raw "@var := " [:inline "foo"]]]]})
+;;=> ["SELECT a, @var := 'foo'"]
+(sql/format {:select [:a [[:raw "@var := " ["foo"]]]]})
+;;=> ["SELECT a, @var := (?)" "foo"]
 ```
 
 `:raw` is also supported as a SQL clause for the same reason.
