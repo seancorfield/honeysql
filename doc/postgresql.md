@@ -255,6 +255,71 @@ By comparison, this is the DSL structure that nilenso would have required:
                                  :where  [:= :user.active false]}}}
 ```
 
+All of the examples for `:do-update-set` so far provide one or
+more columns and generated `SET` clauses using `EXCLUDED` columns.
+You can also perform regular `SET` operations, where the right-hand
+side is a full SQL expression by specifying a hash map of column /
+expression pairs, like you would for a regular `:set` clause:
+
+```clojure
+user=> (-> (insert-into :table)
+           (values [{:id "id" :counter 1}])
+           (on-conflict :id)
+           (do-update-set {:counter [:+ :table.counter 1]})
+           (sql/format {:pretty true}))
+["
+INSERT INTO table
+(id, counter) VALUES (?, ?)
+ON CONFLICT (id)
+DO UPDATE SET counter = table.counter + ?
+" "id" 1 1]
+;; using the DSL directly:
+user=> (-> {:insert-into :table
+            :values [{:id "id" :counter 1}]
+            :on-conflict :id
+            :do-update-set {:counter [:+ :table.counter 1]}}
+           (sql/format {:pretty true}))
+["
+INSERT INTO table
+(id, counter) VALUES (?, ?)
+ON CONFLICT (id)
+DO UPDATE SET counter = table.counter + ?
+" "id" 1 1]
+```
+
+If you need to combine a `DO UPDATE SET` hash map expression
+with a `WHERE` clause, you need to explicitly use the `:fields` /
+`:where` format explained above. Here's how those two examples
+look with a `WHERE` clause added:
+
+```clojure
+user=> (-> (insert-into :table)
+           (values [{:id "id" :counter 1}])
+           (on-conflict :id)
+           (do-update-set {:fields {:counter [:+ :table.counter 1]}
+                           :where [:> :table.counter 1]})
+           (sql/format {:pretty true}))
+["
+INSERT INTO table
+(id, counter) VALUES (?, ?)
+ON CONFLICT (id)
+DO UPDATE SET counter = table.counter + ? WHERE table.counter > ?
+" "id" 1 1 1]
+;; using the DSL directly:
+user=> (-> {:insert-into :table
+            :values [{:id "id" :counter 1}]
+            :on-conflict :id
+            :do-update-set {:fields {:counter [:+ :table.counter 1]}
+                            :where [:> :table.counter 1]}}
+           (sql/format {:pretty true}))
+["
+INSERT INTO table
+(id, counter) VALUES (?, ?)
+ON CONFLICT (id)
+DO UPDATE SET counter = table.counter + ? WHERE table.counter > ?
+" "id" 1 1 1]
+```
+
 ## INSERT INTO AS
 
 HoneySQL supports aliases directly in `:insert-into` so no special

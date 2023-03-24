@@ -1126,6 +1126,12 @@ user=> (sql/format {:insert-into :companies
 ["INSERT INTO companies (name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name WHERE name IS NOT NULL" "Microsoft"]
 user=> (sql/format {:insert-into :companies
                     :values [{:name "Microsoft"}]
+                    :on-conflict :name
+                    :do-update-set {:fields {:name [:+ :table.name 1]}
+                                    :where [:<> :name nil]}})
+["INSERT INTO companies (name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name = table.name + ? WHERE name IS NOT NULL" "Microsoft" 1]
+user=> (sql/format {:insert-into :companies
+                    :values [{:name "Microsoft"}]
                     :on-conflict {:on-constraint :name-idx}
                     :do-nothing true})
 ["INSERT INTO companies (name) VALUES (?) ON CONFLICT ON CONSTRAINT name_idx DO NOTHING" "Microsoft"]
