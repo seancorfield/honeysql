@@ -22,6 +22,11 @@ The examples herein assume:
                                            where order-by over partition-by window]])
 ```
 
+Every DDL and SQL clause has a corresponding helper function
+in `honey.sql.helpers`. In general, `(helper :foo expr)` will
+produce `{:helper [:foo expr]}` (with a few exceptions -- see
+the docstring of the helper function for details).
+
 # DDL Clauses
 
 HoneySQL supports the following DDL clauses as a data DSL.

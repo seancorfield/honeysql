@@ -277,6 +277,10 @@ supports out of the box. In addition, there are helpers for
 parts of the SQL DSL (examples of `composite` appear in the [README](/README.md),
 examples of `over` appear in the [Clause Reference](clause-reference.md))
 
+In general, `(helper :foo expr)` will produce `{:helper [:foo expr]}`
+(with a few exceptions -- see the docstring of the helper function
+for details).
+
 In addition to being variadic -- which often lets you omit one
 level of `[`..`]` -- the helper functions merge clauses, which
 can make it easier to build queries programmatically:

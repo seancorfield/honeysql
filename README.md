@@ -157,6 +157,10 @@ function in the `honey.sql.helpers` namespace:
 => {:select [:a :b :c] :from [:foo] :where [:= :foo.a "baz"]}
 ```
 
+In general, `(helper :foo expr)` will produce `{:helper [:foo expr]}`
+(with a few exceptions -- see the docstring of the helper function
+for details).
+
 Order doesn't matter (for independent clauses):
 
 ```clojure
