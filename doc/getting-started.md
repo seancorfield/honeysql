@@ -406,6 +406,11 @@ HoneySQL supports quite a few [PostgreSQL extensions](postgresql.md).
 
 > Note: the [nilenso/honeysql-postgres](https://github.com/nilenso/honeysql-postgres) library which provided PostgreSQL support for HoneySQL 1.x does not work with HoneySQL 2.x. However, HoneySQL 2.x includes all of the functionality from that library (up to 0.4.112) out of the box!
 
+See also the section on
+[database-specific hints and tips](databases.md) which may
+provide ways to satisfy your database's needs without changing
+the dialect or extending HoneySQL.
+
 ## Reference Documentation
 
 The full list of supported SQL clauses is documented in the

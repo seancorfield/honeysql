@@ -10,7 +10,8 @@ Clauses can be specified as keywords or symbols. Use
 a space (e.g., `:left-join` is formatted as `LEFT JOIN`).
 
 Except as noted, these clauses apply to all the SQL
-dialects that HoneySQL supports.
+dialects that HoneySQL supports. See also the section on
+[database-specific hints and tips](databases.md).
 
 DDL clauses are listed first, followed by SQL clauses.
 

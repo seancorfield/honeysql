@@ -14,6 +14,10 @@ many more. Built in operators include: `:=`, `:+`, `:mod`.
 Built in functions (special syntax) include: `:array`, `:case`,
 `:cast`, `:inline`, `:raw` and many more.
 
+See also the section on
+[database-specific hints and tips](databases.md), which may
+let you avoid extending HoneySQL.
+
 ## Extending what `:inline` can do
 
 By default, the `:inline` option can convert a fairly
