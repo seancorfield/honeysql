@@ -1,5 +1,7 @@
 # Changes
 
+* 2.4.next in progress
+  * Fix [#483](https://github.com/seancorfield/honeysql/issues/483) by adding a function-like `:join` syntax to produce nested `JOIN` expressions.
 * 2.4.1011 -- 2023-03-23
   * Address [#481](https://github.com/seancorfield/honeysql/issues/481) by adding more examples around `:do-update-set`.
   * Address [#480](https://github.com/seancorfield/honeysql/issues/480) by clarifying the general relationship between clauses and helpers.
