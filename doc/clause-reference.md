@@ -700,7 +700,7 @@ one or more SQL entities. Each entity can either be a
 simple table name (keyword or symbol) or a pair of a
 table name and an alias.
 
-`:using` is intended to be used as a simple join with a `:delete-from`
+`:using` is intended to be used as a simple join, for example with a `:delete-from`
 clause (see [PostgreSQL DELETE statement](https://www.postgresql.org/docs/12/sql-delete.html)
 for more detail).
 
@@ -777,6 +777,9 @@ user=> (sql/format {:select [:t.ref :pp.code]
                     :where [:= "settled" :pp.status]})
 ["SELECT t.ref, pp.code FROM transaction AS t LEFT JOIN paypal_tx AS pp USING (id) WHERE ? = pp.status" "settled"]
 ```
+
+See also the [`:join` special syntax](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT/doc/getting-started/sql-special-syntax-#join)
+for nested `JOIN` expressions.
 
 ## cross-join
 

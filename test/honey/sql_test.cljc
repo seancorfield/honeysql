@@ -1170,3 +1170,28 @@ ORDER BY id = ? DESC
            (sut/format [:raw "@foo := " [42]])))
     (is (= ["@foo := MYFUNC(?)" 42]
            (sut/format [:raw "@foo := " [:myfunc 42]])))))
+
+(deftest issue-483-join
+  (testing "single nested join"
+    (is (= ["SELECT * FROM tbl1 LEFT JOIN (tbl2 INNER JOIN tbl3 USING (common_column)) ON (tbl2.col2 = tbl1.col2) AND (tbl3.col3 = tbl1.col3)"]
+           (-> {:select :*
+                :from :tbl1
+                :left-join [[[:join :tbl2 {:join [:tbl3 [:using [:common_column]]]}]]
+                            [:and
+                             [:= :tbl2.col2 :tbl1.col2]
+                             [:= :tbl3.col3 :tbl1.col3]]]}
+               (sut/format)))))
+  (testing "multiple nested join"
+    (is (= ["SELECT * FROM tbl1 LEFT JOIN (tbl2 INNER JOIN tbl3 USING (common_column) RIGHT JOIN tbl4 USING (id)) ON (tbl2.col2 = tbl1.col2) AND (tbl3.col3 = tbl1.col3)"]
+           (-> {:select :*
+                :from :tbl1
+                :left-join [[[:join :tbl2
+                              {:join [:tbl3 [:using [:common_column]]]}
+                              {:right-join [:tbl4 [:using :id]]}]]
+                            [:and
+                             [:= :tbl2.col2 :tbl1.col2]
+                             [:= :tbl3.col3 :tbl1.col3]]]}
+               (sut/format)))))
+  (testing "special syntax example"
+    (is (= ["INNER JOIN (tbl1 LEFT JOIN tbl2 USING (id))"]
+           (sut/format {:join [[[:join :tbl1 {:left-join [:tbl2 [:using :id]]}]]]})))))

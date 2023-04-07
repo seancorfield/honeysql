@@ -220,6 +220,17 @@ that represents a time unit. Produces an `INTERVAL` expression:
 
 > Note: PostgreSQL has an `INTERVAL` data type which is unrelated to this syntax. In PostgreSQL, the closet equivalent would be `[:cast "30 days" :interval]` which will lift `"30 days"` out as a parameter. In DDL, for PostgreSQL, you can use `:interval` to produce the `INTERVAL` data type (without wrapping it in a vector).
 
+## join
+
+Accepts a table name (or expression) followed by one or more join clauses.
+Produces a nested `JOIN` expression, typically used as the table expression of
+a `JOIN` clause.
+
+```clojure
+(sql/format {:join [[[:join :tbl1 {:left-join [:tbl2 [:using :id]]}]]]})
+;;=> ["INNER JOIN (tbl1 LEFT JOIN tbl2 USING (id))"]
+```
+
 ## lateral
 
 Accepts a single argument that can be a (`SELECT`) clause or
