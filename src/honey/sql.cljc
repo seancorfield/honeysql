@@ -1545,6 +1545,11 @@
     (fn [_ [n units]]
       (let [[sql & params] (format-expr n)]
         (into [(str "INTERVAL " sql " " (sql-kw units))] params)))
+    :join
+    (fn [_ [e & js]]
+      (let [[sqls params] (reduce-sql (cons (format-expr e)
+                                            (map format-dsl js)))]
+        (into [(str "(" (str/join " " sqls) ")")] params)))
     :lateral
     (fn [_ [clause-or-expr]]
       (if (map? clause-or-expr)
