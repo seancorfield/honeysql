@@ -4,7 +4,7 @@ SQL as Clojure data structures. Build queries programmatically -- even at runtim
 
 ## Build
 
-[![Clojars Project](https://clojars.org/com.github.seancorfield/honeysql/latest-version.svg)](https://clojars.org/com.github.seancorfield/honeysql) [![cljdoc badge](https://cljdoc.org/badge/com.github.seancorfield/honeysql?2.4.1011)](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT) [![slack]https://img.shields.io/badge/slack-HoneySQL-orange.svg?logo=slack)]([https://kubernetes.slack.com/messages/C87MF1RFD](https://clojurians.slack.com/C66EM8D5H)]
+[![Clojars Project](https://clojars.org/com.github.seancorfield/honeysql/latest-version.svg)](https://clojars.org/com.github.seancorfield/honeysql) [![cljdoc badge](https://cljdoc.org/badge/com.github.seancorfield/honeysql?2.4.1011)](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT) [![Slack](https://img.shields.io/badge/slack-HoneySQL-orange.svg?logo=slack)]([https://kubernetes.slack.com/messages/C87MF1RFD](https://clojurians.slack.com/C66EM8D5H)]
 
 
 This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINOR provide some relative indication of the size of the change, but do not follow semantic versioning. In general, all changes endeavor to be non-breaking (by moving to new names rather than by breaking existing names). COMMITS is an ever-increasing counter of commits since the beginning of this repository.
