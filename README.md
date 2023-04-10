@@ -518,11 +518,11 @@ If you want to delete everything from a table, you can use `truncate`:
 ```clojure
 (-> (truncate :films)
     (sql/format))
-=> ["TRUNCATE films"]
+=> ["TRUNCATE TABLE films"]
 ;; or as pure data DSL:
 (-> {:truncate :films}
     (sql/format))
-=> ["TRUNCATE films"]
+=> ["TRUNCATE TABLE films"]
 ```
 
 ### Set operations

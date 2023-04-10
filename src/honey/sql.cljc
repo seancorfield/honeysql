@@ -998,12 +998,12 @@
           (when opts
             (format-ddl-options opts context)))))
 
-(defn- format-truncate [k xs]
+(defn- format-truncate [_ xs]
   (let [[table & options] (ensure-sequential xs)
         [pre table ine options] (destructure-ddl-item [table options] "truncate")]
     (when (seq pre) (throw (ex-info "TRUNCATE syntax error" {:unexpected pre})))
     (when (seq ine) (throw (ex-info "TRUNCATE syntax error" {:unexpected ine})))
-    [(str/join " " (cond-> [(sql-kw k) table]
+    [(str/join " " (cond-> ["TRUNCATE TABLE" table]
                      (seq options)
                      (conj options)))]))
 

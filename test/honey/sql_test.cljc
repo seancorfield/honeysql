@@ -562,10 +562,10 @@
              (format)))))
 
 (deftest truncate-test
-  (is (= ["TRUNCATE `foo`"]
+  (is (= ["TRUNCATE TABLE `foo`"]
          (-> {:truncate :foo}
              (format {:dialect :mysql}))))
-  (is (= ["TRUNCATE `foo` CONTINUE IDENTITY"]
+  (is (= ["TRUNCATE TABLE `foo` CONTINUE IDENTITY"]
          (-> {:truncate [:foo :continue :identity]}
              (format {:dialect :mysql})))))
 

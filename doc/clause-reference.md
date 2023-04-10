@@ -645,9 +645,9 @@ or a table name followed by various options:
 
 ```clojure
 user=> (sql/format '{truncate transport})
-["TRUNCATE transport"]
+["TRUNCATE TABLE transport"]
 user=> (sql/format '{truncate (transport restart identity)})
-["TRUNCATE transport RESTART IDENTITY"]
+["TRUNCATE TABLE transport RESTART IDENTITY"]
 ```
 
 ## columns
