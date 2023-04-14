@@ -1543,8 +1543,12 @@
         (format-expr x)))
     :interval
     (fn [_ [n units]]
-      (let [[sql & params] (format-expr n)]
-        (into [(str "INTERVAL " sql " " (sql-kw units))] params)))
+      (if units
+        (let [[sql & params] (format-expr n)]
+          (into [(str "INTERVAL " sql " " (sql-kw units))] params))
+        (binding [*inline* true]
+          (let [[sql & params] (format-expr n)]
+            (into [(str "INTERVAL " sql)] params)))))
     :join
     (fn [_ [e & js]]
       (let [[sqls params] (reduce-sql (cons (format-expr e)
@@ -2010,6 +2014,9 @@
   (format {:select [:*] :from [:table]
            :where [:< [:date_add :expiry [:interval 30 :days]] [:now]]} {})
   (format-expr [:interval 30 :days])
+  (format {:select [:*] :from [:table]
+           :where [:< [:date_add :expiry [:interval "30 Days"]] [:now]]} {})
+  (format-expr [:interval "30 Days"])
   (format {:select [:*] :from [:table]
            :where [:= :id (int 1)]} {:dialect :mysql})
   (map fn? (format {:select [:*] :from [:table]

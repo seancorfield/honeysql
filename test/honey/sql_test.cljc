@@ -68,6 +68,10 @@
   (is (= ["INTERVAL ? DAYS" 30]
          (sut/format-expr [:interval 30 :days]))))
 
+(deftest issue-486-interval
+  (is (= ["INTERVAL '30 Days'"]
+         (sut/format-expr [:interval "30 Days"]))))
+
 (deftest issue-455-null
   (is (= ["WHERE (abc + ?) IS NULL" "abc"]
          (sut/format {:where [:= [:+ :abc "abc"] nil]}))))
@@ -97,6 +101,8 @@
          (sut/format {:select [:*] :from [:table] :order-by [[[:date :expiry] :desc] :bar]} {:quoted true})))
   (is (= ["SELECT * FROM \"table\" WHERE DATE_ADD(\"expiry\", INTERVAL ? DAYS) < NOW()" 30]
          (sut/format {:select [:*] :from [:table] :where [:< [:date_add :expiry [:interval 30 :days]] [:now]]} {:quoted true})))
+  (is (= ["SELECT * FROM \"table\" WHERE DATE_ADD(\"expiry\", INTERVAL '30 Days') < NOW()"]
+         (sut/format {:select [:*] :from [:table] :where [:< [:date_add :expiry [:interval "30 Days"]] [:now]]} {:quoted true})))
   (is (= ["SELECT * FROM `table` WHERE `id` = ?" 1]
          (sut/format {:select [:*] :from [:table] :where [:= :id 1]} {:dialect :mysql})))
   (is (= ["SELECT * FROM \"table\" WHERE \"id\" IN (?, ?, ?, ?)" 1 2 3 4]
@@ -126,6 +132,9 @@
                      {:quoted true :numbered true})))
   (is (= ["SELECT * FROM \"table\" WHERE DATE_ADD(\"expiry\", INTERVAL $1 DAYS) < NOW()" 30]
          (sut/format {:select [:*] :from [:table] :where [:< [:date_add :expiry [:interval 30 :days]] [:now]]}
+                     {:quoted true :numbered true})))
+  (is (= ["SELECT * FROM \"table\" WHERE DATE_ADD(\"expiry\", INTERVAL '30 Days') < NOW()"]
+         (sut/format {:select [:*] :from [:table] :where [:< [:date_add :expiry [:interval "30 Days"]] [:now]]}
                      {:quoted true :numbered true})))
   (is (= ["SELECT * FROM `table` WHERE `id` = $1" 1]
          (sut/format {:select [:*] :from [:table] :where [:= :id 1]}

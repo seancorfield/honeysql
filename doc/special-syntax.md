@@ -210,15 +210,18 @@ than turning it into a positional parameter:
 
 ## interval
 
-Accepts two arguments: an expression and a keyword (or a symbol)
-that represents a time unit. Produces an `INTERVAL` expression:
+Accepts one or two arguments: either a string or an expression and
+a keyword (or a symbol) that represents a time unit.
+Produces an `INTERVAL` expression:
 
 ```clojure
 (sql/format-expr [:date_add [:now] [:interval 30 :days]])
 ;;=> ["DATE_ADD(NOW(), INTERVAL ? DAYS)" 30]
+(sql/format-expr [:date_add [:now] [:interval "24 Hours"]])
+;;=> ["DATE_ADD(NOW(), INTERVAL '24 Hours')"]
 ```
 
-> Note: PostgreSQL has an `INTERVAL` data type which is unrelated to this syntax. In PostgreSQL, the closet equivalent would be `[:cast "30 days" :interval]` which will lift `"30 days"` out as a parameter. In DDL, for PostgreSQL, you can use `:interval` to produce the `INTERVAL` data type (without wrapping it in a vector).
+> Note: PostgreSQL also has an `INTERVAL` data type which is unrelated to this syntax. In PostgreSQL, the closet equivalent would be `[:cast "30 days" :interval]` which will lift `"30 days"` out as a parameter. In DDL, for PostgreSQL, you can use `:interval` to produce the `INTERVAL` data type (without wrapping it in a vector).
 
 ## join
 

@@ -1,6 +1,7 @@
 # Changes
 
 * 2.4.next in progress
+  * Fix [#486](https://github.com/seancorfield/honeysql/issues/486) by supporting ANSI-style `INTERVAL` syntax.
   * Fix [#484](https://github.com/seancorfield/honeysql/issues/484) by adding `TABLE` to `TRUNCATE`.
   * Fix [#483](https://github.com/seancorfield/honeysql/issues/483) by adding a function-like `:join` syntax to produce nested `JOIN` expressions.
 * 2.4.1011 -- 2023-03-23
