@@ -1323,7 +1323,8 @@
   (-> #{"mod" "and" "or" "xor" "<>" "<=" ">=" "||" "<->"
         "like" "not-like" "regexp" "~" "&&"
         "ilike" "not-ilike" "similar-to" "not-similar-to"
-        "is" "is-not" "not=" "!=" "regex"}
+        "is" "is-not" "not=" "!=" "regex"
+        "with-ordinality"}
       (into (map str "+-*%|&^=<>"))
       (into (keys infix-aliases))
       (into (vals infix-aliases))

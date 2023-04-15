@@ -2,12 +2,14 @@
 
 * 2.4.next in progress
   * Fix [#486](https://github.com/seancorfield/honeysql/issues/486) by supporting ANSI-style `INTERVAL` syntax.
+  * Fix [#485](https://github.com/seancorfield/honeysql/issues/485) by adding `:with-ordinality` "operator".
   * Fix [#484](https://github.com/seancorfield/honeysql/issues/484) by adding `TABLE` to `TRUNCATE`.
   * Fix [#483](https://github.com/seancorfield/honeysql/issues/483) by adding a function-like `:join` syntax to produce nested `JOIN` expressions.
 * 2.4.1011 -- 2023-03-23
   * Address [#481](https://github.com/seancorfield/honeysql/issues/481) by adding more examples around `:do-update-set`.
   * Address [#480](https://github.com/seancorfield/honeysql/issues/480) by clarifying the general relationship between clauses and helpers.
   * Address [#448](https://github.com/seancorfield/honeysql/issues/448) by adding a new section with hints and tips for database-specific syntax and solutions.
+  * Update `tools.build`; split alias `:test`/`:runner` for friendlier jack-in UX while developing.
 
 * 2.4.1006 -- 2023-03-17
   * Fix [#478](https://github.com/seancorfield/honeysql/issues/478) by handling `:do-update-set` correctly in the `upsert` helper and by handling parameters correctly in the `:do-update-set` formatter.

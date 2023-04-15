@@ -120,6 +120,17 @@ as an alias for `regexp`.
 
 `similar-to` and `not-similar-to` are also supported.
 
+## with ordinality
+
+The ANSI SQL `WITH ORDINALITY` expression is supported as an infix operator:
+
+```clojure
+{...
+ [:with-ordinality [:jsonb_array_elements :j] [:arr :item :index]]
+ ...}
+;;=> ["...JSONB_ARRAY_ELEMENTS(j) WITH ORDINALITY ARR(item, index)..."]
+```
+
 ## ||
 
 String concatenation operator.
