@@ -5,7 +5,7 @@
  {;; for help: clojure -A:deps -T:build help/doc
   :build {:deps {io.github.clojure/tools.build
                  {:git/tag "v0.9.4" :git/sha "76b78fe"}
-                 slipset/deps-deploy {:mvn/version "0.2.0"}}
+                 slipset/deps-deploy {:mvn/version "0.2.1"}}
           :ns-default build}
 
   ;; versions to test against:
@@ -32,7 +32,7 @@
          :main-opts ["-m" "cljs-test-runner.main"]}
 
   :gen-doc-tests {:replace-paths ["build"]
-                  :extra-deps {babashka/fs {:mvn/version "0.2.12"}
+                  :extra-deps {babashka/fs {:mvn/version "0.3.17"}
                                com.github.lread/test-doc-blocks {:mvn/version "1.0.166-alpha"}}
                   :main-opts ["-m" "honey.gen-doc-tests"]}
 
