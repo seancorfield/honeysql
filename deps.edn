@@ -23,8 +23,9 @@
    :extra-deps  {io.github.cognitect-labs/test-runner
                  {:git/tag "v0.5.1" :git/sha "dfb30dd"}
                  org.clojure/core.cache {:mvn/version "RELEASE"}}
-   :main-opts   ["-m" "cognitect.test-runner"]
    :exec-fn     cognitect.test-runner.api/test}
+  :runner
+  {:main-opts   ["-m" "cognitect.test-runner"]}
 
   ;; various "runners" for tests/CI:
   :cljs {:extra-deps {olical/cljs-test-runner {:mvn/version "3.8.0"}}

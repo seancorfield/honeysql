@@ -55,7 +55,7 @@
   [:cljs] -- test against ClojureScript"
   [{:keys [aliases] :as opts}]
   (gen-doc-tests opts)
-  (run-task (-> [:test :test-doc]
+  (run-task (-> [:test :runner :test-doc]
                 (into aliases)
                 (into (if (some #{:cljs} aliases)
                         [:test-doc-cljs]
@@ -63,7 +63,7 @@
   opts)
 
 (defn test "Run basic tests." [opts]
-  (run-task [:test :1.11])
+  (run-task [:test :runner :1.11])
   opts)
 
 (defn- jar-opts [opts]
@@ -92,7 +92,7 @@
       (run-doc-tests {:aliases [alias]}))
     (eastwood opts)
     (doseq [alias aliases]
-      (run-task [:test alias]))
+      (run-task [:test :runner alias]))
     (b/delete {:path "target"})
     (println "\nWriting pom.xml...")
     (b/write-pom opts)
