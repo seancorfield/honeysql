@@ -18,7 +18,6 @@
 .settings
 .socket-repl-port
 .sw*
-.vscode
 *.class
 *.jar
 *.swp
