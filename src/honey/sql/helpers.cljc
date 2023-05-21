@@ -869,7 +869,8 @@
 
 (defn on-conflict
   "Accepts zero or more SQL entities (keywords or symbols),
-  optionally followed by a single SQL clause (hash map)."
+  optionally followed by a single SQL clause (`{:where <condition>}`).
+  Ex.: `(on-conflict :mom :dad {:where [:= :race \"human\"]}`"
   {:arglists '([column* where-clause])}
   [& args]
   (generic :on-conflict args))
