@@ -1,4 +1,4 @@
-;; copyright (c) 2021-2022 sean corfield, all rights reserved
+;; copyright (c) 2021-2023 sean corfield, all rights reserved
 
 (ns honey.sql-test
   (:refer-clojure :exclude [format])
@@ -539,8 +539,8 @@
            (-> {:delete-from :foo
                 :where [:= :foo.id 42]}
                (format :dialect :mysql :pretty true)))))
-  (when (str/starts-with? #?(:clj (clojure-version)
-                             :cljs *clojurescript-version*) "1.11")
+  (when (str/starts-with? #?(:cljs *clojurescript-version*
+                             :default (clojure-version)) "1.11")
     (testing "format can be called with mixed arguments"
       (is (= ["\nDELETE FROM `foo`\nWHERE `foo`.`id` = ?\n" 42]
              (-> {:delete-from :foo
@@ -857,7 +857,7 @@ ORDER BY id = ? DESC
              :order-by [(keyword sort-column)]}
             (format))
         (is false "; not detected in entity!")
-        (catch #?(:clj Throwable :cljs :default) e
+        (catch #?(:cljs :default :default Exception) e
           (is (:disallowed (ex-data e))))))))
     ;; should not produce: ["SELECT foo, bar FROM mytable ORDER BY foo; select * from users"]
 

@@ -1,4 +1,4 @@
-;; copyright (c) 2020-2022 sean corfield, all rights reserved
+;; copyright (c) 2020-2023 sean corfield, all rights reserved
 
 (ns honey.sql
   "Primary API for HoneySQL 2.x.
@@ -174,7 +174,8 @@
      [^String s]
      (.. s toString (toUpperCase (java.util.Locale/US))))
    ;; TODO - not sure if there's a JavaScript equivalent here we should be using as well
-   :cljs
+   ;; TODO - not sure if there's a .NET equivalent here we should be using as well
+   :default
    (defn upper-case
      "In ClojureScript, just an alias for cljs.string/upper-case."
      [s]
@@ -192,7 +193,7 @@
   [x]
   (try
     (some-> (namespace x) (str/replace "-" "_"))
-    (catch #?(:clj Throwable :cljs :default) t
+    (catch #?(:cljs :default :default Exception) t
       (throw (ex-info (str "expected symbol, found: "
                            (type x))
                       {:symbol x
@@ -203,7 +204,7 @@
   [x]
   (try
     (str/replace (name x) "-" "_")
-    (catch #?(:clj Throwable :cljs :default) t
+    (catch #?(:cljs :default :default Exception) t
       (throw (ex-info (str "expected symbol, found: "
                            (type x))
                       {:symbol x
@@ -293,18 +294,18 @@
 (extend-protocol p/InlineValue
   nil
   (sqlize [_] "NULL")
-  #?(:clj String :cljs string)
+  #?(:cljs string :default String)
   (sqlize [x] (str \' (str/replace x "'" "''") \'))
-  #?(:clj clojure.lang.Keyword :cljs Keyword)
+  #?(:cljs Keyword :default clojure.lang.Keyword)
   (sqlize [x] (sql-kw x))
-  #?(:clj clojure.lang.Symbol :cljs Symbol)
+  #?(:cljs Symbol :default clojure.lang.Symbol)
   (sqlize [x] (sql-kw x))
-  #?(:clj clojure.lang.IPersistentVector :cljs PersistentVector)
+  #?(:cljs PersistentVector :default clojure.lang.IPersistentVector)
   (sqlize [x] (str "[" (str/join ", " (map p/sqlize x)) "]"))
   #?@(:clj [java.util.UUID
             ;; issue 385: quoted UUIDs for PostgreSQL/ANSI
             (sqlize [x] (str \' x \'))])
-  #?(:clj Object :cljs default)
+  #?(:cljs default :default Object)
   (sqlize [x] (str x)))
 
 (defn- sqlize-value [x] (p/sqlize x))
