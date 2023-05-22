@@ -1,5 +1,9 @@
 # Changes
 
+* 2.4.1033 -- 2023-05-22
+  * Tentative [ClojureCLR](https://github.com/clojure/clojure-clr) support.
+  * Improve `on-conflict` helper docstring [#490](https://github.com/seancorfield/honeysql/pull/490) [@holyjak](https://github.com/holyjak).
+
 * 2.4.1026 -- 2023-04-15
   * Fix [#486](https://github.com/seancorfield/honeysql/issues/486) by supporting ANSI-style `INTERVAL` syntax.
   * Fix [#485](https://github.com/seancorfield/honeysql/issues/485) by adding `:with-ordinality` "operator".
