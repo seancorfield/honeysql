@@ -173,8 +173,12 @@
      "Upper-case a string in Locale/US to avoid locale-specific capitalization."
      [^String s]
      (.. s toString (toUpperCase (java.util.Locale/US))))
+   :cljr
+   (defn upper-case
+     "Upper-case a string in Locale/US to avoid locale-specific capitalization."
+     [^String s]
+     (.ToUpper s (System.Globalization.CultureInfo. "en-Us")))
    ;; TODO - not sure if there's a JavaScript equivalent here we should be using as well
-   ;; TODO - not sure if there's a .NET equivalent here we should be using as well
    :default
    (defn upper-case
      "In ClojureScript, just an alias for cljs.string/upper-case."
