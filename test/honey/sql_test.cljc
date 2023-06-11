@@ -1204,3 +1204,8 @@ ORDER BY id = ? DESC
   (testing "special syntax example"
     (is (= ["INNER JOIN (tbl1 LEFT JOIN tbl2 USING (id))"]
            (sut/format {:join [[[:join :tbl1 {:left-join [:tbl2 [:using :id]]}]]]})))))
+
+(comment
+  ;; partial workaround for #407:
+  (sut/format {:select :f.* :from [[:foo [:f :for :system-time]]] :where [:= :f.id 1]})
+  )
