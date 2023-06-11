@@ -431,6 +431,8 @@ user=> (sql/format {:with [[[:stuff {:columns [:id :name]}]
 ["WITH stuff (id, name) AS (VALUES (?, ?), (?, ?)) SELECT id, name FROM stuff" 1 "Sean" 2 "Jay"]
 ```
 
+> Note: you must use the vector-of-vectors format for `:values` here -- if you try to use the vector-of-maps format, `VALUES` will be preceded by the column names (keys from the maps) and the resultant SQL will be invalid.
+
 `:with-recursive` follows the same rules as `:with` and produces `WITH RECURSIVE` instead of just `WITH`.
 
 ## intersect, union, union-all, except, except-all

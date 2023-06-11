@@ -1,6 +1,7 @@
 # Changes
 
 * 2.4.next in progress
+  * Address [#493](https://github.com/seancorfield/honeysql/issues/493) by clarifying use of `:values` in CTEs (using `:with`).
   * Address [#489](https://github.com/seancorfield/honeysql/issues/489) by adding more examples around `:update`.
 
 * 2.4.1033 -- 2023-05-22
