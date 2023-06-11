@@ -621,6 +621,16 @@ user=> (sql/format {:update :transport
 ["UPDATE transport SET name = ? WHERE id = ?" "Yacht" 2]
 ```
 
+You can also set columns to `NULL` or to their default values:
+
+```clojure
+user=> (sql/format {:update :transport
+                    :set {:owner nil, :date_built [:default]}
+                    :where [:= :id 2]})
+["UPDATE transport SET owner = NULL, date_built = DEFAULT WHERE id = ?"
+ 2]
+```
+
 ## delete, delete-from
 
 `:delete-from` is the simple use case here, accepting just a

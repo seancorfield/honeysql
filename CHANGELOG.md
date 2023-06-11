@@ -1,5 +1,8 @@
 # Changes
 
+* 2.4.next in progress
+  * Address [#489](https://github.com/seancorfield/honeysql/issues/489) by adding more examples around `:update`.
+
 * 2.4.1033 -- 2023-05-22
   * Tentative [ClojureCLR](https://github.com/clojure/clojure-clr) support.
   * Improve `on-conflict` helper docstring [#490](https://github.com/seancorfield/honeysql/pull/490) [@holyjak](https://github.com/holyjak).
