@@ -32,7 +32,7 @@
          :main-opts ["-m" "cljs-test-runner.main"]}
 
   :gen-doc-tests {:replace-paths ["build"]
-                  :extra-deps {babashka/fs {:mvn/version "0.3.17"}
+                  :extra-deps {babashka/fs {:mvn/version "0.4.19"}
                                com.github.lread/test-doc-blocks {:mvn/version "1.0.166-alpha"}}
                   :main-opts ["-m" "honey.gen-doc-tests"]}
 
@@ -43,5 +43,5 @@
                               "-c" "{:warnings,{:single-segment-namespace,false}}"
                               "-d" "target/test-doc-blocks/test"]}
 
-  :eastwood {:extra-deps {jonase/eastwood {:mvn/version "1.3.0"}}
+  :eastwood {:extra-deps {jonase/eastwood {:mvn/version "1.4.0"}}
              :main-opts ["-m" "eastwood.lint" "{:source-paths,[\"src\"]}"]}}}
