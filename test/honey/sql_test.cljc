@@ -772,13 +772,13 @@ DO NOTHING
 INSERT INTO customers
 (name, email)
 VALUES ('Microsoft', 'hotline@microsoft.com')
-ON CONFLICT (name, TRIM(email))
+ON CONFLICT ((foo + ?), name, (TRIM(email)))
 DO NOTHING
-"]
+" 1]
          (format {:insert-into :customers
                   :columns [:name :email]
                   :values [[[:inline "Microsoft"], [:inline "hotline@microsoft.com"]]]
-                  :on-conflict [:name [:trim :email]]
+                  :on-conflict [[:+ :foo 1] :name [:trim :email]]
                   :do-nothing true}
                  {:pretty true})))
   (is (= ["

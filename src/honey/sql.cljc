@@ -889,11 +889,10 @@
                               {:clause x})))
           [sqls expr-params]
           (when (seq exprs)
-            (format-expr-list exprs))
+            (format-expr-list (map (fn [e] (if (sequential? e) [:nest e] e)) exprs)))
           [sql & clause-params]
           (when clause
             (format-dsl clause))]
-
       (-> [(str (sql-kw k)
                 (when (pos? n)
                   (str " (" (str/join ", " sqls) ")"))
