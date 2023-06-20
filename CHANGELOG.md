@@ -1,6 +1,7 @@
 # Changes
 
 * 2.4.next in progress
+  * Fix [#494](https://github.com/seancorfield/honeysql/issues/494) by supporting expressions in `:on-conflict` instead of just entities.
   * Address [#493](https://github.com/seancorfield/honeysql/issues/493) by clarifying use of `:values` in CTEs (using `:with`).
   * Address [#489](https://github.com/seancorfield/honeysql/issues/489) by adding more examples around `:update`.
   * Update dev/test dependencies.

@@ -881,23 +881,26 @@
 
 (defn- format-on-conflict [k x]
   (if (sequential? x)
-    (let [entities (take-while ident? x)
-          n (count entities)
+    (let [exprs (take-while (complement map?) x)
+          n (count exprs)
           [clause & more] (drop n x)
-          _ (when (or (seq more)
-                      (and clause (not (map? clause))))
+          _ (when (seq more)
               (throw (ex-info "unsupported :on-conflict format"
                               {:clause x})))
-          [sql & params] (when clause
-                           (format-dsl clause))]
-      (into [(str (sql-kw k)
-                  (when (pos? n)
-                    (str " ("
-                         (str/join ", " (map #'format-entity entities))
-                         ")"))
-                  (when sql
-                    (str " " sql)))]
-            params))
+          [sqls expr-params]
+          (when (seq exprs)
+            (format-expr-list exprs))
+          [sql & clause-params]
+          (when clause
+            (format-dsl clause))]
+
+      (-> [(str (sql-kw k)
+                (when (pos? n)
+                  (str " (" (str/join ", " sqls) ")"))
+                (when sql
+                  (str " " sql)))]
+          (into expr-params)
+          (into clause-params)))
     (format-on-conflict k [x])))
 
 (defn- format-do-update-set [k x]
