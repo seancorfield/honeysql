@@ -1810,6 +1810,13 @@
          (mapv #(unwrap % opts) (formatter data opts))))))
   ([data k v & {:as opts}] (format data (assoc opts k v))))
 
+(defn formatf
+  "Experimental implementation of https://github.com/seancorfield/honeysql/issues/495
+
+  Currently, does not support options."
+  [dsl & params]
+  (format dsl {:params (zipmap (map (comp keyword str inc) (range)) params)}))
+
 (defn set-dialect!
   "Set the default dialect for formatting.
 
@@ -2074,4 +2081,6 @@
   (sql/register-fn! :foo foo-formatter)
 
   (sql/format {:select [:*], :from [:table], :where [:foo [:+ :a 1]]})
+  (sql/formatf '{select * from table where (foo (+ a 1))})
+  (sql/formatf '{select * from table where (foo (+ a ?1))} 42)
   )
