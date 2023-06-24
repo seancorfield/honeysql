@@ -1,10 +1,14 @@
-;; copyright (c) 2020-2022 sean corfield, all rights reserved
+;; copyright (c) 2020-2023 sean corfield, all rights reserved
 
 (ns honey.sql.helpers
   "Helper functions for the built-in clauses in honey.sql.
 
-  All helper functions are inherently variadic. Typical
-  usage is threaded, like this:
+  All helper functions are inherently variadic.
+
+  In general, `(helper :foo expr)` will produce `{:helper [:foo expr]}`,
+  with a few exceptions: see the docstring of the helper function for details.
+
+  Typical usage is threaded, like this:
 
 ```
   (-> (select :a :b :c)
