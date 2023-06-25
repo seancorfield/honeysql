@@ -1,7 +1,7 @@
 # Changes
 
-* 2.4.next in progress
-  * Address [#495](https://github.com/seancorfield/honeysql/issues/495) by adding (experimental) `formatf` function. Documentation TBD.
+* 2.4.1045 -- 2023-06-25
+  * Address [#495](https://github.com/seancorfield/honeysql/issues/495) by adding (experimental) `formatf` function -- purely for discussion: may be removed in a subsequent release!
   * Fix [#494](https://github.com/seancorfield/honeysql/issues/494) by supporting expressions in `:on-conflict` instead of just entities.
   * Address [#493](https://github.com/seancorfield/honeysql/issues/493) by clarifying use of `:values` in CTEs (using `:with`).
   * Address [#489](https://github.com/seancorfield/honeysql/issues/489) by adding more examples around `:update`.
