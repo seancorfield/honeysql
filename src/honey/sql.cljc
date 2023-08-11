@@ -2083,4 +2083,19 @@
   (sql/format {:select [:*], :from [:table], :where [:foo [:+ :a 1]]})
   (sql/formatf '{select * from table where (foo (+ a 1))})
   (sql/formatf '{select * from table where (foo (+ a ?1))} 42)
+
+  (sql/format {:update [:user :u]
+               :set {:email :u2.email
+                     :first_name :u2.first_name
+                     :last_name :u2.last_name}
+               :from [[[:values [1 "hollis@weiman.biz" "Hollis" "Connell"]
+                        [2 "robert@duncan.info" "Robert" "Duncan"]]
+                       [[:'u2 :id :email :first_name :last_name]]]]
+               :where [:= :u.id :u2.id]}
+              {:inline true})
+
+  (sql/register-clause! :output :select :values)
+  (sql/format {:insert-into :foo :output [:inserted.*] :values [{:bar 1}]})
+  (sql/format {:insert-into :foo :columns [:bar] :output [:inserted.*] :values [[1]]})
+
   )

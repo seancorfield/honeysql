@@ -564,7 +564,8 @@ The third case takes a pair of either a table specifier
 or a table/column specifier and a SQL query.
 
 For the first and second cases, you'll use the `:values` clause
-to specify rows of values to insert.
+to specify rows of values to insert. See [**values**](#values) below
+for more detail on the `:values` clause.
 
 `:replace-into` is only supported by MySQL and SQLite but is
 part of HoneySQL's "core" dialect anyway. It produces a `REPLACE INTO`
@@ -1037,15 +1038,39 @@ same as the `:for` clause above.
 row values or a sequence of sequences, also representing row
 values.
 
-In the former case, all of the rows are augmented to have
+### values with hash maps
+
+If you provide a sequence of hash maps, the `:values` clause
+will generate a `VALUES` clause with the column names preceding
+and the row values following.
+
+```clojure
+user=> (sql/format {:values [{:col-a 1 :col-b 2}]})
+["(col_a, col_b) VALUES (?, ?)" 1 2]
+```
+
+In addition, all of the rows are augmented to have
 either `NULL` or `DEFAULT` values for any missing keys (columns).
 By default, `NULL` is used but you can specify a set of columns
 to get `DEFAULT` values, via the `:values-default-columns` option.
 You can also be explicit and use `[:default]` as a value to generate `DEFAULT`.
-In the latter case -- a sequence of sequences --
-all of the rows are padded to the same length by adding `nil`
+
+### values with sequences
+
+If you provide a sequence of sequences, the `:values` clause
+will generate a `VALUES` clause with no column names and the
+row values following.
+
+```clojure
+user=> (sql/format {:values [[1 2]]})
+["VALUES (?, ?)" 1 2]
+```
+
+In addition, all of the rows are padded to the same length by adding `nil`
 values if needed (since `:values` does not know how or if column
 names are being used in this case).
+
+### values examples
 
 ```clojure
 user=> (sql/format {:insert-into :table

@@ -1,5 +1,8 @@
 # Changes
 
+* 2.4.next in progress
+  * Attempt to clarify the formatting behavior of the `:values` clause when used to produce column names.
+
 * 2.4.1045 -- 2023-06-25
   * Address [#495](https://github.com/seancorfield/honeysql/issues/495) by adding (experimental) `formatf` function -- purely for discussion: may be removed in a subsequent release!
   * Fix [#494](https://github.com/seancorfield/honeysql/issues/494) by supporting expressions in `:on-conflict` instead of just entities.
