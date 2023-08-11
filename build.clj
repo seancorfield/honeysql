@@ -29,8 +29,7 @@
   (let [basis    (b/create-basis {:aliases aliases})
         combined (t/combine-aliases basis aliases)
         cmds     (b/java-command
-                  {:basis basis
-                   :java-opts (:jvm-opts combined)
+                  {:basis      basis
                    :main      'clojure.main
                    :main-args (:main-opts combined)})
         {:keys [exit]} (b/process cmds)]
