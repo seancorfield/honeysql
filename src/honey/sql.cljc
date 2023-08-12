@@ -223,7 +223,11 @@
 
   Handles quoting, splitting at / or ., replacing - with _ etc."
   [e & [{:keys [aliased drop-ns]}]]
-  (let [col-fn      (if (or *quoted* (string? e))
+  (let [e           (if (and aliased (keyword? e) (= \' (first (name e))))
+                      ;; #497 quoted alias support (should behave like string)
+                      (subs (name e) 1)
+                      e)
+        col-fn      (if (or *quoted* (string? e))
                       (if *quoted-snake* name-_ name)
                       name-_)
         col-e       (col-fn e)
@@ -1494,6 +1498,8 @@
     ;; used in DDL to force rendering as a SQL entity instead
     ;; of a SQL keyword:
     :entity      (fn [_ [e]] [(format-entity e)])
+    ;; #497 used to force rendering as an alias:
+    :alias       (fn [_ [e]] [(format-entity e {:aliased true})])
     ;; bigquery column types:
     :bigquery/array (fn [_ spec]
                       [(str "ARRAY<"
@@ -2098,4 +2104,15 @@
   (sql/format {:insert-into :foo :output [:inserted.*] :values [{:bar 1}]})
   (sql/format {:insert-into :foo :columns [:bar] :output [:inserted.*] :values [[1]]})
 
+  ;; issue-497
+  (honey.sql/format {:select [[:column-name "some-alias"]]
+                     :from :b
+                     :order-by [[[:raw "\"some-alias\""]]]})
+  (honey.sql/format {:select [[:column-name "some-alias"]]
+                     :from :b
+                     :order-by [[[:alias "some-alias"]]]})
+  (honey.sql/format {:select [[:column-name "some-alias"]]
+                     :from :b
+                     :order-by [[[:alias "some-alias"]]]}
+                    {:quoted true})
   )
