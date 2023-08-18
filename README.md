@@ -606,6 +606,20 @@ regular function calls in a select:
 => ["SELECT MAX(id) FROM foo"]
 ```
 
+Custom columns using functions are built with the same vector format. 
+Be sure to properly nest the vectors so that the first element in the selection 
+is the custom function and the second is the column alias.
+```clojure
+(sql/format
+  {:select   [:job_name                                      ;; A bare field selection
+              [[:avg [:/ [:- :end_time :start_time] 1000.0]] ;; A custom function
+               :avg_exec_time_seconds                        ;; The column alias
+               ]]
+   :from     [:job_data]
+   :group-by :job_name})
+=> ["SELECT job_name, AVG((end_time - start_time) / ?) AS avg_exec_time_seconds FROM job_data GROUP BY job_name" 1000.0]
+```
+
 If a keyword begins with `'`, the function name is formatted as a SQL
 entity rather than being converted to uppercase and having hyphens `-`
 converted to spaces). That means that hyphens `-` will become underscores `_`
