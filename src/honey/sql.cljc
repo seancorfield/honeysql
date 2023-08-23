@@ -29,8 +29,7 @@
         it uppercase and replaces - with space). "
   (:refer-clojure :exclude [format])
   (:require [clojure.string :as str]
-            [honey.sql.protocols :as p]
-            [honey.sql :as sql]))
+            [honey.sql.protocols :as p]))
 
 ;; default formatting for known clauses
 
@@ -48,7 +47,8 @@
    :alter-column :modify-column :rename-column
    :add-index :drop-index :rename-table
    :create-table :create-table-as :with-columns
-   :create-view :create-materialized-view :create-extension
+   :create-view :create-or-replace-view :create-materialized-view
+   :create-extension
    :drop-table :drop-view :drop-materialized-view :drop-extension
    :refresh-materialized-view
    ;; then SQL clauses in priority order:
