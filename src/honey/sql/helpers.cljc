@@ -314,13 +314,22 @@
         (generic :with-columns args)))
 
 (defn create-view
-  "Accepts a single view name to create.
+  " Accepts a single view name to create.
 
-  (-> (create-view :cities)
-      (select :*) (from :city))"
+(-> (create-view :cities)
+    (select :*) (from :city)) "
   {:arglists '([view])}
   [& args]
   (generic :create-view args))
+
+(defn create-or-replace-view
+  "Accepts a single view name to create.
+
+  (-> (create-or-replace-view :cities)
+      (select :*) (from :city))"
+  {:arglists '([view])}
+  [& args]
+  (generic :create-or-replace-view args))
 
 (defn create-materialized-view
   "Accepts a single view name to create.
