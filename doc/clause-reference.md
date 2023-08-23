@@ -318,6 +318,18 @@ user=> (sql/format {:refresh-materialized-view [:concurrently :products]
 ["REFRESH MATERIALIZED VIEW CONCURRENTLY products WITH NO DATA"]
 ```
 
+PostgreSQL does not support `IF NOT EXISTS` on `CREATE VIEW` (it supports it on
+`CREATE MATERIALIZED VIEW`!) so HoneySQL also has `:create-or-replace-view`
+for this case:
+
+```clojure
+user=> (sql/format {:create-or-replace-view [:products]
+                    :select [:*]
+                    :from [:items]
+                    :where [:= :category "product"]})
+["CREATE OR REPLACE VIEW products AS SELECT * FROM items WHERE category = ?" "product"]
+```
+
 ## drop-table, drop-extension, drop-view, drop-materialized-view
 
 `:drop-table` et al can accept a single table (extension, view) name or a sequence of

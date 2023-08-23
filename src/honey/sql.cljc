@@ -29,7 +29,8 @@
         it uppercase and replaces - with space). "
   (:refer-clojure :exclude [format])
   (:require [clojure.string :as str]
-            [honey.sql.protocols :as p]))
+            [honey.sql.protocols :as p]
+            [honey.sql :as sql]))
 
 ;; default formatting for known clauses
 
@@ -410,6 +411,7 @@
               [sql' & params'] (when (or pair? big?)
                                  (cond (sequential? a)
                                        (let [[sqls params] (format-expr-list a {:aliased true})]
+                                         (println "sequential alias expression:" a)
                                          (into [(str/join " " sqls)] params))
                                        big? ; BigQuery support #281
                                        (reduce (fn [[sql & params] [k arg]]
@@ -1196,6 +1198,8 @@
          :create-extension (fn [_ x] (format-create :create :extension x nil))
          :with-columns    #'format-table-columns
          :create-view     (fn [_ x] (format-create :create :view x :as))
+         ;; postgresql lacks if not exists:
+         :create-or-replace-view (fn [_ x] (format-create :create :or-replace-view x :as))
          :create-materialized-view (fn [_ x] (format-create :create :materialized-view x :as))
          :drop-table      #'format-drop-items
          :drop-extension  #'format-drop-items
@@ -2115,4 +2119,10 @@
                      :from :b
                      :order-by [[[:alias "some-alias"]]]}
                     {:quoted true})
+  (honey.sql/format {:select [[:column-name "some-alias"]]
+                     :from :b
+                     :order-by [[[:alias "some-alias"]]]}
+                    {:dialect :mysql})
+  (sql/format {:select :f.* :from [[:foo [:f :FOR :SYSTEM-TIME]]] :where [:= :f.id 1]})
+  (sql/format {:using [[:source [:= :table.id :source.id]]]})
   )
