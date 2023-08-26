@@ -6,6 +6,31 @@ as special syntactic forms.
 
 The first group are used for SQL expressions. The second (last group) are used primarily in column definitions (as part of `:with-columns` and `:add-column` / `:alter-column`).
 
+The examples in this section assume the following:
+
+```clojure
+(require '[honey.sql :as sql])
+```
+
+## alias
+
+Accepts a single argument which should be an alias name (from an `AS` clause
+elsewhere in the overall SQL statement) and uses alias formatting rules rather
+than table/column formatting rules (different handling of dots and hyphens).
+This allows you to override HoneySQL's default assumption about entity names
+and strings.
+
+```clojure
+(sql/format {:select [[:column-name "some-alias"]]
+             :from :b
+             :order-by [[[:alias "some-alias"]]]})
+;;=> ["SELECT column_name AS \"some-alias\" FROM b ORDER BY \"some-alias\" ASC"]
+(sql/format {:select [[:column-name :'some-alias]]
+             :from :b
+             :order-by [[[:alias :'some-alias]]]})
+;;=> ["SELECT column_name AS \"some-alias\" FROM b ORDER BY \"some-alias\" ASC"]
+```
+
 ## array
 
 Accepts a single argument, which is expected to evaluate to a sequence,
@@ -13,8 +38,6 @@ with an optional second argument specifying the type of the array,
 and produces `ARRAY[?, ?, ..]` for the elements of that sequence (as SQL parameters):
 
 ```clojure
-(require '[honey.sql :as sql])
-
 (sql/format-expr [:array (range 5)])
 ;;=> ["ARRAY[?, ?, ?, ?, ?]" 0 1 2 3 4]
 (sql/format-expr [:array (range 3) :text])

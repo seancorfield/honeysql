@@ -2108,21 +2108,10 @@
   (sql/format {:insert-into :foo :output [:inserted.*] :values [{:bar 1}]})
   (sql/format {:insert-into :foo :columns [:bar] :output [:inserted.*] :values [[1]]})
 
-  ;; issue-497
-  (honey.sql/format {:select [[:column-name "some-alias"]]
-                     :from :b
-                     :order-by [[[:raw "\"some-alias\""]]]})
-  (honey.sql/format {:select [[:column-name "some-alias"]]
-                     :from :b
-                     :order-by [[[:alias "some-alias"]]]})
-  (honey.sql/format {:select [[:column-name "some-alias"]]
-                     :from :b
-                     :order-by [[[:alias "some-alias"]]]}
-                    {:quoted true})
-  (honey.sql/format {:select [[:column-name "some-alias"]]
-                     :from :b
-                     :order-by [[[:alias "some-alias"]]]}
-                    {:dialect :mysql})
+  (sql/format {:select [[:a.b :c.d]]} {:dialect :mysql})
+  (sql/format {:select [[:column-name :'some-alias]]
+               :from :b
+               :order-by [[[:alias :'some-alias]]]})
   (sql/format {:select :f.* :from [[:foo [:f :FOR :SYSTEM-TIME]]] :where [:= :f.id 1]})
   (sql/format {:using [[:source [:= :table.id :source.id]]]})
   )

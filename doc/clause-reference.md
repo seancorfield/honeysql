@@ -490,6 +490,16 @@ Here, `:select` has a three expressions as its argument. The first is
 a simple column name. The second is an expression and its alias. The
 third is a simple column name and its alias.
 
+An alias can be a simple name (a keyword or a symbol) or a string. An alias
+containing a dot (`.`) is treated as a single name for quoting purposes.
+Otherwise, a simple name will be formatted using table and column name rules
+(including `-` to `_` translation). An alias specified as a string will not get
+the `-` to `_` translation. There may be other contexts where you need to
+refer to an alias but don't want the table/column rules applied to it, e.g.,
+in an `:order-by` clause. You can use the special syntax `[:alias :some.thing]`
+to tell HoneySQL to treat `:some.thing` as an alias instead of a table/column
+name reference.
+
 `:select-distinct` works the same way but produces `SELECT DISTINCT`.
 
 > Google BigQuery support: to provide `SELECT * EXCEPT ..` and `SELECT * REPLACE ..` syntax, HoneySQL supports a vector starting with `:*` or the symbol `*` followed by except columns and/or replace expressions as columns:
@@ -966,6 +976,11 @@ user=> (sql/format {:select [:*] :from :table
                                 :desc]]})
 ["SELECT * FROM table ORDER BY CASE WHEN NOW() < expiry_date THEN created_date ELSE expiry_date END DESC"]
 ```
+
+You can `ORDER BY` column names (`:col1`), or table and column (`:table.col1`),
+or aliases (`:some.alias`). Since there is ambiguity between the formatting
+of those, you can use the special syntax `[:alias :some.thing]` to tell
+HoneySQL to treat `:some.thing` as an alias instead of a table/column name.
 
 ## limit, offset, fetch
 

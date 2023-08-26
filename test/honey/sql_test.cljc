@@ -1205,6 +1205,45 @@ ORDER BY id = ? DESC
     (is (= ["INNER JOIN (tbl1 LEFT JOIN tbl2 USING (id))"]
            (sut/format {:join [[[:join :tbl1 {:left-join [:tbl2 [:using :id]]}]]]})))))
 
+(deftest issue-497-alias
+
+  (is (= ["SELECT column_name AS \"some-alias\" FROM b ORDER BY \"some-alias\" ASC"]
+         (sut/format {:select [[:column-name "some-alias"]]
+                      :from :b
+                      :order-by [[[:raw "\"some-alias\""]]]})))
+  ;; likely illegal SQL, but shows quoted keyword escaping the -/_ replace:
+  (is (= ["SELECT column_name AS \"some-alias\" FROM b ORDER BY some-alias ASC"]
+         (sut/format {:select [[:column-name "some-alias"]]
+                      :from :b
+                      :order-by [[:'some-alias]]})))
+  (is (= ["SELECT column_name AS \"some-alias\" FROM b ORDER BY \"some-alias\" ASC"]
+         (sut/format {:select [[:column-name "some-alias"]]
+                      :from :b
+                      :order-by [[[:alias "some-alias"]]]})))
+  (is (= ["SELECT column_name AS \"some-alias\" FROM b ORDER BY some_alias ASC"]
+         (sut/format {:select [[:column-name "some-alias"]]
+                      :from :b
+                      :order-by [[[:alias :some-alias]]]})))
+  (is (= ["SELECT column_name AS \"some-alias\" FROM b ORDER BY \"some-alias\" ASC"]
+         (sut/format {:select [[:column-name "some-alias"]]
+                      :from :b
+                      :order-by [[[:alias :'some-alias]]]})))
+  (is (= ["SELECT column_name AS \"some-alias\" FROM b ORDER BY \"some-alias\" ASC"]
+         (sut/format {:select [[:column-name "some-alias"]]
+                      :from :b
+                      :order-by [[[:alias "some-alias"]]]})))
+  (is (= ["SELECT \"column-name\" AS \"some-alias\" FROM \"b\" ORDER BY ? ASC"
+          "some-alias"]
+         (sut/format {:select [[:column-name "some-alias"]]
+                      :from :b
+                      :order-by ["some-alias"]}
+                     {:quoted true})))
+  (is (= ["SELECT `column-name` AS `some-alias` FROM `b` ORDER BY `some-alias` ASC"]
+         (sut/format {:select [[:column-name "some-alias"]]
+                      :from :b
+                      :order-by [[[:alias "some-alias"]]]}
+                     {:dialect :mysql}))))
+
 (comment
   ;; partial workaround for #407:
   (sut/format {:select :f.* :from [[:foo [:f :for :system-time]]] :where [:= :f.id 1]})
