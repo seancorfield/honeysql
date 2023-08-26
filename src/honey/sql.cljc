@@ -2113,4 +2113,10 @@
                :order-by [[[:alias :'some-alias]]]})
   (sql/format {:select :f.* :from [[:foo [:f :FOR :SYSTEM-TIME]]] :where [:= :f.id 1]})
   (sql/format {:using [[:source [:= :table.id :source.id]]]})
+
+  ;; #389 -- ONLY for from/join etc:
+  (sql/format {:select [:*], :from [[[:only :table] :t]]})
+  (sql/format {:select [:*]
+               :from [[[:only :countries]]]
+               :join [[[:only :capitals]] [:= :countries.id :capitals.country_id]]})
   )

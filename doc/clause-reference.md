@@ -516,6 +516,12 @@ user=> (sql/format {:select [[:* :except [:a :b] :replace [[[:inline 2] :c]]]] :
 The `:table` clause is equivalent to `:select :* :from` and accepts just
 a simple table name -- see `:create-table-as` above for an example.
 
+Some databases support inheritance and you can `SELECT .. FROM ONLY ..` or
+`.. JOIN ONLY ..` to restrict the query to just the specified table. You can
+use function syntax for this `[:only table]` will produce `ONLY(table)`. This
+is the ANSI SQL syntax (but PostgreSQL allows the parentheses to be omitted,
+if you are writing SQL by hand).
+
 ## select-distinct-on
 
 Similar to `:select-distinct` above but the first element
@@ -728,6 +734,9 @@ user=> (sql/format {:select [:u.username :s.name]
 
 > Note: the actual formatting of a `:from` clause is currently identical to the formatting of a `:select` clause.
 
+If you are using inheritance, you can specify `ONLY(table)` as a function
+call: `[:only :table]`.
+
 ## using
 
 `:using` accepts a single sequence argument that lists
@@ -812,6 +821,9 @@ user=> (sql/format {:select [:t.ref :pp.code]
                     :where [:= "settled" :pp.status]})
 ["SELECT t.ref, pp.code FROM transaction AS t LEFT JOIN paypal_tx AS pp USING (id) WHERE ? = pp.status" "settled"]
 ```
+
+If you are using inheritance, you can specify `ONLY(table)` as a function
+call: `[:only :table]`.
 
 See also the [`:join` special syntax](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT/doc/getting-started/sql-special-syntax-#join)
 for nested `JOIN` expressions.

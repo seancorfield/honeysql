@@ -4,6 +4,7 @@
   * Add `:create-or-replace-view` to support PostgreSQL's lack of `IF NOT EXISTS` for `CREATE VIEW`.
   * Add `:select` with function call and alias example to README (PR [#502](https://github.com/seancorfield/honeysql/pull/502) [@markbastian](https://github.com/markbastian)).
   * Address [#497](https://github.com/seancorfield/honeysql/issues/497) by adding `:alias` special syntax.
+  * Address [#389](https://github.com/seancorfield/honeysql/issues/389) by adding examples of `[:only :table]` producing `ONLY(table)`.
   * Attempt to clarify the formatting behavior of the `:values` clause when used to produce column names.
   * Update `tools.build` to 0.9.5 (and remove `:java-opts` setting from `build/run-task`)
 
