@@ -4,6 +4,7 @@
   * Add `:select` with function call and alias example to README (PR [#502](https://github.com/seancorfield/honeysql/pull/502) [@markbastian](https://github.com/markbastian)).
   * Address [#501](https://github.com/seancorfield/honeysql/issues/501) by making `INSERT INTO` (and `REPLACE INTO`) use the `:columns` or `:values` clauses to produce column names (which are then omitted from those other clauses).
   * Address [#497](https://github.com/seancorfield/honeysql/issues/497) by adding `:alias` special syntax.
+  * Address [#496](https://github.com/seancorfield/honeysql/issues/496) by adding `:overriding-value` option to `:insert` clause. Documentation TBD.
   * Address [#407](https://github.com/seancorfield/honeysql/issues/407) by adding support for temporal queries (see `FROM` in [SQL Clause Reference](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT/doc/getting-started/sql-clause-reference#from)).
   * Address [#389](https://github.com/seancorfield/honeysql/issues/389) by adding examples of `[:only :table]` producing `ONLY(table)`.
   * Add `:create-or-replace-view` to support PostgreSQL's lack of `IF NOT EXISTS` for `CREATE VIEW`.

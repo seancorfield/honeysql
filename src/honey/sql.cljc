@@ -749,7 +749,12 @@
         (if-let [columns (clause-body :columns)]
           (cons columns (format-columns :force-columns columns))
           (when-let [values (clause-body :values)]
-            (columns-from-values values false)))]
+            (columns-from-values values false)))
+        [opts table] (if (and (sequential? table) (map? (first table)))
+                       ((juxt first rest) table)
+                       [{} table])
+        overriding     (when-let [type (:overriding-value opts)]
+                         (str " OVERRIDING " (sql-kw type) " VALUE"))]
     (if (sequential? table)
       (cond (map? (second table))
             (let [[table statement] table
@@ -768,6 +773,7 @@
                                    ") ")
                               (seq cols')
                               (str cols-sql' " "))
+                        overriding
                         sql)]
                   (into t-params)
                   (into c-params)
@@ -780,20 +786,23 @@
               (-> [(str (sql-kw k) " " t-sql
                         " ("
                         (str/join ", " c-sqls)
-                        ")")]
+                        ")"
+                        overriding)]
                   (into t-params)
                   (into c-params)))
             :else
             (let [[sql & params] (format-entity-alias table)]
               (-> [(str (sql-kw k) " " sql
                         (when (seq cols')
-                          (str " " cols-sql')))]
+                          (str " " cols-sql'))
+                        overriding)]
                   (into cols-params')
                   (into params))))
       (let [[sql & params] (format-entity-alias table)]
         (-> [(str (sql-kw k) " " sql
                   (when (seq cols')
-                    (str " " cols-sql')))]
+                    (str " " cols-sql'))
+                  overriding)]
             (into cols-params')
             (into params))))))
 
@@ -2245,4 +2254,9 @@
   (sql/format {:select [:u.username]
                :from [[:user :u :for :system-time :from [:inline "2019-08-01 15:23:00"] :to [:inline "2019-08-01 15:24:00"]]]
                :where [:= :u.id 9]})
+  ;; #496 -- overriding
+  (sql/register-clause! :overriding-system-value
+                        (fn [_ _] ["OVERRIDING SYSTEM VALUE"])
+                        :values)
+  (sql/format {:insert-into :foo :values [{:id 1}] :overriding-system-value true})
   )
