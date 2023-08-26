@@ -409,7 +409,7 @@
 
 (defn- format-bigquery-*-except-replace
   "Format BigQuery * except/replace phrases #281."
-  [star-cols & x]
+  [[star-cols & x]]
   (let [[sql & params] (format-expr star-cols)
         [sql' & params']
         (reduce (fn [[sql & params] [k arg]]
@@ -434,6 +434,13 @@
     (-> [(str sql " " sql')]
         (into params)
         (into params'))))
+
+(comment
+  (bigquery-*-except-replace? [:* :except [:a :b :c]])
+  (format-bigquery-*-except-replace [:* :except [:a :b :c]])
+  (format-expr :*)
+  (partition-all 2 [:except [:a :b :c]])
+  )
 
 (defn- split-alias-temporal
   "Given a general selectable item, split it into the subject selectable,
