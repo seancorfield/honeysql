@@ -411,7 +411,6 @@
               [sql' & params'] (when (or pair? big?)
                                  (cond (sequential? a)
                                        (let [[sqls params] (format-expr-list a {:aliased true})]
-                                         (println "sequential alias expression:" a)
                                          (into [(str/join " " sqls)] params))
                                        big? ; BigQuery support #281
                                        (reduce (fn [[sql & params] [k arg]]
