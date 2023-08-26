@@ -1203,6 +1203,18 @@ ORDER BY id = ? DESC
     (is (= ["INNER JOIN (tbl1 LEFT JOIN tbl2 USING (id))"]
            (sut/format {:join [[[:join :tbl1 {:left-join [:tbl2 [:using :id]]}]]]})))))
 
+(deftest issue-496-overriding
+  (is (= ["INSERT INTO table (a, b) OVERRIDING SYSTEM VALUE VALUES (?, ?)" 1 2]
+         (sut/format {:insert-into [{:overriding-value :system} :table]
+                      :columns [:a :b]
+                      :values [[1 2]]})))
+  (is (= ["INSERT INTO table (a, b) OVERRIDING USER VALUE VALUES (?, ?)" 1 2]
+         (sut/format {:insert-into [{:overriding-value :user} :table [:a :b]]
+                      :values [[1 2]]})))
+  (is (= ["INSERT INTO table (a, b) OVERRIDING SYSTEM VALUE VALUES (?, ?)" 1 2]
+         (sut/format {:insert-into [{:overriding-value :system} :table]
+                      :values [{:a 1 :b 2}]}))))
+
 (deftest issue-497-alias
 
   (is (= ["SELECT column_name AS \"some-alias\" FROM b ORDER BY \"some-alias\" ASC"]
