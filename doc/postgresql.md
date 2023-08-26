@@ -102,8 +102,8 @@ user=> (-> (insert-into :distributors)
            (returning :*)
            (sql/format {:pretty true}))
 ["
-INSERT INTO distributors
-(did, dname) VALUES (?, ?), (?, ?)
+INSERT INTO distributors (did, dname)
+VALUES (?, ?), (?, ?)
 ON CONFLICT (did)
 DO UPDATE SET dname = EXCLUDED.dname
 RETURNING *
@@ -124,8 +124,8 @@ user=> (-> (insert-into :distributors)
            (returning :*)
            (sql/format {:pretty true}))
 ["
-INSERT INTO distributors
-(did, dname) VALUES (?, ?), (?, ?)
+INSERT INTO distributors (did, dname)
+VALUES (?, ?), (?, ?)
 ON CONFLICT (did)
 DO UPDATE SET dname = EXCLUDED.dname
 RETURNING *
@@ -144,8 +144,8 @@ user=> (-> (insert-into :distributors)
                        do-nothing))
            (sql/format {:pretty true}))
 ["
-INSERT INTO distributors
-(did, dname) VALUES (?, ?)
+INSERT INTO distributors (did, dname)
+VALUES (?, ?)
 ON CONFLICT (did)
 DO NOTHING
 "
@@ -161,8 +161,8 @@ user=> (-> (insert-into :distributors)
            do-nothing
            (sql/format {:pretty true}))
 ["
-INSERT INTO distributors
-(did, dname) VALUES (?, ?)
+INSERT INTO distributors (did, dname)
+VALUES (?, ?)
 ON CONFLICT (did)
 DO NOTHING
 "
@@ -180,8 +180,8 @@ user=> (-> (insert-into :distributors)
            do-nothing
            (sql/format {:pretty true}))
 ["
-INSERT INTO distributors
-(did, dname) VALUES (?, ?)
+INSERT INTO distributors (did, dname)
+VALUES (?, ?)
 ON CONFLICT ON CONSTRAINT distributors_pkey
 DO NOTHING
 "
@@ -194,8 +194,8 @@ user=> (-> (insert-into :distributors)
            do-nothing
            (sql/format {:pretty true}))
 ["
-INSERT INTO distributors
-(did, dname) VALUES (?, ?)
+INSERT INTO distributors (did, dname)
+VALUES (?, ?)
 ON CONFLICT
 ON CONSTRAINT distributors_pkey
 DO NOTHING
@@ -215,8 +215,8 @@ user=> (-> (insert-into :user)
            (do-update-set :phone :name (where [:= :user.active false]))
            (sql/format {:pretty true}))
 ["
-INSERT INTO user
-(phone, name) VALUES (?, ?)
+INSERT INTO user (phone, name)
+VALUES (?, ?)
 ON CONFLICT (phone) WHERE phone IS NOT NULL
 DO UPDATE SET phone = EXCLUDED.phone, name = EXCLUDED.name WHERE user.active = FALSE
 "
@@ -231,8 +231,8 @@ user=> (sql/format
                           :where  [:= :user.active false]}}
         {:pretty true})
 ["
-INSERT INTO user
-(phone, name) VALUES (?, ?)
+INSERT INTO user (phone, name)
+VALUES (?, ?)
 ON CONFLICT (phone) WHERE phone IS NOT NULL
 DO UPDATE SET phone = EXCLUDED.phone, name = EXCLUDED.name WHERE user.active = FALSE
 "
@@ -268,8 +268,8 @@ user=> (-> (insert-into :table)
            (do-update-set {:counter [:+ :table.counter 1]})
            (sql/format {:pretty true}))
 ["
-INSERT INTO table
-(id, counter) VALUES (?, ?)
+INSERT INTO table (id, counter)
+VALUES (?, ?)
 ON CONFLICT (id)
 DO UPDATE SET counter = table.counter + ?
 " "id" 1 1]
@@ -280,8 +280,8 @@ user=> (-> {:insert-into :table
             :do-update-set {:counter [:+ :table.counter 1]}}
            (sql/format {:pretty true}))
 ["
-INSERT INTO table
-(id, counter) VALUES (?, ?)
+INSERT INTO table (id, counter)
+VALUES (?, ?)
 ON CONFLICT (id)
 DO UPDATE SET counter = table.counter + ?
 " "id" 1 1]
@@ -300,8 +300,8 @@ user=> (-> (insert-into :table)
                            :where [:> :table.counter 1]})
            (sql/format {:pretty true}))
 ["
-INSERT INTO table
-(id, counter) VALUES (?, ?)
+INSERT INTO table (id, counter)
+VALUES (?, ?)
 ON CONFLICT (id)
 DO UPDATE SET counter = table.counter + ? WHERE table.counter > ?
 " "id" 1 1 1]
@@ -313,8 +313,8 @@ user=> (-> {:insert-into :table
                             :where [:> :table.counter 1]}}
            (sql/format {:pretty true}))
 ["
-INSERT INTO table
-(id, counter) VALUES (?, ?)
+INSERT INTO table (id, counter)
+VALUES (?, ?)
 ON CONFLICT (id)
 DO UPDATE SET counter = table.counter + ? WHERE table.counter > ?
 " "id" 1 1 1]

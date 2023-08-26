@@ -687,8 +687,7 @@ VALUES (?, ?, ?, ?, ?, ?)
                   :values [["UA502" "Bananas" 105 "1971-07-13" "Comedy" "82 minutes"]]}
                  {:pretty true})))
   (is (= ["
-INSERT INTO films
-(code, title, did, date_prod, kind)
+INSERT INTO films (code, title, did, date_prod, kind)
 VALUES (?, ?, ?, ?, ?)
 " "T_601", "Yojimo", 106, "1961-06-16", "Drama"]
          (format {:insert-into :films
@@ -703,8 +702,7 @@ VALUES (?, ?, ?, DEFAULT, ?, ?)
                   :values [["UA502" "Bananas" 105 [:default] "Comedy" "82 minutes"]]}
                  {:pretty true})))
   (is (= ["
-INSERT INTO films
-(code, title, did, date_prod, kind)
+INSERT INTO films (code, title, did, date_prod, kind)
 VALUES (?, ?, ?, DEFAULT, ?)
 " "T_601", "Yojimo", 106, "Drama"]
          (format {:insert-into :films
@@ -715,8 +713,7 @@ VALUES (?, ?, ?, DEFAULT, ?)
 (deftest on-conflict-tests
   ;; these examples are taken from https://www.postgresqltutorial.com/postgresql-upsert/
   (is (= ["
-INSERT INTO customers
-(name, email)
+INSERT INTO customers (name, email)
 VALUES ('Microsoft', 'hotline@microsoft.com')
 ON CONFLICT ON CONSTRAINT customers_name_key
 DO NOTHING
@@ -728,8 +725,7 @@ DO NOTHING
                   :do-nothing true}
                  {:pretty true})))
   (is (= ["
-INSERT INTO customers
-(name, email)
+INSERT INTO customers (name, email)
 VALUES ('Microsoft', 'hotline@microsoft.com')
 ON CONFLICT
 ON CONSTRAINT customers_name_key
@@ -743,8 +739,7 @@ DO NOTHING
                   :do-nothing true}
                  {:pretty true})))
   (is (= ["
-INSERT INTO customers
-(name, email)
+INSERT INTO customers (name, email)
 VALUES ('Microsoft', 'hotline@microsoft.com')
 ON CONFLICT (name)
 DO NOTHING
@@ -756,8 +751,7 @@ DO NOTHING
                   :do-nothing true}
                  {:pretty true})))
   (is (= ["
-INSERT INTO customers
-(name, email)
+INSERT INTO customers (name, email)
 VALUES ('Microsoft', 'hotline@microsoft.com')
 ON CONFLICT (name)
 DO NOTHING
@@ -769,8 +763,7 @@ DO NOTHING
                   :do-nothing true}
                  {:pretty true})))
   (is (= ["
-INSERT INTO customers
-(name, email)
+INSERT INTO customers (name, email)
 VALUES ('Microsoft', 'hotline@microsoft.com')
 ON CONFLICT ((foo + ?), name, (TRIM(email)))
 DO NOTHING
@@ -782,8 +775,7 @@ DO NOTHING
                   :do-nothing true}
                  {:pretty true})))
   (is (= ["
-INSERT INTO customers
-(name, email)
+INSERT INTO customers (name, email)
 VALUES ('Microsoft', 'hotline@microsoft.com')
 ON CONFLICT (name)
 DO UPDATE SET email = EXCLUDED.email || ';' || customers.email
@@ -1249,6 +1241,13 @@ ORDER BY id = ? DESC
                       :from :b
                       :order-by [[[:alias "some-alias"]]]}
                      {:dialect :mysql}))))
+
+(deftest output-clause-post-501
+  (sut/register-clause! :output :select :values)
+  (is (= ["INSERT INTO foo (bar) OUTPUT inserted.* VALUES (?)" 1]
+         (sut/format {:insert-into :foo :output [:inserted.*] :values [{:bar 1}]})))
+  (is (= ["INSERT INTO foo (bar) OUTPUT inserted.* VALUES (?)" 1]
+         (sut/format {:insert-into :foo :columns [:bar] :output [:inserted.*] :values [[1]]}))))
 
 (comment
   ;; partial workaround for #407:

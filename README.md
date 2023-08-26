@@ -241,8 +241,7 @@ then provide a collection of rows, each a collection of column values:
       ["Jane" "Daniels" 56]])
     (sql/format {:pretty true}))
 => ["
-INSERT INTO properties
-(name, surname, age)
+INSERT INTO properties (name, surname, age)
 VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
 "
 "Jon" "Smith" 34 "Andrew" "Cooper" 12 "Jane" "Daniels" 56]
@@ -254,8 +253,7 @@ VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
               ["Jane" "Daniels" 56]]}
     (sql/format {:pretty true}))
 => ["
-INSERT INTO properties
-(name, surname, age)
+INSERT INTO properties (name, surname, age)
 VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
 "
 "Jon" "Smith" 34 "Andrew" "Cooper" 12 "Jane" "Daniels" 56]
@@ -272,8 +270,8 @@ Alternately, you can simply specify the values as maps:
              {:name "Jane" :surname "Daniels" :age 56}])
     (sql/format {:pretty true}))
 => ["
-INSERT INTO properties
-(name, surname, age) VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
+INSERT INTO properties (name, surname, age)
+VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
 "
 "John" "Smith" 34
 "Andrew" "Cooper"  12
@@ -285,8 +283,8 @@ INSERT INTO properties
               {:name "Jane", :surname "Daniels", :age 56}]}
     (sql/format {:pretty true}))
 => ["
-INSERT INTO properties
-(name, surname, age) VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
+INSERT INTO properties (name, surname, age)
+VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?)
 "
 "John" "Smith" 34
 "Andrew" "Cooper"  12
@@ -306,8 +304,8 @@ a set of column names that should get the value `DEFAULT` instead of `NULL`:
              {:name "Jane" :surname "Daniels"}])
     (sql/format {:pretty true}))
 => ["
-INSERT INTO properties
-(name, surname, age) VALUES (?, ?, ?), (?, NULL, ?), (?, ?, NULL)
+INSERT INTO properties (name, surname, age)
+VALUES (?, ?, ?), (?, NULL, ?), (?, ?, NULL)
 "
 "John" "Smith" 34
 "Andrew" 12
@@ -318,8 +316,8 @@ INSERT INTO properties
              {:name "Jane" :surname "Daniels"}])
     (sql/format {:pretty true :values-default-columns #{:age}}))
 => ["
-INSERT INTO properties
-(name, surname, age) VALUES (?, ?, ?), (?, NULL, ?), (?, ?, DEFAULT)
+INSERT INTO properties (name, surname, age)
+VALUES (?, ?, ?), (?, NULL, ?), (?, ?, DEFAULT)
 "
 "John" "Smith" 34
 "Andrew" 12
@@ -341,8 +339,8 @@ The column values do not have to be literals, they can be nested queries:
       (sql/format {:pretty true})))
 
 => ["
-INSERT INTO user_profile_to_role
-(user_profile_id, role_id) VALUES (?, (SELECT id FROM role WHERE name = ?))
+INSERT INTO user_profile_to_role (user_profile_id, role_id)
+VALUES (?, (SELECT id FROM role WHERE name = ?))
 "
 12345
 "user"]
@@ -356,8 +354,8 @@ INSERT INTO user_profile_to_role
                            :where [:= :name "user"]}}]}
       (sql/format {:pretty true})))
 => ["
-INSERT INTO user_profile_to_role
-(user_profile_id, role_id) VALUES (?, (SELECT id FROM role WHERE name = ?))
+INSERT INTO user_profile_to_role (user_profile_id, role_id)
+VALUES (?, (SELECT id FROM role WHERE name = ?))
 "
 12345
 "user"]
@@ -398,8 +396,7 @@ Composite types are supported:
       ["large" (composite 10 "feet")]])
     (sql/format {:pretty true}))
 => ["
-INSERT INTO comp_table
-(name, comp_column)
+INSERT INTO comp_table (name, comp_column)
 VALUES (?, (?, ?)), (?, (?, ?))
 "
 "small" 1 "inch" "large" 10 "feet"]
@@ -411,8 +408,7 @@ VALUES (?, (?, ?)), (?, (?, ?))
       ["large" (composite 10 "feet")]])
     (sql/format {:pretty true :numbered true}))
 => ["
-INSERT INTO comp_table
-(name, comp_column)
+INSERT INTO comp_table (name, comp_column)
 VALUES ($1, ($2, $3)), ($4, ($5, $6))
 "
 "small" 1 "inch" "large" 10 "feet"]
@@ -423,8 +419,7 @@ VALUES ($1, ($2, $3)), ($4, ($5, $6))
               ["large" [:composite 10 "feet"]]]}
     (sql/format {:pretty true}))
 => ["
-INSERT INTO comp_table
-(name, comp_column)
+INSERT INTO comp_table (name, comp_column)
 VALUES (?, (?, ?)), (?, (?, ?))
 "
 "small" 1 "inch" "large" 10 "feet"]
@@ -606,8 +601,8 @@ regular function calls in a select:
 => ["SELECT MAX(id) FROM foo"]
 ```
 
-Custom columns using functions are built with the same vector format. 
-Be sure to properly nest the vectors so that the first element in the selection 
+Custom columns using functions are built with the same vector format.
+Be sure to properly nest the vectors so that the first element in the selection
 is the custom function and the second is the column alias.
 ```clojure
 (sql/format
@@ -751,8 +746,8 @@ have a lot of function calls needed in code:
                          [:cast 4325 :integer]]}])
     (sql/format {:pretty true}))
 => ["
-INSERT INTO sample
-(location) VALUES (ST_SETSRID(ST_MAKEPOINT(?, ?), CAST(? AS INTEGER)))
+INSERT INTO sample (location)
+VALUES (ST_SETSRID(ST_MAKEPOINT(?, ?), CAST(? AS INTEGER)))
 "
 0.291 32.621 4325]
 ```

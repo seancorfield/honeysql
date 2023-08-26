@@ -585,7 +585,8 @@ There are three use cases with `:insert-into`.
 
 The first case takes just a table specifier (either a
 table name or a table/alias pair),
-and then you can optionally specify the columns (via a `:columns` clause).
+and then you can optionally specify the columns (via a `:columns` clause,
+or via a `:values` clause using hash maps).
 
 The second case takes a pair of a table specifier (either a
 table name or table/alias pair) and a sequence of column
@@ -1103,8 +1104,12 @@ values.
 ### values with hash maps
 
 If you provide a sequence of hash maps, the `:values` clause
-will generate a `VALUES` clause with the column names preceding
-and the row values following.
+will generate a `VALUES` clause, and will also generate the column names
+as part of the `INSERT INTO` (or `REPLACE INTO`) statement.
+
+If there is no `INSERT INTO` (or `REPLACE INTO`) statement in the context
+of the `:values` clause, the column names will be generated as a part of
+the `VALUES` clause itself.
 
 ```clojure
 user=> (sql/format {:values [{:col-a 1 :col-b 2}]})

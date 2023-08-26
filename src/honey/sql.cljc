@@ -132,7 +132,7 @@
 (def ^:private ^:dynamic *allow-suspicious-entities* false)
 ;; "linting" mode (:none, :basic, :strict):
 (def ^:private ^:dynamic *checking* @default-checking)
-;; the current DSL hash map being formatted (for contains-clause?):
+;; the current DSL hash map being formatted (for clause-body / contains-clause?):
 (def ^:private ^:dynamic *dsl* nil)
 ;; caching data to detect expressions that cannot be cached:
 (def ^:private ^:dynamic *caching* nil)
@@ -140,15 +140,21 @@
 
 ;; clause helpers
 
+(defn clause-body
+  "If the current DSL expression being formatted contains the specified clause
+  (as a keyword or symbol), returns that clause's value."
+  [clause]
+  (or (get *dsl* clause)
+      (get *dsl*
+           (if (keyword? clause)
+             (symbol (name clause))
+             (keyword (name clause))))))
+
 (defn contains-clause?
   "Returns true if the current DSL expression being formatted
   contains the specified clause (as a keyword or symbol)."
   [clause]
-  (or (contains? *dsl* clause)
-      (contains? *dsl*
-                 (if (keyword? clause)
-                   (symbol (name clause))
-                   (keyword (name clause))))))
+  (some? (clause-body clause)))
 
 (defn- mysql?
   "Helper to detect if MySQL is the current dialect."
@@ -628,8 +634,12 @@
   )
 
 (defn- format-columns [k xs]
-  (let [[sqls params] (format-expr-list xs {:drop-ns (= :columns k)})]
-    (into [(str "(" (str/join ", " sqls) ")")] params)))
+  (if (and (= :columns k)
+           (or (contains-clause? :insert-into)
+               (contains-clause? :replace-into)))
+    []
+    (let [[sqls params] (format-expr-list xs {:drop-ns true})]
+      (into [(str "(" (str/join ", " sqls) ")")] params))))
 
 (defn- format-selects-common [prefix as xs]
   (if (sequential? xs)
@@ -732,42 +742,60 @@
 (defn- format-selector [k xs]
   (format-selects k [xs]))
 
+(declare columns-from-values)
+
 (defn- format-insert [k table]
-  (if (sequential? table)
-    (cond (map? (second table))
-          (let [[table statement] table
-                [table cols]
-                (if (and (sequential? table) (sequential? (second table)))
-                  table
-                  [table])
-                [sql & params] (format-dsl statement)
-                [t-sql & t-params] (format-entity-alias table)
-                [c-sqls c-params] (reduce-sql (map #'format-entity-alias cols))]
-            (-> [(str (sql-kw k) " " t-sql
-                      " "
-                      (when (seq cols)
-                        (str "("
-                             (str/join ", " c-sqls)
-                             ") "))
-                      sql)]
-                (into t-params)
-                (into c-params)
-                (into params)))
-          (sequential? (second table))
-          (let [[table cols] table
-                [t-sql & t-params] (format-entity-alias table)
-                [c-sqls c-params] (reduce-sql (map #'format-entity-alias cols))]
-            (-> [(str (sql-kw k) " " t-sql
-                      " ("
-                      (str/join ", " c-sqls)
-                      ")")]
-                (into t-params)
-                (into c-params)))
-          :else
-          (let [[sql & params] (format-entity-alias table)]
-            (into [(str (sql-kw k) " " sql)] params)))
-    (let [[sql & params] (format-entity-alias table)]
-      (into [(str (sql-kw k) " " sql)] params))))
+  (let [[cols' cols-sql' cols-params']
+        (if-let [columns (clause-body :columns)]
+          (cons columns (format-columns :force-columns columns))
+          (when-let [values (clause-body :values)]
+            (columns-from-values values false)))]
+    (if (sequential? table)
+      (cond (map? (second table))
+            (let [[table statement] table
+                  [table cols]
+                  (if (and (sequential? table) (sequential? (second table)))
+                    table
+                    [table])
+                  [sql & params] (format-dsl statement)
+                  [t-sql & t-params] (format-entity-alias table)
+                  [c-sqls c-params] (reduce-sql (map #'format-entity-alias cols))]
+              (-> [(str (sql-kw k) " " t-sql
+                        " "
+                        (cond (seq cols)
+                              (str "("
+                                   (str/join ", " c-sqls)
+                                   ") ")
+                              (seq cols')
+                              (str cols-sql' " "))
+                        sql)]
+                  (into t-params)
+                  (into c-params)
+                  (into cols-params')
+                  (into params)))
+            (sequential? (second table))
+            (let [[table cols] table
+                  [t-sql & t-params] (format-entity-alias table)
+                  [c-sqls c-params] (reduce-sql (map #'format-entity-alias cols))]
+              (-> [(str (sql-kw k) " " t-sql
+                        " ("
+                        (str/join ", " c-sqls)
+                        ")")]
+                  (into t-params)
+                  (into c-params)))
+            :else
+            (let [[sql & params] (format-entity-alias table)]
+              (-> [(str (sql-kw k) " " sql
+                        (when (seq cols')
+                          (str " " cols-sql')))]
+                  (into cols-params')
+                  (into params))))
+      (let [[sql & params] (format-entity-alias table)]
+        (-> [(str (sql-kw k) " " sql
+                  (when (seq cols')
+                    (str " " cols-sql')))]
+            (into cols-params')
+            (into params))))))
 
 (comment
   (format-insert :insert-into [[[:raw ":foo"]] {:select :bar}])
@@ -879,6 +907,22 @@
               (when nowait
                 (str " " (sql-kw nowait))))))]))
 
+(defn- columns-from-values [xs skip-cols-sql]
+  (let [first-xs (when (sequential? xs) (first (drop-while ident? xs)))]
+    (when (map? first-xs)
+      (let [cols-1 (keys (first xs))
+            ;; issue #291: check for all keys in all maps but still
+            ;; use the keys from the first map if they match so that
+            ;; users can rely on the key ordering if they want to,
+            ;; e.g., see test that uses array-map for the first row
+            cols-n (into #{} (mapcat keys) (filter map? xs))
+            cols   (if (= (set cols-1) cols-n) cols-1 cols-n)]
+        [cols (when-not skip-cols-sql
+                (str "("
+                     (str/join ", "
+                               (map #(format-entity % {:drop-ns true}) cols))
+                     ")"))]))))
+
 (defn- format-values [k xs]
   (let [first-xs (when (sequential? xs) (first (drop-while ident? xs)))]
     (cond (contains? #{:default 'default} xs)
@@ -913,13 +957,10 @@
 
           (map? first-xs)
           ;; [{:a 1 :b 2 :c 3}]
-          (let [cols-1 (keys (first xs))
-                ;; issue #291: check for all keys in all maps but still
-                ;; use the keys from the first map if they match so that
-                ;; users can rely on the key ordering if they want to,
-                ;; e.g., see test that uses array-map for the first row
-                cols-n (into #{} (mapcat keys) (filter map? xs))
-                cols   (if (= (set cols-1) cols-n) cols-1 cols-n)
+          (let [[cols cols-sql]
+                (columns-from-values xs (or (contains-clause? :insert-into)
+                                            (contains-clause? :replace-into)
+                                            (contains-clause? :columns)))
                 [sqls params]
                 (reduce (fn [[sql params] [sqls' params']]
                           [(conj sql
@@ -941,10 +982,8 @@
                                        cols))
                                  [(sql-kw m)]))
                              xs))]
-            (into [(str "("
-                        (str/join ", "
-                                  (map #(format-entity % {:drop-ns true}) cols))
-                        ") "
+            (into [(str (when cols-sql
+                          (str cols-sql " "))
                         (sql-kw k)
                         " "
                         (str/join ", " sqls))]
@@ -2186,10 +2225,6 @@
                        [[:'u2 :id :email :first_name :last_name]]]]
                :where [:= :u.id :u2.id]}
               {:inline true})
-
-  (sql/register-clause! :output :select :values)
-  (sql/format {:insert-into :foo :output [:inserted.*] :values [{:bar 1}]})
-  (sql/format {:insert-into :foo :columns [:bar] :output [:inserted.*] :values [[1]]})
 
   (sql/format {:select [[:a.b :c.d]]} {:dialect :mysql})
   (sql/format {:select [[:column-name :'some-alias]]
