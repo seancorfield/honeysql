@@ -522,6 +522,9 @@ use function syntax for this `[:only table]` will produce `ONLY(table)`. This
 is the ANSI SQL syntax (but PostgreSQL allows the parentheses to be omitted,
 if you are writing SQL by hand).
 
+Some databases support temporal queries -- see the `:for` clause section
+of the `FROM` clause below.
+
 ## select-distinct-on
 
 Similar to `:select-distinct` above but the first element
@@ -716,8 +719,9 @@ user=> (sql/format {:update :order
 
 `:from` accepts a single sequence argument that lists
 one or more SQL entities. Each entity can either be a
-simple table name (keyword or symbol) or a pair of a
-table name and an alias:
+simple table name (keyword or symbol) or a sequence of a
+table name, followed by an optional alias, followed by an
+optional temporal clause:
 
 ```clojure
 user=> (sql/format {:select [:username :name]
@@ -730,6 +734,25 @@ user=> (sql/format {:select [:u.username :s.name]
                     :where [:and [:= :u.statusid :s.id]
                                  [:= :u.id 9]]})
 ["SELECT u.username, s.name FROM user AS u, status AS s WHERE (u.statusid = s.id) AND (u.id = ?)" 9]
+```
+
+A temporal clause starts with `:for`, followed by the time reference
+(e.g., `:system-time` or `:business-time`), followed by a temporal qualifier,
+one of:
+* `:all`
+* `:as-of timestamp`
+* `:from timestamp1 :to timestamp2`
+* `:between timestamp1 :and timestamp2`
+
+```clojure
+user=> (sql/format {:select [:username]
+                    :from [[:user :for :system-time :as-of [:inline "2019-08-01 15:23:00"]]]
+                    :where [:= :id 9]})
+["SELECT username FROM user FOR SYSTEM_TIME AS OF '2019-08-01 15:23:00' WHERE id = ?" 9]
+user=> (sql/format {:select [:u.username]
+                    :from [[:user :u :for :system-time :from [:inline "2019-08-01 15:23:00"] :to [:inline "2019-08-01 15:24:00"]]]
+                    :where [:= :u.id 9]})
+["SELECT u.username FROM user AS u FOR SYSTEM_TIME FROM '2019-08-01 15:23:00' TO '2019-08-01 15:24:00' WHERE u.id = ?" 9]
 ```
 
 > Note: the actual formatting of a `:from` clause is currently identical to the formatting of a `:select` clause.

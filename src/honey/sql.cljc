@@ -344,6 +344,10 @@
 
 (def ^:private ^:dynamic *formatted-column* (atom false))
 
+(defn- format-fn-name
+  [x]
+  (upper-case (str/replace (name x) "-" "_")))
+
 (defn- format-var [x & [opts]]
   ;; rather than name/namespace, we want to allow
   ;; for multiple / in the %fun.call case so that
@@ -352,7 +356,7 @@
     (cond (= \% (first c))
           (let [[f & args] (str/split (subs c 1) #"\.")
                 quoted-args (map #(format-entity (keyword %) opts) args)]
-            [(str (upper-case (str/replace f "-" "_"))
+            [(str (format-fn-name f)
                   "(" (str/join ", " quoted-args) ")")])
           (= \? (first c))
           (let [k (keyword (subs c 1))]
@@ -393,64 +397,137 @@
   )
 
 (declare format-selects-common)
+(declare format-selectable-dsl)
+
+(defn- bigquery-*-except-replace?
+  [[maybe-* maybe-except-replace]]
+  (and (ident? maybe-*)
+       (or (= "*" (name maybe-*))
+           (str/ends-with? (name maybe-*) ".*"))
+       (ident? maybe-except-replace)
+       (#{"except" "replace"} (name maybe-except-replace))))
+
+(defn- format-bigquery-*-except-replace
+  "Format BigQuery * except/replace phrases #281."
+  [star-cols & x]
+  (let [[sql & params] (format-expr star-cols)
+        [sql' & params']
+        (reduce (fn [[sql & params] [k arg]]
+                  (let [[sql' params']
+                        (cond (and (ident? k) (= "except" (name k)) arg)
+                              (let [[sqls params]
+                                    (format-expr-list arg {:aliased true})]
+                                [(str (sql-kw k) " (" (str/join ", " sqls) ")")
+                                 params])
+                              (and (ident? k) (= "replace" (name k)) arg)
+                              (let [[sql & params] (format-selects-common nil true arg)]
+                                [(str (sql-kw k) " (" sql ")")
+                                 params])
+                              :else
+                              (throw (ex-info "bigquery * only supports except and replace"
+                                              {:clause k :arg arg})))]
+                    (-> [(cond->> sql' sql (str sql " "))]
+                        (into params)
+                        (into params'))))
+                []
+                (partition-all 2 x))]
+    (-> [(str sql " " sql')]
+        (into params)
+        (into params'))))
+
+(defn- split-alias-temporal
+  "Given a general selectable item, split it into the subject selectable,
+   an optional alias, and any temporal clauses present."
+  [[selectable alias-for for-part & more]]
+  (let [no-alias? (and (= :for (sym->kw alias-for)) for-part)]
+    [selectable
+     (if no-alias?
+       nil
+       alias-for)
+     (cond no-alias?
+           (into [alias-for for-part] more)
+           (= :for (sym->kw for-part))
+           (cons for-part more)
+           (or for-part (seq more))
+           ::too-many!)]))
+
+(defn- format-temporal
+  ":for :some-time <period>
+
+   <period> may be:
+   * :all
+   * :as-of <value>
+   * :from <value> :to <value>
+   * :between <value> :and <value>
+
+   Then generic format here is to alternate between sql-kw and format-expr
+   as we walk the <period> sequence."
+  [[for-part the-time & more]]
+  (let [control {:sql-kw [(fn [x] [(sql-kw x)]) :expr]
+                 :expr   [#'format-expr :sql-kw]}]
+    (loop [sqls   [(sql-kw for-part)
+                   (format-fn-name the-time)]
+           params []
+           more   more
+           fmt    :sql-kw]
+      (if (seq more)
+        (let [[x & more] more
+              [f fmt]    (get control fmt)
+              [sql' & params'] (f x)]
+          (recur (conj sqls sql')
+                 (into params params')
+                 more
+                 fmt))
+        (into [(str/join " " sqls)] params)))))
+
+(comment
+  (format-temporal [:for :some-time :all])
+  (format-temporal [:for :business_time :as-of [:inline "2000-12-16"]])
+  (format-temporal [:for :business_time :from [:inline "2000-12-16"] :to [:inline "2000-12-17"]])
+  (format-temporal [:for :system-time :between [:inline "2000-12-16"] :and [:inline "2000-12-17"]])
+  )
+
+(defn- format-item-selection
+  "Format all the possible ways to represent a table/column selection."
+  [x as]
+  (if (bigquery-*-except-replace? x)
+    (format-bigquery-*-except-replace x)
+    (let [[selectable alias temporal] (split-alias-temporal x)
+          _ (when (= ::too-many! temporal)
+              (throw (ex-info "illegal syntax in select expression"
+                              {:symbol selectable :alias alias :unexpected (nnext x)})))
+          [sql & params] (if (map? selectable)
+                           (format-dsl selectable {:nested true})
+                           (format-expr selectable))
+          [sql' & params'] (when alias
+                             (if (sequential? alias)
+                              (let [[sqls params] (format-expr-list alias {:aliased true})]
+                                (into [(str/join " " sqls)] params))
+                              (format-selectable-dsl alias {:aliased true})))
+          [sql'' & params''] (when temporal
+                               (format-temporal temporal))]
+
+      (-> [(str sql
+                (when sql'
+                  (str (if as
+                         (if (and (contains? *dialect* :as)
+                                  (not (:as *dialect*)))
+                           " "
+                           " AS ")
+                         " ")
+                       sql'))
+                (when sql''
+                  (str " " sql'')))]
+          (into params)
+          (into params')
+          (into params'')))))
 
 (defn- format-selectable-dsl [x & [{:keys [as aliased] :as opts}]]
   (cond (map? x)
         (format-dsl x {:nested true})
 
         (sequential? x)
-        (let [s     (first x)
-              a     (second x)
-              pair? (= 2 (count x))
-              big?  (and (ident? s) (or (= "*" (name s)) (str/ends-with? (name s) ".*"))
-                         (ident? a) (#{"except" "replace"} (name a)))
-              more? (and (< 2 (count x)) (not big?))
-              [sql & params] (if (map? s)
-                               (format-dsl s {:nested true})
-                               (format-expr s))
-              [sql' & params'] (when (or pair? big?)
-                                 (cond (sequential? a)
-                                       (let [[sqls params] (format-expr-list a {:aliased true})]
-                                         (into [(str/join " " sqls)] params))
-                                       big? ; BigQuery support #281
-                                       (reduce (fn [[sql & params] [k arg]]
-                                                 (let [[sql' params']
-                                                       (cond (and (ident? k) (= "except" (name k)) arg)
-                                                             (let [[sqls params]
-                                                                   (format-expr-list arg {:aliased true})]
-                                                               [(str (sql-kw k) " (" (str/join ", " sqls) ")")
-                                                                params])
-                                                             (and (ident? k) (= "replace" (name k)) arg)
-                                                             (let [[sql & params] (format-selects-common nil true arg)]
-                                                               [(str (sql-kw k) " (" sql ")")
-                                                                params])
-                                                             :else
-                                                             (throw (ex-info "bigquery * only supports except and replace"
-                                                                             {:clause k :arg arg})))]
-                                                   (-> [(cond->> sql' sql (str sql " "))]
-                                                       (into params)
-                                                       (into params'))))
-                                               []
-                                               (partition-all 2 (rest x)))
-                                       :else
-                                       (format-selectable-dsl a {:aliased true})))]
-          (-> [(cond pair?
-                     (str sql
-                          (if as
-                            (if (and (contains? *dialect* :as)
-                                     (not (:as *dialect*)))
-                              " "
-                              " AS ")
-                            " ") sql')
-                     big?
-                     (str sql " " sql')
-                     more?
-                     (throw (ex-info "illegal syntax in select expression"
-                                     {:symbol s :alias a :unexpected (nnext x)}))
-                     :else
-                     sql)]
-              (into params)
-              (into params')))
+        (format-item-selection x as)
 
         (ident? x)
         (if aliased
@@ -2119,4 +2196,11 @@
   (sql/format {:select [:*]
                :from [[[:only :countries]]]
                :join [[[:only :capitals]] [:= :countries.id :capitals.country_id]]})
+  ;; #407 -- temporal clauses:
+  (sql/format {:select [:username]
+               :from [[:user :for :system-time :as-of [:inline "2019-08-01 15:23:00"]]]
+               :where [:= :id 9]})
+  (sql/format {:select [:u.username]
+               :from [[:user :u :for :system-time :from [:inline "2019-08-01 15:23:00"] :to [:inline "2019-08-01 15:24:00"]]]
+               :where [:= :u.id 9]})
   )
