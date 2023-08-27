@@ -2259,4 +2259,8 @@
                         (fn [_ _] ["OVERRIDING SYSTEM VALUE"])
                         :values)
   (sql/format {:insert-into :foo :values [{:id 1}] :overriding-system-value true})
+  (sql/format {:insert-into [{:overriding-value :system}
+                             [:transport :t] [:id :name]]
+               :values [[1 "Car"] [2 "Boat"] [3 "Bike"]]}
+              {:pretty true})
   )

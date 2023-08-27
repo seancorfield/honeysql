@@ -642,7 +642,33 @@ user=> (sql/format '{insert-into (((transport t) (id, name)) {select (*) from (c
 ["INSERT INTO transport AS t (id, name) SELECT * FROM cars"]
 ```
 
-> Note: if you specify `:columns` for an `:insert-into` that also includes column names, you will get invalid SQL. Similarly, if you specify `:columns` when `:values` is based on hash maps, you will get invalid SQL. Since clauses are generated independently, there is no cross-checking performed if you provide an illegal combination of clauses.
+Some databases do not let you override (insert) values that would override
+generated column values, unless your SQL specifies `OVERRIDING SYSTEM VALUE`
+or `OVERRIDING USER VALUE`. In HoneySQL, you can use `:overriding-value` as
+an option to `:insert-into` to specify this, with either `:system` or `:user`
+as the option's value. The options can be specified as a hash map in the
+first position of the `:insert-into` clause, prior to the table specifier.
+
+```clojure
+user=> (sql/format {:insert-into [{:overriding-value :system}
+                                  [:transport :t] [:id :name]]
+                    :values [[1 "Car"] [2 "Boat"] [3 "Bike"]]}
+                   {:pretty true})
+["
+INSERT INTO transport AS t (id, name) OVERRIDING SYSTEM VALUE
+VALUES (?, ?), (?, ?), (?, ?)
+" 1 "Car" 2 "Boat" 3 "Bike"]
+user=> (sql/format {:insert-into [{:overriding-value :user}
+                                  [:transport :t] [:id :name]]
+                    :values [[1 "Car"] [2 "Boat"] [3 "Bike"]]}
+                   {:pretty true})
+["
+INSERT INTO transport AS t (id, name) OVERRIDING USER VALUE
+VALUES (?, ?), (?, ?), (?, ?)
+" 1 "Car" 2 "Boat" 3 "Bike"]
+```
+
+> Note: if you specify `:columns` for an `:insert-into` that also includes column names, or with a `:values` clause based on hash maps (which imply column names), then an order of precedence is applied: the columns specified directly in `:insert-into` take precedence, then the `:columns` clause, then the implied column names from the `:values` clause.
 
 ## update
 
