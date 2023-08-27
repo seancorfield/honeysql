@@ -319,8 +319,8 @@ user=> (sql/format {:refresh-materialized-view [:concurrently :products]
 ```
 
 PostgreSQL does not support `IF NOT EXISTS` on `CREATE VIEW` (it supports it on
-`CREATE MATERIALIZED VIEW`!) so HoneySQL also has `:create-or-replace-view`
-for this case:
+`CREATE MATERIALIZED VIEW`!) so, as of 2.4.1066, HoneySQL also has
+`:create-or-replace-view` for this case:
 
 ```clojure
 user=> (sql/format {:create-or-replace-view [:products]
@@ -644,7 +644,7 @@ user=> (sql/format '{insert-into (((transport t) (id, name)) {select (*) from (c
 
 Some databases do not let you override (insert) values that would override
 generated column values, unless your SQL specifies `OVERRIDING SYSTEM VALUE`
-or `OVERRIDING USER VALUE`. In HoneySQL, you can use `:overriding-value` as
+or `OVERRIDING USER VALUE`. As of 2.4.1066, you can use `:overriding-value` as
 an option to `:insert-into` to specify this, with either `:system` or `:user`
 as the option's value. The options can be specified as a hash map in the
 first position of the `:insert-into` clause, prior to the table specifier.
@@ -668,7 +668,7 @@ VALUES (?, ?), (?, ?), (?, ?)
 " 1 "Car" 2 "Boat" 3 "Bike"]
 ```
 
-> Note: if you specify `:columns` for an `:insert-into` that also includes column names, or with a `:values` clause based on hash maps (which imply column names), then an order of precedence is applied: the columns specified directly in `:insert-into` take precedence, then the `:columns` clause, then the implied column names from the `:values` clause.
+> Note: as of 2.4.1066, if you specify `:columns` for an `:insert-into` that also includes column names, or with a `:values` clause based on hash maps (which imply column names), then an order of precedence is applied: the columns specified directly in `:insert-into` take precedence, then the `:columns` clause, then the implied column names from the `:values` clause. Prior to 2.4.1066, you would get invalid SQL generated.
 
 ## update
 
@@ -763,7 +763,8 @@ user=> (sql/format {:select [:u.username :s.name]
 ["SELECT u.username, s.name FROM user AS u, status AS s WHERE (u.statusid = s.id) AND (u.id = ?)" 9]
 ```
 
-A temporal clause starts with `:for`, followed by the time reference
+As of 2.4.1066, HoneySQL supports a temporal clause that starts with `:for`,
+followed by the time reference
 (e.g., `:system-time` or `:business-time`), followed by a temporal qualifier,
 one of:
 * `:all`

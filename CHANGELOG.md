@@ -1,6 +1,6 @@
 # Changes
 
-* 2.4.next in progress
+* 2.4.1066 -- 2023-08-27
   * Add `:select` with function call and alias example to README (PR [#502](https://github.com/seancorfield/honeysql/pull/502) [@markbastian](https://github.com/markbastian)).
   * Address [#501](https://github.com/seancorfield/honeysql/issues/501) by making `INSERT INTO` (and `REPLACE INTO`) use the `:columns` or `:values` clauses to produce column names (which are then omitted from those other clauses).
   * Address [#497](https://github.com/seancorfield/honeysql/issues/497) by adding `:alias` special syntax.
