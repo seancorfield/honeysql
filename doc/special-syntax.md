@@ -215,6 +215,18 @@ FROM aa
 100]
 ```
 
+## ignore/respect nulls
+
+Both of these accept a single argument -- an expression -- and
+renders that expression followed by `IGNORE NULLS` or `RESPECT NULLS`:
+
+```clojure
+(sql/format-expr [:array_agg [:ignore-nulls :a]])
+;;=> ["ARRAY_AGG(a IGNORE NULLS)"]
+(sql/format-expr [:array_agg [:respect-nulls :a]])
+;;=> ["ARRAY_AGG(a RESPECT NULLS)"]
+```
+
 ## inline
 
 Accepts a single argument and tries to render it as a

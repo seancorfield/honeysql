@@ -1605,6 +1605,10 @@
         (into paramsx)
         (into params))))
 
+(defn ignore-respect-nulls [k [x]]
+  (let [[sql & params] (format-expr x)]
+    (into [(str sql " " (sql-kw k))] params)))
+
 (def ^:private special-syntax
   (atom
    {;; these "functions" are mostly used in column
@@ -1686,6 +1690,7 @@
             (into params-p)
             (into params-e))))
     :filter expr-clause-pairs
+    :ignore-nulls ignore-respect-nulls
     :inline
     (fn [_ [x]]
       (binding [*inline* true]
@@ -1766,6 +1771,7 @@
         (raw-render (first xs))
         ;; ...but allow for multiple arguments now:
         (raw-render xs)))
+    :respect-nulls ignore-respect-nulls
     :within-group expr-clause-pairs}))
 
 (defn- format-equality-expr [op' op expr nested]
