@@ -48,7 +48,7 @@
     bulk-collect-info [& args]
 
   (as they are for all helper functions)."
-  (:refer-clojure :exclude [filter for group-by into partition-by set update])
+  (:refer-clojure :exclude [distinct filter for group-by into partition-by set update])
   (:require [clojure.core :as c]
             [honey.sql]))
 
@@ -467,6 +467,16 @@
   "Like `select-top` but produces SELECT DISTINCT TOP..."
   [& args]
   (generic :select-distinct-top args))
+
+(defn distinct
+  "Like `select-distinct` but produces DISTINCT..."
+  [& args]
+  (generic-1 :distinct args))
+
+(defn expr
+  "Like `distinct` but produces ... (i.e., just the expression that follows)."
+  [& args]
+  (generic-1 :expr args))
 
 (defn into
   "Accepts table name, optionally followed a database name."

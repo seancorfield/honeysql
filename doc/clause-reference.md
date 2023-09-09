@@ -1002,6 +1002,19 @@ user=> (sql/format (-> (select :id
 ["SELECT id, AVG(salary) OVER () AS Average, MAX(salary) OVER () AS MaxSalary FROM employee"]
 ```
 
+## distinct, expr
+
+Related to the windowing clauses above, `:distinct` and `:expr` are
+intended to let you mix clauses with expressions, such as in BigQuery's
+`ARRAY_AGG` function:
+
+```clojure
+user=> (sql/format {:select [[[:over
+                               [[:array_agg {:distinct [:ignore-nulls :col] :order-by :x}]
+                                {:partition-by :y}]]]]})
+["SELECT ARRAY_AGG (DISTINCT col IGNORE NULLS ORDER BY x ASC) OVER (PARTITION BY y)"]
+```
+
 ## order-by
 
 `:order-by` accepts a sequence of one or more ordering

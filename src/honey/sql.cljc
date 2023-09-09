@@ -55,6 +55,7 @@
    :raw :nest :with :with-recursive :intersect :union :union-all :except :except-all
    :table
    :select :select-distinct :select-distinct-on :select-top :select-distinct-top
+   :distinct :expr
    :into :bulk-collect-into
    :insert-into :replace-into :update :delete :delete-from :truncate
    :columns :set :from :using
@@ -288,13 +289,14 @@
 
   Any ? is escaped to ??."
   [k]
-  (let [n (str/replace (name k) "?" "??")]
-    (if (= \' (first n))
-      (let [ident   (subs n 1 (count n))
-            ident-l (str/lower-case ident)]
-        (binding [*quoted* (when-not (contains? #{"array"} ident-l) *quoted*)]
-          (format-entity (keyword ident))))
-      (-> n (dehyphen) (upper-case)))))
+  (when k
+    (let [n (str/replace (name k) "?" "??")]
+      (if (= \' (first n))
+        (let [ident   (subs n 1 (count n))
+              ident-l (str/lower-case ident)]
+          (binding [*quoted* (when-not (contains? #{"array"} ident-l) *quoted*)]
+            (format-entity (keyword ident))))
+        (-> n (dehyphen) (upper-case))))))
 
 (defn- sym->kw
   "Given a symbol, produce a keyword, retaining the namespace
@@ -1361,6 +1363,8 @@
          :select-distinct-on #'format-selects-on
          :select-top      #'format-select-top
          :select-distinct-top #'format-select-top
+         :distinct        (fn [k xs] (format-selects k   [[xs]]))
+         :expr            (fn [_ xs] (format-selects nil [[xs]]))
          :into            #'format-select-into
          :bulk-collect-into #'format-select-into
          :insert-into     #'format-insert
@@ -2269,4 +2273,8 @@
                              [:transport :t] [:id :name]]
                :values [[1 "Car"] [2 "Boat"] [3 "Bike"]]}
               {:pretty true})
+  (sql/format-expr [:array_agg {:distinct [:ignore-nulls :a]  :order-by :a}])
+  (sql/format-expr [:over [[:array_agg {:expr     [:respect-nulls :a] :order-by :a
+                                        :limit    10}]
+                           {:partition-by :something}]])
   )

@@ -1,7 +1,7 @@
 # Changes
 
 * 2.4.next in progress
-  * Address [#504](https://github.com/seancorfield/honeysql/issues/504) by adding special syntax for ignore/respect nulls. More work will be needed to support distinct/order by/limit in BigQuery array aggregation.
+  * Address [#504](https://github.com/seancorfield/honeysql/issues/504) for BigQuery support, by adding special syntax for ignore/respect nulls, as well as new `:distinct` and `:expr` clauses to allow expressions to be qualified with SQL clauses. The latter will probably be useful for other dialects too.
 
 * 2.4.1066 -- 2023-08-27
   * Add `:select` with function call and alias example to README (PR [#502](https://github.com/seancorfield/honeysql/pull/502) [@markbastian](https://github.com/markbastian)).
