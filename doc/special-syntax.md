@@ -68,6 +68,19 @@ In addition, the argument to `:array` is treated as a literal sequence of Clojur
 ;;=> ["SELECT ARRAY[inline, (?, ?, ?)] AS arr" 1 2 3]
 ```
 
+## at time zone
+
+Accepts two arguments: an expression (assumed to be a date/time of some sort)
+and a time zone name or identifier (can be a string, a symbol, or a keyword):
+
+```clojure
+(sql/format-expr [:at-time-zone [:now] :utc])
+;;=> ["NOW() AT TIME ZONE 'UTC'"]
+```
+
+The time zone name or identifier will be inlined (as a string) and therefore
+cannot be an expression.
+
 ## between
 
 Accepts three arguments: an expression, a lower bound, and

@@ -1261,6 +1261,14 @@ ORDER BY id = ? DESC
   (is (= ["INSERT INTO foo (bar) OUTPUT inserted.* VALUES (?)" 1]
          (sut/format {:insert-into :foo :columns [:bar] :output [:inserted.*] :values [[1]]}))))
 
+(deftest at-time-zone-503
+  (is (= ["SELECT foo AT TIME ZONE 'UTC'"]
+         (sut/format {:select [[[:at-time-zone :foo "UTC"]]]})))
+  (is (= ["SELECT foo AT TIME ZONE 'UTC'"]
+         (sut/format {:select [[[:at-time-zone :foo :UTC]]]})))
+  (is (= ["SELECT FOO(bar) AT TIME ZONE 'UTC'"]
+         (sut/format {:select [[[:at-time-zone [:foo :bar] :UTC]]]}))))
+
 (comment
   ;; partial workaround for #407:
   (sut/format {:select :f.* :from [[:foo [:f :for :system-time]]] :where [:= :f.id 1]})

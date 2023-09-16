@@ -1632,6 +1632,7 @@
     :primary-key #'function-0
     :references  #'function-1
     :unique      #'function-1-opt
+    ;; dynamic dotted name creation:
     :.           (fn [_ [expr col subcol]]
                    (let [[sql & params] (format-expr expr)]
                      (into [(str sql "." (format-entity col)
@@ -1658,6 +1659,13 @@
       (let [[sqls params] (format-expr-list arr)
             type-str (when type (str "::" (sql-kw type) "[]"))]
         (into [(str "ARRAY[" (str/join ", " sqls) "]" type-str)] params)))
+    :at-time-zone
+    (fn [_ [expr tz]]
+      (let [[sql & params] (format-expr expr {:nested true})
+            [tz-sql & _]
+            (binding [*inline* true]
+              (format-expr (if (ident? tz) (name tz) tz)))]
+        (into [(str sql " AT TIME ZONE " tz-sql)] params)))
     :between
     (fn [_ [x a b]]
       (let [[sql-x & params-x] (format-expr x {:nested true})
