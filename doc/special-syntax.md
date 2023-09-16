@@ -74,7 +74,7 @@ Accepts two arguments: an expression (assumed to be a date/time of some sort)
 and a time zone name or identifier (can be a string, a symbol, or a keyword):
 
 ```clojure
-(sql/format-expr [:at-time-zone [:now] :utc])
+(sql/format-expr [:at-time-zone [:now] :UTC])
 ;;=> ["NOW() AT TIME ZONE 'UTC'"]
 ```
 
