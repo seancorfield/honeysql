@@ -913,3 +913,24 @@
            (where false)))
     (is (= ["SELECT * FROM table WHERE FALSE"]
            (sql/format {:select [:*] :from [:table] :where false})))))
+
+(deftest issue-505
+  (testing "where should merge symbols/keywords correctly"
+    (is (= '{where [:and (= a 1) [:= :b 2]]}
+           (-> '{where (= a 1)}
+               (where [:= :b 2]))))
+    (is (= '{where (= a 1)}
+           (-> '{where (= a 1)}
+               (where))))
+    (is (= '{:where [:and (= a 1) [:= :b 2]]}
+           (-> '{:where (= a 1)}
+               (where [:= :b 2]))))
+    (is (= '{:where (= a 1)}
+           (-> '{:where (= a 1)}
+               (where))))
+    (is (= '{:where [:= :b 2]}
+           (-> '{}
+               (where [:= :b 2]))))
+    (is (= '{}
+           (-> '{}
+               (where))))))

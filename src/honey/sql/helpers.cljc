@@ -71,6 +71,16 @@
       (keyword (name s)))
     s))
 
+(defn- kw->sym
+  "Given a keyword, produce a symbol, retaining the namespace
+  qualifier, if any."
+  [k]
+  (if (keyword? k)
+    (if-let [n (namespace k)]
+      (symbol n (name k))
+      (symbol (name k)))
+    k))
+
 (defn- conjunction?
   [e]
   (and (ident? e)
@@ -134,11 +144,26 @@
    :having             #'conjunction-merge})
 
 (defn- helper-merge [data k args]
-  (if-let [merge-fn (special-merges k)]
-    (if-some [clause (merge-fn (get data k) args)]
-      (assoc data k clause)
-      data)
-    (clojure.core/update data k default-merge args)))
+  (let [k'  (sym->kw k)
+        k   (kw->sym k)
+        d   (get data k)
+        d'  (get data k')
+        mf  (special-merges k')
+        mf' (or mf default-merge)]
+    (cond (some? d)
+          (if-some [clause (mf' d args)]
+            (assoc data k clause)
+            data)
+          (some? d')
+          (if-some [clause (mf' d' args)]
+            (assoc data k' clause)
+            data)
+          mf
+          (if-some [clause (mf nil args)]
+            (assoc data k' clause)
+            data)
+          :else
+          (clojure.core/update data k' default-merge args))))
 
 (defn- generic [k args]
   (if (map? (first args))

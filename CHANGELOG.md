@@ -1,6 +1,7 @@
 # Changes
 
 * 2.4.next in progress
+  * Fix [#505](https://github.com/seancorfield/honeysql/issues/505) by rewriting the helper merge function to handle both keywords and symbols properly.
   * Address [#503](https://github.com/seancorfield/honeysql/issues/503) by adding `:at-time-zone` special syntax.
   * Address [#504](https://github.com/seancorfield/honeysql/issues/504) for BigQuery support, by adding special syntax for ignore/respect nulls, as well as new `:distinct` and `:expr` clauses to allow expressions to be qualified with SQL clauses. The latter will probably be useful for other dialects too.
 
