@@ -50,7 +50,7 @@
   (as they are for all helper functions)."
   (:refer-clojure :exclude [distinct filter for group-by into partition-by set update])
   (:require [clojure.core :as c]
-            [honey.sql]))
+            [honey.sql :as h]))
 
 ;; implementation helpers:
 
@@ -61,30 +61,10 @@
                   :else [current])]
     (c/into current args)))
 
-(defn- sym->kw
-  "Given a symbol, produce a keyword, retaining the namespace
-  qualifier, if any."
-  [s]
-  (if (symbol? s)
-    (if-let [n (namespace s)]
-      (keyword n (name s))
-      (keyword (name s)))
-    s))
-
-(defn- kw->sym
-  "Given a keyword, produce a symbol, retaining the namespace
-  qualifier, if any."
-  [k]
-  (if (keyword? k)
-    (if-let [n (namespace k)]
-      (symbol n (name k))
-      (symbol (name k)))
-    k))
-
 (defn- conjunction?
   [e]
   (and (ident? e)
-       (contains? #{:and :or} (sym->kw e))))
+       (contains? #{:and :or} (#'h/sym->kw e))))
 
 (defn- simplify-logic
   "For Boolean expressions, simplify the logic to make
@@ -96,11 +76,11 @@
   [e]
   (if (= 1 (count (rest e)))
     (fnext e)
-    (let [conjunction (sym->kw (first e))]
+    (let [conjunction (#'h/sym->kw (first e))]
       (reduce (fn [acc e]
                 (if (and (sequential? e)
                          (conjunction? (first e))
-                         (= conjunction (sym->kw (first e))))
+                         (= conjunction (#'h/sym->kw (first e))))
                   (c/into acc (rest e))
                   (conj acc e)))
               [conjunction]
@@ -144,8 +124,8 @@
    :having             #'conjunction-merge})
 
 (defn- helper-merge [data k args]
-  (let [k'  (sym->kw k)
-        k   (kw->sym k)
+  (let [k'  (#'h/sym->kw k)
+        k   (#'h/kw->sym k)
         d   (get data k)
         d'  (get data k')
         mf  (special-merges k')
