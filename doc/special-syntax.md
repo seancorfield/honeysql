@@ -114,13 +114,43 @@ this using `:case-expr`:
 
 ## cast
 
-A SQL CAST expression. Expects an expression and something
+A SQL `CAST` expression. Expects an expression and something
 that produces a SQL type:
 
 ```clojure
-(sql/format-expr [:cast :a :int])
+(sql/format [:cast :a :int])
 ;;=> ["CAST(a AS INT)"]
 ```
+
+Quoting does not affect the type in a `CAST`, only the expression:
+
+```clojure
+(sql/format [:cast :a :int] {:quoted true})
+;;=> ["CAST(\"a\" AS INT)"]
+```
+
+A hyphen (`-`) in the type name becomes a space:
+
+```clojure
+(sql/format [:cast :a :double-precision])
+;;=> ["CAST(a AS DOUBLE PRECISION)"]
+```
+
+If you want an underscore in the type name, you have two choices:
+
+```clojure
+(sql/format [:cast :a :some_type])
+;;=> ["CAST(a AS SOME_TYPE)"]
+```
+
+or:
+
+```clojure
+(sql/format [:cast :a :'some-type])
+;;=> ["CAST(a AS some_type)"]
+```
+
+> Note: In HoneySQL 2.4.947 and earlier, the type name was incorrectly affected by the quoting feature, and a hyphen in a type name was incorrectly changed to underscore. This was corrected in 2.4.962.
 
 ## composite
 

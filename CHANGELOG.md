@@ -1,6 +1,7 @@
 # Changes
 
 * 2.4.next in progress
+  * Address [#507](https://github.com/seancorfield/honeysql/issues/507) by clarifying formatting of `:cast` in **Special Syntax**.
   * Fix [#505](https://github.com/seancorfield/honeysql/issues/505) by rewriting the helper merge function to handle both keywords and symbols properly.
   * Address [#503](https://github.com/seancorfield/honeysql/issues/503) by adding `:at-time-zone` special syntax.
   * Address [#504](https://github.com/seancorfield/honeysql/issues/504) for BigQuery support, by adding special syntax for ignore/respect nulls, as well as new `:distinct` and `:expr` clauses to allow expressions to be qualified with SQL clauses. The latter will probably be useful for other dialects too.
@@ -74,7 +75,7 @@
 
 * 2.4.962 -- 2022-12-17
   * Fix `set-options!` (only `:checking` worked in 2.4.947).
-  * Fix `:cast` formatting when quoting is enabled, via PR [#443](https://github.com/seancorfield/honeysql/pull/443) [duddlf23](https://github.com/duddlf23).
+  * Fix `:cast` formatting when quoting is enabled, via PR [#443](https://github.com/seancorfield/honeysql/pull/443) [duddlf23](https://github.com/duddlf23). **This changes how type names containing `-` are formatted in a cast.** See [`cast` Special Syntax](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT/doc/getting-started/sql-special-syntax-#cast) for more details.
   * Fix [#441](https://github.com/seancorfield/honeysql/issues/441) by adding `:replace-into` to in-flight clause order (as well as registering it for the `:mysql` dialect).
   * Fix [#434](https://github.com/seancorfield/honeysql/issues/434) by special-casing `:'ARRAY`.
   * Fix [#433](https://github.com/seancorfield/honeysql/issues/433) by supporting additional `WITH` syntax, via PR [#432](https://github.com/seancorfield/honeysql/issues/432), [@MawiraIke](https://github.com/MawiraIke). _[Technically, this was in 2.4.947, but I kept the issue open while I wordsmithed the documentation]_
