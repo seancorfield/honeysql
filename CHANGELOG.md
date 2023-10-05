@@ -5,6 +5,7 @@
   * Fix [#505](https://github.com/seancorfield/honeysql/issues/505) by rewriting the helper merge function to handle both keywords and symbols properly.
   * Address [#503](https://github.com/seancorfield/honeysql/issues/503) by adding `:at-time-zone` special syntax.
   * Address [#504](https://github.com/seancorfield/honeysql/issues/504) for BigQuery support, by adding special syntax for ignore/respect nulls, as well as new `:distinct` and `:expr` clauses to allow expressions to be qualified with SQL clauses. The latter will probably be useful for other dialects too.
+  * Update CI tooling versions.
 
 * 2.4.1066 -- 2023-08-27
   * Add `:select` with function call and alias example to README (PR [#502](https://github.com/seancorfield/honeysql/pull/502) [@markbastian](https://github.com/markbastian)).
