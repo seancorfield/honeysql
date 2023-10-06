@@ -79,7 +79,7 @@
      [:name "Justin Kramer"]]]
    [:scm
     [:url "https://github.com/seancorfield/honeysql"]
-    [:connection "scm:git:git://github.com/seancorfield/honeysql.git"]
+    [:connection "scm:git:https://github.com/seancorfield/honeysql.git"]
     [:developerConnection "scm:git:ssh://git@github.com/seancorfield/honeysql.git"]
     [:tag (str "v" version)]]])
 
