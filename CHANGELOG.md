@@ -1,6 +1,6 @@
 # Changes
 
-* 2.4.next in progress
+* 2.4.1078 -- 2023-10-07
   * Address [#507](https://github.com/seancorfield/honeysql/issues/507) by clarifying formatting of `:cast` in **Special Syntax**.
   * Fix [#505](https://github.com/seancorfield/honeysql/issues/505) by rewriting the helper merge function to handle both keywords and symbols properly.
   * Address [#503](https://github.com/seancorfield/honeysql/issues/503) by adding `:at-time-zone` special syntax.

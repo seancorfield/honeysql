@@ -80,7 +80,7 @@
    [:scm
     [:url "https://github.com/seancorfield/honeysql"]
     [:connection "scm:git:https://github.com/seancorfield/honeysql.git"]
-    [:developerConnection "scm:git:ssh://git@github.com/seancorfield/honeysql.git"]
+    [:developerConnection "scm:git:ssh:git@github.com:seancorfield/honeysql.git"]
     [:tag (str "v" version)]]])
 
 (defn- jar-opts [opts]
