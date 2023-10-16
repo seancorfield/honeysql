@@ -1018,6 +1018,28 @@
   [& args]
   (c/into [:within-group] args))
 
+;; nrql-specific helpers:
+
+(defn since
+  "(since 2 :days :ago)"
+  [& args]
+  (generic :since args))
+
+(defn until
+  "(until 1 :month :ago)"
+  [& args]
+  (generic :until args))
+
+(defn compare-with
+  "(compare-with 1 :week :ago)"
+  [& args]
+  (generic :compare-with args))
+
+(defn timeseries
+  "(timeseries 1 :week :ago)"
+  [& args]
+  (generic :timeseries args))
+
 ;; this helper is intended to ease the migration from nilenso:
 (defn upsert
   "Provided purely to ease migration from nilenso/honeysql-postgres

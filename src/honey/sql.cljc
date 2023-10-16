@@ -67,7 +67,9 @@
    :order-by :limit :offset :fetch :for :lock :values
    :on-conflict :on-constraint :do-nothing :do-update-set :on-duplicate-key-update
    :returning
-   :with-data])
+   :with-data
+   ;; NRQL extensions:
+   :since :until :compare-with :timeseries])
 
 (defn add-clause-before
   "Low-level helper just to insert a new clause.
@@ -108,7 +110,10 @@
                :mysql     {:quote #(strop \` % \`)
                            :clause-order-fn
                            #(add-clause-before % :set :where)}
-               :oracle    {:quote #(strop \" % \") :as false}})))
+               :oracle    {:quote #(strop \" % \") :as false}
+               :nrql      {:quote    #(strop \` % \`)
+                           :col-fn   #(if (keyword? %) (subs (str %) 1) (str %))
+                           :parts-fn vector}})))
 
 ; should become defonce
 (def ^:private default-dialect (atom (:ansi @dialects)))
@@ -225,6 +230,17 @@
 (defn- ensure-sequential [xs]
   (if (sequential? xs) xs [xs]))
 
+(comment
+  (format {:select [:mulog/timestamp :mulog/event-name]
+           :from   :Log
+           :where  [:= :mulog/data.account "foo-account-id"]
+           :since  [2 :days :ago]
+           :limit 2000}
+          {:dialect :nrql})
+  ;; ["SELECT `mulog/timestamp`, `mulog/event-name` FROM Log
+  ;;   WHERE `mulog/data.account` = 'foo-account-id' LIMIT 2000 SINCE 2 DAYS AGO"]
+  )
+
 (defn format-entity
   "Given a simple SQL entity (a keyword or symbol -- or string),
   return the equivalent SQL fragment (as a string -- no parameters).
@@ -235,9 +251,10 @@
                       ;; #497 quoted alias support (should behave like string)
                       (subs (name e) 1)
                       e)
-        col-fn      (if (or *quoted* (string? e))
-                      (if *quoted-snake* name-_ name)
-                      name-_)
+        col-fn      (or (:col-fn *dialect*)
+                        (if (or *quoted* (string? e))
+                          (if *quoted-snake* name-_ name)
+                          name-_))
         col-e       (col-fn e)
         dialect-q   (:quote *dialect* identity)
         quote-fn    (cond (or *quoted* (string? e))
@@ -251,12 +268,14 @@
                               (dialect-q part)))
                           :else
                           identity)
-        parts       (if-let [n (when-not (or drop-ns (string? e))
-                                 (namespace-_ e))]
-                      [n col-e]
-                      (if aliased
-                        [col-e]
-                        (str/split col-e #"\.")))
+        parts-fn    (or (:parts-fn *dialect*)
+                        #(if-let [n (when-not (or drop-ns (string? e))
+                                      (namespace-_ e))]
+                           [n %]
+                           (if aliased
+                             [%]
+                             (str/split % #"\."))))
+        parts       (parts-fn col-e)
         entity      (str/join "." (map #(cond-> % (not= "*" %) (quote-fn)) parts))
         suspicious #";"]
     (when-not *allow-suspicious-entities*
@@ -1287,6 +1306,16 @@
   (let [tables (destructure-drop-columns params)]
     [(str/join ", " (mapv #(str (sql-kw k) " " %) tables))]))
 
+(defn- format-interval
+  [k [n & units]]
+  (if (seq units)
+    (let [[sql & params] (format-expr n)]
+      (into [(str (sql-kw k) " " sql " "
+                  (str/join " " (map sql-kw units)))]
+            params))
+    (binding [*inline* true]
+      (let [[sql & params] (format-expr n)]
+        (into [(str (sql-kw k) " " sql)] params)))))
 (defn- check-where
   "Given a formatter function, performs a pre-flight check that there is
   a non-empty where clause if at least basic checking is enabled."
@@ -1414,7 +1443,12 @@
          ;; MySQL-specific but might as well be always enabled:
          :on-duplicate-key-update #'format-do-update-set
          :returning       #'format-selects
-         :with-data       #'format-with-data}))
+         :with-data       #'format-with-data
+         ;; NRQL extensions:
+         :since           #'format-interval
+         :until           #'format-interval
+         :compare-with    #'format-interval
+         :timeseries      #'format-interval}))
 
 (assert (= (set @base-clause-order)
            (set @current-clause-order)
@@ -1707,14 +1741,7 @@
     (fn [_ [x]]
       (binding [*inline* true]
         (format-expr x)))
-    :interval
-    (fn [_ [n units]]
-      (if units
-        (let [[sql & params] (format-expr n)]
-          (into [(str "INTERVAL " sql " " (sql-kw units))] params))
-        (binding [*inline* true]
-          (let [[sql & params] (format-expr n)]
-            (into [(str "INTERVAL " sql)] params)))))
+    :interval format-interval
     :join
     (fn [_ [e & js]]
       (let [[sqls params] (reduce-sql (cons (format-expr e)
@@ -1932,12 +1959,14 @@
   ([data opts]
    (let [cache     (:cache opts)
          dialect?  (contains? opts :dialect)
-         dialect   (when dialect? (get @dialects (check-dialect (:dialect opts))))
+         dialect   (if dialect?
+                     (get @dialects (check-dialect (:dialect opts)))
+                     @default-dialect)
          numbered  (if (contains? opts :numbered)
                      (:numbered opts)
                      @default-numbered)
          formatter (if (map? data) #'format-dsl #'format-expr)]
-     (binding [*dialect* (if dialect? dialect @default-dialect)
+     (binding [*dialect* dialect
                *caching* cache
                *checking* (if (contains? opts :checking)
                             (:checking opts)
@@ -1947,13 +1976,18 @@
                                   (f @base-clause-order)
                                   @current-clause-order)
                                 @current-clause-order)
-               *inline*  (if (contains? opts :inline)
-                           (:inline opts)
-                           @default-inline)
+               *inline*  (cond (contains? opts :inline)
+                               (:inline opts)
+                               (= :nrql (:dialect dialect))
+                               true
+                               :else
+                               @default-inline)
                *numbered* (when numbered
                             (atom []))
                *quoted*  (cond (contains? opts :quoted)
                                (:quoted opts)
+                               (= :nrql (:dialect dialect))
+                               nil
                                dialect?
                                true
                                :else
