@@ -936,7 +936,7 @@
 
 (defn- format-values [k xs]
   (let [first-xs (when (sequential? xs) (first (drop-while ident? xs)))]
-    (cond (or (identical? :default xs) (= 'default xs))
+    (cond (and (ident? xs) (contains? #{:default 'default} xs))
           [(str (sql-kw xs) " " (sql-kw k))]
           (empty? xs)
           [(str (sql-kw k) " ()")]
