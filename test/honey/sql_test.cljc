@@ -260,6 +260,14 @@
   (is (= (format {:insert-into [:foo :bar] :values [{:foo/id 1}]})
          ["INSERT INTO foo AS bar (id) VALUES (?)" 1])))
 
+(deftest insert-into-unhashable
+  (let [unhashable
+        (reify Object
+          (toString [_] "Unhashable")
+          (hashCode [_] (throw (ex-info "Unimplemented `hashCode`!" {}))))]
+    (is (= (format {:insert-into [[:lift unhashable]]})
+           ["INSERT INTO ?" unhashable]))))
+
 (deftest exists-test
   ;; EXISTS should never have been implemented as SQL syntax: it's an operator!
   #_(is (= (format {:exists {:select [:a] :from [:foo]}})
