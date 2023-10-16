@@ -1,5 +1,8 @@
 # Changes
 
+* 2.4.next in progress
+  * Fix [#509](https://github.com/seancorfield/honeysql/issues/509) by checking for `ident?` before checking keyword/symbol.
+
 * 2.4.1078 -- 2023-10-07
   * Address [#507](https://github.com/seancorfield/honeysql/issues/507) by clarifying formatting of `:cast` in **Special Syntax**.
   * Fix [#505](https://github.com/seancorfield/honeysql/issues/505) by rewriting the helper merge function to handle both keywords and symbols properly.
