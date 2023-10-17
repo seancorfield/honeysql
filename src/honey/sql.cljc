@@ -1447,7 +1447,7 @@
          :returning       #'format-selects
          :with-data       #'format-with-data
          ;; NRQL extensions:
-         :facet           #'format-selector
+         :facet           #'format-selects
          :since           #'format-interval
          :until           #'format-interval
          :compare-with    #'format-interval
@@ -2331,7 +2331,7 @@
                :where [:some :value]
                #_[:and [:= :environment "production"]
                   [:= :process.name "match"]]
-               :facet [:some.metric :alias]
+               :facet [[:some.metric :alias]]
                :since [1 :day :ago]
                :timeseries [:auto]}
               {:dialect :nrql})

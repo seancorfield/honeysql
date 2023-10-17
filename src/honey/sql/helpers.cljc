@@ -1023,7 +1023,7 @@
 (defn facet
   "(facet [:metric.name :alias])"
   [& args]
-  (generic-1 :facet args))
+  (generic :facet args))
 
 (defn since
   "(since 2 :days :ago)"
