@@ -63,6 +63,8 @@
    :join :left-join :right-join :inner-join :outer-join :full-join
    :cross-join
    :where :group-by :having
+   ;; NRQL extension:
+   :facet
    :window :partition-by
    :order-by :limit :offset :fetch :for :lock :values
    :on-conflict :on-constraint :do-nothing :do-update-set :on-duplicate-key-update
@@ -676,8 +678,8 @@
 (defn- format-selects [k xs]
   (format-selects-common
    (sql-kw k)
-   (#{:select :select-distinct :from :window :delete-from
-      'select 'select-distinct 'from 'window 'delete-from}
+   (#{:select :select-distinct :from :window :delete-from :facet
+      'select 'select-distinct 'from 'window 'delete-from 'facet}
     k)
    xs))
 
@@ -1445,6 +1447,7 @@
          :returning       #'format-selects
          :with-data       #'format-with-data
          ;; NRQL extensions:
+         :facet           #'format-selector
          :since           #'format-interval
          :until           #'format-interval
          :compare-with    #'format-interval
@@ -2319,4 +2322,17 @@
   (sql/format-expr [:over [[:array_agg {:expr     [:respect-nulls :a] :order-by :a
                                         :limit    10}]
                            {:partition-by :something}]])
+  ;; doesn't work yet -- requires [:auto]
+  (sql/format {:select :col :from :data :timeseries :auto} {:dialect :nrql})
+  (sql/format {:select [[[:latest (keyword "Elastic/Search OK Count/value")]]
+                        [[:latest (keyword "Elastic/Search Fail Count/value")]]
+                        [[:* 100 [:latest :Sent/rate]] "Sent/rate x 100"]]
+               :from :Metric
+               :where [:some :value]
+               #_[:and [:= :environment "production"]
+                  [:= :process.name "match"]]
+               :facet [:some.metric :alias]
+               :since [1 :day :ago]
+               :timeseries [:auto]}
+              {:dialect :nrql})
   )
