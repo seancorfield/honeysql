@@ -553,6 +553,12 @@
                          (where [:= :metroflag "y"])
                          (with-data false)))
          ["CREATE TABLE IF NOT EXISTS metro AS SELECT * FROM cities WHERE metroflag = ? WITH NO DATA" "y"]))
+  (is (= (sql/format (-> (create-table-as :metro :or-replace)
+                         (select :*)
+                         (from :cities)
+                         (where [:= :metroflag "y"])
+                         (with-data false)))
+         ["CREATE OR REPLACE TABLE metro AS SELECT * FROM cities WHERE metroflag = ? WITH NO DATA" "y"]))
   (is (= (sql/format (-> (create-materialized-view :metro :if-not-exists)
                          (select :*)
                          (from :cities)
@@ -567,6 +573,16 @@
                          (where [:= :metroflag "y"])
                          (with-data false)))
          [(str "CREATE TABLE IF NOT EXISTS metro"
+               " (foo, bar, baz) TABLESPACE quux"
+               " AS SELECT * FROM cities WHERE metroflag = ? WITH NO DATA") "y"]))
+  (is (= (sql/format (-> (create-table-as :metro :or-replace
+                                          (columns :foo :bar :baz)
+                                          [:tablespace [:entity :quux]])
+                         (select :*)
+                         (from :cities)
+                         (where [:= :metroflag "y"])
+                         (with-data false)))
+         [(str "CREATE OR REPLACE TABLE metro"
                " (foo, bar, baz) TABLESPACE quux"
                " AS SELECT * FROM cities WHERE metroflag = ? WITH NO DATA") "y"]))
   (is (= (sql/format (-> (create-materialized-view :metro :if-not-exists

@@ -1156,9 +1156,13 @@
         opts (filter some? (drop-while tab? params))
         ine  (last coll)
         [prequel table ine]
-        (if (= :if-not-exists (sym->kw ine))
-          [(butlast (butlast coll)) (last (butlast coll)) ine]
-          [(butlast coll) (last coll) nil])]
+        (let [ine-kw (sym->kw ine)]
+          (cond (= :if-not-exists ine-kw)
+                [(butlast (butlast coll)) (last (butlast coll)) ine]
+                (= :or-replace ine-kw)
+                [(cons ine (butlast (butlast coll))) (last (butlast coll)) nil]
+                :else
+                [(butlast coll) (last coll) nil]))]
     (into [(str/join " " (map sql-kw prequel))
            (when table (format-entity table))
            (when ine (sql-kw ine))]
