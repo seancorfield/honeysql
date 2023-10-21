@@ -1313,15 +1313,18 @@
     [(str/join ", " (mapv #(str (sql-kw k) " " %) tables))]))
 
 (defn- format-interval
-  [k [n & units]]
-  (if (seq units)
-    (let [[sql & params] (format-expr n)]
-      (into [(str (sql-kw k) " " sql " "
-                  (str/join " " (map sql-kw units)))]
-            params))
-    (binding [*inline* true]
-      (let [[sql & params] (format-expr n)]
-        (into [(str (sql-kw k) " " sql)] params)))))
+  [k args]
+  (if (sequential? args)
+    (let [[n & units] args]
+      (if (seq units)
+        (let [[sql & params] (format-expr n)]
+          (into [(str (sql-kw k) " " sql " "
+                      (str/join " " (map sql-kw units)))]
+                params))
+        (binding [*inline* true]
+          (let [[sql & params] (format-expr n)]
+            (into [(str (sql-kw k) " " sql)] params)))))
+    [(str (sql-kw k) " " (sql-kw args))]))
 (defn- check-where
   "Given a formatter function, performs a pre-flight check that there is
   a non-empty where clause if at least basic checking is enabled."
@@ -2326,7 +2329,7 @@
   (sql/format-expr [:over [[:array_agg {:expr     [:respect-nulls :a] :order-by :a
                                         :limit    10}]
                            {:partition-by :something}]])
-  ;; doesn't work yet -- requires [:auto]
+  ;; :timeseries :auto supported as a shortcut:
   (sql/format {:select :col :from :data :timeseries :auto} {:dialect :nrql})
   (sql/format {:select [[[:latest (keyword "Elastic/Search OK Count/value")]]
                         [[:latest (keyword "Elastic/Search Fail Count/value")]]
