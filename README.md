@@ -773,7 +773,7 @@ Valid `:dialect` options are `:ansi` (the default, use this for PostgreSQL),
     (from :foo)
     (where [:= :foo.a "baz"])
     (sql/format {:dialect :nrql}))
-=> ["SELECT `foo.a` FROM `foo` WHERE `foo.a` = 'baz'"]
+=> ["SELECT `foo.a` FROM foo WHERE `foo.a` = 'baz'"]
 ```
 
 See [New Relic NRQL Support](nrsql.md) for more details of the NRQL dialect.
