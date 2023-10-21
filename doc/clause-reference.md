@@ -229,7 +229,8 @@ CREATE TABLE quux
 `:create-table-as` can accept a single table name or a sequence
 that starts with a table name, optionally followed by
 a flag indicating the creation should be conditional
-(`:if-not-exists` or the symbol `if-not-exists`),
+(`:if-not-exists` or the symbol `if-not-exists` or,
+for BigQuery `:or-replace` or the symbol `or-replace`),
 optionally followed by a `{:columns ..}` clause to specify
 the columns to use in the created table, optionally followed
 by special syntax to specify `TABLESPACE` etc.
@@ -261,7 +262,7 @@ A more concise version of the above can use the `TABLE` clause:
 
 
 ```clojure
-user=> (sql/format {:create-table-as [:metro :if-not-exists
+user=> (sql/format {:create-table-as [:metro :or-replace
                                       {:columns [:foo :bar :baz]}
                                       [:tablespace [:entity :quux]]],
                     :table :cities,
@@ -269,7 +270,7 @@ user=> (sql/format {:create-table-as [:metro :if-not-exists
                     :with-data false}
                    {:pretty true})
 ["
-CREATE TABLE IF NOT EXISTS metro (foo, bar, baz) TABLESPACE quux AS
+CREATE OR REPLACE TABLE metro (foo, bar, baz) TABLESPACE quux AS
 TABLE cities
 WHERE metroflag = ?
 WITH NO DATA
@@ -284,7 +285,13 @@ will be turned into SQL keywords (this is true for all of the
 {:create-table-as [:temp :metro :if-not-exists [..]] ..}
 ```
 
-to produce `CREATE TEMP TABLE IF NOT EXISTS metro ..`.
+to produce `CREATE TEMP TABLE IF NOT EXISTS metro ..`, or:
+
+```
+{:create-table-as [:temp :metro :or-replace [..]] ..}
+```
+
+to produce `CREATE OR REPLACE TEMP TABLE metro ..`.
 
 ## create-extension
 

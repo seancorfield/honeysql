@@ -1,7 +1,7 @@
 # Changes
 
 * 2.4.next in progress
-  * Support BigQuery `CREATE OR REPLACE` (work-in-progress).
+  * Address [#511](https://github.com/seancorfield/honeysql/issues/511) by adding support for BigQuery `CREATE OR REPLACE`.
   * Address [#510](https://github.com/seancorfield/honeysql/issues/510) by adding some NRQL support (work-in-progress).
   * Fix [#509](https://github.com/seancorfield/honeysql/issues/509) by checking for `ident?` before checking keyword/symbol.
 
