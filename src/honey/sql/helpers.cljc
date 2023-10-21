@@ -1021,27 +1021,53 @@
 ;; nrql-specific helpers:
 
 (defn facet
-  "(facet [:metric.name :alias])"
+  "Accepts any number of column names, or column/alias
+  pairs, or SQL expressions (optionally aliased):
+
+  (facet :id [:foo :bar] [[:max :quux]])
+
+  Produces: FACET id, foo AS bar, MAX(quux)"
   [& args]
   (generic :facet args))
 
 (defn since
-  "(since 2 :days :ago)"
+  "Accepts a time interval such as:
+
+  (since 2 :days :ago)
+
+  Produces: SINCE 2 DAYS AGO"
   [& args]
   (generic :since args))
 
 (defn until
-  "(until 1 :month :ago)"
+  "Accepts a time interval such as:
+
+  (until 1 :month :ago)
+
+  Produces: UNTIL 1 MONTH AGO"
   [& args]
   (generic :until args))
 
 (defn compare-with
-  "(compare-with 1 :week :ago)"
+  "Accepts a time interval such as:
+
+  (compare-with 1 :week :ago)
+
+  Produces: COMPARE WITH 1 WEEK AGO"
   [& args]
   (generic :compare-with args))
 
 (defn timeseries
-  "(timeseries 1 :week :ago)"
+  "Accepts a time interval such as:
+
+  (timeseries 1 :day)
+
+  or:
+
+  (timeseries :auto)
+
+  Produces: TIMESERIES 1 DAY
+  Or:       TIMESERIES AUTO"
   [& args]
   (generic :timeseries args))
 
