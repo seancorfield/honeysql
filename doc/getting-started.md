@@ -341,6 +341,7 @@ The dialects supported by HoneySQL 2.x are:
 * `:ansi` -- the default, including most PostgreSQL extensions
 * `:sqlserver` -- Microsoft SQL Server
 * `:mysql` -- MySQL (and Percona and MariaDB)
+* `:nrql` -- as of 2.4.next
 * `:oracle` -- Oracle
 
 The most visible difference between dialects is how SQL entities
@@ -354,6 +355,8 @@ The `:sqlserver` dialect uses `[`..`]` and the `:mysql` dialect uses
 Currently, the only dialect that has substantive differences from
 the others is `:mysql` for which the `:set` clause
 has a different precedence than ANSI SQL.
+
+See [New Relic NRQL Support](nrsql.md) for more details of the NRQL dialect.
 
 You can change the dialect globally using the `set-dialect!` function,
 passing in one of the keywords above. You need to call this function

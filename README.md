@@ -759,7 +759,7 @@ be quoted according to the selected dialect. If you override the dialect in a
 `format` call, by passing the `:dialect` option, SQL entity names will be automatically
 quoted. You can override the dialect and turn off quoting by passing `:quoted false`.
 Valid `:dialect` options are `:ansi` (the default, use this for PostgreSQL),
-`:mysql`, `:oracle`, or `:sqlserver`:
+`:mysql`, `:oracle`, or `:sqlserver`. As of 2.4.next, `:nrql` is also supported:
 
 ```clojure
 (-> (select :foo.a)
@@ -768,6 +768,15 @@ Valid `:dialect` options are `:ansi` (the default, use this for PostgreSQL),
     (sql/format {:dialect :mysql}))
 => ["SELECT `foo`.`a` FROM `foo` WHERE `foo`.`a` = ?" "baz"]
 ```
+```clojure
+(-> (select :foo.a)
+    (from :foo)
+    (where [:= :foo.a "baz"])
+    (sql/format {:dialect :nrql}))
+=> ["SELECT `foo.a` FROM `foo` WHERE `foo.a` = 'baz'"]
+```
+
+See [New Relic NRQL Support](nrsql.md) for more details of the NRQL dialect.
 
 #### Locking
 

@@ -2342,4 +2342,11 @@
                :since [1 :day :ago]
                :timeseries [:auto]}
               {:dialect :nrql})
+  (sql/format {:select [:mulog/timestamp :mulog/event-name]
+               :from   :Log
+               :where  [:= :mulog/data.account "foo-account-id"]
+               :since  [2 :days :ago]
+               :limit 2000}
+              {:dialect :nrql :pretty true})
+
   )

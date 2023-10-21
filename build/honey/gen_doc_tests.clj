@@ -7,10 +7,12 @@
         success-marker (fs/file target "SUCCESS")
         docs ["README.md"
               "doc/clause-reference.md"
+              "doc/databases.md"
               "doc/differences-from-1-x.md"
               "doc/extending-honeysql.md"
               "doc/general-reference.md"
               "doc/getting-started.md"
+              "doc/nrql.md"
               ;;"doc/operator-reference.md"
               "doc/options.md"
               "doc/postgresql.md"
