@@ -7,7 +7,7 @@ databases.
 As a reminder, HoneySQL supports the following dialects out of the box:
 * `:ansi` -- which is the default and provides broad support for PostgreSQL as well
 * `:mysql` -- which includes MariaDB and Percona
-* `:nrql` -- as of 2.5.1090
+* `:nrql` -- as of 2.5.1091
 * `:oracle`
 * `:sqlserver` -- Microsoft SQL Server
 

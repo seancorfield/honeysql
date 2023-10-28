@@ -182,7 +182,7 @@ _New in HoneySQL 2.3.x_
 The built-in dialects that HoneySQL supports are:
 * `:ansi` -- the default, that quotes SQL entity names with double-quotes, like `"this"`
 * `:mysql` -- quotes SQL entity names with backticks, and changes the precedence of `SET` in `UPDATE`
-* `:nrql` -- as of 2.5.1090, see [New Relic NRQL Support](nrsql.md) for more details of the NRQL dialect
+* `:nrql` -- as of 2.5.1091, see [New Relic NRQL Support](nrsql.md) for more details of the NRQL dialect
 * `:oracle` -- quotes SQL entity names like `:ansi`, and does not use `AS` in aliases
 * `:sqlserver` -- quotes SQL entity names with brackets, like `[this]`
 

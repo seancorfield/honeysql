@@ -10,14 +10,14 @@ For the Clojure CLI, add the following dependency to your `deps.edn` file:
 
 <!-- :test-doc-blocks/skip -->
 ```clojure
-    com.github.seancorfield/honeysql {:mvn/version "2.5.1090"}
+    com.github.seancorfield/honeysql {:mvn/version "2.5.1091"}
 ```
 
 For Leiningen, add the following dependency to your `project.clj` file:
 
 <!-- :test-doc-blocks/skip -->
 ```clojure
-    [com.github.seancorfield/honeysql "2.5.1090"]
+    [com.github.seancorfield/honeysql "2.5.1091"]
 ```
 
 HoneySQL produces SQL statements but does not execute them.
@@ -341,7 +341,7 @@ The dialects supported by HoneySQL 2.x are:
 * `:ansi` -- the default, including most PostgreSQL extensions
 * `:sqlserver` -- Microsoft SQL Server
 * `:mysql` -- MySQL (and Percona and MariaDB)
-* `:nrql` -- as of 2.5.1090
+* `:nrql` -- as of 2.5.1091
 * `:oracle` -- Oracle
 
 The most visible difference between dialects is how SQL entities
