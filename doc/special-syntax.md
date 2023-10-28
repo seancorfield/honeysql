@@ -33,9 +33,14 @@ and strings.
 
 ## array
 
-Accepts a single argument, which is expected to evaluate to a sequence,
-with an optional second argument specifying the type of the array,
-and produces `ARRAY[?, ?, ..]` for the elements of that sequence (as SQL parameters):
+Accepts either an expression (that evaluates to a sequence) or a subquery
+(hash map). In the expression case, also accepts an optional second argument
+that specifies the type of the array.
+
+Produces either an `ARRAY[..]` or an `ARRAY(subquery)` expression.
+
+In the expression case, produces `ARRAY[?, ?, ..]` for the elements of that
+sequence (as SQL parameters):
 
 ```clojure
 (sql/format-expr [:array (range 5)])
@@ -66,6 +71,13 @@ In addition, the argument to `:array` is treated as a literal sequence of Clojur
 ```clojure
 (sql/format {:select [[[:array [:inline [1 2 3]]] :arr]]})
 ;;=> ["SELECT ARRAY[inline, (?, ?, ?)] AS arr" 1 2 3]
+```
+
+In the subquery case, produces `ARRAY(subquery)`:
+
+```clojure
+(sql/format {:select [[[:array {:select :* :from :table}] :arr]]})
+;;=> ["SELECT ARRAY(SELECT * FROM table) AS arr"]
 ```
 
 ## at time zone

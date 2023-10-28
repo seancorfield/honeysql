@@ -296,7 +296,15 @@
     (is (= (format {:select [[[:array [] :integer]]]})
            ["SELECT ARRAY[]::INTEGER[]"]))
     (is (= (format {:select [[[:array [1 2] :text]]]})
-           ["SELECT ARRAY[?, ?]::TEXT[]" 1 2]))))
+           ["SELECT ARRAY[?, ?]::TEXT[]" 1 2])))
+  (testing "array subquery"
+    (is (= (format {:select [[[:array {:select [:foo] :from [:bar]}]]]})
+           ["SELECT ARRAY(SELECT foo FROM bar)"]))
+    (is (= (format {:select [[[:array {:select ^{:as :struct} [:foo :bar] :from [:bar]}]]]})
+           ["SELECT ARRAY(SELECT AS STRUCT foo, bar FROM bar)"]))
+    ;; documented subquery workaround:
+    (is (= (format {:select [[[:'ARRAY {:select [:foo] :from [:bar]}]]]})
+           ["SELECT ARRAY (SELECT foo FROM bar)"]))))
 
 (deftest union-test
   ;; UNION and INTERSECT subexpressions should not be parenthesized.
@@ -1275,6 +1283,15 @@ ORDER BY id = ? DESC
                      (hashCode [_] (throw (ex-info "Unsupported" {}))))]
     (is (= ["INSERT INTO table VALUES (?)" unhashable]
            (sut/format {:insert-into :table :values [[unhashable]]})))))
+
+(deftest issue-512
+  (testing "select with metadata"
+    (is (= ["SELECT DISTINCT * FROM table"]
+           (sut/format {:select-distinct [:*] :from [:table]})))
+    (is (= ["SELECT DISTINCT * FROM table"]
+           (sut/format {:select ^{:distinct true} [:*] :from [:table]})))
+    (is (= ["SELECT DISTINCT * FROM table"]
+           (sut/format {:select ^:distinct [:*] :from [:table]})))))
 
 (comment
   ;; partial workaround for #407:

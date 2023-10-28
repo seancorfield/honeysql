@@ -664,16 +664,41 @@
     (let [[sqls params] (format-expr-list xs {:drop-ns true})]
       (into [(str "(" (str/join ", " sqls) ")")] params))))
 
+(defn- format-meta
+  "If the expression has metadata, format it as a sequence of keywords,
+   treating `:foo true` as `FOO` and `:foo :bar` as `FOO BAR`.
+   Return nil if there is no metadata."
+  [x]
+  (when-let [data (meta x)]
+    (let [items (reduce-kv (fn [acc k v]
+                             (if (true? v)
+                               (conj acc k)
+                               (conj acc k v)))
+                           []
+                           (apply dissoc data [:line :column]))]
+      (when (seq items)
+        (println "items" items)
+        (str/join " " (mapv sql-kw items))))))
+
+(comment
+  (format-meta ^{:foo true :bar :baz} [])
+  (format-meta [])
+  )
+
 (defn- format-selects-common [prefix as xs]
-  (if (sequential? xs)
-    (let [[sqls params] (reduce-sql (map #(format-selectable-dsl % {:as as}) xs))]
-      (when-not (= :none *checking*)
-        (when (empty? xs)
-          (throw (ex-info (str prefix " empty column list is illegal")
-                          {:clause (into [prefix] xs)}))))
-      (into [(str (when prefix (str prefix " ")) (str/join ", " sqls))] params))
-    (let [[sql & params] (format-selectable-dsl xs {:as as})]
-      (into [(str (when prefix (str prefix " ")) sql)] params))))
+  (let [qualifier (format-meta xs)
+        prefix    (if prefix
+                    (cond-> prefix qualifier (str " " qualifier))
+                    qualifier)]
+    (if (sequential? xs)
+      (let [[sqls params] (reduce-sql (map #(format-selectable-dsl % {:as as}) xs))]
+        (when-not (= :none *checking*)
+          (when (empty? xs)
+            (throw (ex-info (str prefix " empty column list is illegal")
+                            {:clause (into [prefix] xs)}))))
+        (into [(str (when prefix (str prefix " ")) (str/join ", " sqls))] params))
+      (let [[sql & params] (format-selectable-dsl xs {:as as})]
+        (into [(str (when prefix (str prefix " ")) sql)] params)))))
 
 (defn- format-selects [k xs]
   (format-selects-common
@@ -1699,10 +1724,14 @@
                              ">")])
     :array
     (fn [_ [arr type]]
-      ;; allow for (unwrap arr) here?
-      (let [[sqls params] (format-expr-list arr)
-            type-str (when type (str "::" (sql-kw type) "[]"))]
-        (into [(str "ARRAY[" (str/join ", " sqls) "]" type-str)] params)))
+      ;; #512 allow for subquery here:
+      (if (map? arr)
+        (let [[sql & params] (format-dsl arr)]
+          (into [(str "ARRAY(" sql ")")] params))
+        ;; allow for (unwrap arr) here?
+        (let [[sqls params] (format-expr-list arr)
+              type-str (when type (str "::" (sql-kw type) "[]"))]
+          (into [(str "ARRAY[" (str/join ", " sqls) "]" type-str)] params))))
     :at-time-zone
     (fn [_ [expr tz]]
       (let [[sql & params] (format-expr expr {:nested true})
@@ -2348,5 +2377,5 @@
                :since  [2 :days :ago]
                :limit 2000}
               {:dialect :nrql :pretty true})
-
+  (sql/format {:select [[[:array {:select :* :from :table}] :arr]]})
   )

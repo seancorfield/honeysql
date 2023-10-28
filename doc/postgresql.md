@@ -37,26 +37,32 @@ Clojure users can opt for the shorter `(require '[honey.sql :as sql] '[honey.sql
 
 ## Working with Arrays
 
-HoneySQL supports `:array` as special syntax to produce `ARRAY[..]` expressions
-but PostgreSQL also has an "array constructor" for creating arrays from subquery results.
+HoneySQL supports `:array` as special syntax to produce `ARRAY[..]` expressions:
+
+```clojure
+user=> (sql/format {:select [[[:array [1 2 3]] :a]]})
+["SELECT ARRAY[?, ?, ?] AS a" 1 2 3]
+```
+
+PostgreSQL also has an "array constructor" for creating arrays from subquery results.
 
 ```sql
 SELECT ARRAY(SELECT oid FROM pg_proc WHERE proname LIKE 'bytea%');
 ```
 
-In order to produce that SQL, you can use HoneySQL's "as-is" function syntax to circumvent
+As of 2.4.next, HoneySQL supports this syntax directly:
+
+```clojure
+user=> (sql/format {:select [[[:array {:select :oid :from :pg_proc :where [:like :proname [:inline "bytea%"]]}]]]})
+["SELECT ARRAY(SELECT oid FROM pg_proc WHERE proname LIKE 'bytea%')"]
+```
+
+Prior to 2.4.next, you had to use HoneySQL's "as-is" function syntax to circumvent
 the special syntax:
 
 ```clojure
 user=> (sql/format {:select [[[:'ARRAY {:select :oid :from :pg_proc :where [:like :proname [:inline "bytea%"]]}]]]})
 ["SELECT ARRAY (SELECT oid FROM pg_proc WHERE proname LIKE 'bytea%')"]
-```
-
-Compare this with the `ARRAY[..]` syntax:
-
-```clojure
-user=> (sql/format {:select [[[:array [1 2 3]] :a]]})
-["SELECT ARRAY[?, ?, ?] AS a" 1 2 3]
 ```
 
 ## Operators with @, #, and ~

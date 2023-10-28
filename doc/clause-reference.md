@@ -509,6 +509,23 @@ name reference.
 
 `:select-distinct` works the same way but produces `SELECT DISTINCT`.
 
+As of 2.4.next, you can use metadata on the argument to `:select` to
+provide qualifiers for the `SELECT` clause:
+
+```clojure
+user=> (sql/format {:select ^:distinct [:id :name] :from :table})
+["SELECT DISTINCT id, name FROM table"]
+```
+
+The metadata can also be a map, with `true` values ignored (which is why
+`^:distinct` produces just `DISTINCT` even though it is short for
+`^{:distinct true}`):
+
+```clojure
+user=> (sql/format {:select ^{:as :struct} [:id :name] :from :table})
+["SELECT AS STRUCT id, name FROM table"]
+```
+
 > Google BigQuery support: to provide `SELECT * EXCEPT ..` and `SELECT * REPLACE ..` syntax, HoneySQL supports a vector starting with `:*` or the symbol `*` followed by except columns and/or replace expressions as columns:
 
 ```clojure

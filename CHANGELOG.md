@@ -1,6 +1,7 @@
 # Changes
 
 * 2.4.next in progress
+  * Address [#512](https://github.com/seancorfield/honeysql/issues/512) by adding support for subqueries in the `:array` special syntax (for BigQuery and PostgreSQL). This also adds support for metadata on the `:select` value to produce `AS STRUCT` or `DISTINCT`.
   * Address [#511](https://github.com/seancorfield/honeysql/issues/511) by adding support for BigQuery `CREATE OR REPLACE`.
   * Address [#510](https://github.com/seancorfield/honeysql/issues/510) by adding initial support for an NRQL dialect.
   * Fix [#509](https://github.com/seancorfield/honeysql/issues/509) by checking for `ident?` before checking keyword/symbol.
