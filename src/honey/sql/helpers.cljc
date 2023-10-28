@@ -55,11 +55,12 @@
 ;; implementation helpers:
 
 (defn- default-merge [current args]
-  (let [current (cond
+  (let [mdata   (meta current)
+        current (cond
                   (nil? current) []
                   (sequential? current) (vec current)
                   :else [current])]
-    (c/into current args)))
+    (c/into (with-meta current mdata) args)))
 
 (defn- conjunction?
   [e]
@@ -143,7 +144,7 @@
             (assoc data k' clause)
             data)
           :else
-          (clojure.core/update data k' default-merge args))))
+          (c/update data k' default-merge args))))
 
 (defn- generic [k args]
   (if (map? (first args))
@@ -1158,9 +1159,9 @@
        ;; ensure #295 stays true (all public functions have docstring):
        (assert (empty? (->> (ns-publics *ns*) (vals) (c/filter (comp not :doc meta))))))
      ;; ensure all public functions match clauses:
-     (assert (= (clojure.core/set (conj @#'honey.sql/default-clause-order
-                                        :composite :filter :lateral :over :within-group
-                                        :upsert
-                                        :generic-helper-variadic :generic-helper-unary))
-                (clojure.core/set (conj (map keyword (keys (ns-publics *ns*)))
-                                        :nest :raw))))))
+     (assert (= (c/set (conj @#'honey.sql/default-clause-order
+                             :composite :filter :lateral :over :within-group
+                             :upsert
+                             :generic-helper-variadic :generic-helper-unary))
+                (c/set (conj (map keyword (keys (ns-publics *ns*)))
+                             :nest :raw))))))

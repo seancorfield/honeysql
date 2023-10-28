@@ -50,14 +50,14 @@ PostgreSQL also has an "array constructor" for creating arrays from subquery res
 SELECT ARRAY(SELECT oid FROM pg_proc WHERE proname LIKE 'bytea%');
 ```
 
-As of 2.4.next, HoneySQL supports this syntax directly:
+As of 2.5.1090, HoneySQL supports this syntax directly:
 
 ```clojure
 user=> (sql/format {:select [[[:array {:select :oid :from :pg_proc :where [:like :proname [:inline "bytea%"]]}]]]})
 ["SELECT ARRAY(SELECT oid FROM pg_proc WHERE proname LIKE 'bytea%')"]
 ```
 
-Prior to 2.4.next, you had to use HoneySQL's "as-is" function syntax to circumvent
+Prior to 2.5.1090, you had to use HoneySQL's "as-is" function syntax to circumvent
 the special syntax:
 
 ```clojure

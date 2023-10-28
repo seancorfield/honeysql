@@ -1,6 +1,6 @@
 # New Relic NRQL Support
 
-As of 2.4.next, HoneySQL provides some support for New Relic's NRQL query language.
+As of 2.5.1090, HoneySQL provides some support for New Relic's NRQL query language.
 
 At present, the following additional SQL clauses (and their corresponding
 helper functions) are supported:

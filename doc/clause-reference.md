@@ -509,7 +509,7 @@ name reference.
 
 `:select-distinct` works the same way but produces `SELECT DISTINCT`.
 
-As of 2.4.next, you can use metadata on the argument to `:select` to
+As of 2.5.1090, you can use metadata on the argument to `:select` to
 provide qualifiers for the `SELECT` clause:
 
 ```clojure
