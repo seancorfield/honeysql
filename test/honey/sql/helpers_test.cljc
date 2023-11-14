@@ -263,6 +263,10 @@
          (sql/format {:select [:foo [[:cast :bar [:char 10]]]]} {:dialect :mysql
                                                                  :inline true}))))
 
+(deftest test-quoting
+  (is (= ["SELECT foo, \"bar\""]
+         (sql/format {:select [:foo :bar]} {:quoted-when #(some #{%} ["bar"])})))) ;; Example showing only quoting reserved words
+
 (deftest test-value
   (is (= ["INSERT INTO foo (bar) VALUES (?)" {:baz "my-val"}]
          (->

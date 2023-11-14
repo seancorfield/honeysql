@@ -120,6 +120,7 @@
 ; should become defonce
 (def ^:private default-dialect (atom (:ansi @dialects)))
 (def ^:private default-quoted (atom nil))
+(def ^:private default-quoted-when (atom nil))
 (def ^:private default-quoted-snake (atom nil))
 (def ^:private default-inline (atom nil))
 (def ^:private default-checking (atom :none))
@@ -130,6 +131,7 @@
 ;; functions harder than necessary:
 (def ^:private ^:dynamic *clause-order* default-clause-order)
 (def ^:private ^:dynamic *quoted* @default-quoted)
+(def ^:private ^:dynamic *quoted-when* @default-quoted-when)
 (def ^:private ^:dynamic *quoted-snake* @default-quoted-snake)
 (def ^:private ^:dynamic *inline* @default-inline)
 (def ^:private ^:dynamic *params* nil)
@@ -265,9 +267,10 @@
                           ;; characters in entity, then quote it:
                           (nil? *quoted*)
                           (fn opt-quote [part]
-                            (if (re-find #"^[A-Za-z0-9_]+$" part)
-                              part
-                              (dialect-q part)))
+                            (let [quote? (or *quoted-when* #(not (re-find #"^[A-Za-z0-9_]+$" %)))]
+                              (if (quote? part)
+                                (dialect-q part)
+                                part)))
                           :else
                           identity)
         parts-fn    (or (:parts-fn *dialect*)
@@ -2031,6 +2034,9 @@
                                true
                                :else
                                @default-quoted)
+               *quoted-when* (if (contains? opts :quoted-when)
+                                (:quoted-when opts)
+                                @default-quoted-when)
                *quoted-snake* (if (contains? opts :quoted-snake)
                                 (:quoted-snake opts)
                                 @default-quoted-snake)
@@ -2073,10 +2079,11 @@
   * :inline
   * :numbered
   * :quoted
+  * :quoted-when
   * :quoted-snake
   Note that calling `set-dialect!` can override the default for `:quoted`."
   [opts]
-  (let [unknowns (dissoc opts :checking :inline :numbered :quoted :quoted-snake)]
+  (let [unknowns (dissoc opts :checking :inline :numbered :quoted :quoted-when :quoted-snake)]
     (when (seq unknowns)
       (throw (ex-info (str (str/join ", " (keys unknowns))
                            " are not options that can be set globally.")
@@ -2089,6 +2096,8 @@
       (reset! default-numbered (:numbered opts)))
     (when (contains? opts :quoted)
       (reset! default-quoted (:quoted opts)))
+    (when (contains? opts :quoted-when)
+      (reset! default-quoted-when (:quoted-when opts)))
     (when (contains? opts :quoted-snake)
       (reset! default-quoted-snake (:quoted-snake opts)))))
 
