@@ -138,9 +138,6 @@
 ;; in entities; if someone complains about this check, an option
 ;; can be added to format to turn this on:
 (def ^:private ^:dynamic *allow-suspicious-entities* false)
-;; adding this as an experimental approach for #514 -- will become private
-;; and an option added if this works out:
-(def ^:dynamic *always-quote* nil)
 ;; "linting" mode (:none, :basic, :strict):
 (def ^:private ^:dynamic *checking* @default-checking)
 ;; the current DSL hash map being formatted (for clause-body / contains-clause?):
@@ -274,9 +271,6 @@
                           (fn opt-quote [part]
                             (cond (re-find alphanumeric part)
                                   part
-                                  (and *always-quote*
-                                       (re-find *always-quote* part))
-                                  (dialect-q part)
                                   :else
                                   (dialect-q part)))
                           :else
