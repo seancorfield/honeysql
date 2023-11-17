@@ -138,6 +138,9 @@
 ;; in entities; if someone complains about this check, an option
 ;; can be added to format to turn this on:
 (def ^:private ^:dynamic *allow-suspicious-entities* false)
+;; adding this as an experimental approach for #514 -- will become private
+;; and an option added if this works out:
+(def ^:dynamic *always-quote* nil)
 ;; "linting" mode (:none, :basic, :strict):
 (def ^:private ^:dynamic *checking* @default-checking)
 ;; the current DSL hash map being formatted (for clause-body / contains-clause?):
@@ -243,6 +246,14 @@
   ;;   WHERE `mulog/data.account` = 'foo-account-id' LIMIT 2000 SINCE 2 DAYS AGO"]
   )
 
+(def ^:private alphanumeric
+  "Basic regex for entities that do not need quoting.
+   Either:
+   * all numeric
+   * leading alpha followed by optional alphanumerics
+   (with _ allowed in either)"
+  #"^([0-9_]+|[A-Za-z_][A-Za-z0-9_]*)$")
+
 (defn format-entity
   "Given a simple SQL entity (a keyword or symbol -- or string),
   return the equivalent SQL fragment (as a string -- no parameters).
@@ -265,9 +276,13 @@
                           ;; characters in entity, then quote it:
                           (nil? *quoted*)
                           (fn opt-quote [part]
-                            (if (re-find #"^[A-Za-z0-9_]+$" part)
-                              part
-                              (dialect-q part)))
+                            (cond (re-find alphanumeric part)
+                                  part
+                                  (and *always-quote*
+                                       (re-find *always-quote* part))
+                                  (dialect-q part)
+                                  :else
+                                  (dialect-q part)))
                           :else
                           identity)
         parts-fn    (or (:parts-fn *dialect*)
