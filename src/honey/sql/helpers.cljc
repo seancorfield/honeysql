@@ -1165,3 +1165,11 @@
                              :generic-helper-variadic :generic-helper-unary))
                 (c/set (conj (map keyword (keys (ns-publics *ns*)))
                              :nest :raw))))))
+
+(comment
+  (require '[honey.sql :refer [format]])
+  (-> (delete-from :table)
+      (where [:in (composite :first :second)
+              [(composite 1 2) (composite 2 1)]])
+      (format))
+  )

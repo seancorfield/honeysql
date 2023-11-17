@@ -675,9 +675,10 @@
                                (conj acc k)
                                (conj acc k v)))
                            []
-                           (apply dissoc data [:line :column]))]
+                           (dissoc data ; remove the somewhat "standard" metadata:
+                                   :line :column :file
+                                   :end-line :end-column))]
       (when (seq items)
-        (println "items" items)
         (str/join " " (mapv sql-kw items))))))
 
 (comment

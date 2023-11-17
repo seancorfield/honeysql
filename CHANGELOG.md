@@ -1,5 +1,9 @@
 # Changes
 
+* 2.5.next in progress
+  * Review metadata -> SQL logic?
+  * Review quoting logic?
+
 * 2.5.1091 -- 2023-10-28
   * Address [#512](https://github.com/seancorfield/honeysql/issues/512) by adding support for subqueries in the `:array` special syntax (for BigQuery and PostgreSQL). This also adds support for metadata on the `:select` value to produce `AS STRUCT` or `DISTINCT`.
   * Address [#511](https://github.com/seancorfield/honeysql/issues/511) by adding support for BigQuery `CREATE OR REPLACE`.
