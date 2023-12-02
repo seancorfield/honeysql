@@ -6,8 +6,7 @@
       "autoSelectForJackIn": true,
       "menuSelections": {
         "cljAliases": ["1.12", "dev/repl", "portal", "test"]
-      },
-      "afterCLJReplJackInCode": "(clojure.core/require 'honey.sql)"
+      }
     },
     {
       "name": "HoneySQL (Connect)",
