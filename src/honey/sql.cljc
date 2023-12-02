@@ -138,6 +138,10 @@
 ;; in entities; if someone complains about this check, an option
 ;; can be added to format to turn this on:
 (def ^:private ^:dynamic *allow-suspicious-entities* false)
+;; the following metadata is ignored in formatted by default:
+;; :file, :line, :column, :end-line, and :end-column
+;; this dynamic var can be used to add more metadata to ignore:
+(def ^:private ^:dynamic *ignored-metadata* [])
 ;; "linting" mode (:none, :basic, :strict):
 (def ^:private ^:dynamic *checking* @default-checking)
 ;; the current DSL hash map being formatted (for clause-body / contains-clause?):
@@ -684,14 +688,21 @@
                                (conj acc k)
                                (conj acc k v)))
                            []
-                           (dissoc data ; remove the somewhat "standard" metadata:
-                                   :line :column :file
-                                   :end-line :end-column))]
+                           (reduce dissoc
+                                   data
+                                   (into [; remove the somewhat "standard" metadata:
+                                          :line :column :file
+                                          :end-line :end-column]
+                                         *ignored-metadata*)))]
       (when (seq items)
         (str/join " " (mapv sql-kw items))))))
 
 (comment
   (format-meta ^{:foo true :bar :baz} [])
+
+  (binding [*ignored-metadata* [:bar]]
+    (format-meta ^{:foo true :bar :baz} []))
+
   (format-meta [])
   )
 
@@ -2025,6 +2036,9 @@
                                   (f @base-clause-order)
                                   @current-clause-order)
                                 @current-clause-order)
+               *ignored-metadata* (if (contains? opts :ignored-metadata)
+                                    (:ignored-metadata opts)
+                                    [])
                *inline*  (cond (contains? opts :inline)
                                (:inline opts)
                                (= :nrql (:dialect dialect))

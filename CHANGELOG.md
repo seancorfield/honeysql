@@ -1,8 +1,8 @@
 # Changes
 
 * 2.5.next in progress
-  * Review metadata -> SQL logic?
   * Address [#515](https://github.com/seancorfield/honeysql/issues/515) in part by quoting entities that start with a digit but are otherwise alphanumeric. Note that entities that are all digits (optionally including underscores) will still not be quoted as in previous releases.
+  * Address [#513](https://github.com/seancorfield/honeysql/issues/513) by ignoring `:file`, `:line`, `:column`, `:end-line`, and `:end-column` metadata keys and providing an `:ignored-metadata` option to allow additional keys to be ignored.
 
 * 2.5.1091 -- 2023-10-28
   * Address [#512](https://github.com/seancorfield/honeysql/issues/512) by adding support for subqueries in the `:array` special syntax (for BigQuery and PostgreSQL). This also adds support for metadata on the `:select` value to produce `AS STRUCT` or `DISTINCT`.

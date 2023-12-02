@@ -18,6 +18,7 @@ All options may be omitted. The default behavior of each option is described in 
 * `:cache` -- an atom containing a [clojure.core.cache](https://github.com/clojure/core.cache) cache used to cache generated SQL; the default behavior is to generate SQL on each call to `format`,
 * `:checking` -- `:none` (default), `:basic`, or `:strict` to control the amount of lint-like checking that HoneySQL performs,
 * `:dialect` -- a keyword that identifies a dialect to be used for this specific call to `format`; the default is to use what was specified in `set-dialect!` or `:ansi` if no other dialect has been set,
+* `:ignored-metadata` -- a sequence of metadata keys that should be ignored when formatting (in addition to `:file`, `:line`, `:column`, `:end-line` and `:end-column` which are always ignored); the default is `[]` -- no additional metadata is ignored (since 2.5.next),
 * `:inline` -- a Boolean indicating whether or not to inline parameter values, rather than use `?` placeholders and a sequence of parameter values; the default is `false` -- values are not inlined,
 * `:numbered` -- a Boolean indicating whether to generate numbered placeholders in the generated SQL (`$1`, `$2`, etc) or positional placeholders (`?`); the default is `false` (positional placeholders); this option was added in 2.4.962,
 * `:params` -- a hash map providing values for named parameters, identified by names (keywords or symbols) that start with `?` in the DSL; the default is that any such named parameters will have `nil` values,
