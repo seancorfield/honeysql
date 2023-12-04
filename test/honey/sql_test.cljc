@@ -1293,6 +1293,22 @@ ORDER BY id = ? DESC
     (is (= ["SELECT DISTINCT * FROM table"]
            (sut/format {:select ^:distinct [:*] :from [:table]})))))
 
+(deftest issue-515
+  (testing ":always-quoting option"
+    (is (= ["SELECT foo FROM table"]
+           (sut/format '{select foo from table})))
+    (is (= ["SELECT \"foo\" FROM \"table\""]
+           (sut/format '{select foo from table}
+                       {:quoted-always #"^(foo|table)$"})))
+    (is (= ["SELECT \"foo\" FROM \"table\""]
+           (sut/format '{select foo from table}
+                       {:quoted-always #"^(foo|table)$"
+                        :quoted false})))
+    (is (= ["SELECT \"foo\" FROM table"]
+           (sut/format '{select foo from table}
+                       {:quoted-always #"^(foo)$"
+                        :quoted false})))))
+
 (comment
   ;; partial workaround for #407:
   (sut/format {:select :f.* :from [[:foo [:f :for :system-time]]] :where [:= :f.id 1]})
