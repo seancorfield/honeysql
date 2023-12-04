@@ -1,6 +1,6 @@
 # Changes
 
-* 2.5.next in progress
+* 2.5.1103 in progress
   * Address [#515](https://github.com/seancorfield/honeysql/issues/515) by:
     * Quoting entities that start with a digit but are otherwise alphanumeric. Note that entities that are all digits (optionally including underscores) will still not be quoted as in previous releases,
     * Adding a new `:quoted-always` option allows users to specify a regex that matches entities that should always be quoted (stropped) regardless of the value of `:quoted` (such as reserved words that you have used as column or table names).

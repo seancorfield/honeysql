@@ -526,7 +526,7 @@ user=> (sql/format {:select ^{:as :struct} [:id :name] :from :table})
 ["SELECT AS STRUCT id, name FROM table"]
 ```
 
-As of 2.5.next, HoneySQL ignores the following metadata: `:file`, `:line`,
+As of 2.5.1103, HoneySQL ignores the following metadata: `:file`, `:line`,
 `:column`, `:end-line`, and `:end-column` (2.5.1091 only ignored `:line`
 and `:column`). You can ask HoneySQL to ignore other metadata by specifying
 the `:ignored-metadata` option to `honey.sql/format`.
