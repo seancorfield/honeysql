@@ -1,7 +1,7 @@
 # Changes
 
 * 2.5.next in progress
-  * Address [#515](https://github.com/seancorfield/honeysql/issues/515) in part by quoting entities that start with a digit but are otherwise alphanumeric. Note that entities that are all digits (optionally including underscores) will still not be quoted as in previous releases.
+  * Address [#515](https://github.com/seancorfield/honeysql/issues/515) in part by quoting entities that start with a digit but are otherwise alphanumeric. Note that entities that are all digits (optionally including underscores) will still not be quoted as in previous releases. In addition, a new `:quoted-always` option allows users to specify a regex that matches entities that should always be quoted (stropped) regardless of the value of `:quoted`.
   * Address [#513](https://github.com/seancorfield/honeysql/issues/513) by ignoring `:file`, `:line`, `:column`, `:end-line`, and `:end-column` metadata keys and providing an `:ignored-metadata` option to allow additional keys to be ignored.
 
 * 2.5.1091 -- 2023-10-28

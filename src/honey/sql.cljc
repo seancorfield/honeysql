@@ -120,6 +120,7 @@
 ; should become defonce
 (def ^:private default-dialect (atom (:ansi @dialects)))
 (def ^:private default-quoted (atom nil))
+(def ^:private default-quoted-always (atom nil))
 (def ^:private default-quoted-snake (atom nil))
 (def ^:private default-inline (atom nil))
 (def ^:private default-checking (atom :none))
@@ -130,6 +131,7 @@
 ;; functions harder than necessary:
 (def ^:private ^:dynamic *clause-order* default-clause-order)
 (def ^:private ^:dynamic *quoted* @default-quoted)
+(def ^:private ^:dynamic *quoted-always* @default-quoted-always)
 (def ^:private ^:dynamic *quoted-snake* @default-quoted-snake)
 (def ^:private ^:dynamic *inline* @default-inline)
 (def ^:private ^:dynamic *params* nil)
@@ -277,10 +279,18 @@
                           ;; characters in entity, then quote it:
                           (nil? *quoted*)
                           (fn opt-quote [part]
-                            (cond (re-find alphanumeric part)
+                            (cond (and *quoted-always*
+                                       (re-find *quoted-always* part))
+                                  (dialect-q part)
+                                  (re-find alphanumeric part)
                                   part
                                   :else
                                   (dialect-q part)))
+                          *quoted-always*
+                          (fn always-quote [part]
+                            (if (re-find *quoted-always* part)
+                              (dialect-q part)
+                              part))
                           :else
                           identity)
         parts-fn    (or (:parts-fn *dialect*)
@@ -2055,6 +2065,9 @@
                                true
                                :else
                                @default-quoted)
+               *quoted-always* (if (contains? opts :quoted-always)
+                                 (:quoted-always opts)
+                                 @default-quoted-always)
                *quoted-snake* (if (contains? opts :quoted-snake)
                                 (:quoted-snake opts)
                                 @default-quoted-snake)
@@ -2097,6 +2110,7 @@
   * :inline
   * :numbered
   * :quoted
+  * :quoted-always
   * :quoted-snake
   Note that calling `set-dialect!` can override the default for `:quoted`."
   [opts]
@@ -2113,6 +2127,8 @@
       (reset! default-numbered (:numbered opts)))
     (when (contains? opts :quoted)
       (reset! default-quoted (:quoted opts)))
+    (when (contains? opts :quoted-always)
+      (reset! default-quoted-always (:quoted-always opts)))
     (when (contains? opts :quoted-snake)
       (reset! default-quoted-snake (:quoted-snake opts)))))
 
