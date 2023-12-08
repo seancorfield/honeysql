@@ -51,6 +51,7 @@
    :create-extension
    :drop-table :drop-view :drop-materialized-view :drop-extension
    :refresh-materialized-view
+   :create-index
    ;; then SQL clauses in priority order:
    :raw :nest :with :with-recursive :intersect :union :union-all :except :except-all
    :table
@@ -1255,6 +1256,17 @@
                                (into more)
                                (conj (when as (sql-kw as))))))]))
 
+(defn- format-create-index [k clauses]
+  (let [[index-spec [table & exprs]] clauses
+        [pre entity ine & more] (destructure-ddl-item index-spec (str (sql-kw k) " options"))
+        [sqls params] (format-expr-list exprs)]
+    (into [(str/join " " (remove empty?
+                                 (-> ["CREATE" pre "INDEX" ine entity
+                                      "ON" (format-entity table)
+                                      (str "(" (str/join ", " sqls) ")")]
+                                     (into more))))]
+          params)))
+
 (defn- format-with-data [_ data]
   (let [data (if (sequential? data) (first data) data)]
     [(str/join " " (remove nil?
@@ -1433,6 +1445,7 @@
          :drop-view       #'format-drop-items
          :drop-materialized-view #'format-drop-items
          :refresh-materialized-view (fn [_ x] (format-create :refresh :materialized-view x nil))
+         :create-index    #'format-create-index
          :raw             (fn [_ x] (raw-render x))
          :nest            (fn [_ x]
                             (let [[sql & params] (format-dsl x {:nested true})]

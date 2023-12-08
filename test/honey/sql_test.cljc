@@ -1311,5 +1311,4 @@ ORDER BY id = ? DESC
 
 (comment
   ;; partial workaround for #407:
-  (sut/format {:select :f.* :from [[:foo [:f :for :system-time]]] :where [:= :f.id 1]})
-  )
+  (sut/format {:select :f.* :from [[:foo [:f :for :system-time]]] :where [:= :f.id 1]}))

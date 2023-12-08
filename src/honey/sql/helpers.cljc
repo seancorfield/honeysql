@@ -375,6 +375,20 @@
   [& views]
   (generic :refresh-materialized-view views))
 
+(defn create-index
+  "Accepts an index spexification and a column specification. The column
+  specification consists of table name and one or more columns.
+
+  (create-index :name-of-idx [:table :col])
+  (create-index :name-of-idx [:table :col1 :col2])
+  (create-index [:unique :name-of-idx] [:table :col])
+
+  PostgreSQL also supports :if-not-exists and expressions instead of columns.
+
+  (create-index [:name-of-idx :if-not-exists] [:table :%lower.col])"
+  [& args]
+  (generic :create-index args))
+
 (defn with
   "Accepts one or more CTE definitions.
 
