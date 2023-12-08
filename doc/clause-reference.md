@@ -98,7 +98,7 @@ names: the "from" and the "to" names.
 
 > Note: `:modify-column` is MySQL-specific and should be considered legacy and deprecated. `:alter-column` will produce `MODIFY COLUMN` when the MySQL dialect is selected.
 
-### add-index, drop-index
+### add-index, drop-index, create-index
 
 Used with `:alter-table`,
 `:add-index` accepts a single (function) expression
@@ -123,6 +123,22 @@ user=> (-> (h/alter-table :fruit)
            (h/add-index :primary-key :id)
            (sql/format))
 ["ALTER TABLE fruit ADD PRIMARY KEY(id)"]
+```
+
+Some databases treat the standalone `:create-index` differently (e.g. PostgreSQL) while some treat it as an alias to `:alter-table` `:add-index` (e.g. MySQL). It accepts a pair of index specification and column specification:
+
+```clojure
+user=> (sql/format {:create-index [:my-idx [:fruit :appearance]]})
+["CREATE INDEX my_idx ON fruit (appearance)"]
+user=> (sql/format {:create-index [[:unique :another-idx] [:fruit :color :appearance]]})
+["CREATE UNIQUE INDEX another_idx ON fruit (color, appearance)"]
+```
+
+PostgreSQL supports IF NOT EXISTS and expressions instead of columns. This may make `:create-index` more useful than `:add-index`:
+
+```clojure
+user=> (sql/format (h/create-index [:unique :another-idx :if-not-exists] [:fruit :color :%lower.appearance]))
+["CREATE UNIQUE INDEX IF NOT EXISTS another_idx ON fruit (color, LOWER(appearance))"]
 ```
 
 ### rename-table
