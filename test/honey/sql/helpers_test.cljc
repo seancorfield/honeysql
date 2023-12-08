@@ -7,6 +7,7 @@
             [honey.sql.helpers :as h
              :refer [add-column add-index alter-table columns create-table create-table-as create-view
                      create-materialized-view drop-view drop-materialized-view
+                     create-index
                      bulk-collect-into
                      cross-join do-update-set drop-column drop-index drop-table
                      filter from full-join
@@ -962,3 +963,21 @@
     (is (= '{}
            (-> '{}
                (where))))))
+
+(deftest test-create-index
+  (testing "create index, commonly supported features"
+    (is (= ["CREATE INDEX my_column_idx ON my_table (my_column)"]
+           (sql/format {:create-index [:my-column-idx [:my-table :my-column]]})))
+    (is (= ["CREATE INDEX my_column_idx ON my_table (my_column)"]
+           (sql/format (create-index :my-column-idx [:my-table :my-column]))))
+    (is (= ["CREATE UNIQUE INDEX my_column_idx ON my_table (my_column)"]
+           (sql/format (create-index [:unique :my-column-idx] [:my-table :my-column]))))
+    (is (= ["CREATE INDEX my_column_idx ON my_table (my_column, my_other_column)"]
+           (sql/format (create-index :my-column-idx [:my-table :my-column :my-other-column])))))
+  (testing "PostgreSQL extensions (IF NOT EXISTS and expressions)"
+    (is (= ["CREATE INDEX IF NOT EXISTS my_column_idx ON my_table (my_column)"]
+           (sql/format (create-index [:my-column-idx :if-not-exists] [:my-table :my-column]))))
+    (is (= ["CREATE UNIQUE INDEX IF NOT EXISTS my_column_idx ON my_table (my_column)"]
+           (sql/format (create-index [:unique :my-column-idx :if-not-exists] [:my-table :my-column]))))
+    (is (= ["CREATE INDEX my_column_idx ON my_table (LOWER(my_column))"]
+           (sql/format (create-index :my-column-idx [:my-table :%lower.my-column]))))))
