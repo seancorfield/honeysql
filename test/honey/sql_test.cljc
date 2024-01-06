@@ -1309,9 +1309,28 @@ ORDER BY id = ? DESC
                        {:quoted-always #"^(foo)$"
                         :quoted false})))))
 
+(deftest issue-520
+  (testing ":inline with a single argument"
+    (is (= ["SELECT 42 AS x"]
+           (sut/format '{select [[[inline 42] x]]}))))
+  (testing ":inline with multiple arguments"
+    (is (= ["SELECT DATE '2024-01-06' AS x"]
+           (sut/format '{select [[[inline DATE "2024-01-06"] x]]}))))
+  (testing ":inline with a parameter"
+    (is (= ["SELECT 42 AS x"]
+           (sut/format '{select [[[inline [param foo]] x]]}
+                       {:params {'foo 42}}))))
+  (testing ":inline with a sequence"
+    (is (= ["SELECT ('a', 'b', 'c') AS x"]
+           (sut/format '{select [[[inline ["a" "b" "c"]] x]]}))))
+  (testing ":inline with a lifted sequence"
+    (is (= ["SELECT ['a', 'b', 'c'] AS x"]
+           (sut/format '{select [[[inline [lift ["a" "b" "c"]]] x]]})))))
+
 (comment
   ;; partial (incorrect!) workaround for #407:
   (sut/format {:select :f.* :from [[:foo [:f :for :system-time]]] :where [:= :f.id 1]})
   ;; correct version:
   (sut/format {:select :f.* :from [[:foo :f :for :system-time]] :where [:= :f.id 1]})
+  (sut/format {:where [:= :x [:inline :DATE "2019-01-01"]]})
   )

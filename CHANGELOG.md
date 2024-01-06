@@ -1,6 +1,7 @@
 # Changes
 
 * 2.5.next in progress
+  * Address [#520](https://github.com/seancorfield/honeysql/issues/520) by expanding how `:inline` works, to support a sequence of arguments.
   * Fix [#518](https://github.com/seancorfield/honeysql/issues/518) by moving temporal clause before alias.
   * Implemented `CREATE INDEX` [#348](https://github.com/seancorfield/honeysql/issues/348) via PR [#517](https://github.com/seancorfield/honeysql/pull/517) [@dancek](https://github.com/dancek).
 

@@ -284,8 +284,8 @@ renders that expression followed by `IGNORE NULLS` or `RESPECT NULLS`:
 
 ## inline
 
-Accepts a single argument and tries to render it as a
-SQL value directly in the formatted SQL string rather
+Accepts one or more arguments and tries to render them as a
+SQL values directly in the formatted SQL string rather
 than turning it into a positional parameter:
 * `nil` becomes `NULL`
 * keywords and symbols become upper case entities (with `-` replaced by space)
@@ -296,6 +296,34 @@ than turning it into a positional parameter:
 ```clojure
 (sql/format {:where [:= :x [:inline "foo"]]})
 ;;=> ["WHERE x = 'foo'"]
+```
+
+If multiple arguments are provided, they are individually formatted as above
+and joined into a single SQL string with spaces:
+
+```clojure
+(sql/format {:where [:= :x [:inline :DATE "2019-01-01"]]})
+;;=> ["WHERE x = DATE '2019-01-01'"]
+```
+
+This is convenient for rendering DATE/TIME/TIMESTAMP literals in SQL.
+
+If an argument is an expression, it is formatted as a regular SQL expression
+except that any parameters are inlined:
+
+```clojure
+(sql/format {:where [:= :x [:inline [:date_add [:now] [:interval 30 :days]]]]})
+;;=> ["WHERE x = DATE_ADD(NOW(), INTERVAL 30 DAYS)"]
+```
+
+In particular, that means that you can use `:inline` to inline a parameter
+value:
+
+```clojure
+(sql/format {:where [:= :x [:inline :?foo]]} {:params {:foo "bar"}})
+;;=> ["WHERE x = 'bar'"]
+(sql/format {:where [:= :x [:inline [:param :foo]]]} {:params {:foo "bar"}})
+;;=> ["WHERE x = 'bar'"]
 ```
 
 ## interval

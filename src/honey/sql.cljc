@@ -1821,9 +1821,10 @@
     :filter expr-clause-pairs
     :ignore-nulls ignore-respect-nulls
     :inline
-    (fn [_ [x]]
+    (fn [_ xs]
       (binding [*inline* true]
-        (format-expr x)))
+        (let [sqls (mapcat format-expr xs)]
+          [(str/join " " sqls)])))
     :interval format-interval
     :join
     (fn [_ [e & js]]
@@ -2443,4 +2444,5 @@
                :limit 2000}
               {:dialect :nrql :pretty true})
   (sql/format {:select [[[:array {:select :* :from :table}] :arr]]})
+  (sql/format [:inline :DATE "2020-01-01"])
   )
