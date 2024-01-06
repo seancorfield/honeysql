@@ -1,6 +1,7 @@
 # Changes
 
 * 2.5.next in progress
+  * Fix [#518](https://github.com/seancorfield/honeysql/issues/518) by moving temporal clause before alias.
   * Implemented `CREATE INDEX` [#348](https://github.com/seancorfield/honeysql/issues/348) via PR [#517](https://github.com/seancorfield/honeysql/pull/517) [@dancek](https://github.com/dancek).
 
 * 2.5.1103 -- 2023-12-03

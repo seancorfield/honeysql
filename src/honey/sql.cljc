@@ -568,6 +568,8 @@
                                (format-temporal temporal))]
 
       (-> [(str sql
+                (when sql''
+                  (str " " sql''))
                 (when sql'
                   (str (if as
                          (if (and (contains? *dialect* :as)
@@ -575,9 +577,7 @@
                            " "
                            " AS ")
                          " ")
-                       sql'))
-                (when sql''
-                  (str " " sql'')))]
+                       sql')))]
           (into params)
           (into params')
           (into params'')))))
@@ -2383,7 +2383,13 @@
   (sql/format {:select [[:column-name :'some-alias]]
                :from :b
                :order-by [[[:alias :'some-alias]]]})
+  ;; this was an earlier (and incorrect!) workaround for temporal queries:
   (sql/format {:select :f.* :from [[:foo [:f :FOR :SYSTEM-TIME]]] :where [:= :f.id 1]})
+  ;; this is the correct way to do it:
+  (sql/format {:select :f.* :from [[:foo :f :for :system-time]] :where [:= :f.id 1]})
+  (sql/format {:select [:u.username]
+               :from [[:user :u :for :system-time :from [:inline "2019-08-01 15:23:00"] :to [:inline "2019-08-01 15:24:00"]]]
+               :where [:= :u.id 9]})
   (sql/format {:using [[:source [:= :table.id :source.id]]]})
 
   ;; #389 -- ONLY for from/join etc:
@@ -2402,6 +2408,12 @@
   (sql/register-clause! :overriding-system-value
                         (fn [_ _] ["OVERRIDING SYSTEM VALUE"])
                         :values)
+  (sql/format-expr-list [:foo/id] {:drop-ns false})
+  (sql/format-expr-list [:foo/id] {:drop-ns true})
+  (sql/format-expr-list [:'foo/id] {:drop-ns true})
+  (sql/format-expr-list [(keyword "foo/foo/id")] {:drop-ns false})
+  (sql/format-expr-list [(keyword "foo/foo/id")] {:drop-ns true})
+  (sql/format {:insert-into :foo :values [{:foo/id 1}]})
   (sql/format {:insert-into :foo :values [{:id 1}] :overriding-system-value true})
   (sql/format {:insert-into [{:overriding-value :system}
                              [:transport :t] [:id :name]]

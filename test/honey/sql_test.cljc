@@ -1055,7 +1055,7 @@ ORDER BY id = ? DESC
   (is (= ["SELECT \"A\"\"B\""] (sut/format {:select (keyword "A\"B")} {:dialect :oracle}))))
 
 (deftest issue-407-temporal
-  (is (= ["SELECT f.* FROM foo AS f FOR SYSTEM_TIME ALL WHERE f.id = ?" 1]
+  (is (= ["SELECT f.* FROM foo FOR SYSTEM_TIME ALL AS f WHERE f.id = ?" 1]
          (sut/format {:select :f.* :from [[:foo :f :for :system-time :all]] :where [:= :f.id 1]})))
   (is (= ["SELECT * FROM foo FOR SYSTEM_TIME ALL WHERE id = ?" 1]
          (sut/format {:select :* :from [[:foo :for :system-time :all]] :where [:= :id 1]}))))
@@ -1310,5 +1310,8 @@ ORDER BY id = ? DESC
                         :quoted false})))))
 
 (comment
-  ;; partial workaround for #407:
-  (sut/format {:select :f.* :from [[:foo [:f :for :system-time]]] :where [:= :f.id 1]}))
+  ;; partial (incorrect!) workaround for #407:
+  (sut/format {:select :f.* :from [[:foo [:f :for :system-time]]] :where [:= :f.id 1]})
+  ;; correct version:
+  (sut/format {:select :f.* :from [[:foo :f :for :system-time]] :where [:= :f.id 1]})
+  )

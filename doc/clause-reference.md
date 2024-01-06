@@ -825,7 +825,7 @@ user=> (sql/format {:select [:username]
 user=> (sql/format {:select [:u.username]
                     :from [[:user :u :for :system-time :from [:inline "2019-08-01 15:23:00"] :to [:inline "2019-08-01 15:24:00"]]]
                     :where [:= :u.id 9]})
-["SELECT u.username FROM user AS u FOR SYSTEM_TIME FROM '2019-08-01 15:23:00' TO '2019-08-01 15:24:00' WHERE u.id = ?" 9]
+["SELECT u.username FROM user FOR SYSTEM_TIME FROM '2019-08-01 15:23:00' TO '2019-08-01 15:24:00' AS u WHERE u.id = ?" 9]
 ```
 
 > Note: the actual formatting of a `:from` clause is currently identical to the formatting of a `:select` clause.
