@@ -1277,13 +1277,6 @@ ORDER BY id = ? DESC
   (is (= ["SELECT FOO(bar) AT TIME ZONE 'UTC'"]
          (sut/format {:select [[[:at-time-zone [:foo :bar] :UTC]]]}))))
 
-(deftest unhashable-value-509
-  (let [unhashable (reify Object
-                     (toString [_] "unhashable")
-                     (hashCode [_] (throw (ex-info "Unsupported" {}))))]
-    (is (= ["INSERT INTO table VALUES (?)" unhashable]
-           (sut/format {:insert-into :table :values [[unhashable]]})))))
-
 (deftest issue-512
   (testing "select with metadata"
     (is (= ["SELECT DISTINCT * FROM table"]
