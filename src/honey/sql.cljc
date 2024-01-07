@@ -29,7 +29,7 @@
         it uppercase and replaces - with space). "
   (:refer-clojure :exclude [format])
   (:require [clojure.string :as str]
-            [clojure.template]
+            #?(:clj [clojure.template])
             [honey.sql.protocols :as p]))
 
 ;; default formatting for known clauses
@@ -2101,32 +2101,34 @@
   [dsl & params]
   (format dsl {:params (zipmap (map (comp keyword str inc) (range)) params)}))
 
-(defmacro format&
-  "Experimental implementation of https://github.com/seancorfield/honeysql/issues/495
+#?(:clj
+   (defmacro format&
+     "Experimental implementation of https://github.com/seancorfield/honeysql/issues/495
 
-   Implicitly treats any locally bound symbol as a variable to be substituted
-   in the symbolic SQL expression.
+      Implicitly treats any locally bound symbol as a variable to be substituted
+      in the symbolic SQL expression.
 
-   (let [x 42 y 13]
-     (format& '{select * from table where (= x y)}))
+      (let [x 42 y 13]
+        (format& '{select * from table where (= x y)}))
 
-   => SELECT * FROM table WHERE (42 = 13)"
-  [dsl & opts]
-  (let [syms (vec (keys &env))]
-    `(honey.sql/format (clojure.template/apply-template '~syms ~dsl ~syms) ~@opts)))
+      => SELECT * FROM table WHERE (42 = 13)"
+     [dsl & opts]
+     (let [syms (vec (keys &env))]
+       `(honey.sql/format (clojure.template/apply-template '~syms ~dsl ~syms) ~@opts))))
 
-(defmacro formatv
-  "Experimental implementation of https://github.com/seancorfield/honeysql/issues/495
+#?(:clj
+   (defmacro formatv
+     "Experimental implementation of https://github.com/seancorfield/honeysql/issues/495
 
-   Treats the specified vector of symbols as variables to be substituted
-   in the symbolic SQL expression.
+      Treats the specified vector of symbols as variables to be substituted
+      in the symbolic SQL expression.
 
-   (let [x 42 y 13]
-     (formatv [x] '{select * from table where (= x y)}))
+      (let [x 42 y 13]
+        (formatv [x] '{select * from table where (= x y)}))
 
-   => SELECT * FROM table WHERE (42 = y)"
-  [syms sql & opts]
-  `(honey.sql/format (clojure.template/apply-template '~syms ~sql ~syms) ~@opts))
+      => SELECT * FROM table WHERE (42 = y)"
+     [syms sql & opts]
+     `(honey.sql/format (clojure.template/apply-template '~syms ~sql ~syms) ~@opts)))
 
 (defn set-dialect!
   "Set the default dialect for formatting.
