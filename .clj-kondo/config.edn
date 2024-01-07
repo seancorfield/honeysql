@@ -1,2 +1,1 @@
-{:lint-as
- {honeysql.helpers/defhelper clojure.core/defn}}
+{}

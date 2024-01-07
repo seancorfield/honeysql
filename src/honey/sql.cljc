@@ -1,4 +1,4 @@
-;; copyright (c) 2020-2023 sean corfield, all rights reserved
+;; copyright (c) 2020-2024 sean corfield, all rights reserved
 
 (ns honey.sql
   "Primary API for HoneySQL 2.x.
@@ -29,6 +29,7 @@
         it uppercase and replaces - with space). "
   (:refer-clojure :exclude [format])
   (:require [clojure.string :as str]
+            [clojure.template]
             [honey.sql.protocols :as p]))
 
 ;; default formatting for known clauses
@@ -2100,6 +2101,33 @@
   [dsl & params]
   (format dsl {:params (zipmap (map (comp keyword str inc) (range)) params)}))
 
+(defmacro format&
+  "Experimental implementation of https://github.com/seancorfield/honeysql/issues/495
+
+   Implicitly treats any locally bound symbol as a variable to be substituted
+   in the symbolic SQL expression.
+
+   (let [x 42 y 13]
+     (format& '{select * from table where (= x y)}))
+
+   => SELECT * FROM table WHERE (42 = 13)"
+  [dsl & opts]
+  (let [syms (vec (keys &env))]
+    `(honey.sql/format (clojure.template/apply-template '~syms ~dsl ~syms) ~@opts)))
+
+(defmacro formatv
+  "Experimental implementation of https://github.com/seancorfield/honeysql/issues/495
+
+   Treats the specified vector of symbols as variables to be substituted
+   in the symbolic SQL expression.
+
+   (let [x 42 y 13]
+     (formatv [x] '{select * from table where (= x y)}))
+
+   => SELECT * FROM table WHERE (42 = y)"
+  [syms sql & opts]
+  `(honey.sql/format (clojure.template/apply-template '~syms ~sql ~syms) ~@opts))
+
 (defn set-dialect!
   "Set the default dialect for formatting.
 
@@ -2367,8 +2395,15 @@
   (sql/register-fn! :foo foo-formatter)
 
   (sql/format {:select [:*], :from [:table], :where [:foo [:+ :a 1]]})
-  (sql/formatf '{select * from table where (foo (+ a 1))})
-  (sql/formatf '{select * from table where (foo (+ a ?1))} 42)
+  (sql/format '{select * from table where (foo (+ a 1))})
+  (let [v 42]
+    (sql/formatf '{select * from table where (foo (+ a ?1))} v))
+  (let [v 42]
+    (sql/format& '{select * from table where (foo (+ a v))}))
+  (let [v 42]
+    (sql/formatv [v] '{select * from table where (foo (+ a v))}))
+  (sql/format '{select * from table where (foo (+ a ?v))}
+              {:params {:v 42}})
 
   (sql/format {:update [:user :u]
                :set {:email :u2.email
