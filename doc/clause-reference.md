@@ -828,6 +828,23 @@ user=> (sql/format {:select [:u.username]
 ["SELECT u.username FROM user FOR SYSTEM_TIME FROM '2019-08-01 15:23:00' TO '2019-08-01 15:24:00' AS u WHERE u.id = ?" 9]
 ```
 
+As of 2.5.next, HoneySQL supports metadata on a table expression to provide
+database-specific hints, such as SQL Server's `WITH (..)` clause:
+
+```clojure
+user=> (sql/format {:select [:col]
+                    :from [^:nolock [:table]]
+                    :where [:= :id 9]})
+["SELECT col FROM table WITH (NOLOCK) WHERE id = ?" 9]
+user=> (sql/format {:select [:col]
+                    :from [^:nolock [:table :t]]
+                    :where [:= :id 9]})
+["SELECT col FROM table AS t WITH (NOLOCK) WHERE id = ?" 9]
+```
+
+Since you cannot put metadata on a keyword, the table name must be written as
+a vector even when you have no alias.
+
 > Note: the actual formatting of a `:from` clause is currently identical to the formatting of a `:select` clause.
 
 If you are using inheritance, you can specify `ONLY(table)` as a function
@@ -917,6 +934,25 @@ user=> (sql/format {:select [:t.ref :pp.code]
                     :where [:= "settled" :pp.status]})
 ["SELECT t.ref, pp.code FROM transaction AS t LEFT JOIN paypal_tx AS pp USING (id) WHERE ? = pp.status" "settled"]
 ```
+
+As of 2.5.next, HoneySQL supports metadata on a table expression to provide
+database-specific hints, such as SQL Server's `WITH (..)` clause:
+
+```clojure
+user=> (sql/format {:select [:col]
+                    :from [:table]
+                    :join [^:nolock [:extra] [:= :table.extra_id :extra.id]]
+                    :where [:= :id 9]})
+["SELECT col FROM table INNER JOIN extra WITH (NOLOCK) ON table.extra_id = extra.id WHERE id = ?" 9]
+user=> (sql/format {:select [:col]
+                    :from [[:table :t]]
+                    :join [^:nolock [:extra :x] [:= :t.extra_id :x.id]]
+                    :where [:= :id 9]})
+["SELECT col FROM table AS t INNER JOIN extra AS x WITH (NOLOCK) ON t.extra_id = x.id WHERE id = ?" 9]
+```
+
+Since you cannot put metadata on a keyword, the table name must be written as
+a vector even when you have no alias.
 
 If you are using inheritance, you can specify `ONLY(table)` as a function
 call: `[:only :table]`.

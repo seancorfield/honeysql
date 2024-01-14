@@ -1320,6 +1320,20 @@ ORDER BY id = ? DESC
     (is (= ["SELECT ['a', 'b', 'c'] AS x"]
            (sut/format '{select [[[inline [lift ["a" "b" "c"]]] x]]})))))
 
+(deftest issue-522
+  (testing "from with metadata"
+    (is (= ["SELECT * FROM table WITH (HINT)"]
+           (sut/format {:select [:*] :from [^:hint [:table]]})))
+    ;; hash map (metadata) is unordered:
+    (is (or (= ["SELECT * FROM table WITH (ABC, DEF)"]
+               (sut/format {:select [:*] :from [^:abc ^:def [:table]]}))
+            (= ["SELECT * FROM table WITH (DEF, ABC)"]
+               (sut/format {:select [:*] :from [^:abc ^:def [:table]]}))))
+    (is (or (= ["SELECT * FROM table WITH (ABC, DEF)"]
+               (sut/format {:select [:*] :from [^{:abc true :def true} [:table]]}))
+            (= ["SELECT * FROM table WITH (DEF, ABC)"]
+               (sut/format {:select [:*] :from [^{:abc true :def true} [:table]]}))))))
+
 (comment
   ;; partial (incorrect!) workaround for #407:
   (sut/format {:select :f.* :from [[:foo [:f :for :system-time]]] :where [:= :f.id 1]})

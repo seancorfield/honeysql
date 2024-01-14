@@ -548,12 +548,43 @@
   (format-temporal [:for :system-time :between [:inline "2000-12-16"] :and [:inline "2000-12-17"]])
   )
 
+(defn- format-meta
+  "If the expression has metadata, format it as a sequence of keywords,
+   treating `:foo true` as `FOO` and `:foo :bar` as `FOO BAR`.
+   Return nil if there is no metadata."
+  [x & [sep]]
+  (when-let [data (meta x)]
+    (let [items (reduce-kv (fn [acc k v]
+                             (if (true? v)
+                               (conj acc k)
+                               (conj acc k v)))
+                           []
+                           (reduce dissoc
+                                   data
+                                   (into [; remove the somewhat "standard" metadata:
+                                          :line :column :file
+                                          :end-line :end-column]
+                                         *ignored-metadata*)))]
+      (when (seq items)
+        (str/join (str sep " ") (mapv sql-kw items))))))
+
+(comment
+  (format-meta ^{:foo true :bar :baz} [])
+
+  (binding [*ignored-metadata* [:bar]]
+    (format-meta ^{:foo true :bar :baz} []))
+
+  (format-meta [])
+  (format-meta ^:nolock ^:uncommited [] ",")
+  )
+
 (defn- format-item-selection
   "Format all the possible ways to represent a table/column selection."
   [x as]
   (if (bigquery-*-except-replace? x)
     (format-bigquery-*-except-replace x)
-    (let [[selectable alias temporal] (split-alias-temporal x)
+    (let [hints (format-meta x ",")
+          [selectable alias temporal] (split-alias-temporal x)
           _ (when (= ::too-many! temporal)
               (throw (ex-info "illegal syntax in select expression"
                               {:symbol selectable :alias alias :unexpected (nnext x)})))
@@ -569,16 +600,18 @@
                                (format-temporal temporal))]
 
       (-> [(str sql
-                (when sql''
+                (when sql'' ; temporal
                   (str " " sql''))
-                (when sql'
+                (when sql' ; alias
                   (str (if as
                          (if (and (contains? *dialect* :as)
                                   (not (:as *dialect*)))
                            " "
                            " AS ")
                          " ")
-                       sql')))]
+                       sql'))
+                (when hints
+                  (str " WITH (" hints ")")))]
           (into params)
           (into params')
           (into params'')))))
@@ -688,35 +721,6 @@
     []
     (let [[sqls params] (format-expr-list xs {:drop-ns true})]
       (into [(str "(" (str/join ", " sqls) ")")] params))))
-
-(defn- format-meta
-  "If the expression has metadata, format it as a sequence of keywords,
-   treating `:foo true` as `FOO` and `:foo :bar` as `FOO BAR`.
-   Return nil if there is no metadata."
-  [x]
-  (when-let [data (meta x)]
-    (let [items (reduce-kv (fn [acc k v]
-                             (if (true? v)
-                               (conj acc k)
-                               (conj acc k v)))
-                           []
-                           (reduce dissoc
-                                   data
-                                   (into [; remove the somewhat "standard" metadata:
-                                          :line :column :file
-                                          :end-line :end-column]
-                                         *ignored-metadata*)))]
-      (when (seq items)
-        (str/join " " (mapv sql-kw items))))))
-
-(comment
-  (format-meta ^{:foo true :bar :baz} [])
-
-  (binding [*ignored-metadata* [:bar]]
-    (format-meta ^{:foo true :bar :baz} []))
-
-  (format-meta [])
-  )
 
 (defn- format-selects-common [prefix as xs]
   (let [qualifier (format-meta xs)
