@@ -2392,7 +2392,7 @@
   (sql/register-op! :<=> :ignore-nil true)
   ;; and then use the new operator:
   (sql/format {:select [:*], :from [:table], :where [:<=> nil :x 42]})
-  (sql/register-fn! :foo (fn [f args] ["FOO(?)" (first args)]))
+  (sql/register-fn! :foo (fn [_ args] ["FOO(?)" (first args)]))
   (sql/format {:select [:*], :from [:table], :where [:foo 1 2 3]})
   (defn- foo-formatter [f [x]]
     (let [[sql & params] (sql/format-expr x)]
@@ -2404,7 +2404,7 @@
   (sql/format '{select * from table where (foo (+ a 1))})
   (let [v 42]
     (sql/formatf '{select * from table where (foo (+ a ?1))} v))
-  (let [v 42]
+  (let [v 42] (println v)
     (sql/format& '{select * from table where (foo (+ a v))}))
   (let [v 42]
     (sql/formatv [v] '{select * from table where (foo (+ a v))}))
