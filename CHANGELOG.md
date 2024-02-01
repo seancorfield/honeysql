@@ -6,6 +6,7 @@
   * Fix [#518](https://github.com/seancorfield/honeysql/issues/518) by moving temporal clause before alias.
   * Address [#495](https://github.com/seancorfield/honeysql/issues/495) by adding (experimental) `format&` and `formatv` macros (`.clj` only!) -- purely for discussion: may be removed in a subsequent release!
   * Implemented `CREATE INDEX` [#348](https://github.com/seancorfield/honeysql/issues/348) via PR [#517](https://github.com/seancorfield/honeysql/pull/517) [@dancek](https://github.com/dancek).
+  * Mention `:not-in` explicitly in the documentation.
   * Code cleanup per `clj-kondo`.
 
 * 2.5.1103 -- 2023-12-03

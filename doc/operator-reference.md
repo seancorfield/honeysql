@@ -32,15 +32,14 @@ can simply evaluate to `nil` instead).
 ;;=> ["...WHERE (id = ?) OR (type = ?)..." 42 "match"]
 ```
 
-## in
+## in, not-in
 
-Predicate for checking an expression is
-is a member of a specified set of values.
+Predicates for checking an expression is or is not a member of a specified set of values.
 
 The two most common forms are:
 
-* `[:in :col [val1 val2 ...]]` where the `valN` can be arbitrary expressions,
-* `[:in :col {:select ...}]` where the `SELECT` specifies a single column.
+* `[:in :col [val1 val2 ...]]` or `[:not-in :col [val1 val2 ...]]` where the `valN` can be arbitrary expressions,
+* `[:in :col {:select ...}]` or `[:not-in :col {:select ...}]` where the `SELECT` specifies a single column.
 
 `:col` could be an arbitrary SQL expression (but is most
 commonly just a column name).
@@ -48,15 +47,17 @@ commonly just a column name).
 The former produces an inline vector expression with the
 values resolved as regular SQL expressions (i.e., with
 literal values lifted out as parameters): `col IN [?, ?, ...]`
+or `col NOT IN [?, ?, ...]`
 
 The latter produces a sub-select, as expected: `col IN (SELECT ...)`
+or `col NOT IN (SELECT ...)`
 
 You can also specify the set of values via a named parameter:
 
-* `[:in :col :?values]` where `:params {:values [1 2 ...]}` is provided to `format` in the options.
+* `[:in :col :?values]` or `[:not-in :col :?values]` where `:params {:values [1 2 ...]}` is provided to `format` in the options.
 
 In this case, the named parameter is expanded directly when
-`:in` is formatted to obtain the sequence of values (which
+`:in` (or `:not-in`) is formatted to obtain the sequence of values (which
 must be _sequential_, not a Clojure set). That means you
 cannot use this approach and also specify `:cache` -- see
 [cache in All the Options](options.md#cache) for more details.
@@ -67,9 +68,9 @@ of columns, producing `(col1, col2) IN (SELECT ...)`, but
 you need to specify the columns (or expressions) using the
 `:composite` special syntax:
 
-* `[:in [:composite :col1 :col2] ...]`
+* `[:in [:composite :col1 :col2] ...]` or `[:not-in [:composite :col1 :col2] ...]`
 
-This produces `(col1, col2) IN ...`
+This produces `(col1, col2) IN ...` or `(col1, col2) NOT IN ...`
 
 > Note: This is a change from HoneySQL 1.x which accepted a sequence of column names but required more work for arbitrary expressions.
 
