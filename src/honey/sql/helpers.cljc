@@ -1185,4 +1185,6 @@
       (where [:in (composite :first :second)
               [(composite 1 2) (composite 2 1)]])
       (h/format))
+  (-> (select [:%count.* :total]) (from :foo) h/format)
+  (-> (select [[:count :*] :total]) (from :foo) h/format)
   )

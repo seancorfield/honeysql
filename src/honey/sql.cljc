@@ -195,7 +195,7 @@
    (defn upper-case
      "Upper-case a string in Locale/US to avoid locale-specific capitalization."
      [^String s]
-     (.. s toString (toUpperCase (java.util.Locale/US))))
+     (.. s toString (toUpperCase java.util.Locale/US)))
    :cljr
    (defn upper-case
      "Upper-case a string in Locale/US to avoid locale-specific capitalization."

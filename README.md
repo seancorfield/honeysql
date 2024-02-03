@@ -565,6 +565,11 @@ keywords that begin with `%` are interpreted as SQL function calls:
 => ["SELECT COUNT(*) FROM foo"]
 ```
 ```clojure
+;; with an alias:
+(-> (select [:%count.* :total]) (from :foo) sql/format)
+=> ["SELECT COUNT(*) AS total FROM foo"]
+```
+```clojure
 (-> (select :%max.id) (from :foo) sql/format)
 => ["SELECT MAX(id) FROM foo"]
 ```
@@ -578,6 +583,10 @@ regular function calls in a select:
 => ["SELECT COUNT(*) FROM foo"]
 ```
 ```clojure
+(-> (select [[:count :*] :total]) (from :foo) sql/format)
+=> ["SELECT COUNT(*) AS total FROM foo"]
+```
+```clojure
 (-> (select [:%count.*]) (from :foo) sql/format)
 => ["SELECT COUNT(*) FROM foo"]
 ;; or even:
@@ -587,16 +596,22 @@ regular function calls in a select:
 ```clojure
 (-> (select [[:max :id]]) (from :foo) sql/format)
 => ["SELECT MAX(id) FROM foo"]
+(-> (select [[:max :id] :highest]) (from :foo) sql/format)
+=> ["SELECT MAX(id) AS highest FROM foo"]
 ;; the pure data DSL requires an extra level of brackets:
 (-> {:select [[[:max :id]]], :from [:foo]} sql/format)
 => ["SELECT MAX(id) FROM foo"]
+(-> {:select [[[:max :id] :highest]], :from [:foo]} sql/format)
+=> ["SELECT MAX(id) AS highest FROM foo"]
 ;; the shorthand makes this simpler:
 (-> {:select [[:%max.id]], :from [:foo]} sql/format)
 => ["SELECT MAX(id) FROM foo"]
-;; or even:
+(-> {:select [[:%max.id :highest]], :from [:foo]} sql/format)
+=> ["SELECT MAX(id) AS highest FROM foo"]
+;; or even (no alias):
 (-> {:select [:%max.id], :from [:foo]} sql/format)
 => ["SELECT MAX(id) FROM foo"]
-;; or even:
+;; or even (no alias, no other columns):
 (-> {:select :%max.id, :from :foo} sql/format)
 => ["SELECT MAX(id) FROM foo"]
 ```

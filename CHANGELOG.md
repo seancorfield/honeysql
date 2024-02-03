@@ -1,6 +1,7 @@
 # Changes
 
 * 2.5.next in progress
+  * Address [#523](https://github.com/seancorfield/honeysql/issues/523) by expanding examples in README **Functions** to show aliases.
   * Address [#522](https://github.com/seancorfield/honeysql/issues/522) by supporting metadata on table specifications in `:from` and `:join` clauses to provide index hints (SQL Server).
   * Address [#520](https://github.com/seancorfield/honeysql/issues/520) by expanding how `:inline` works, to support a sequence of arguments.
   * Fix [#518](https://github.com/seancorfield/honeysql/issues/518) by moving temporal clause before alias.
