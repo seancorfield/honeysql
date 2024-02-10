@@ -410,10 +410,10 @@
 
 (deftest select-agg-order-by-test
   (testing "single expression in order by"
-    (is (= ["SELECT ARRAY_AGG(a ORDER BY x) FROM products"])
-        (sql/format
-          {:select [[[:array_agg [:order-by :a :x]]]]
-           :from   :products})))
+    (is (= ["SELECT ARRAY_AGG(a ORDER BY x) FROM products"]
+           (sql/format
+            {:select [[[:array_agg [:order-by :a :x]]]]
+             :from   :products}))))
   (testing "multiple expressions in order by"
     (is (= ["SELECT ARRAY_AGG(a ORDER BY x ASC, y DESC, z ASC) FROM products"]
            (sql/format

@@ -3,10 +3,9 @@
 (ns honey.ops-test
   (:refer-clojure :exclude [format])
   (:require [clojure.test :refer [deftest is]]
-            [honey.sql :as sut]
-            [honey.sql :as sql]))
+            [honey.sql :as sut]))
 
 (deftest issue-454
   (is (= ["SELECT a - b - c AS x"]
          (-> {:select [[[:- :a :b :c] :x]]}
-             (sql/format)))))
+             (sut/format)))))
