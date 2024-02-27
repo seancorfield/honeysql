@@ -114,10 +114,13 @@
                :mysql     {:quote #(strop \` % \`)
                            :clause-order-fn
                            #(add-clause-before % :set :where)}
-               :oracle    {:quote #(strop \" % \") :as false}
                :nrql      {:quote    #(strop \` % \`)
                            :col-fn   #(if (keyword? %) (subs (str %) 1) (str %))
-                           :parts-fn vector}})))
+                           :parts-fn vector}
+               :oracle    {:quote #(strop \" % \") :as false}
+               :xtdb      {:quote    #(strop \" % \")
+                           :col-fn   #(if (keyword? %) (subs (str %) 1) (str %))
+                           :parts-fn #(str/split % #"\.")}})))
 
 ; should become defonce
 (def ^:private default-dialect (atom (:ansi @dialects)))
