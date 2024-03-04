@@ -835,7 +835,7 @@ user=> (sql/format {:select [:u.username]
 ["SELECT u.username FROM user FOR SYSTEM_TIME FROM '2019-08-01 15:23:00' TO '2019-08-01 15:24:00' AS u WHERE u.id = ?" 9]
 ```
 
-As of 2.5.next, HoneySQL supports metadata on a table expression to provide
+As of 2.6.1125, HoneySQL supports metadata on a table expression to provide
 database-specific hints, such as SQL Server's `WITH (..)` clause:
 
 ```clojure
@@ -942,7 +942,7 @@ user=> (sql/format {:select [:t.ref :pp.code]
 ["SELECT t.ref, pp.code FROM transaction AS t LEFT JOIN paypal_tx AS pp USING (id) WHERE ? = pp.status" "settled"]
 ```
 
-As of 2.5.next, HoneySQL supports metadata on a table expression to provide
+As of 2.6.1125, HoneySQL supports metadata on a table expression to provide
 database-specific hints, such as SQL Server's `WITH (..)` clause:
 
 ```clojure
