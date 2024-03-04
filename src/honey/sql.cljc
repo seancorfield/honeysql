@@ -2101,24 +2101,15 @@
          (mapv #(unwrap % opts) (formatter data opts))))))
   ([data k v & {:as opts}] (format data (assoc opts k v))))
 
-(defn formatf
-  "Experimental implementation of https://github.com/seancorfield/honeysql/issues/495
-
-  Currently, does not support options."
-  [dsl & params]
-  (format dsl {:params (zipmap (map (comp keyword str inc) (range)) params)}))
-
 #?(:clj
    (defmacro formatv
-     "Experimental implementation of https://github.com/seancorfield/honeysql/issues/495
-
-      Treats the specified vector of symbols as variables to be substituted
+     "Treats the specified vector of symbols as variables to be substituted
       in the symbolic SQL expression.
 
       (let [x 42 y 13]
-        (formatv [x] '{select * from table where (= x y)}))
+        (formatv [y] '{select * from table where (= x y)}))
 
-      => SELECT * FROM table WHERE (42 = y)"
+      => [\"SELECT * FROM table WHERE (x = ?)\" 13]"
      [syms sql & opts]
      `(honey.sql/format (clojure.template/apply-template '~syms ~sql ~syms) ~@opts)))
 
@@ -2390,10 +2381,6 @@
 
   (sql/format {:select [:*], :from [:table], :where [:foo [:+ :a 1]]})
   (sql/format '{select * from table where (foo (+ a 1))})
-  (let [v 42]
-    (sql/formatf '{select * from table where (foo (+ a ?1))} v))
-  (let [v 42] (println v)
-    (sql/format& '{select * from table where (foo (+ a v))}))
   (let [v 42]
     (sql/formatv [v] '{select * from table where (foo (+ a v))}))
   (sql/format '{select * from table where (foo (+ a ?v))}

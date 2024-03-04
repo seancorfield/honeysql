@@ -143,6 +143,24 @@ Namespace-qualified keywords (and symbols) are generally treated as table-qualif
 => ["SELECT foo.a, foo.b, foo.c FROM foo WHERE foo.a = ?" "baz"]
 ```
 
+As of 2.5.next, there is a helper macro you can use with quoted symbolic
+queries (that are purely literal, not programmatically constructed) to
+provide "escape hatches" for certain symbols that you want to be treated
+as locally bound symbols (and, hence, their values):
+
+<!-- :test-doc-blocks/skip -->
+```clojure
+;; quoted symbolic query with local substitution:
+(let [search-value "baz"]
+  (sql/formatv [search-value]
+   '{select (foo/a, foo/b, foo/c)
+     from   (foo)
+     where  (= foo/a search-value)}))
+=> ["SELECT foo.a, foo.b, foo.c FROM foo WHERE foo.a = ?" "baz"]
+```
+
+> Note: this is a Clojure-only feature and is not available in ClojureScript, and it is intended for literal, inline symbolic queries only, not for programmatically constructed queries (where you would be able to substitute the values directly, as you build the query).
+
 Documentation for the entire data DSL can be found in the
 [Clause Reference](doc/clause-reference.md), the
 [Operator Reference](doc/operator-reference.md), and the

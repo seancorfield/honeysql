@@ -7,7 +7,7 @@
   * Address [#521](https://github.com/seancorfield/honeysql/issues/521) by adding initial experimental support for an XTDB dialect.
   * Address [#520](https://github.com/seancorfield/honeysql/issues/520) by expanding how `:inline` works, to support a sequence of arguments.
   * Fix [#518](https://github.com/seancorfield/honeysql/issues/518) by moving temporal clause before alias.
-  * Address [#495](https://github.com/seancorfield/honeysql/issues/495) by adding (experimental) `formatv` macro (`.clj` only!) -- purely for discussion: may be removed in a subsequent release!
+  * Address [#495](https://github.com/seancorfield/honeysql/issues/495) by adding `formatv` macro (`.clj` only!) -- and removing the experimental `formatf` function (added for discussion in 2.4.1045).
   * Implemented `CREATE INDEX` [#348](https://github.com/seancorfield/honeysql/issues/348) via PR [#517](https://github.com/seancorfield/honeysql/pull/517) [@dancek](https://github.com/dancek).
   * Mention `:not-in` explicitly in the documentation.
   * Code cleanup per `clj-kondo`.
@@ -45,7 +45,7 @@
   * Update `tools.build` to 0.9.5 (and remove `:java-opts` setting from `build/run-task`)
 
 * 2.4.1045 -- 2023-06-25
-  * Address [#495](https://github.com/seancorfield/honeysql/issues/495) by adding (experimental) `formatf` function -- purely for discussion: may be removed in a subsequent release!
+  * Address [#495](https://github.com/seancorfield/honeysql/issues/495) by adding (experimental) `formatf` function -- _note: this was removed in 2.5.next, in favor of the `formatv` macro._
   * Fix [#494](https://github.com/seancorfield/honeysql/issues/494) by supporting expressions in `:on-conflict` instead of just entities.
   * Address [#493](https://github.com/seancorfield/honeysql/issues/493) by clarifying use of `:values` in CTEs (using `:with`).
   * Address [#489](https://github.com/seancorfield/honeysql/issues/489) by adding more examples around `:update`.
