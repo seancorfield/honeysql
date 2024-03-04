@@ -1,6 +1,6 @@
 # Changes
 
-* 2.6.1125 -- 2024-03-04
+* 2.6.1126 -- 2024-03-04
   * Address [#524](https://github.com/seancorfield/honeysql/issues/524) by adding example of `{:nest ..}` in `:union` clause reference docs.
   * Address [#523](https://github.com/seancorfield/honeysql/issues/523) by expanding examples in README **Functions** to show aliases.
   * Address [#522](https://github.com/seancorfield/honeysql/issues/522) by supporting metadata on table specifications in `:from` and `:join` clauses to provide index hints (SQL Server).
@@ -45,7 +45,7 @@
   * Update `tools.build` to 0.9.5 (and remove `:java-opts` setting from `build/run-task`)
 
 * 2.4.1045 -- 2023-06-25
-  * Address [#495](https://github.com/seancorfield/honeysql/issues/495) by adding (experimental) `formatf` function -- _note: this was removed in 2.6.1125, in favor of the `formatv` macro._
+  * Address [#495](https://github.com/seancorfield/honeysql/issues/495) by adding (experimental) `formatf` function -- _note: this was removed in 2.6.1126, in favor of the `formatv` macro._
   * Fix [#494](https://github.com/seancorfield/honeysql/issues/494) by supporting expressions in `:on-conflict` instead of just entities.
   * Address [#493](https://github.com/seancorfield/honeysql/issues/493) by clarifying use of `:values` in CTEs (using `:with`).
   * Address [#489](https://github.com/seancorfield/honeysql/issues/489) by adding more examples around `:update`.
