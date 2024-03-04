@@ -1,6 +1,7 @@
 # Changes
 
 * 2.5.next in progress
+  * Address [#524](https://github.com/seancorfield/honeysql/issues/524) by adding example of `{:nest ..}` in `:union` clause reference docs.
   * Address [#523](https://github.com/seancorfield/honeysql/issues/523) by expanding examples in README **Functions** to show aliases.
   * Address [#522](https://github.com/seancorfield/honeysql/issues/522) by supporting metadata on table specifications in `:from` and `:join` clauses to provide index hints (SQL Server).
   * Address [#521](https://github.com/seancorfield/honeysql/issues/521) by adding initial experimental support for an XTDB dialect.

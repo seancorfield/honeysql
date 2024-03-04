@@ -484,6 +484,13 @@ user=> (sql/format '{union [{select (id,status) from (table-a)}
 
 > Note: different databases have different precedence rules for these set operations when used in combination -- you may need to use `:nest` to add `(` .. `)` in order to combine these operations in a single SQL statement, if the natural order produced by HoneySQL does not work "as expected" for your database.
 
+```clojure
+;; BigQuery requires UNION clauses be parenthesized:
+user=> (sql/format '{union [{:nest {select (id,status) from (table-a)}}
+                            {:nest {select (id,(event status) from (table-b))}}]})
+["(SELECT id, status FROM table_a) UNION (SELECT id, event AS status, from, table_b)"]
+```
+
 ## select, select-distinct, table
 
 `:select` and `:select-distinct` expect a sequence of SQL entities (column names
