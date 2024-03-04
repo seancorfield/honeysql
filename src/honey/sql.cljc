@@ -2109,21 +2109,6 @@
   (format dsl {:params (zipmap (map (comp keyword str inc) (range)) params)}))
 
 #?(:clj
-   (defmacro format&
-     "Experimental implementation of https://github.com/seancorfield/honeysql/issues/495
-
-      Implicitly treats any locally bound symbol as a variable to be substituted
-      in the symbolic SQL expression.
-
-      (let [x 42 y 13]
-        (format& '{select * from table where (= x y)}))
-
-      => SELECT * FROM table WHERE (42 = 13)"
-     [dsl & opts]
-     (let [syms (vec (keys &env))]
-       `(honey.sql/format (clojure.template/apply-template '~syms ~dsl ~syms) ~@opts))))
-
-#?(:clj
    (defmacro formatv
      "Experimental implementation of https://github.com/seancorfield/honeysql/issues/495
 

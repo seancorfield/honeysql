@@ -3,9 +3,10 @@
 * 2.5.next in progress
   * Address [#523](https://github.com/seancorfield/honeysql/issues/523) by expanding examples in README **Functions** to show aliases.
   * Address [#522](https://github.com/seancorfield/honeysql/issues/522) by supporting metadata on table specifications in `:from` and `:join` clauses to provide index hints (SQL Server).
+  * Address [#521](https://github.com/seancorfield/honeysql/issues/521) by adding initial experimental support for an XTDB dialect.
   * Address [#520](https://github.com/seancorfield/honeysql/issues/520) by expanding how `:inline` works, to support a sequence of arguments.
   * Fix [#518](https://github.com/seancorfield/honeysql/issues/518) by moving temporal clause before alias.
-  * Address [#495](https://github.com/seancorfield/honeysql/issues/495) by adding (experimental) `format&` and `formatv` macros (`.clj` only!) -- purely for discussion: may be removed in a subsequent release!
+  * Address [#495](https://github.com/seancorfield/honeysql/issues/495) by adding (experimental) `formatv` macro (`.clj` only!) -- purely for discussion: may be removed in a subsequent release!
   * Implemented `CREATE INDEX` [#348](https://github.com/seancorfield/honeysql/issues/348) via PR [#517](https://github.com/seancorfield/honeysql/pull/517) [@dancek](https://github.com/dancek).
   * Mention `:not-in` explicitly in the documentation.
   * Code cleanup per `clj-kondo`.
