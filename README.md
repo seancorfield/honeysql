@@ -1,4 +1,4 @@
-# Honey SQL [![Clojure CI](https://github.com/seancorfield/honeysql/actions/workflows/test.yml/badge.svg)](https://github.com/seancorfield/honeysql/actions/workflows/test.yml) [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/seancorfield/honeysql)
+# Honey SQL [![Clojure CI Release](https://github.com/seancorfield/honeysql/actions/workflows/test-and-release.yml/badge.svg)](https://github.com/seancorfield/honeysql/actions/workflows/test-and-release.yml) [![Clojure CI Develop](https://github.com/seancorfield/honeysql/actions/workflows/test-and-snapshot.yml/badge.svg)](https://github.com/seancorfield/honeysql/actions/workflows/test-and-snapshot.yml) [![Clojure CI Pull Request](https://github.com/seancorfield/honeysql/actions/workflows/test.yml/badge.svg)](https://github.com/seancorfield/honeysql/actions/workflows/test.yml)
 
 SQL as Clojure data structures. Build queries programmatically -- even at runtime -- without having to bash strings together.
 
