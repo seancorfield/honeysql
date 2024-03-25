@@ -1,4 +1,5 @@
 .calva/output-window/
+.calva/repl.calva-repl
 .classpath
 .clj-kondo/.cache
 .cpcache
