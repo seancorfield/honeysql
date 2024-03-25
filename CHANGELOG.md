@@ -1,5 +1,8 @@
 # Changes
 
+* 2.6.next in progress
+  * Update Clojure versions (to 1.11.2 and 1.12.0-alpha9).
+
 * 2.6.1126 -- 2024-03-04
   * Address [#524](https://github.com/seancorfield/honeysql/issues/524) by adding example of `{:nest ..}` in `:union` clause reference docs.
   * Address [#523](https://github.com/seancorfield/honeysql/issues/523) by expanding examples in README **Functions** to show aliases.
