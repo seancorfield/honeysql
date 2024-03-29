@@ -341,7 +341,7 @@
   (when k
     (let [n (str/replace (name k) "?" "??")]
       (if (= \' (first n))
-        (let [ident   (subs n 1 (count n))
+        (let [ident   (subs n 1)
               ident-l (str/lower-case ident)]
           (binding [*quoted* (when-not (contains? #{"array"} ident-l) *quoted*)]
             (format-entity (keyword ident))))

@@ -174,6 +174,23 @@ expression (comma-separated, wrapped in parentheses):
 ;;=> ["(a, b, ?, x + ?)" "red" 1]
 ```
 
+This can be useful in a number of situations where you want a composite
+value, as above, or a composite based on or declaring columns names:
+
+```clojure
+(sql/format {:select [[[:composite :a :b] :c]] :from :table})
+;;=> ["SELECT (a, b) AS c FROM table"]
+```
+
+```clojure
+(sql/format {:update :table :set {:a :v.a}
+             :from [[{:values [[1 2 3]
+                               [4 5 6]]}
+                     [:v [:composite :a :b :c]]]]
+             :where [:and [:= :x :v.b] [:> :y :v.c]]})
+;;=> ["UPDATE table FROM (VALUES (?, ?, ?), (?, ?, ?)) AS v (a, b, c) SET a = v.a WHERE (x = v.b) AND (y > v.c)" 1 2 3 4 5 6]
+```
+
 ## distinct
 
 Accepts a single expression and prefixes it with `DISTINCT `:

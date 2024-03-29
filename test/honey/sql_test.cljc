@@ -1341,10 +1341,26 @@ ORDER BY id = ? DESC
             (= ["SELECT * FROM table WITH (DEF, ABC)"]
                (sut/format {:select [:*] :from [^{:abc true :def true} [:table]]}))))))
 
+(deftest issue-527-composite
+  (is (= ["SELECT (a, b) AS c FROM table"]
+         (sut/format {:select [[[:composite :a :b] :c]] :from [:table]})))
+  (is (= ["SELECT a FROM table WHERE (b, c) = (?, ?)" 1 2]
+         (sut/format {:select :a :from :table :where [:= [:composite :b :c] [:composite 1 2]]})))
+  (is (= ["SELECT a, b, c FROM (VALUES (?, ?, ?), (?, ?, ?)) AS t (a, b, c)" 1 2 3 4 5 6]
+         (sut/format {:select [:a :b :c]
+                      :from [[{:values [[1 2 3] [4 5 6]]}
+                              [:t [:composite :a :b :c]]]]}))))
+
 (comment
   ;; partial (incorrect!) workaround for #407:
   (sut/format {:select :f.* :from [[:foo [:f :for :system-time]]] :where [:= :f.id 1]})
   ;; correct version:
   (sut/format {:select :f.* :from [[:foo :f :for :system-time]] :where [:= :f.id 1]})
   (sut/format {:where [:= :x [:inline :DATE "2019-01-01"]]})
+  ;; https://github.com/seancorfield/honeysql/issues/526
+  (->
+   {:create-table-as [:a-b.b-c.c-d]
+    :select          [:*]
+    :from            [:a-b.b-c.c-d]}
+   (sut/format {:dialect :nrql}))
   )

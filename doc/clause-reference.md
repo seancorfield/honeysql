@@ -815,6 +815,17 @@ user=> (sql/format {:select [:u.username :s.name]
 ["SELECT u.username, s.name FROM user AS u, status AS s WHERE (u.statusid = s.id) AND (u.id = ?)" 9]
 ```
 
+`:from` can also accept a `:values` clause:
+
+```clojure
+user=> (sql/format {:update :table :set {:a :v.a}
+                    :from [[{:values [[1 2 3]
+                                      [4 5 6]]}
+                            [:v [:composite :a :b :c]]]]
+                    :where [:and [:= :x :v.b] [:> :y :v.c]]})
+["UPDATE table SET a = v.a FROM (VALUES (?, ?, ?), (?, ?, ?)) AS v (a, b, c) WHERE (x = v.b) AND (y > v.c)" 1 2 3 4 5 6]
+```
+
 As of 2.4.1066, HoneySQL supports a temporal clause that starts with `:for`,
 followed by the time reference
 (e.g., `:system-time` or `:business-time`), followed by a temporal qualifier,
