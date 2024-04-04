@@ -326,27 +326,6 @@
         [v a d (format-entity v {:aliased a :drop-ns d})])))
   )
 
-(defn sql-op-kw
-  "Given a keyword for an operator, return a SQL representation of it as a string.
-
-  A keyword whose name begins with a single quote is left exactly as-is
-  (with the `:` and `'` removed), otherwise a `:kebab-case` keyword
-  becomes a `KEBAB CASE` (uppercase) string with hyphens replaced
-  by spaces, e.g., `:insert-into` => `INSERT INTO`.
-
-  Any namespace qualifier is ignored.
-
-  Unlike sql-kw below, ? is NOT escaped to ??."
-  [k]
-  (when k
-    (let [n (name k)]
-      (if (= \' (first n))
-        (let [ident   (subs n 1)
-              ident-l (str/lower-case ident)]
-          (binding [*quoted* (when-not (contains? #{"array"} ident-l) *quoted*)]
-            (format-entity (keyword ident))))
-        (-> n (dehyphen) (upper-case))))))
-
 (defn sql-kw
   "Given a keyword, return a SQL representation of it as a string.
 
@@ -1964,10 +1943,10 @@
     (when-not (pos? (count sqls))
       (throw (ex-info (str "no operands found for " op')
                       {:expr expr})))
-    (into [(cond-> (str/join (str " " (sql-op-kw op) " ") sqls)
+    (into [(cond-> (str/join (str " " (sql-kw op) " ") sqls)
              (and (contains? @op-can-be-unary op)
                   (= 1 (count sqls)))
-             (as-> s (str (sql-op-kw op) " " s))
+             (as-> s (str (sql-kw op) " " s))
              nested
              (as-> s (str "(" s ")")))]
           params)))

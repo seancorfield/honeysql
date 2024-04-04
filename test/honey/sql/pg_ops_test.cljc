@@ -20,11 +20,11 @@
            (sql/format {:select [[[:#> :a :b] :x]]})))
     (is (= ["SELECT a #>> b AS x"]
            (sql/format {:select [[[:#>> :a :b] :x]]})))
-    (is (= ["SELECT a ? b AS x"]
+    (is (= ["SELECT a ?? b AS x"]
            (sql/format {:select [[[:? :a :b] :x]]})))
-    (is (= ["SELECT a ?| b AS x"]
+    (is (= ["SELECT a ??| b AS x"]
            (sql/format {:select [[[:?| :a :b] :x]]})))
-    (is (= ["SELECT a ?& b AS x"]
+    (is (= ["SELECT a ??& b AS x"]
            (sql/format {:select [[[:?& :a :b] :x]]})))
     (is (= ["SELECT a #- b AS x"]
            (sql/format {:select [[[:#- :a :b] :x]]}))))
@@ -33,7 +33,7 @@
            (sql/format {:select [[[sut/at> :a :b] :x]]})))
     (is (= ["SELECT a <@ b AS x"]
            (sql/format {:select [[[sut/<at :a :b] :x]]})))
-    (is (= ["SELECT a @? b AS x"]
+    (is (= ["SELECT a @?? b AS x"]
            (sql/format {:select [[[sut/at? :a :b] :x]]})))
     (is (= ["SELECT a @@ b AS x"]
            (sql/format {:select [[[sut/atat :a :b] :x]]}))))
