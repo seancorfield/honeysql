@@ -1,4 +1,4 @@
-;; copyright (c) 2022 sean corfield, all rights reserved
+;; copyright (c) 2022-2024 sean corfield, all rights reserved
 
 (ns honey.sql.pg-ops-test
   (:require [clojure.test :refer [deftest is testing]]
