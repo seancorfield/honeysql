@@ -12,16 +12,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
           distribution: 'adopt'
           java-version: '11'
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
-          cli: '1.11.1.1413'
+          cli: '1.11.2.1446'
       - name: Cache All The Things
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.m2/repository

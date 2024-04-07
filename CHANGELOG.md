@@ -2,7 +2,7 @@
 
 * 2.6.next in progress
   * Address [#527](https://github.com/seancorfield/honeysql/issues/527) by adding tests and more documentation for `:composite`.
-  * Update Clojure versions (to 1.11.2 and 1.12.0-alpha9).
+  * Update Clojure versions (to 1.11.2 and 1.12.0-alpha9); update other dev/test dependencies.
 
 * 2.6.1126 -- 2024-03-04
   * Address [#524](https://github.com/seancorfield/honeysql/issues/524) by adding example of `{:nest ..}` in `:union` clause reference docs.

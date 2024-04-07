@@ -3,8 +3,8 @@
  :deps {org.clojure/clojure {:mvn/version "1.9.0"}}
  :aliases
  {;; for help: clojure -A:deps -T:build help/doc
-  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.9.6"}
-                 slipset/deps-deploy {:mvn/version "0.2.1"}}
+  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.0"}
+                 slipset/deps-deploy {:mvn/version "0.2.2"}}
           :ns-default build}
 
   ;; versions to test against:
@@ -27,11 +27,11 @@
   {:main-opts   ["-m" "cognitect.test-runner"]}
 
   ;; various "runners" for tests/CI:
-  :cljs {:extra-deps {olical/cljs-test-runner {:mvn/version "3.8.0"}}
+  :cljs {:extra-deps {olical/cljs-test-runner {:mvn/version "3.8.1"}}
          :main-opts ["-m" "cljs-test-runner.main"]}
 
   :gen-doc-tests {:replace-paths ["build"]
-                  :extra-deps {babashka/fs {:mvn/version "0.4.19"}
+                  :extra-deps {babashka/fs {:mvn/version "0.5.20"}
                                com.github.lread/test-doc-blocks {:mvn/version "1.0.166-alpha"}}
                   :main-opts ["-m" "honey.gen-doc-tests"]}
 
@@ -42,5 +42,5 @@
                               "-c" "{:warnings,{:single-segment-namespace,false}}"
                               "-d" "target/test-doc-blocks/test"]}
 
-  :eastwood {:extra-deps {jonase/eastwood {:mvn/version "1.4.0"}}
+  :eastwood {:extra-deps {jonase/eastwood {:mvn/version "1.4.2"}}
              :main-opts ["-m" "eastwood.lint" "{:source-paths,[\"src\"]}"]}}}
