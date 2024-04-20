@@ -1576,7 +1576,10 @@
                   *clause-order*)]
       (if (seq leftover)
         (throw (ex-info (str "These SQL clauses are unknown or have nil values: "
-                             (str/join ", " (keys leftover)))
+                             (str/join ", " (keys leftover))
+                             "(perhaps you need [:lift {"
+                             (first (keys leftover))
+                             " ...}] here?)")
                         leftover))
         (into [(cond-> (str/join (if pretty "\n" " ") (filter seq sqls))
                  pretty

@@ -3,6 +3,7 @@
 * 2.6.next in progress
   * Address [#527](https://github.com/seancorfield/honeysql/issues/527) by adding tests and more documentation for `:composite`.
   * Add example of mixed `DO UPDATE SET` with `EXCLUDED` and regular SQL expressions.
+  * Improve exception message when un-`lift`-ed JSON expressions are used in the DSL.
   * Update Clojure versions (to 1.11.2 and 1.12.0-alpha9); update other dev/test dependencies.
 
 * 2.6.1126 -- 2024-03-04
