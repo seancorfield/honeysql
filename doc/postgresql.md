@@ -293,6 +293,24 @@ DO UPDATE SET counter = table.counter + ?
 " "id" 1 1]
 ```
 
+You can use `:EXCLUDED.column` in a hash map to produce the
+same effect as `:column` in a vector:
+
+```clojure
+user=> (-> (insert-into :table)
+           (values [{:id "id" :counter 1}])
+           (on-conflict :id)
+           (do-update-set {:name    :EXCLUDED.name
+                           :counter [:+ :table.counter 1]})
+           (sql/format {:pretty true}))
+["
+INSERT INTO table (id, counter)
+VALUES (?, ?)
+ON CONFLICT (id)
+DO UPDATE SET name = EXCLUDED.name, counter = table.counter + ?
+" "id" 1 1]
+```
+
 If you need to combine a `DO UPDATE SET` hash map expression
 with a `WHERE` clause, you need to explicitly use the `:fields` /
 `:where` format explained above. Here's how those two examples
