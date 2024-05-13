@@ -1,4 +1,4 @@
-;; copyright (c) 2020-2022 sean corfield, all rights reserved
+;; copyright (c) 2020-2024 sean corfield, all rights reserved
 
 (ns honey.sql.helpers-test
   (:refer-clojure :exclude [filter for group-by partition-by set update])
@@ -981,3 +981,14 @@
            (sql/format (create-index [:unique :my-column-idx :if-not-exists] [:my-table :my-column]))))
     (is (= ["CREATE INDEX my_column_idx ON my_table (LOWER(my_column))"]
            (sql/format (create-index :my-column-idx [:my-table :%lower.my-column]))))))
+
+(deftest join-with-alias
+  (is (= ["SELECT * FROM foo LEFT JOIN (populatons AS pm INNER JOIN customers AS pc ON (pm.id = pc.id) AND (pm.other_id = pc.other_id)) ON foo.fk_id = pm.id"]
+         (sql/format {:select    :*
+                      :from      :foo
+                      :left-join [[[:join [:populatons :pm]
+                                    {:join [[:customers :pc]
+                                            [:and
+                                             [:= :pm/id :pc/id]
+                                             [:= :pm/other-id :pc/other-id]]]}]]
+                                  [:= :foo/fk-id :pm/id]]}))))

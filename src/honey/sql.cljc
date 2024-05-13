@@ -1839,7 +1839,7 @@
     :interval format-interval
     :join
     (fn [_ [e & js]]
-      (let [[sqls params] (reduce-sql (cons (format-expr e)
+      (let [[sqls params] (reduce-sql (cons (format-selectable-dsl e {:as true})
                                             (map format-dsl js)))]
         (into [(str "(" (str/join " " sqls) ")")] params)))
     :lateral

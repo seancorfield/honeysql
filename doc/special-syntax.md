@@ -369,6 +369,20 @@ a `JOIN` clause.
 ;;=> ["INNER JOIN (tbl1 LEFT JOIN tbl2 USING (id))"]
 ```
 
+An alias can be provided:
+
+```clojure
+(sql/format {:join [[[:join [:tbl1 :t] {:left-join [:tbl2 [:using :id]]}]]]})
+;;=> ["INNER JOIN (tbl1 AS t LEFT JOIN tbl2 USING (id))"]
+```
+
+To provide an expression, an extra level of `[...]` is needed:
+
+```clojure
+(sql/format {:join [[[:join [[:make_thing 42] :t] {:left-join [:tbl2 [:using :id]]}]]]})
+;;=> ["INNER JOIN (MAKE_THING(?) AS t LEFT JOIN tbl2 USING (id))" 42]
+```
+
 ## lateral
 
 Accepts a single argument that can be a (`SELECT`) clause or
