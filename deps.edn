@@ -11,7 +11,7 @@
   :1.9 {:override-deps {org.clojure/clojure {:mvn/version "1.9.0"}}}
   :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.3"}}}
   :1.11 {:override-deps {org.clojure/clojure {:mvn/version "1.11.3"}}}
-  :1.12 {:override-deps {org.clojure/clojure {:mvn/version "1.12.0-alpha11"}}}
+  :1.12 {:override-deps {org.clojure/clojure {:mvn/version "1.12.0-alpha12"}}}
 
   :elide ; to test #409 (assertion on helper docstrings)
   {:jvm-opts ["-Dclojure.compiler.elide-meta=[:doc]"]}
@@ -31,7 +31,7 @@
          :main-opts ["-m" "cljs-test-runner.main"]}
 
   :gen-doc-tests {:replace-paths ["build"]
-                  :extra-deps {babashka/fs {:mvn/version "0.5.20"}
+                  :extra-deps {babashka/fs {:mvn/version "0.5.21"}
                                com.github.lread/test-doc-blocks {:mvn/version "1.1.20"}}
                   :main-opts ["-m" "honey.gen-doc-tests"]}
 
