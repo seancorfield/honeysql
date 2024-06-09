@@ -744,6 +744,17 @@ user=> (sql/format {:update :transport
  2]
 ```
 
+You can also `UPDATE .. FROM (VALUES ..) ..` where you might also need `:composite`:
+
+```clojure
+(sql/format {:update :table :set {:a :v.a}
+             :from [[{:values [[1 2 3]
+                               [4 5 6]]}
+                     [:v [:composite :a :b :c]]]]
+             :where [:and [:= :x :v.b] [:> :y :v.c]]})
+;;=> ["UPDATE table FROM (VALUES (?, ?, ?), (?, ?, ?)) AS v (a, b, c) SET a = v.a WHERE (x = v.b) AND (y > v.c)" 1 2 3 4 5 6]
+```
+
 ## delete, delete-from
 
 `:delete-from` is the simple use case here, accepting just a
