@@ -188,7 +188,7 @@ value, as above, or a composite based on or declaring columns names:
                                [4 5 6]]}
                      [:v [:composite :a :b :c]]]]
              :where [:and [:= :x :v.b] [:> :y :v.c]]})
-;;=> ["UPDATE table FROM (VALUES (?, ?, ?), (?, ?, ?)) AS v (a, b, c) SET a = v.a WHERE (x = v.b) AND (y > v.c)" 1 2 3 4 5 6]
+;;=> ["UPDATE table SET a = v.a FROM (VALUES (?, ?, ?), (?, ?, ?)) AS v (a, b, c) WHERE (x = v.b) AND (y > v.c)" 1 2 3 4 5 6]
 ```
 
 ## distinct

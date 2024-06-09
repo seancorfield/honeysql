@@ -2130,7 +2130,7 @@
   Dialects are always applied to the base order to create the current order."
   [dialect & {:keys [quoted]}]
   (reset! default-dialect (get @dialects (check-dialect dialect)))
-  (when-let [f (:clause-order-fn @default-dialect)]
+  (let [f (:clause-order-fn @default-dialect identity)]
     (reset! current-clause-order (f @base-clause-order)))
   (reset! default-quoted quoted))
 

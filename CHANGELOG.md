@@ -1,7 +1,7 @@
 # Changes
 
 * 2.6.next in progress
-  * Address [#531](https://github.com/seancorfield/honeysql/issues/531) and [#527](https://github.com/seancorfield/honeysql/issues/527) by adding tests and more documentation for `:composite`.
+  * Address [#531](https://github.com/seancorfield/honeysql/issues/531) and [#527](https://github.com/seancorfield/honeysql/issues/527) by adding tests and more documentation for `:composite`; fix bug in `set-dialect!` where clause order is not restored.
   * Address [#529](https://github.com/seancorfield/honeysql/issues/529) by fixing `:join` special syntax to support aliases and to handle expressions the same way `select` / `from` etc handle them (extra `[...]` nesting).
   * Add example of mixed `DO UPDATE SET` with `EXCLUDED` and regular SQL expressions.
   * Improve exception message when un-`lift`-ed JSON expressions are used in the DSL.
