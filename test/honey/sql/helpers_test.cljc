@@ -980,7 +980,12 @@
     (is (= ["CREATE UNIQUE INDEX IF NOT EXISTS my_column_idx ON my_table (my_column)"]
            (sql/format (create-index [:unique :my-column-idx :if-not-exists] [:my-table :my-column]))))
     (is (= ["CREATE INDEX my_column_idx ON my_table (LOWER(my_column))"]
-           (sql/format (create-index :my-column-idx [:my-table :%lower.my-column]))))))
+           (sql/format (create-index :my-column-idx [:my-table :%lower.my-column])))))
+  (testing "PostgreSQL extensions (USING GIN)"
+    (is (= ["CREATE INDEX my_column_idx ON my_table USING GIN (my_column)"]
+           (sql/format {:create-index [:my-column-idx [:my-table :using-gin :my-column]]})))
+    (is (= ["CREATE INDEX my_column_idx ON my_table USING GIN (my_column)"]
+           (sql/format (create-index :my-column-idx [:my-table :using-gin :my-column]))))))
 
 (deftest join-with-alias
   (is (= ["SELECT * FROM foo LEFT JOIN (populatons AS pm INNER JOIN customers AS pc ON (pm.id = pc.id) AND (pm.other_id = pc.other_id)) ON foo.fk_id = pm.id"]

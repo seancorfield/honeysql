@@ -1267,10 +1267,14 @@
 (defn- format-create-index [k clauses]
   (let [[index-spec [table & exprs]] clauses
         [pre entity ine & more] (destructure-ddl-item index-spec (str (sql-kw k) " options"))
+        [using & exprs] (if (= :using-gin (first exprs))
+                          exprs
+                          (cons nil exprs))
         [sqls params] (format-expr-list exprs)]
     (into [(str/join " " (remove empty?
                                  (-> ["CREATE" pre "INDEX" ine entity
                                       "ON" (format-entity table)
+                                      (when using (sql-kw using))
                                       (str "(" (str/join ", " sqls) ")")]
                                      (into more))))]
           params)))
