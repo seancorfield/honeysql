@@ -156,6 +156,8 @@
 ;; caching data to detect expressions that cannot be cached:
 (def ^:private ^:dynamic *caching* nil)
 (def ^:private ^:dynamic *numbered* nil)
+;; #533 mostly undocumented dynvar to prevent ? -> ?? escaping:
+(def ^:no-doc ^:dynamic *escape-?* true)
 
 ;; clause helpers
 
@@ -339,7 +341,9 @@
   Any ? is escaped to ??."
   [k]
   (when k
-    (let [n (str/replace (name k) "?" "??")]
+    (let [n (cond-> (name k)
+              *escape-?*
+              (str/replace "?" "??"))]
       (if (= \' (first n))
         (let [ident   (subs n 1)
               ident-l (str/lower-case ident)]
