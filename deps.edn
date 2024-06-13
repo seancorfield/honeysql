@@ -3,7 +3,7 @@
  :deps {org.clojure/clojure {:mvn/version "1.9.0"}}
  :aliases
  {;; for help: clojure -A:deps -T:build help/doc
-  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.3"}
+  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.4"}
                  slipset/deps-deploy {:mvn/version "0.2.2"}}
           :ns-default build}
 

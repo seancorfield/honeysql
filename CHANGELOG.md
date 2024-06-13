@@ -1,5 +1,8 @@
 # Changes
 
+* 2.6.next in progress
+  * Update JDK test matrix (adopt -> temurin, 19 -> 21).
+
 * 2.6.1147 -- 2024-06-12
   * Address [#531](https://github.com/seancorfield/honeysql/issues/531) and [#527](https://github.com/seancorfield/honeysql/issues/527) by adding tests and more documentation for `:composite`; fix bug in `set-dialect!` where clause order is not restored.
   * Address [#530](https://github.com/seancorfield/honeysql/issues/530) by adding support for `:using-gin` to `:create-index`.
