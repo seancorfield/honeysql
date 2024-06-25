@@ -1233,7 +1233,14 @@
                 :else
                 [(butlast coll) (last coll) nil]))]
     (into [(str/join " " (map sql-kw prequel))
-           (when table (format-entity table))
+           (when table
+             (let [[v & more] (format-var table)]
+               (when (seq more)
+                 (throw (ex-info (str "DDL syntax error at: "
+                                      (pr-str table)
+                                      " - expected table name")
+                                 {:unexpected more})))
+               v))
            (when ine (sql-kw ine))]
           (when opts
             (format-ddl-options opts context)))))

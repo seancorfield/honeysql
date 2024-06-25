@@ -1,7 +1,8 @@
 # Changes
 
 * 2.6.next in progress
-  * Address [#533](https://github.com/seancorfield/honeysql/issues/533) by adding `honey.sql/*escape-?*` which can be bound to `false` to prevent `?` being escaped to `??` when used as an operator, function, or
+  * Address [#533](https://github.com/seancorfield/honeysql/issues/533) by adding `honey.sql/*escape-?*` which can be bound to `false` to prevent `?` being escaped to `??` when used as an operator or function.
+  * Address [#526](https://github.com/seancorfield/honeysql/issues/526) by using `format-var` in DDL, instead of `format-entity`.
   * Update JDK test matrix (adopt -> temurin, 19 -> 21).
 
 * 2.6.1147 -- 2024-06-12
