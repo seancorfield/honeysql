@@ -14,5 +14,6 @@
       "autoSelectForConnect": true
     }
   ],
+  "calva.autoStartRepl": true,
   "calva.autoConnectRepl": true
 }
