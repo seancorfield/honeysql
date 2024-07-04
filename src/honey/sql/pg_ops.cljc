@@ -49,6 +49,7 @@
 (def -
   "The - operator: 
    - text value: deletes a key (and its value) from a JSON object, or matching string value(s) from a JSON array
+   - text[] array value: as above, but for all the provided keys
    - int value: deletes the array element with specified index (negative integers count from the end)"
   :-)
 (def hash-  "The #- operator - deletes the field or array element at the specified path, where path elements can be either field keys or array indexes."  :#-)
