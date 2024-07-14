@@ -55,8 +55,10 @@
 (def hash-  "The #- operator - deletes the field or array element at the specified path, where path elements can be either field keys or array indexes."  :#-)
 (def at?    "The @? operator - does JSON path return any item for the specified JSON value?"  (keyword "@?"))
 (def atat
-  "The @@ operator - returns the result of a JSON path predicate check for the specified JSON value. 
-  Only the first item of the result is taken into account. If the result is not Boolean, then NULL is returned."  
+  "The @@ operator:
+  - returns the result of a JSON path predicate check for the specified JSON value. Only the first item of the result is taken into account. 
+    If the result is not Boolean, then NULL is returned.
+  - checks if a text search vector (or a text value implicitly converted to a text search vector) matches a text search query. Returns a Boolean."  
   (keyword "@@"))
 
 (def tilde   "The case-sensitive regex match operator."   (keyword "~"))
