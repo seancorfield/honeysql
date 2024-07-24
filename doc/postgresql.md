@@ -456,11 +456,6 @@ user=> (-> (alter-table :fruit)
            (drop-column :skin)
            sql/format)
 ["ALTER TABLE fruit DROP COLUMN skin"]
-;; alter table alter column:
-user=> (-> (alter-table :fruit)
-           (alter-column :name [:varchar 64] [:not nil])
-           sql/format)
-["ALTER TABLE fruit ALTER COLUMN name VARCHAR(64) NOT NULL"]
 ;; alter table rename column:
 user=> (-> (alter-table :fruit)
            (rename-column :cost :price)
@@ -471,6 +466,29 @@ user=> (-> (alter-table :fruit)
            (rename-table :vegetable)
            sql/format)
 ["ALTER TABLE fruit RENAME TO vegetable"]
+```
+
+The following does not work for PostgreSQL, but does work for several other databases:
+
+```clojure
+;; alter table alter column:
+user=> (-> (alter-table :fruit)
+           (alter-column :name [:varchar 64] [:not nil])
+           sql/format)
+["ALTER TABLE fruit ALTER COLUMN name VARCHAR(64) NOT NULL"]
+```
+
+For PostgreSQL, you need separate statements:
+
+```clojure
+user=> (-> (alter-table :fruit)
+           (alter-column :name :type [:varchar 64])
+           sql/format)
+["ALTER TABLE fruit ALTER COLUMN name TYPE VARCHAR(64)"]
+user=> (-> (alter-table :fruit)
+           (alter-column :name :set [:not nil])
+           sql/format)
+["ALTER TABLE fruit ALTER COLUMN name SET NOT NULL"]
 ```
 
 The following PostgreSQL-specific DDL statements are supported
