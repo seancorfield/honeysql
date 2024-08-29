@@ -1,12 +1,12 @@
 # Changes
 
-* 2.6.next in progress
+* 2.6.1161 -- 2024-08-29
   * Address [#537](https://github.com/seancorfield/honeysql/issues/537) by ignoring non-scalar values in metadata, and expanding support to numbers, and checking strings for suspicious characters.
   * Address [#536](https://github.com/seancorfield/honeysql/issues/536) by noting what will not work with PostgreSQL (but works with other databases).
   * Address [#533](https://github.com/seancorfield/honeysql/issues/533) by adding `honey.sql/*escape-?*` which can be bound to `false` to prevent `?` being escaped to `??` when used as an operator or function.
   * Address [#526](https://github.com/seancorfield/honeysql/issues/526) by using `format-var` in DDL, instead of `format-entity`.
   * Update JDK test matrix (adopt -> temurin, 19 -> 21).
-  * Update Clojure version (to 1.11.4 & 1.12.0-rc1).
+  * Update Clojure versions (to 1.11.4 & 1.12.0-rc2).
 
 * 2.6.1147 -- 2024-06-12
   * Address [#531](https://github.com/seancorfield/honeysql/issues/531) and [#527](https://github.com/seancorfield/honeysql/issues/527) by adding tests and more documentation for `:composite`; fix bug in `set-dialect!` where clause order is not restored.
