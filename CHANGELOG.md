@@ -1,6 +1,7 @@
 # Changes
 
 * 2.6.next in progress
+  * Address [#537](https://github.com/seancorfield/honeysql/issues/537) by ignoring non-scalar values in metadata, and expanding support to numbers, and checking strings for suspicious characters.
   * Address [#536](https://github.com/seancorfield/honeysql/issues/536) by noting what will not work with PostgreSQL (but works with other databases).
   * Address [#533](https://github.com/seancorfield/honeysql/issues/533) by adding `honey.sql/*escape-?*` which can be bound to `false` to prevent `?` being escaped to `??` when used as an operator or function.
   * Address [#526](https://github.com/seancorfield/honeysql/issues/526) by using `format-var` in DDL, instead of `format-entity`.

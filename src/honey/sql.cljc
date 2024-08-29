@@ -159,6 +159,15 @@
 ;; #533 mostly undocumented dynvar to prevent ? -> ?? escaping:
 (def ^:no-doc ^:dynamic *escape-?* true)
 
+;; suspicious entity names:
+(def ^:private suspicious #";")
+(defn- suspicious? [s] (boolean (re-find suspicious s)))
+(defn- suspicious-entity-check [entity]
+    (when-not *allow-suspicious-entities*
+      (when (suspicious? entity)
+        (throw (ex-info (str "suspicious character found in entity: " entity)
+                        {:disallowed suspicious})))))
+
 ;; clause helpers
 
 (defn clause-body
@@ -308,12 +317,8 @@
                              [%]
                              (str/split % #"\."))))
         parts       (parts-fn col-e)
-        entity      (str/join "." (map #(cond-> % (not= "*" %) (quote-fn)) parts))
-        suspicious #";"]
-    (when-not *allow-suspicious-entities*
-      (when (re-find suspicious entity)
-        (throw (ex-info (str "suspicious character found in entity: " entity)
-                        {:disallowed suspicious}))))
+        entity      (str/join "." (map #(cond-> % (not= "*" %) (quote-fn)) parts))]
+    (suspicious-entity-check entity)
     entity))
 
 (comment
@@ -562,9 +567,18 @@
   [x & [sep]]
   (when-let [data (meta x)]
     (let [items (reduce-kv (fn [acc k v]
-                             (if (true? v)
-                               (conj acc k)
-                               (conj acc k v)))
+                             (cond (number? v)
+                                   (conj acc (str v))
+                                   (true? v)
+                                   (conj acc k)
+                                   (ident? v)
+                                   (conj acc k v)
+                                   (string? v)
+                                   (do
+                                     (suspicious-entity-check v)
+                                     (conj acc k v))
+                                   :else ; quietly ignore other metadata
+                                   acc))
                            []
                            (reduce dissoc
                                    data
@@ -576,7 +590,7 @@
         (str/join (str sep " ") (mapv sql-kw items))))))
 
 (comment
-  (format-meta ^{:foo true :bar :baz} [])
+  (format-meta ^{:foo true :bar :baz :original {:line 1} :top 10} [])
 
   (binding [*ignored-metadata* [:bar]]
     (format-meta ^{:foo true :bar :baz} []))
