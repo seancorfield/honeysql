@@ -1,5 +1,8 @@
 # Changes
 
+* 2.6.next in progress
+  * Update Clojure version to 1.12.0.
+
 * 2.6.1161 -- 2024-08-29
   * Address [#537](https://github.com/seancorfield/honeysql/issues/537) by ignoring non-scalar values in metadata, and expanding support to numbers, and checking strings for suspicious characters.
   * Address [#536](https://github.com/seancorfield/honeysql/issues/536) by noting what will not work with PostgreSQL (but works with other databases).

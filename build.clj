@@ -50,7 +50,7 @@
   [:1.9] -- test against Clojure 1.9 (the default)
   [:1.10] -- test against Clojure 1.10.3
   [:1.11] -- test against Clojure 1.11.0
-  [:1.12] -- test against Clojure 1.12 alpha
+  [:1.12] -- test against Clojure 1.12.0
   [:cljs] -- test against ClojureScript"
   [{:keys [aliases] :as opts}]
   (gen-doc-tests opts)
