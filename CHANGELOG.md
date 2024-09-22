@@ -1,6 +1,7 @@
 # Changes
 
 * 2.6.next in progress
+  * Getting Started updated based on feedback from Los Angeles Clojure meetup walkthrough [#539](https://github.com/seancorfield/honeysql/issues/539).
   * Update Clojure version to 1.12.0.
 
 * 2.6.1161 -- 2024-08-29

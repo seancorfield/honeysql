@@ -1,4 +1,4 @@
-;; copyright (c) 2020-2023 sean corfield, all rights reserved
+;; copyright (c) 2020-2024 sean corfield, all rights reserved
 
 (ns honey.sql.helpers
   "Helper functions for the built-in clauses in honey.sql.

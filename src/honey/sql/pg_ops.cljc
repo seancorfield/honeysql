@@ -1,4 +1,4 @@
-;; copyright (c) 2022 sean corfield, all rights reserved
+;; copyright (c) 2022-2024 sean corfield, all rights reserved
 
 (ns honey.sql.pg-ops
   "Register all the PostgreSQL JSON/JSONB operators
@@ -29,12 +29,12 @@
 
 (def ->
   "The -> operator for accessing nested JSON(B) values as JSON(B).
-  Ex.: 
+  Ex.:
   ```clojure
   (sql/format {:select [[[:->> [:-> :my_column \"kids\" [:inline 0]] \"name\"]]]})
   ; => [\"SELECT (my_column -> ? -> 0) ->> ?\" \"kids\" \"name\"]
   ```
-  
+
   Notice we need to wrap the keys/indices with :inline if we don't want them to become parameters."
   :->)
 (def ->>    "The ->> operator - like -> but returns the value as text instead of a JSON object." :->>)
@@ -47,7 +47,7 @@
 (def ?&     "The ?& operator - do all of the strings in the text array exist as top-level keys or array elements?"  :?&)
 (def ||     "The || operator - concatenates two jsonb values (arrays or objects; anything else treated as 1-element array)."  :||)
 (def -
-  "The - operator: 
+  "The - operator:
    - text value: deletes a key (and its value) from a JSON object, or matching string value(s) from a JSON array
    - text[] array value: as above, but for all the provided keys
    - int value: deletes the array element with specified index (negative integers count from the end)"
@@ -56,9 +56,9 @@
 (def at?    "The @? operator - does JSON path return any item for the specified JSON value?"  (keyword "@?"))
 (def atat
   "The @@ operator:
-  - returns the result of a JSON path predicate check for the specified JSON value. Only the first item of the result is taken into account. 
+  - returns the result of a JSON path predicate check for the specified JSON value. Only the first item of the result is taken into account.
     If the result is not Boolean, then NULL is returned.
-  - checks if a text search vector (or a text value implicitly converted to a text search vector) matches a text search query. Returns a Boolean."  
+  - checks if a text search vector (or a text value implicitly converted to a text search vector) matches a text search query. Returns a Boolean."
   (keyword "@@"))
 
 (def tilde   "The case-sensitive regex match operator."   (keyword "~"))

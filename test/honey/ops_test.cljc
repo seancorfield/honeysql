@@ -1,4 +1,4 @@
-;; copyright (c) 2023 sean corfield, all rights reserved
+;; copyright (c) 2023-2024 sean corfield, all rights reserved
 
 (ns honey.ops-test
   (:refer-clojure :exclude [format])
