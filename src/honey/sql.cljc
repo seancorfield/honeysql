@@ -822,10 +822,16 @@
       (into [(str (format-entity (first x)) " " sql)] params))
     [(format-entity x)]))
 
-(defn- format-with [k xs as-fn]
+(defn- format-with [k xs]
   ;; TODO: a sequence of pairs -- X AS expr -- where X is either [entity expr]
   ;; or just entity, as far as I can tell...
-  (let [[sqls params]
+  (let [as-fn
+        (fn [[_ _ materialization]]
+          (condp = materialization
+            :materialized "AS MATERIALIZED"
+            :not-materialized "AS NOT MATERIALIZED"
+            "AS"))
+        [sqls params]
         (reduce-sql
          (map
           (fn [[x expr :as with]]
@@ -1487,15 +1493,8 @@
          :nest            (fn [_ x]
                             (let [[sql & params] (format-dsl x {:nested true})]
                               (into [sql] params)))
-         :with            (let [as-fn
-                                (fn [[_ _ materialization]]
-                                  (condp = materialization
-                                    :materialized "AS MATERIALIZED"
-                                    :not-materialized "AS NOT MATERIALIZED"
-                                    "AS"))]
-                            (fn [k xs] (format-with k xs as-fn)))
-         :with-recursive  (let [as-fn (constantly "AS")]
-                            (fn [k xs] (format-with k xs as-fn)))
+         :with            #'format-with
+         :with-recursive  #'format-with
          :intersect       #'format-on-set-op
          :union           #'format-on-set-op
          :union-all       #'format-on-set-op
