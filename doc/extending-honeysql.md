@@ -50,12 +50,37 @@ The formatter function will be called with:
 * The clause name (always as a keyword),
 * The sequence of arguments provided.
 
+The formatter function should return a vector whose first element is the
+generated SQL string and whose remaining elements (if any) are the parameters
+lifted from the DSL (for which the generated SQL string should contain `?`
+placeholders).
+
 The third argument to `register-clause!` allows you to
 insert your new clause formatter so that clauses are
 formatted in the correct order for your SQL dialect.
 For example, `:select` comes before `:from` which comes
 before `:where`. You can call `clause-order` to see what the
 current ordering of clauses is.
+
+<!-- :test-doc-blocks/skip -->
+```clojure
+;; the formatter will be passed your new clause and the value associated
+;; with that clause in the DSL (which is often a sequence but does not
+;; need to be -- it can be whatever syntax you desire in the DSL):
+(sql/register-clause! :foobar
+                      (fn [clause x]
+                        (let [[sql & params]
+                              (if (ident? x)
+                                (sql/format-expr x)
+                                (sql/format-dsl x))]
+                          (c/into [(str (sql/sql-kw clause) " " sql)] params)))
+                      :from) ; SELECT ... FOOBAR ... FROM ...
+;; example usage:
+(sql/format {:select [:a :b] :foobar :baz})
+=> ["SELECT a, b FOOBAR baz"]
+(sql/format {:select [:a :b] :foobar {:where [:= :id 1]}})
+=> ["SELECT a, b FOOBAR WHERE id = ?" 1]
+```
 
 > Note: if you call `register-clause!` more than once for the same clause, the last call "wins". This allows you to correct an incorrect clause order insertion by simply calling `register-clause!` again with a different third argument.
 
