@@ -280,8 +280,11 @@ is also available. These functions are generally variadic and threadable:
 There is a helper function for every single clause that HoneySQL
 supports out of the box. In addition, there are helpers for
 `composite`, `lateral`, `over`, and `upsert` that make it easier to construct those
-parts of the SQL DSL (examples of `composite` appear in the [README](/README.md),
-examples of `over` appear in the [Clause Reference](clause-reference.md))
+parts of the SQL DSL (examples of `composite` appear in the
+[README](/README.md#composite-types)
+and in the [General Reference](general-reference.md#tuples-and-composite-values);
+examples of `over` appear in the
+[Clause Reference](clause-reference.md#window-partition-by-and-over))
 
 In general, `(helper :foo expr)` will produce `{:helper [:foo expr]}`
 (with a few exceptions -- see the docstring of the helper function
