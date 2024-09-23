@@ -10,7 +10,7 @@ register formatters or behavior corresponding to clauses,
 operators, and functions.
 
 Built in clauses include: `:select`, `:from`, `:where` and
-many more. Built in operators include: `:=`, `:+`, `:mod`.
+many more. Built in operators include: `:=`, `:+`, `:%`.
 Built in functions (special syntax) include: `:array`, `:case`,
 `:cast`, `:inline`, `:raw` and many more.
 

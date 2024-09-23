@@ -336,7 +336,15 @@
                            {:params {:ids values} :numbered true})))))))
 
 (deftest test-case
-  (is (= ["SELECT CASE WHEN foo < ? THEN ? WHEN (foo > ?) AND ((foo MOD ?) = ?) THEN foo / ? ELSE ? END FROM bar"
+  (is (= ["SELECT CASE WHEN foo < ? THEN ? WHEN (foo > ?) AND ((foo % ?) = ?) THEN foo / ? ELSE ? END FROM bar"
+          0 -1 0 2 0 2 0]
+         (sql/format
+          {:select [[[:case
+                      [:< :foo 0] -1
+                      [:and [:> :foo 0] [:= [:% :foo 2] 0]] [:/ :foo 2]
+                      :else 0]]]
+           :from [:bar]})))
+  (is (= ["SELECT CASE WHEN foo < ? THEN ? WHEN (foo > ?) AND (MOD(foo, ?) = ?) THEN foo / ? ELSE ? END FROM bar"
           0 -1 0 2 0 2 0]
          (sql/format
           {:select [[[:case

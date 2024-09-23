@@ -3,6 +3,7 @@
 * 2.6.next in progress
   * Fix [#543](https://github.com/seancorfield/honeysql/issues/543) by supporting both symbols and keywords in named parameters.
   * Getting Started updated based on feedback from Los Angeles Clojure meetup walkthrough [#539](https://github.com/seancorfield/honeysql/issues/539).
+  * Fix [#538](https://github.com/seancorfield/honeysql/issues/538) by removing `mod` from list of infix operators.
   * Update Clojure version to 1.12.0.
 
 * 2.6.1161 -- 2024-08-29

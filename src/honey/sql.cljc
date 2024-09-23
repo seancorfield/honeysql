@@ -1622,7 +1622,7 @@
    :regex :regexp})
 
 (def ^:private infix-ops
-  (-> #{"mod" "and" "or" "xor" "<>" "<=" ">=" "||" "<->"
+  (-> #{"and" "or" "xor" "<>" "<=" ">=" "||" "<->"
         "like" "not-like" "regexp" "~" "&&"
         "ilike" "not-ilike" "similar-to" "not-similar-to"
         "is" "is-not" "not=" "!=" "regex"

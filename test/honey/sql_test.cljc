@@ -356,7 +356,11 @@
 
 (deftest compare-expressions-test
   (testing "Sequences should be fns when in value/comparison spots"
-    (is (= ["SELECT foo FROM bar WHERE (col1 MOD ?) = (col2 + ?)" 4 4]
+    (is (= ["SELECT foo FROM bar WHERE (col1 % ?) = (col2 + ?)" 4 4]
+           (format {:select [:foo]
+                    :from [:bar]
+                    :where [:= [:% :col1 4] [:+ :col2 4]]})))
+    (is (= ["SELECT foo FROM bar WHERE MOD(col1, ?) = (col2 + ?)" 4 4]
            (format {:select [:foo]
                     :from [:bar]
                     :where [:= [:mod :col1 4] [:+ :col2 4]]}))))
