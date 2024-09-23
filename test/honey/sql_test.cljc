@@ -1351,6 +1351,27 @@ ORDER BY id = ? DESC
                       :from [[{:values [[1 2 3] [4 5 6]]}
                               [:t [:composite :a :b :c]]]]}))))
 
+(deftest issue-543-param
+  (testing "quoted param with symbol param"
+    (is (= ["SELECT a FROM table WHERE x = ?" 42]
+           (sut/format '{select a from table where (= x (param y))}
+                       {:params {'y 42}})))
+    (is (= ["SELECT a FROM table WHERE x = ?" 42]
+           (sut/format '{select a from table where (= x ?y)}
+                       {:params {'y 42}}))))
+  (testing "quoted param with keyword param"
+    (is (= ["SELECT a FROM table WHERE x = ?" 42]
+           (sut/format '{select a from table where (= x (param y))}
+                       {:params {:y 42}})))
+    (is (= ["SELECT a FROM table WHERE x = ?" 42]
+           (sut/format '{select a from table where (= x :?y)}
+                       {:params {:y 42}}))))
+  (testing "all combinations"
+    (doseq [p1 [:y 'y] p2 [:y 'y]]
+      (is (= ["SELECT a FROM table WHERE x = ?" 42]
+             (sut/format {:select :a :from :table :where [:= :x [:param p1]]}
+                         {:params {p2 42}}))))))
+
 (comment
   ;; partial (incorrect!) workaround for #407:
   (sut/format {:select :f.* :from [[:foo [:f :for :system-time]]] :where [:= :f.id 1]})

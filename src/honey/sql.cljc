@@ -1920,12 +1920,13 @@
         (into [(str/join ", " sqls)] params)))
     :param
     (fn [_ [k]]
-      (cond *inline*
-            [(sqlize-value (param-value k))]
-            *numbered*
-            (->numbered-param k)
-            :else
-            ["?" (->param k)]))
+      (let [k (sym->kw k)]
+        (cond *inline*
+              [(sqlize-value (param-value k))]
+              *numbered*
+              (->numbered-param k)
+              :else
+              ["?" (->param k)])))
     :raw
     (fn [_ [& xs]]
       ;; #476 : preserve existing single-argument behavior...
@@ -2124,7 +2125,10 @@
                *quoted-snake* (if (contains? opts :quoted-snake)
                                 (:quoted-snake opts)
                                 @default-quoted-snake)
-               *params* (:params opts)
+               *params* (reduce-kv (fn [m k v]
+                                     (assoc m (sym->kw k) v))
+                                   {}
+                                   (:params opts))
                *values-default-columns* (:values-default-columns opts)]
        (if cache
          (->> (through-opts opts cache data (fn [_] (formatter data (dissoc opts :cache))))
