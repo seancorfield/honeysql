@@ -366,7 +366,7 @@ See [New Relic NRQL Support](nrsql.md) for more details of the NRQL dialect.
 
 You can change the dialect globally using the `set-dialect!` function,
 passing in one of the keywords above. You need to call this function
-before you call `format` for the first time.
+before you call `format` for the first time. See below for examples.
 
 You can change the dialect for a single `format` call by
 specifying the `:dialect` option in that call.
@@ -375,7 +375,8 @@ Alphanumeric SQL entities are not quoted by default but if you specify the
 dialect in a `format` call, they will be quoted. If you don't
 specify a dialect in the `format` call, you can specify
 `:quoted true` to have SQL entities quoted. You can also enable quoting
-globally via the `set-dialect!` function.
+globally via the `set-dialect!` function. See below for an example
+with `:quoted true`.
 
 If you want to use a dialect _and_ use the default quoting strategy (automatically quote any SQL entities that seem unusual), specify a `:dialect` option and set `:quoted nil`:
 
