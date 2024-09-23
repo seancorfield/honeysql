@@ -5,7 +5,7 @@
   * Address [#541](https://github.com/seancorfield/honeysql/issues/541) by specifying the expected result of a formatter function passed to `register-clause!` and adding the example from the README to **Extending HoneySQL**.
   * Getting Started updated based on feedback from Los Angeles Clojure meetup walkthrough [#539](https://github.com/seancorfield/honeysql/issues/539).
   * Fix [#538](https://github.com/seancorfield/honeysql/issues/538) by removing `mod` from list of infix operators.
-  * Update Clojure version to 1.12.0.
+  * Update Clojure version to 1.12.0; update dev/test/ci deps.
 
 * 2.6.1161 -- 2024-08-29
   * Address [#537](https://github.com/seancorfield/honeysql/issues/537) by ignoring non-scalar values in metadata, and expanding support to numbers, and checking strings for suspicious characters.
