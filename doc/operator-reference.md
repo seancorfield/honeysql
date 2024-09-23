@@ -110,7 +110,7 @@ Predicates for `NULL` and Boolean values:
 ;;=> ["...WHERE col IS NOT FALSE..."]
 ```
 
-## mod, xor, + - * / % | & ^
+## xor, + - * / % | & ^
 
 Mathematical and bitwise operators.
 
