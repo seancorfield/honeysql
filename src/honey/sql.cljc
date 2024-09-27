@@ -691,7 +691,9 @@
   * [:overlay :foo :*placing :?subs :*from 3 :*for 4]
   * [:trim :*leading-from :bar]"
   [args & [opts]]
-  (loop [exprs   (map #(format-expr % opts) (remove inline-kw? args))
+  (loop [exprs   (keep #(when-not (inline-kw? %)
+                          (format-expr % opts))
+                       args)
          args    args
          prev-in false
          result  []]
@@ -933,29 +935,33 @@
 
 (defn- format-join [k clauses]
   (let [[sqls params]
-        (reduce (fn [[sqls params] [j e]]
-                  (let [[sql-j & params-j]
-                        (format-selects-common
-                         (sql-kw (if (= :join k) :inner-join k))
-                         true
-                         [j])
-                        sqls (conj sqls sql-j)]
-                    (if (and (sequential? e) (= :using (first e)))
-                      (let [[u-sqls u-params]
-                            (reduce-sql (map #'format-entity-alias (rest e)))]
-                        [(conj sqls
-                               "USING"
-                               (str "("
-                                    (join ", " u-sqls)
-                                    ")"))
-                         (-> params (into params-j) (into u-params))])
-                      (let [[sql & params'] (when e (format-expr e))]
-                        [(cond-> sqls e (conj "ON" sql))
-                         (-> params
-                             (into params-j)
-                             (into params'))]))))
-                [[] []]
-                (partition-all 2 clauses))]
+        (transduce
+         (partition-all 2)
+         (fn
+           ([res] res)
+           ([[sqls params] [j e]]
+            (let [[sql-j & params-j]
+                  (format-selects-common
+                   (sql-kw (if (= :join k) :inner-join k))
+                   true
+                   [j])
+                  sqls (conj sqls sql-j)]
+              (if (and (sequential? e) (= :using (first e)))
+                (let [[u-sqls u-params]
+                      (reduce-sql (map #'format-entity-alias) (rest e))]
+                  [(conj sqls
+                         "USING"
+                         (str "("
+                              (join ", " u-sqls)
+                              ")"))
+                   (-> params (into params-j) (into u-params))])
+                (let [[sql & params'] (when e (format-expr e))]
+                  [(cond-> sqls e (conj "ON" sql))
+                   (-> params
+                       (into params-j)
+                       (into params'))])))))
+         [[] []]
+         clauses)]
     (into [(join " " sqls)] params)))
 
 (def ^:private join-by-aliases
@@ -1969,7 +1975,7 @@
 (defn- format-infix-expr [op' op expr nested]
   (let [args (cond->> (rest expr)
                (contains? @op-ignore-nil op)
-               (remove nil?))
+               (filterv some?))
         args (cond (seq args)
                    args
                    (= :and op)
