@@ -110,16 +110,16 @@
    (reduce-kv (fn [m k v]
                 (assoc m k (assoc v :dialect k)))
               {}
-              {:ansi      {:quote #(strop \" % \")}
-               :sqlserver {:quote #(strop \[ % \])}
-               :mysql     {:quote #(strop \` % \`)
+              {:ansi      {:quote #(strop "\"" % "\"")}
+               :sqlserver {:quote #(strop "[" % "]")}
+               :mysql     {:quote #(strop "`" % "`")
                            :clause-order-fn
                            #(add-clause-before % :set :where)}
-               :nrql      {:quote    #(strop \` % \`)
+               :nrql      {:quote    #(strop "`" % "`")
                            :col-fn   #(if (keyword? %) (subs (str %) 1) (str %))
                            :parts-fn vector}
-               :oracle    {:quote #(strop \" % \") :as false}
-               :xtdb      {:quote    #(strop \" % \")
+               :oracle    {:quote    #(strop "\"" % "\"") :as false}
+               :xtdb      {:quote    #(strop "\"" % "\"")
                            :col-fn   #(if (keyword? %) (subs (str %) 1) (str %))
                            :parts-fn #(str/split % #"\.")}})))
 
