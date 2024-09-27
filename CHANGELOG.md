@@ -1,7 +1,7 @@
 # Changes
 
 * 2.6.next in progress
-  * Performance optimization (on allocations, primarily) via PR [#545](https://github.com/seancorfield/honeysql/pull/545) [@alexander-yakushev](https://github.com/alexander-yakushev).
+  * Performance optimizations via PRs [#545](https://github.com/seancorfield/honeysql/pull/545) and [#546](https://github.com/seancorfield/honeysql/pull/546) [@alexander-yakushev](https://github.com/alexander-yakushev).
   * Fix [#543](https://github.com/seancorfield/honeysql/issues/543) by supporting both symbols and keywords in named parameters.
   * Address [#541](https://github.com/seancorfield/honeysql/issues/541) by specifying the expected result of a formatter function passed to `register-clause!` and adding the example from the README to **Extending HoneySQL**.
   * Getting Started updated based on feedback from Los Angeles Clojure meetup walkthrough [#539](https://github.com/seancorfield/honeysql/issues/539).
