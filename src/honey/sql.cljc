@@ -272,7 +272,7 @@
    * the whole entity is numeric (with optional underscores), or
    * the first character is alphabetic (or underscore) and the rest is
      alphanumeric (or underscore)."
-  #"^([0-9_]+|[A-Za-z_][A-Za-z0-9_]*)$")
+  #"^(?:[0-9_]+|[A-Za-z_][A-Za-z0-9_]*)$")
 
 (defn format-entity
   "Given a simple SQL entity (a keyword or symbol -- or string),
