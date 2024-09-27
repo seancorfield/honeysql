@@ -110,16 +110,16 @@
    (reduce-kv (fn [m k v]
                 (assoc m k (assoc v :dialect k)))
               {}
-              {:ansi      {:quote #(strop \" % \")}
-               :sqlserver {:quote #(strop \[ % \])}
-               :mysql     {:quote #(strop \` % \`)
+              {:ansi      {:quote #(strop "\"" % "\"")}
+               :sqlserver {:quote #(strop "[" % "]")}
+               :mysql     {:quote #(strop "`" % "`")
                            :clause-order-fn
                            #(add-clause-before % :set :where)}
-               :nrql      {:quote    #(strop \` % \`)
+               :nrql      {:quote    #(strop "`" % "`")
                            :col-fn   #(if (keyword? %) (subs (str %) 1) (str %))
                            :parts-fn vector}
-               :oracle    {:quote #(strop \" % \") :as false}
-               :xtdb      {:quote    #(strop \" % \")
+               :oracle    {:quote    #(strop "\"" % "\"") :as false}
+               :xtdb      {:quote    #(strop "\"" % "\"")
                            :col-fn   #(if (keyword? %) (subs (str %) 1) (str %))
                            :parts-fn #(str/split % #"\.")}})))
 
@@ -161,8 +161,8 @@
 (def ^:no-doc ^:dynamic *escape-?* true)
 
 ;; suspicious entity names:
-(def ^:private suspicious #";")
-(defn- suspicious? [s] (boolean (re-find suspicious s)))
+(def ^:private suspicious ";")
+(defn- suspicious? [s] (str/includes? s suspicious))
 (defn- suspicious-entity-check [entity]
     (when-not *allow-suspicious-entities*
       (when (suspicious? entity)
@@ -272,7 +272,7 @@
    * the whole entity is numeric (with optional underscores), or
    * the first character is alphabetic (or underscore) and the rest is
      alphanumeric (or underscore)."
-  #"^([0-9_]+|[A-Za-z_][A-Za-z0-9_]*)$")
+  #"^(?:[0-9_]+|[A-Za-z_][A-Za-z0-9_]*)$")
 
 (defn format-entity
   "Given a simple SQL entity (a keyword or symbol -- or string),
@@ -280,7 +280,7 @@
 
   Handles quoting, splitting at / or ., replacing - with _ etc."
   [e & [{:keys [aliased drop-ns]}]]
-  (let [e           (if (and aliased (keyword? e) (= \' (first (name e))))
+  (let [e           (if (and aliased (keyword? e) (str/starts-with? (name e) "'"))
                       ;; #497 quoted alias support (should behave like string)
                       (subs (name e) 1)
                       e)
@@ -350,7 +350,7 @@
     (let [n (cond-> (name k)
               *escape-?*
               (str/replace "?" "??"))]
-      (if (= \' (first n))
+      (if (str/starts-with? n "'")
         (let [ident   (subs n 1)
               ident-l (str/lower-case ident)]
           (binding [*quoted* (when-not (contains? #{"array"} ident-l) *quoted*)]
@@ -419,13 +419,16 @@
   ;; rather than name/namespace, we want to allow
   ;; for multiple / in the %fun.call case so that
   ;; qualified column names can be used:
-  (let [c (cond-> (str x) (keyword? x) (subs 1))]
-    (cond (= \% (first c))
+  (let [c (if (keyword? x)
+            #?(:clj (str (.sym ^clojure.lang.Keyword x)) ;; Omits leading colon
+               :default (subs (str x) 1))
+            (str x))]
+    (cond (str/starts-with? c "%")
           (let [[f & args] (str/split (subs c 1) #"\.")]
             [(str (format-fn-name f) "("
                   (join ", " (map #(format-entity (keyword %) opts)) args)
                   ")")])
-          (= \? (first c))
+          (str/starts-with? c "?")
           (let [k (keyword (subs c 1))]
             (cond *inline*
                   [(sqlize-value (param-value k))]
@@ -433,7 +436,7 @@
                   (->numbered-param k)
                   :else
                   ["?" (->param k)]))
-          (= \' (first c))
+          (str/starts-with? c "'")
           (do
             (reset! *formatted-column* true)
             [(subs c 1)])
@@ -656,11 +659,16 @@
         :else
         (format-expr x)))
 
-(defn- reduce-sql [xs]
-  (reduce (fn [[sql params] [sql' & params']]
-            [(conj sql sql') (if params' (into params params') params)])
-          [[] []]
-          xs))
+(defn- reduce-sql
+  ([xs] (reduce-sql identity xs))
+  ([xform xs]
+   (transduce xform
+              (fn
+                ([res] res)
+                ([[sql params] [sql' & params']]
+                 [(conj sql sql') (if params' (into params params') params)]))
+              [[] []]
+              xs)))
 
 ;; primary clauses
 
@@ -683,7 +691,9 @@
   * [:overlay :foo :*placing :?subs :*from 3 :*for 4]
   * [:trim :*leading-from :bar]"
   [args & [opts]]
-  (loop [exprs   (map #(format-expr % opts) (remove inline-kw? args))
+  (loop [exprs   (keep #(when-not (inline-kw? %)
+                          (format-expr % opts))
+                       args)
          args    args
          prev-in false
          result  []]
@@ -730,7 +740,7 @@
     (throw (ex-info (str "format-expr-list expects a sequence of expressions, found: "
                          (type exprs))
                     {:exprs exprs})))
-  (reduce-sql (map #(format-expr % opts) exprs)))
+  (reduce-sql (map #(format-expr % opts)) exprs))
 
 (comment
   (format-expr-list :?tags)
@@ -750,7 +760,7 @@
                     (cond-> prefix qualifier (str " " qualifier))
                     qualifier)]
     (if (sequential? xs)
-      (let [[sqls params] (reduce-sql (map #(format-selectable-dsl % {:as as}) xs))]
+      (let [[sqls params] (reduce-sql (map #(format-selectable-dsl % {:as as})) xs)]
         (when-not (= :none *checking*)
           (when (empty? xs)
             (throw (ex-info (str prefix " empty column list is illegal")
@@ -848,8 +858,8 @@
                 ;; according to docs, CTE should _always_ be wrapped:
                 (cond-> [(str sql " " (as-fn with) " " (str "(" sql' ")"))]
                         params  (into params)
-                        params' (into params')))))
-          xs))]
+                        params' (into params'))))))
+         xs)]
     (into [(str (sql-kw k) " " (join ", " sqls))] params)))
 
 (defn- format-selector [k xs]
@@ -877,7 +887,7 @@
                     [table])
                   [sql & params] (format-dsl statement)
                   [t-sql & t-params] (format-entity-alias table)
-                  [c-sqls c-params] (reduce-sql (map #'format-entity-alias cols))]
+                  [c-sqls c-params] (reduce-sql (map #'format-entity-alias) cols)]
               (-> [(str (sql-kw k) " " t-sql
                         " "
                         (cond (seq cols)
@@ -895,7 +905,7 @@
             (sequential? (second table))
             (let [[table cols] table
                   [t-sql & t-params] (format-entity-alias table)
-                  [c-sqls c-params] (reduce-sql (map #'format-entity-alias cols))]
+                  [c-sqls c-params] (reduce-sql (map #'format-entity-alias) cols)]
               (-> [(str (sql-kw k) " " t-sql
                         " ("
                         (join ", " c-sqls)
@@ -925,29 +935,33 @@
 
 (defn- format-join [k clauses]
   (let [[sqls params]
-        (reduce (fn [[sqls params] [j e]]
-                  (let [[sql-j & params-j]
-                        (format-selects-common
-                         (sql-kw (if (= :join k) :inner-join k))
-                         true
-                         [j])
-                        sqls (conj sqls sql-j)]
-                    (if (and (sequential? e) (= :using (first e)))
-                      (let [[u-sqls u-params]
-                            (reduce-sql (map #'format-entity-alias (rest e)))]
-                        [(conj sqls
-                               "USING"
-                               (str "("
-                                    (join ", " u-sqls)
-                                    ")"))
-                         (-> params (into params-j) (into u-params))])
-                      (let [[sql & params'] (when e (format-expr e))]
-                        [(cond-> sqls e (conj "ON" sql))
-                         (-> params
-                             (into params-j)
-                             (into params'))]))))
-                [[] []]
-                (partition-all 2 clauses))]
+        (transduce
+         (partition-all 2)
+         (fn
+           ([res] res)
+           ([[sqls params] [j e]]
+            (let [[sql-j & params-j]
+                  (format-selects-common
+                   (sql-kw (if (= :join k) :inner-join k))
+                   true
+                   [j])
+                  sqls (conj sqls sql-j)]
+              (if (and (sequential? e) (= :using (first e)))
+                (let [[u-sqls u-params]
+                      (reduce-sql (map #'format-entity-alias) (rest e))]
+                  [(conj sqls
+                         "USING"
+                         (str "("
+                              (join ", " u-sqls)
+                              ")"))
+                   (-> params (into params-j) (into u-params))])
+                (let [[sql & params'] (when e (format-expr e))]
+                  [(cond-> sqls e (conj "ON" sql))
+                   (-> params
+                       (into params-j)
+                       (into params'))])))))
+         [[] []]
+         clauses)]
     (into [(join " " sqls)] params)))
 
 (def ^:private join-by-aliases
@@ -1961,7 +1975,7 @@
 (defn- format-infix-expr [op' op expr nested]
   (let [args (cond->> (rest expr)
                (contains? @op-ignore-nil op)
-               (remove nil?))
+               (filterv some?))
         args (cond (seq args)
                    args
                    (= :and op)
@@ -1971,7 +1985,7 @@
                    :else ; args is empty and not a special case
                    [])
         [sqls params]
-        (reduce-sql (map #(format-expr % {:nested true}) args))]
+        (reduce-sql (map #(format-expr % {:nested true})) args)]
     (when-not (pos? (count sqls))
       (throw (ex-info (str "no operands found for " op')
                       {:expr expr})))

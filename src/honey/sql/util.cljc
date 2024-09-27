@@ -7,7 +7,6 @@
   "More efficient implementation of `clojure.core/str` because it has more
   non-variadic arities. Optimization is Clojure-only, on other platforms it
   reverts back to `clojure.core/str`."
-  {:tag String}
   (^String [] "")
   (^String [^Object a]
    #?(:clj (if (nil? a) "" (.toString a))
