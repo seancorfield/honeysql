@@ -161,8 +161,8 @@
 (def ^:no-doc ^:dynamic *escape-?* true)
 
 ;; suspicious entity names:
-(def ^:private suspicious #";")
-(defn- suspicious? [s] (boolean (re-find suspicious s)))
+(def ^:private suspicious ";")
+(defn- suspicious? [s] (str/includes? s suspicious))
 (defn- suspicious-entity-check [entity]
     (when-not *allow-suspicious-entities*
       (when (suspicious? entity)
