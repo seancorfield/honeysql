@@ -659,11 +659,16 @@
         :else
         (format-expr x)))
 
-(defn- reduce-sql [xs]
-  (reduce (fn [[sql params] [sql' & params']]
-            [(conj sql sql') (if params' (into params params') params)])
-          [[] []]
-          xs))
+(defn- reduce-sql
+  ([xs] (reduce-sql identity xs))
+  ([xform xs]
+   (transduce xform
+              (fn
+                ([res] res)
+                ([[sql params] [sql' & params']]
+                 [(conj sql sql') (if params' (into params params') params)]))
+              [[] []]
+              xs)))
 
 ;; primary clauses
 
@@ -733,7 +738,7 @@
     (throw (ex-info (str "format-expr-list expects a sequence of expressions, found: "
                          (type exprs))
                     {:exprs exprs})))
-  (reduce-sql (map #(format-expr % opts) exprs)))
+  (reduce-sql (map #(format-expr % opts)) exprs))
 
 (comment
   (format-expr-list :?tags)
@@ -753,7 +758,7 @@
                     (cond-> prefix qualifier (str " " qualifier))
                     qualifier)]
     (if (sequential? xs)
-      (let [[sqls params] (reduce-sql (map #(format-selectable-dsl % {:as as}) xs))]
+      (let [[sqls params] (reduce-sql (map #(format-selectable-dsl % {:as as})) xs)]
         (when-not (= :none *checking*)
           (when (empty? xs)
             (throw (ex-info (str prefix " empty column list is illegal")
@@ -851,8 +856,8 @@
                 ;; according to docs, CTE should _always_ be wrapped:
                 (cond-> [(str sql " " (as-fn with) " " (str "(" sql' ")"))]
                         params  (into params)
-                        params' (into params')))))
-          xs))]
+                        params' (into params'))))))
+         xs)]
     (into [(str (sql-kw k) " " (join ", " sqls))] params)))
 
 (defn- format-selector [k xs]
@@ -880,7 +885,7 @@
                     [table])
                   [sql & params] (format-dsl statement)
                   [t-sql & t-params] (format-entity-alias table)
-                  [c-sqls c-params] (reduce-sql (map #'format-entity-alias cols))]
+                  [c-sqls c-params] (reduce-sql (map #'format-entity-alias) cols)]
               (-> [(str (sql-kw k) " " t-sql
                         " "
                         (cond (seq cols)
@@ -898,7 +903,7 @@
             (sequential? (second table))
             (let [[table cols] table
                   [t-sql & t-params] (format-entity-alias table)
-                  [c-sqls c-params] (reduce-sql (map #'format-entity-alias cols))]
+                  [c-sqls c-params] (reduce-sql (map #'format-entity-alias) cols)]
               (-> [(str (sql-kw k) " " t-sql
                         " ("
                         (join ", " c-sqls)
@@ -1974,7 +1979,7 @@
                    :else ; args is empty and not a special case
                    [])
         [sqls params]
-        (reduce-sql (map #(format-expr % {:nested true}) args))]
+        (reduce-sql (map #(format-expr % {:nested true})) args)]
     (when-not (pos? (count sqls))
       (throw (ex-info (str "no operands found for " op')
                       {:expr expr})))
