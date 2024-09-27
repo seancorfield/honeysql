@@ -280,7 +280,7 @@
 
   Handles quoting, splitting at / or ., replacing - with _ etc."
   [e & [{:keys [aliased drop-ns]}]]
-  (let [e           (if (and aliased (keyword? e) (= \' (first (name e))))
+  (let [e           (if (and aliased (keyword? e) (str/starts-with? (name e) "'"))
                       ;; #497 quoted alias support (should behave like string)
                       (subs (name e) 1)
                       e)
@@ -350,7 +350,7 @@
     (let [n (cond-> (name k)
               *escape-?*
               (str/replace "?" "??"))]
-      (if (= \' (first n))
+      (if (str/starts-with? n "'")
         (let [ident   (subs n 1)
               ident-l (str/lower-case ident)]
           (binding [*quoted* (when-not (contains? #{"array"} ident-l) *quoted*)]
@@ -419,13 +419,16 @@
   ;; rather than name/namespace, we want to allow
   ;; for multiple / in the %fun.call case so that
   ;; qualified column names can be used:
-  (let [c (cond-> (str x) (keyword? x) (subs 1))]
-    (cond (= \% (first c))
+  (let [c (if (keyword? x)
+            #?(:clj (str (.sym ^clojure.lang.Keyword x)) ;; Omits leading colon
+               :default (subs (str x) 1))
+            (str x))]
+    (cond (str/starts-with? c "%")
           (let [[f & args] (str/split (subs c 1) #"\.")]
             [(str (format-fn-name f) "("
                   (join ", " (map #(format-entity (keyword %) opts)) args)
                   ")")])
-          (= \? (first c))
+          (str/starts-with? c "?")
           (let [k (keyword (subs c 1))]
             (cond *inline*
                   [(sqlize-value (param-value k))]
@@ -433,7 +436,7 @@
                   (->numbered-param k)
                   :else
                   ["?" (->param k)]))
-          (= \' (first c))
+          (str/starts-with? c "'")
           (do
             (reset! *formatted-column* true)
             [(subs c 1)])
