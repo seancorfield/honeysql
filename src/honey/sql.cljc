@@ -1059,7 +1059,9 @@
                      ")"))]))))
 
 (defn- format-values [k xs]
-  (let [first-xs (when (sequential? xs) (first (drop-while ident? xs)))]
+  (let [first-xs (when (sequential? xs) (first (drop-while ident? xs)))
+        row-ctr  (and (sequential? xs) (contains? #{:row 'rows} (first xs)))
+        xs       (if row-ctr (rest xs) xs)]
     (cond (and (ident? xs) (contains? #{:default 'default} xs))
           [(str (sql-kw xs) " " (sql-kw k))]
           (empty? xs)
@@ -1087,7 +1089,8 @@
                         (map #(if (sequential? %)
                                 (format-expr-list %)
                                 [(sql-kw %)])
-                             xs'))]
+                             xs'))
+                sqls (if row-ctr (map #(str "ROW" %) sqls) sqls)]
             (into [(str (sql-kw k) " " (join ", " sqls))] params))
 
           (map? first-xs)
@@ -2364,6 +2367,7 @@
   (format-expr 1)
   (format {:select [:a [:b :c] [[:d :e]] [[:f :g] :h]]})
   (format {:select [[[:d :e]] :a [:b :c]]})
+  (format {:values [:row [1 2] [3 4]]})
   (format-on-expr :where [:= :id 1])
   (format-dsl {:select [:*] :from [:table] :where [:= :id 1]})
   (format {:select [:t.*] :from [[:table :t]] :where [:= :id 1]} {})
