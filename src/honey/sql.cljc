@@ -1062,7 +1062,7 @@
   (let [first-xs (when (sequential? xs) (first (drop-while ident? xs)))
         row-ctr  (and (sequential? xs)
                       (ident? (first xs))
-                      (contains? #{:row 'rows} (first xs)))
+                      (contains? #{:row 'row} (first xs)))
         xs       (if row-ctr (rest xs) xs)]
     (cond (and (ident? xs) (contains? #{:default 'default} xs))
           [(str (sql-kw xs) " " (sql-kw k))]
