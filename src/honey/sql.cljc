@@ -2370,6 +2370,10 @@
   (format {:select [:a [:b :c] [[:d :e]] [[:f :g] :h]]})
   (format {:select [[[:d :e]] :a [:b :c]]})
   (format {:values [:row [1 2] [3 4]]})
+  (format {:with [[[:stuff {:columns [:id :name]}]
+                   {:values [:row [1 "Sean"] [2 "Jay"]]}]]
+           :select [:id :name]
+           :from [:stuff]})
   (format-on-expr :where [:= :id 1])
   (format-dsl {:select [:*] :from [:table] :where [:= :id 1]})
   (format {:select [:t.*] :from [[:table :t]] :where [:= :id 1]} {})

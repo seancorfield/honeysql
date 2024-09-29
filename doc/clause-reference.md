@@ -1305,6 +1305,21 @@ In addition, all of the rows are padded to the same length by adding `nil`
 values if needed (since `:values` does not know how or if column
 names are being used in this case).
 
+### values row (MySQL)
+
+MySQL supports `VALUES` as a table expression in multiple
+contexts, and it uses "row constructors" to represent the
+rows of values.
+
+HoneySQL supports this by using the keyword `:row` (or
+symbol `'row`) as the first element of a sequence of values.
+
+
+```clojure
+user=> (sql/format {:values [:row [1 2] [3 4]]})
+["VALUES ROW(?, ?), ROW(?, ?)" 1 2 3 4]
+```
+
 ### values examples
 
 ```clojure
