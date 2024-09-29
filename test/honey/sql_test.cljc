@@ -1376,6 +1376,17 @@ ORDER BY id = ? DESC
              (sut/format {:select :a :from :table :where [:= :x [:param p1]]}
                          {:params {p2 42}}))))))
 
+(deftest issue-n-using
+  (testing "all keywords"
+    (is (= ["SELECT * FROM `t1` INNER JOIN `t2` USING (`id`) WHERE `t1`.`id` = ?" 1]
+           (sut/format {:select :* :from :t1 :join [:t2 [:using :id]] :where [:= :t1/id 1]} {:dialect :mysql}))))
+  (testing "all symbols"
+    (is (= ["SELECT * FROM `t1` INNER JOIN `t2` USING (`id`) WHERE `t1`.`id` = ?" 1]
+           (sut/format '{select * from t1 join (t2 (using id)) where (= t1/id 1)} {:dialect :mysql}))))
+  (testing "mixed keywords and symbols"
+    (is (= ["SELECT * FROM `t1` INNER JOIN `t2` USING (`id`) WHERE `t1`.`id` = ?" 1]
+           (sut/format '{select * from t1 join (t2 (:using id)) where (= t1/id 1)} {:dialect :mysql})))))
+
 (comment
   ;; partial (incorrect!) workaround for #407:
   (sut/format {:select :f.* :from [[:foo [:f :for :system-time]]] :where [:= :f.id 1]})

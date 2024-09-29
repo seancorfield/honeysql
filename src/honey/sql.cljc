@@ -516,14 +516,15 @@
   "Given a general selectable item, split it into the subject selectable,
    an optional alias, and any temporal clauses present."
   [[selectable alias-for for-part & more]]
-  (let [no-alias? (and (= :for (sym->kw alias-for)) for-part)]
+  (let [no-alias? (and (contains? #{:for 'for} alias-for)
+                       for-part)]
     [selectable
      (if no-alias?
        nil
        alias-for)
      (cond no-alias?
            (into [alias-for for-part] more)
-           (= :for (sym->kw for-part))
+           (contains? #{:for 'for} for-part)
            (cons for-part more)
            (or for-part (seq more))
            ::too-many!)]))
@@ -946,7 +947,8 @@
                    true
                    [j])
                   sqls (conj sqls sql-j)]
-              (if (and (sequential? e) (= :using (first e)))
+              (if (and (sequential? e)
+                       (contains? #{:using 'using} (first e)))
                 (let [[u-sqls u-params]
                       (reduce-sql (map #'format-entity-alias) (rest e))]
                   [(conj sqls
@@ -1319,7 +1321,8 @@
 (defn- format-create-index [k clauses]
   (let [[index-spec [table & exprs]] clauses
         [pre entity ine & more] (destructure-ddl-item index-spec (str (sql-kw k) " options"))
-        [using & exprs] (if (= :using-gin (first exprs))
+        [using & exprs] (if (contains? #{:using-gin 'using-gin}
+                                       (first exprs))
                           exprs
                           (cons nil exprs))
         [sqls params] (format-expr-list exprs)]
