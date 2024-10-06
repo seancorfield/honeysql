@@ -17,6 +17,16 @@
       (sql/format))
 ```
 
+  or conditionally like this:
+
+```
+  (-> (select :a :b :c)
+      (from :table)
+      (cond->
+        id (where [:= :id id]))
+      (sql/format))
+```
+
   Therefore all helpers can take an existing DSL expression
   as their first argument or, if the first argument is not
   a hash map, an empty DSL is assumed -- an empty hash map.

@@ -215,6 +215,24 @@ If you want to replace a clause, you can `dissoc` the existing clause first, sin
 => ["SELECT * FROM foo WHERE (a = ?) AND (b < ?)" 1 100]
 ```
 
+The power of this approach comes from the abiliity to programmatically and
+conditionally build up queries:
+
+<!-- :test-doc-blocks/skip -->
+```clojure
+(defn fetch-user [& {:keys [id name]}]
+  (-> (select :*)
+      (from :users)
+      (cond->
+        id    (where [:= :id id])
+        name  (where [:= :name name]))
+      sql/format))
+```
+
+You can call `fetch-user` with either `:id` or `:name` _or both_ and get back
+a query with the appropriate `WHERE` clause, since the helpers will merge the
+conditions into the query DSL.
+
 Column and table names may be aliased by using a vector pair of the original
 name and the desired alias:
 
@@ -224,6 +242,21 @@ name and the desired alias:
     (where [:= :quux.a 1] [:< :bar 100])
     sql/format)
 => ["SELECT a, b AS bar, c, d AS x FROM foo AS quux WHERE (quux.a = ?) AND (bar < ?)" 1 100]
+```
+
+or conditionally:
+
+<!-- :test-doc-blocks/skip -->
+```clojure
+(-> (select :a [:b :bar])
+    (cond->
+      need-c (select :c)
+      x-val  (select [:d :x]))
+    (from [:foo :quux])
+    (where [:= :quux.a 1] [:< :bar 100])
+    (cond->
+      x-val  (where [:> :x x-val]))
+    sql/format)
 ```
 
 In particular, note that `(select [:a :b])` means `SELECT a AS b` rather than
