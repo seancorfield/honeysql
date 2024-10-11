@@ -2543,4 +2543,10 @@
               {:dialect :nrql :pretty true})
   (sql/format {:select [[[:array {:select :* :from :table}] :arr]]})
   (sql/format [:inline :DATE "2020-01-01"])
+  ;; issue 526 "test":
+  (->
+   {:create-table-as [(keyword "'`a-b.b-c.c-d`")]
+    :select          [:*]
+    :from            [(keyword "'`a-b.b-c.c-d`")]}
+   (sql/format))
   )
