@@ -279,48 +279,49 @@
   return the equivalent SQL fragment (as a string -- no parameters).
 
   Handles quoting, splitting at / or ., replacing - with _ etc."
-  [e & [{:keys [aliased drop-ns]}]]
-  (let [e           (if (and aliased (keyword? e) (str/starts-with? (name e) "'"))
+  ([e] (format-entity e {}))
+  ([e {:keys [aliased drop-ns]}]
+   (let [e           (if (and aliased (keyword? e) (str/starts-with? (name e) "'"))
                       ;; #497 quoted alias support (should behave like string)
-                      (subs (name e) 1)
-                      e)
-        col-fn      (or (:col-fn *dialect*)
-                        (if (or *quoted* (string? e))
-                          (if *quoted-snake* name-_ name)
-                          name-_))
-        col-e       (col-fn e)
-        dialect-q   (:quote *dialect* identity)
-        quote-fn    (cond (or *quoted* (string? e))
-                          dialect-q
+                       (subs (name e) 1)
+                       e)
+         col-fn      (or (:col-fn *dialect*)
+                         (if (or *quoted* (string? e))
+                           (if *quoted-snake* name-_ name)
+                           name-_))
+         col-e       (col-fn e)
+         dialect-q   (:quote *dialect* identity)
+         quote-fn    (cond (or *quoted* (string? e))
+                           dialect-q
                           ;; #422: if default quoting and "unusual"
                           ;; characters in entity, then quote it:
-                          (nil? *quoted*)
-                          (fn opt-quote [part]
-                            (cond (and *quoted-always*
-                                       (re-find *quoted-always* part))
-                                  (dialect-q part)
-                                  (re-find alphanumeric part)
-                                  part
-                                  :else
-                                  (dialect-q part)))
-                          *quoted-always*
-                          (fn always-quote [part]
-                            (if (re-find *quoted-always* part)
-                              (dialect-q part)
-                              part))
-                          :else
-                          identity)
-        parts-fn    (or (:parts-fn *dialect*)
-                        #(if-let [n (when-not (or drop-ns (string? e))
-                                      (namespace-_ e))]
-                           [n %]
-                           (if aliased
-                             [%]
-                             (str/split % #"\."))))
-        parts       (parts-fn col-e)
-        entity      (join "." (map #(cond-> % (not= "*" %) (quote-fn))) parts)]
-    (suspicious-entity-check entity)
-    entity))
+                           (nil? *quoted*)
+                           (fn opt-quote [part]
+                             (cond (and *quoted-always*
+                                        (re-find *quoted-always* part))
+                                   (dialect-q part)
+                                   (re-find alphanumeric part)
+                                   part
+                                   :else
+                                   (dialect-q part)))
+                           *quoted-always*
+                           (fn always-quote [part]
+                             (if (re-find *quoted-always* part)
+                               (dialect-q part)
+                               part))
+                           :else
+                           identity)
+         parts-fn    (or (:parts-fn *dialect*)
+                         #(if-let [n (when-not (or drop-ns (string? e))
+                                       (namespace-_ e))]
+                            [n %]
+                            (if aliased
+                              [%]
+                              (str/split % #"\."))))
+         parts       (parts-fn col-e)
+         entity      (join "." (map #(cond-> % (not= "*" %) (quote-fn))) parts)]
+     (suspicious-entity-check entity)
+     entity)))
 
 (comment
   (for [v [:foo-bar "foo-bar" ; symbol is the same as keyword
@@ -415,41 +416,45 @@
   [x]
   (upper-case (str/replace (name x) "-" "_")))
 
-(defn- format-simple-var [x & [c opts]]
-  (let [c (or c
-              (if (keyword? x)
-                #?(:clj (str (.sym ^clojure.lang.Keyword x)) ;; Omits leading colon
-                   :default (subs (str x) 1))
-                (str x)))]
-    (if (str/starts-with? c "'")
-      (do
-        (reset! *formatted-column* true)
-        [(subs c 1)])
-      [(format-entity x opts)])))
+(defn- format-simple-var
+  ([x]
+   (let [c (if (keyword? x)
+             #?(:clj (str (.sym ^clojure.lang.Keyword x)) ;; Omits leading colon
+                :default (subs (str x) 1))
+             (str x))]
+     (format-simple-var x c {})))
+  ([x c opts]
+   (if (str/starts-with? c "'")
+     (do
+       (reset! *formatted-column* true)
+       [(subs c 1)])
+     [(format-entity x opts)])))
 
-(defn- format-var [x & [opts]]
-  ;; rather than name/namespace, we want to allow
-  ;; for multiple / in the %fun.call case so that
-  ;; qualified column names can be used:
-  (let [c (if (keyword? x)
-            #?(:clj (str (.sym ^clojure.lang.Keyword x)) ;; Omits leading colon
-               :default (subs (str x) 1))
-            (str x))]
-    (cond (str/starts-with? c "%")
-          (let [[f & args] (str/split (subs c 1) #"\.")]
-            [(str (format-fn-name f) "("
-                  (join ", " (map #(format-entity (keyword %) opts)) args)
-                  ")")])
-          (str/starts-with? c "?")
-          (let [k (keyword (subs c 1))]
-            (cond *inline*
-                  [(sqlize-value (param-value k))]
-                  *numbered*
-                  (->numbered-param k)
-                  :else
-                  ["?" (->param k)]))
-          :else
-          (format-simple-var x c opts))))
+(defn- format-var
+  ([x] (format-var x {}))
+  ([x opts]
+   ;; rather than name/namespace, we want to allow
+   ;; for multiple / in the %fun.call case so that
+   ;; qualified column names can be used:
+   (let [c (if (keyword? x)
+             #?(:clj (str (.sym ^clojure.lang.Keyword x)) ;; Omits leading colon
+                :default (subs (str x) 1))
+             (str x))]
+     (cond (str/starts-with? c "%")
+           (let [[f & args] (str/split (subs c 1) #"\.")]
+             [(str (format-fn-name f) "("
+                   (join ", " (map #(format-entity (keyword %) opts)) args)
+                   ")")])
+           (str/starts-with? c "?")
+           (let [k (keyword (subs c 1))]
+             (cond *inline*
+                   [(sqlize-value (param-value k))]
+                   *numbered*
+                   (->numbered-param k)
+                   :else
+                   ["?" (->param k)]))
+           :else
+           (format-simple-var x c opts)))))
 
 (defn- format-entity-alias [x]
   (cond (sequential? x)
@@ -577,30 +582,31 @@
   "If the expression has metadata, format it as a sequence of keywords,
    treating `:foo true` as `FOO` and `:foo :bar` as `FOO BAR`.
    Return nil if there is no metadata."
-  [x & [sep]]
-  (when-let [data (meta x)]
-    (let [items (reduce-kv (fn [acc k v]
-                             (cond (number? v)
-                                   (conj acc (str v))
-                                   (true? v)
-                                   (conj acc k)
-                                   (ident? v)
-                                   (conj acc k v)
-                                   (string? v)
-                                   (do
-                                     (suspicious-entity-check v)
-                                     (conj acc k v))
-                                   :else ; quietly ignore other metadata
-                                   acc))
-                           []
-                           (reduce dissoc
-                                   data
-                                   (into [; remove the somewhat "standard" metadata:
-                                          :line :column :file
-                                          :end-line :end-column]
-                                         *ignored-metadata*)))]
-      (when (seq items)
-        (join (str sep " ") (map sql-kw) items)))))
+  ([x] (format-meta x nil))
+  ([x sep]
+   (when-let [data (meta x)]
+     (let [items (reduce-kv (fn [acc k v]
+                              (cond (number? v)
+                                    (conj acc (str v))
+                                    (true? v)
+                                    (conj acc k)
+                                    (ident? v)
+                                    (conj acc k v)
+                                    (string? v)
+                                    (do
+                                      (suspicious-entity-check v)
+                                      (conj acc k v))
+                                    :else ; quietly ignore other metadata
+                                    acc))
+                            []
+                            (reduce dissoc
+                                    data
+                                    (into [; remove the somewhat "standard" metadata:
+                                           :line :column :file
+                                           :end-line :end-column]
+                                          *ignored-metadata*)))]
+       (when (seq items)
+         (join (str sep " ") (map sql-kw) items))))))
 
 (comment
   (format-meta ^{:foo true :bar :baz :original {:line 1} :top 10} [])
@@ -650,23 +656,25 @@
           (into params')
           (into params'')))))
 
-(defn- format-selectable-dsl [x & [{:keys [as aliased] :as opts}]]
-  (cond (map? x)
-        (format-dsl x {:nested true})
+(defn- format-selectable-dsl
+  ([x] (format-selectable-dsl x {}))
+  ([x {:keys [as aliased] :as opts}]
+   (cond (map? x)
+         (format-dsl x {:nested true})
 
-        (sequential? x)
-        (format-item-selection x as)
+         (sequential? x)
+         (format-item-selection x as)
 
-        (ident? x)
-        (if aliased
-          [(format-entity x opts)]
-          (format-var x opts))
+         (ident? x)
+         (if aliased
+           [(format-entity x opts)]
+           (format-var x opts))
 
-        (and aliased (string? x))
-        [(format-entity x opts)]
+         (and aliased (string? x))
+         [(format-entity x opts)]
 
-        :else
-        (format-expr x)))
+         :else
+         (format-expr x))))
 
 (defn- reduce-sql
   ([xs] (reduce-sql identity xs))
@@ -699,31 +707,32 @@
   This allows for argument lists like:
   * [:overlay :foo :*placing :?subs :*from 3 :*for 4]
   * [:trim :*leading-from :bar]"
-  [args & [opts]]
-  (loop [exprs   (keep #(when-not (inline-kw? %)
-                          (format-expr % opts))
-                       args)
-         args    args
-         prev-in false
-         result  []]
-    (if (seq args)
-      (let [[arg & args'] args]
-        (if (inline-kw? arg)
-          (let [sql (sql-kw (keyword (subs (name arg) 1)))]
-            (if (seq result)
-              (let [[cur & params] (peek result)]
-                (recur exprs args' true (conj (pop result)
-                                              (into [(str cur " " sql)] params))))
-              (recur exprs args' true (conj result [sql]))))
-          (if prev-in
-            (let [[cur & params]  (peek result)
-                  [sql & params'] (first exprs)]
-              (recur (rest exprs) args' false (conj (pop result)
-                                                    (-> [(str cur " " sql)]
-                                                        (into params)
-                                                        (into params')))))
-            (recur (rest exprs) args' false (conj result (first exprs))))))
-      (reduce-sql result))))
+  ([args] (format-interspersed-expr-list args {}))
+  ([args opts]
+   (loop [exprs   (keep #(when-not (inline-kw? %)
+                           (format-expr % opts))
+                        args)
+          args    args
+          prev-in false
+          result  []]
+     (if (seq args)
+       (let [[arg & args'] args]
+         (if (inline-kw? arg)
+           (let [sql (sql-kw (keyword (subs (name arg) 1)))]
+             (if (seq result)
+               (let [[cur & params] (peek result)]
+                 (recur exprs args' true (conj (pop result)
+                                               (into [(str cur " " sql)] params))))
+               (recur exprs args' true (conj result [sql]))))
+           (if prev-in
+             (let [[cur & params]  (peek result)
+                   [sql & params'] (first exprs)]
+               (recur (rest exprs) args' false (conj (pop result)
+                                                     (-> [(str cur " " sql)]
+                                                         (into params)
+                                                         (into params')))))
+             (recur (rest exprs) args' false (conj result (first exprs))))))
+       (reduce-sql result)))))
 
 (comment
   (format-interspersed-expr-list [:foo :*placing :?subs :*from 3 :*for 4]
@@ -744,12 +753,13 @@
 
   This is intended to be used when writing your own formatters to
   extend the DSL supported by HoneySQL."
-  [exprs & [opts]]
-  (when-not (sequential? exprs)
-    (throw (ex-info (str "format-expr-list expects a sequence of expressions, found: "
-                         (type exprs))
-                    {:exprs exprs})))
-  (reduce-sql (map #(format-expr % opts)) exprs))
+  ([exprs] (format-expr-list exprs {}))
+  ([exprs opts]
+   (when-not (sequential? exprs)
+     (throw (ex-info (str "format-expr-list expects a sequence of expressions, found: "
+                          (type exprs))
+                     {:exprs exprs})))
+   (reduce-sql (map #(format-expr % opts)) exprs)))
 
 (comment
   (format-expr-list :?tags)
@@ -1617,34 +1627,35 @@
 
   This is intended to be used when writing your own formatters to
   extend the DSL supported by HoneySQL."
-  [statement-map & [{:keys [aliased nested pretty]}]]
-  (binding [*dsl* statement-map]
-    (let [[sqls params leftover]
-          (reduce (fn [[sql params leftover] k]
-                    (if-some [xs (if-some [xs (k leftover)]
-                                   xs
-                                   (let [s (kw->sym k)]
-                                     (get leftover s)))]
-                      (let [formatter (k @clause-format)
-                            [sql' & params'] (formatter k xs)]
-                        [(conj sql sql')
-                         (if params' (into params params') params)
-                         (dissoc leftover k (kw->sym k))])
-                      [sql params leftover]))
-                  [[] [] statement-map]
-                  *clause-order*)]
-      (if (seq leftover)
-        (throw (ex-info (str "These SQL clauses are unknown or have nil values: "
-                             (join ", " (keys leftover))
-                             "(perhaps you need [:lift {"
-                             (first (keys leftover))
-                             " ...}] here?)")
-                        leftover))
-        (into [(cond-> (join (if pretty "\n" " ") (remove empty?) sqls)
-                 pretty
-                 (as-> s (str "\n" s "\n"))
-                 (and nested (not aliased))
-                 (as-> s (str "(" s ")")))] params)))))
+  ([statement-map] (format-dsl statement-map {}))
+  ([statement-map {:keys [aliased nested pretty]}]
+   (binding [*dsl* statement-map]
+     (let [[sqls params leftover]
+           (reduce (fn [[sql params leftover] k]
+                     (if-some [xs (if-some [xs (k leftover)]
+                                    xs
+                                    (let [s (kw->sym k)]
+                                      (get leftover s)))]
+                       (let [formatter (k @clause-format)
+                             [sql' & params'] (formatter k xs)]
+                         [(conj sql sql')
+                          (if params' (into params params') params)
+                          (dissoc leftover k (kw->sym k))])
+                       [sql params leftover]))
+                   [[] [] statement-map]
+                   *clause-order*)]
+       (if (seq leftover)
+         (throw (ex-info (str "These SQL clauses are unknown or have nil values: "
+                              (join ", " (keys leftover))
+                              "(perhaps you need [:lift {"
+                              (first (keys leftover))
+                              " ...}] here?)")
+                         leftover))
+         (into [(cond-> (join (if pretty "\n" " ") (remove empty?) sqls)
+                  pretty
+                  (as-> s (str "\n" s "\n"))
+                  (and nested (not aliased))
+                  (as-> s (str "(" s ")")))] params))))))
 
 (def ^:private infix-aliases
   "Provided for backward compatibility with earlier HoneySQL versions."
@@ -2031,45 +2042,46 @@
 
   This is intended to be used when writing your own formatters to
   extend the DSL supported by HoneySQL."
-  [expr & [{:keys [nested] :as opts}]]
-  (cond (ident? expr)
-        (format-var expr opts)
+  ([expr] (format-expr expr {}))
+  ([expr {:keys [nested] :as opts}]
+   (cond (ident? expr)
+         (format-var expr opts)
 
-        (map? expr)
-        (format-dsl expr (assoc opts :nested true))
+         (map? expr)
+         (format-dsl expr (assoc opts :nested true))
 
-        (sequential? expr)
-        (let [op' (sym->kw (first expr))
-              op  (get infix-aliases op' op')]
-          (if (keyword? op')
-            (cond (contains? @infix-ops op')
-                  (if (contains? #{:= :<>} op)
-                    (format-equality-expr op' op expr nested)
-                    (format-infix-expr op' op expr nested))
-                  (contains? #{:in :not-in} op)
-                  (let [[sql & params] (format-in op (rest expr))]
-                    (into [(if nested (str "(" sql ")") sql)] params))
-                  (contains? @special-syntax op)
-                  (let [formatter (get @special-syntax op)]
-                    (formatter op (rest expr)))
-                  :else
-                  (format-fn-call-expr op expr))
-            (let [[sqls params] (format-expr-list expr)]
-              (into [(str "(" (join ", " sqls) ")")] params))))
+         (sequential? expr)
+         (let [op' (sym->kw (first expr))
+               op  (get infix-aliases op' op')]
+           (if (keyword? op')
+             (cond (contains? @infix-ops op')
+                   (if (contains? #{:= :<>} op)
+                     (format-equality-expr op' op expr nested)
+                     (format-infix-expr op' op expr nested))
+                   (contains? #{:in :not-in} op)
+                   (let [[sql & params] (format-in op (rest expr))]
+                     (into [(if nested (str "(" sql ")") sql)] params))
+                   (contains? @special-syntax op)
+                   (let [formatter (get @special-syntax op)]
+                     (formatter op (rest expr)))
+                   :else
+                   (format-fn-call-expr op expr))
+             (let [[sqls params] (format-expr-list expr)]
+               (into [(str "(" (join ", " sqls) ")")] params))))
 
-        (boolean? expr)
-        [(upper-case (str expr))]
+         (boolean? expr)
+         [(upper-case (str expr))]
 
-        (nil? expr)
-        ["NULL"]
+         (nil? expr)
+         ["NULL"]
 
-        :else
-        (cond *inline*
-              [(sqlize-value expr)]
-              *numbered*
-              (->numbered expr)
-              :else
-              ["?" expr])))
+         :else
+         (cond *inline*
+               [(sqlize-value expr)]
+               *numbered*
+               (->numbered expr)
+               :else
+               ["?" expr]))))
 
 (defn- check-dialect [dialect]
   (when-not (contains? @dialects dialect)
