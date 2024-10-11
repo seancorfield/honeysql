@@ -6,7 +6,8 @@
             [clojure.test :refer [deftest is testing]]
             [honey.sql :as sut :refer [format]]
             [honey.sql.helpers :as h])
-  #?(:clj (:import (clojure.lang ExceptionInfo))))
+  #?(:clj (:import (clojure.lang ExceptionInfo)
+                   (java.net URLEncoder))))
 
 (deftest mysql-tests
   (is (= ["SELECT * FROM `table` WHERE `id` = ?" 1]
@@ -1386,6 +1387,15 @@ ORDER BY id = ? DESC
   (testing "mixed keywords and symbols"
     (is (= ["SELECT * FROM `t1` INNER JOIN `t2` USING (`id`) WHERE `t1`.`id` = ?" 1]
            (sut/format '{select * from t1 join (t2 (:using id)) where (= t1/id 1)} {:dialect :mysql})))))
+
+(deftest issue-548-format-var-encoding
+  (is (= ["CREATE TABLE \"With%20Space\""]
+         (sut/format {:create-table "With%20Space"})))
+  (is (= ["CREATE TABLE \"%20WithLeadingSpace\""]
+         (sut/format {:create-table "%20WithLeadingSpace"})))
+  #?(:clj (let [table (URLEncoder/encode "привіт")]
+            (is (= [(str "CREATE TABLE \"" table "\"")]
+                   (sut/format {:create-table table}))))))
 
 (comment
   ;; partial (incorrect!) workaround for #407:

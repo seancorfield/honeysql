@@ -415,6 +415,18 @@
   [x]
   (upper-case (str/replace (name x) "-" "_")))
 
+(defn- format-simple-var [x & [c opts]]
+  (let [c (or c
+              (if (keyword? x)
+                #?(:clj (str (.sym ^clojure.lang.Keyword x)) ;; Omits leading colon
+                   :default (subs (str x) 1))
+                (str x)))]
+    (if (str/starts-with? c "'")
+      (do
+        (reset! *formatted-column* true)
+        [(subs c 1)])
+      [(format-entity x opts)])))
+
 (defn- format-var [x & [opts]]
   ;; rather than name/namespace, we want to allow
   ;; for multiple / in the %fun.call case so that
@@ -436,12 +448,8 @@
                   (->numbered-param k)
                   :else
                   ["?" (->param k)]))
-          (str/starts-with? c "'")
-          (do
-            (reset! *formatted-column* true)
-            [(subs c 1)])
           :else
-          [(format-entity x opts)])))
+          (format-simple-var x c opts))))
 
 (defn- format-entity-alias [x]
   (cond (sequential? x)
@@ -1277,7 +1285,7 @@
                 [(butlast coll) (last coll) nil]))]
     (into [(join " " (map sql-kw) prequel)
            (when table
-             (let [[v & more] (format-var table)]
+             (let [[v & more] (format-simple-var table)]
                (when (seq more)
                  (throw (ex-info (str "DDL syntax error at: "
                                       (pr-str table)

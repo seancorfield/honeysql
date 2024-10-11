@@ -1,5 +1,8 @@
 # Changes
 
+* 2.6.next in progress
+  * Fix [#548](https://github.com/seancorfield/honeysql/issues/548) which was a regression introduced in [#526](https://github.com/seancorfield/honeysql/issues/526).
+
 * 2.6.1196 -- 2024-10-06
   * Address [#547](https://github.com/seancorfield/honeysql/issues/547) by adding examples of conditional SQL building with the helpers to the README and the `honey.sql.helpers` ns docstring.
   * Performance optimizations via PRs [#545](https://github.com/seancorfield/honeysql/pull/545) and [#546](https://github.com/seancorfield/honeysql/pull/546) [@alexander-yakushev](https://github.com/alexander-yakushev).
