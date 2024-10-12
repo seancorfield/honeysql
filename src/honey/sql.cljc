@@ -852,6 +852,57 @@
       (into [(str (format-entity (first x)) " " sql)] params))
     [(format-entity x)]))
 
+(defn- format-with-query-tail*
+  "Given a sequence of pairs, format as a series of SQL keywords followed by
+   entities or comma-separated entities (or, if following TO, an expression)."
+  [pairs]
+  (reduce-sql
+   (map (fn [[kw entities]]
+          (cond (contains? #{:to 'to :default 'default} kw)
+                ;; TO value -- expression:
+                (let [[sql & params] (format-expr entities)]
+                  (into [(str (sql-kw kw) " " sql)]
+                        params))
+                (sequential? entities)
+                (let [[sqls params] (format-expr-list entities)]
+                  (into [(str (sql-kw kw) " " (join ", " sqls))] params))
+                :else
+                (let [[sql & params] (format-var entities)]
+                  (into [(str (sql-kw kw) " " sql)] params)))))
+   pairs))
+
+(defn- format-with-query-tail
+  "Given the tail of a WITH query, that may start with [not] materialized,
+   partition it into pairs of keywords and entities, and format that, then
+   return the formatted SQL and parameters."
+  [xs]
+  (let [xs (if (contains? #{:materialized 'materialized
+                            :not-materialized 'not-materialized}
+                          (first xs))
+             (rest xs)
+             xs)
+        [sqls params] (format-with-query-tail* (partition-all 2 xs))]
+    (into [(join " " sqls)] params)))
+
+(comment
+  (format-var :d)
+  (format-with-query-tail* [[:cycle [:a :b :c]]
+                            [:set :d]
+                            [:to [:abs :e]]
+                            [:default 42]
+                            [:using :x]])
+  (format-with-query-tail [:materialized
+                           :cycle [:a :b :c]
+                           :set :d
+                           :to [:abs :e]
+                           :default 42
+                           :using :x])
+  (format-with-query-tail [:not-materialized
+                           :search-depth-first-by :a
+                           :set :b])
+  (format-with-query-tail [])
+  )
+
 (defn- format-with [k xs]
   ;; TODO: a sequence of pairs -- X AS expr -- where X is either [entity expr]
   ;; or just entity, as far as I can tell...
@@ -859,25 +910,35 @@
         (fn [[_ _ materialization]]
           (condp = materialization
             :materialized "AS MATERIALIZED"
+            'materialized "AS MATERIALIZED"
             :not-materialized "AS NOT MATERIALIZED"
+            'not-materialized "AS NOT MATERIALIZED"
             "AS"))
         [sqls params]
         (reduce-sql
          (map
-          (fn [[x expr :as with]]
+          (fn [[x expr & tail :as with]]
             (let [[sql & params] (format-with-part x)
                   non-query-expr? (or (ident? expr) (string? expr))
                   [sql' & params'] (if non-query-expr?
                                      (format-expr expr)
-                                     (format-dsl expr))]
-              (if non-query-expr?
-                (cond-> [(str sql' " AS " sql)]
-                        params' (into params')
-                        params  (into params))
-                ;; according to docs, CTE should _always_ be wrapped:
-                (cond-> [(str sql " " (as-fn with) " " (str "(" sql' ")"))]
-                        params  (into params)
-                        params' (into params'))))))
+                                     (format-dsl expr))
+                  [sql'' & params'' :as sql-params'']
+                  (if non-query-expr?
+                    (cond-> [(str sql' " AS " sql)]
+                      params' (into params')
+                      params  (into params))
+                    ;; according to docs, CTE should _always_ be wrapped:
+                    (cond-> [(str sql " " (as-fn with) " " (str "(" sql' ")"))]
+                      params  (into params)
+                      params' (into params')))
+                  [tail-sql & tail-params]
+                  (format-with-query-tail tail)]
+              (if (seq tail-sql)
+                (cond-> [(str sql'' " " tail-sql)]
+                  params''    (into params'')
+                  tail-params (into tail-params))
+                sql-params''))))
          xs)]
     (into [(str (sql-kw k) " " (join ", " sqls))] params)))
 
