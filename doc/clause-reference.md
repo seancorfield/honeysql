@@ -486,6 +486,27 @@ user=> (sql/format {:with [[:stuff {:select :*
 ["WITH stuff AS NOT MATERIALIZED (SELECT * FROM table) SELECT * FROM stuff"]
 ```
 
+As of 2.6.next, you can specify `SEARCH` and/or `CYCLE` clauses, in place of
+or following the `MATERIALIZED` marker:
+
+```clojure
+user=> (sql/format {:with-recursive [[:stuff {:select :*
+                                              :from :table}
+                                      :search-depth-first-by :col :set :search-col]]
+                    :select :*
+                    :from :stuff})
+["WITH RECURSIVE stuff AS (SELECT * FROM table) SEARCH DEPTH FIRST BY col SET search_col SELECT * FROM stuff"]
+```
+
+```clojure
+user=> (sql/format {:with-recursive [[:stuff {:select :*
+                                              :from :table}
+                                      :cycle [:a :b :c] :set :d :to [:abs :e] :default 42 :using :x]]
+                    :select :*
+                    :from :stuff})
+["WITH RECURSIVE stuff AS (SELECT * FROM table) CYCLE a, b, c SET d TO ABS(e) DEFAULT ? USING x SELECT * FROM stuff" 42]
+```
+
 `:with-recursive` follows the same rules as `:with` and produces `WITH RECURSIVE` instead of just `WITH`.
 
 ## intersect, union, union-all, except, except-all

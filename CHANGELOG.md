@@ -1,8 +1,8 @@
 # Changes
 
 * 2.6.next in progress
-  * Fix [#548](https://github.com/seancorfield/honeysql/issues/548) which was a regression introduced in [#526](https://github.com/seancorfield/honeysql/issues/526).
-  * Address [#542](https://github.com/seancorfield/honeysql/issues/542) by adding support for `WITH` query tail options for PostgreSQL. Docs TBD.
+  * Fix [#548](https://github.com/seancorfield/honeysql/issues/548) which was a regression introduced in [#526](https://github.com/seancorfield/honeysql/issues/526) (in 2.6.1161).
+  * Address [#542](https://github.com/seancorfield/honeysql/issues/542) by adding support for `WITH` query tail options for PostgreSQL.
   * Replace all optional argument destructuring with multiple arities to improve performance.
 
 * 2.6.1196 -- 2024-10-06
