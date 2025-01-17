@@ -82,8 +82,9 @@
   separator is not present in the haystack at all."
   [s sep]
   (loop [start 0, res []]
-    (if-let [sep-idx (clojure.string/index-of s sep start)]
-      (recur (inc sep-idx) (conj res (subs s start sep-idx)))
+    (if-some [sep-idx (clojure.string/index-of s sep start)]
+      (let [sep-idx (long sep-idx)]
+        (recur (inc sep-idx) (conj res (subs s start sep-idx))))
       (if (= start 0)
         ;; Fastpath - zero separators in s
         [s]
