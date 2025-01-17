@@ -25,6 +25,8 @@
   (:refer-clojure :exclude [-> ->> -])
   (:require [honey.sql :as sql]))
 
+#?(:clj (set! *warn-on-reflection* true))
+
 ;; see https://www.postgresql.org/docs/current/functions-json.html
 
 (def ->

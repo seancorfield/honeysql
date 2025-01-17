@@ -62,6 +62,8 @@
   (:require [clojure.core :as c]
             [honey.sql :as h]))
 
+#?(:clj (set! *warn-on-reflection* true))
+
 ;; implementation helpers:
 
 (defn- default-merge [current args]

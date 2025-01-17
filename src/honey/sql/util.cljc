@@ -3,6 +3,8 @@
   (:refer-clojure :exclude [str])
   (:require clojure.string))
 
+#?(:clj (set! *warn-on-reflection* true))
+
 (defn str
   "More efficient implementation of `clojure.core/str` because it has more
   non-variadic arities. Optimization is Clojure-only, on other platforms it

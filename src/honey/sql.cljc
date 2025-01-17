@@ -33,6 +33,8 @@
             [honey.sql.protocols :as p]
             [honey.sql.util :refer [str join split-by-separator into*]]))
 
+#?(:clj (set! *warn-on-reflection* true))
+
 ;; default formatting for known clauses
 
 (declare format-dsl)
