@@ -2,22 +2,23 @@
 
 (ns honey.sql.helpers-test
   (:refer-clojure :exclude [filter for group-by partition-by set update])
+  #_{:clj-kondo/ignore [:unused-namespace]}
   (:require [clojure.core :as c]
             [clojure.test :refer [deftest is testing]]
             [honey.sql :as sql]
             [honey.sql.helpers :as h
-             :refer [add-column add-index alter-table columns create-table create-table-as create-view
-                     create-materialized-view drop-view drop-materialized-view
+             :refer [add-column alter-table columns create-table create-table-as create-view
+                     create-materialized-view
                      create-index
                      bulk-collect-into
-                     cross-join do-update-set drop-column drop-index drop-table
+                     cross-join do-update-set drop-column drop-table
                      filter from full-join
                      group-by having insert-into replace-into
-                     join-by join lateral left-join limit offset on-conflict
+                     join-by join left-join limit offset on-conflict
                      on-duplicate-key-update
                      order-by over partition-by refresh-materialized-view
-                     rename-column rename-table returning right-join
-                     select select-distinct select-top select-distinct-top
+                     returning right-join
+                     select select-distinct select-top
                      values where window with with-columns
                      with-data within-group]]))
 

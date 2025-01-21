@@ -4,7 +4,7 @@
   (:require [clojure.test :refer [deftest is testing]]
             [honey.sql :as sql]
             [honey.sql.helpers :as h
-             :refer [select exclude rename from where]]))
+             :refer [select exclude rename from]]))
 
 (deftest select-tests
   (testing "select, exclude, rename"
