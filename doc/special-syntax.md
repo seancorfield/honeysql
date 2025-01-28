@@ -29,6 +29,14 @@ and strings.
              :from :b
              :order-by [[[:alias :'some-alias]]]})
 ;;=> ["SELECT column_name AS \"some-alias\" FROM b ORDER BY \"some-alias\" ASC"]
+(sql/format {:select [[:column-name "some-alias"]]
+             :from :b
+             :group-by [[:alias "some-alias"]]})
+;;=> ["SELECT column_name AS \"some-alias\" FROM b GROUP BY \"some-alias\""]
+(sql/format {:select [[:column-name "some-alias"]]
+             :from :b
+             :group-by [[:alias :'some-alias]]})
+;;=> ["SELECT column_name AS \"some-alias\" FROM b GROUP BY \"some-alias\""]
 ```
 
 ## array

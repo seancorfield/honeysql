@@ -1091,6 +1091,11 @@ user=> (sql/format '{select (*) from (table)
 ["SELECT * FROM table GROUP BY status, YEAR(created_date)"]
 ```
 
+You can `GROUP BY` expressions, column names (`:col1`), or table and column (`:table.col1`),
+or aliases (`:some.alias`). Since there is ambiguity between the formatting
+of those, you can use the special syntax `[:alias :some.thing]` to tell
+HoneySQL to treat `:some.thing` as an alias instead of a table/column name.
+
 ## having
 
 The `:having` clause works identically to `:where` above
