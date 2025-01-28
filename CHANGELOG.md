@@ -4,7 +4,7 @@
   * Add examples of `:alias` with `:group-by` (syntax is slightly different to existing examples for `:order-by`).
 
 * 2.6.1270 -- 2025-01-17
-  * Fix autoboxing introduced in 2.6.1270 via PR [#564](https://github.com/seancorfield/honeysql/pull/564) [@alexander-yakushev](https://github.com/alexander-yakushev).
+  * Fix autoboxing introduced in 2.6.1267 via PR [#564](https://github.com/seancorfield/honeysql/pull/564) [@alexander-yakushev](https://github.com/alexander-yakushev).
 
 * 2.6.1267 -- 2025-01-16
   * Support expressions in `WITH` clauses via PR [#563](https://github.com/seancorfield/honeysql/pull/563) [@krevedkokun](https://github.com/krevedkokun).
