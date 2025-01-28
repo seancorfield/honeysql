@@ -1,5 +1,8 @@
 # Changes
 
+* 2.6.next in progress
+  * Add examples of `:alias` with `:group-by` (syntax is slightly different to existing examples for `:order-by`).
+
 * 2.6.1270 -- 2025-01-17
   * Fix autoboxing introduced in 2.6.1270 via PR [#564](https://github.com/seancorfield/honeysql/pull/564) [@alexander-yakushev](https://github.com/alexander-yakushev).
 
