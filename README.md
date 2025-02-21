@@ -47,7 +47,7 @@ section of the documentation before trying to use HoneySQL to build your own que
 From Clojure:
 <!-- {:test-doc-blocks/reader-cond :clj} -->
 ```clojure
-(refer-clojure :exclude '[distinct filter for group-by into partition-by set update])
+(refer-clojure :exclude '[assert distinct filter for group-by into partition-by set update])
 (require '[honey.sql :as sql]
          ;; CAUTION: this overwrites several clojure.core fns:
          ;;
