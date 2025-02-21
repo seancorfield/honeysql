@@ -2517,6 +2517,22 @@
       (first clauses)
       (into [:and] clauses))))
 
+(defn semicolon
+  "Given either a vector of formatted SQL+params vectors, or two or more
+  SQL+params vectors as arguments, merge them into a single SQL+params
+  vector with the SQL strings separated by semicolons."
+  ([sql+params-vector]
+   (reduce into
+           [(str/join "; " (map first sql+params-vector))]
+           (map rest sql+params-vector)))
+  ([sql+params & more]
+   (semicolon (cons sql+params more))))
+
+(comment
+  (semicolon [ ["foo" 1 2 3] ["bar" 4 5 6] ])
+  (semicolon ["foo" 1 2 3] ["bar" 4 5 6] ["baz" 7 8 9] )
+  )
+
 ;; aids to migration from HoneySQL 1.x -- these are deliberately undocumented
 ;; so as not to encourage their use for folks starting fresh with 2.x!
 
