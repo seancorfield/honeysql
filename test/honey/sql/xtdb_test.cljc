@@ -1,4 +1,4 @@
-;; copyright (c) 2020-2024 sean corfield, all rights reserved
+;; copyright (c) 2020-2025 sean corfield, all rights reserved
 
 (ns honey.sql.xtdb-test
   (:require [clojure.test :refer [deftest is testing]]
@@ -129,3 +129,11 @@
          (sql/format '{select (((get-in (. a b) c (lift 1) d)))})))
   (is (= ["SELECT (OBJECT (_id: 1, b: 'thing').b).c[?].d" 1]
          (sql/format '{select (((get-in (. (object {_id 1 b "thing"}) b) c (lift 1) d)))}))))
+
+(deftest assert-statement
+  (is (= ["ASSERT NOT EXISTS (SELECT 1 FROM users WHERE email = 'james @example.com')"]
+         (sql/format '{assert (not-exists {select 1 from users where (= email "james @example.com")})}
+                     :inline true)))
+  (is (= ["ASSERT TRUE"]
+         (sql/format '{assert true}
+                     :inline true))))

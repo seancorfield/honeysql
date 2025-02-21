@@ -59,7 +59,7 @@
    ;; then SQL clauses in priority order:
    :setting
    :raw :nest :with :with-recursive :intersect :union :union-all :except :except-all
-   :table
+   :table :assert ; #567 XTDB
    :select :select-distinct :select-distinct-on :select-top :select-distinct-top
    :distinct :expr :exclude :rename
    :into :bulk-collect-into
@@ -1654,6 +1654,9 @@
          :except          #'format-on-set-op
          :except-all      #'format-on-set-op
          :table           #'format-selector
+         :assert          (fn [k xs]
+                            (let [[sql & params] (format-expr xs)]
+                              (into [(str (sql-kw k) " " sql)] params)))
          :select          #'format-selects
          :select-distinct #'format-selects
          :select-distinct-on #'format-selects-on

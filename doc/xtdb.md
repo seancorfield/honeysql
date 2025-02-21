@@ -207,3 +207,14 @@ user=> (sql/format {:patch-into :foo
                     :records [{:_id 1 :status "active"}]})
 ["PATCH INTO foo RECORDS ?" {:_id 1, :status "active"}]
 ```
+
+## `assert`
+
+XTDB supports an `ASSERT` operation that will throw an exception if the
+asserted predicate is not true:
+
+```clojure
+user=> (sql/format '{assert (not-exists {select 1 from users where (= email "james @example.com")})}
+                   :inline true)
+["ASSERT NOT EXISTS (SELECT 1 FROM users WHERE email = 'james @example.com')"]
+```
