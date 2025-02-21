@@ -1,4 +1,4 @@
-;; copyright (c) 2020-2024 sean corfield, all rights reserved
+;; copyright (c) 2020-2025 sean corfield, all rights reserved
 
 (ns honey.sql
   "Primary API for HoneySQL 2.x.
@@ -1788,6 +1788,7 @@
         "like" "not-like" "regexp" "~" "&&"
         "ilike" "not-ilike" "similar-to" "not-similar-to"
         "is" "is-not" "not=" "!=" "regex"
+        "is-distinct-from" "is-not-distinct-from"
         "with-ordinality"}
       (into (map str "+-*%|&^=<>"))
       (into (keys infix-aliases))

@@ -1,6 +1,7 @@
 # Changes
 
 * 2.6.next in progress
+  * Address [#566](https://github.com/seancorfield/honeysql/issues/566) by adding `IS [NOT] DISTINCT FROM` operators.
   * Add examples of `:alias` with `:group-by` (syntax is slightly different to existing examples for `:order-by`).
 
 * 2.6.1270 -- 2025-01-17
