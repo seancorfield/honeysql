@@ -131,9 +131,18 @@
          (sql/format '{select (((get-in (. (object {_id 1 b "thing"}) b) c (lift 1) d)))}))))
 
 (deftest assert-statement
-  (is (= ["ASSERT NOT EXISTS (SELECT 1 FROM users WHERE email = 'james @example.com')"]
-         (sql/format '{assert (not-exists {select 1 from users where (= email "james @example.com")})}
-                     :inline true)))
-  (is (= ["ASSERT TRUE"]
-         (sql/format '{assert true}
-                     :inline true))))
+  (testing "quoted sql"
+    (is (= ["ASSERT NOT EXISTS (SELECT 1 FROM users WHERE email = 'james @example.com')"]
+           (sql/format '{assert (not-exists {select 1 from users where (= email "james @example.com")})}
+                       :inline true)))
+    (is (= ["ASSERT TRUE"]
+           (sql/format '{assert true}
+                       :inline true))))
+  (testing "helper"
+    (is (= ["ASSERT NOT EXISTS (SELECT 1 FROM users WHERE email = 'james @example.com')"]
+           (-> (h/assert [:not-exists {:select 1 :from :users :where [:= :email "james @example.com"]}])
+               (sql/format {:inline true}))))
+    (is (= ["ASSERT NOT EXISTS (SELECT 1 FROM users WHERE email = 'james @example.com')"]
+           (-> {}
+               (h/assert [:not-exists {:select 1 :from :users :where [:= :email "james @example.com"]}])
+               (sql/format {:inline true}))))))

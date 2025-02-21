@@ -1,4 +1,4 @@
-;; copyright (c) 2020-2024 sean corfield, all rights reserved
+;; copyright (c) 2020-2025 sean corfield, all rights reserved
 
 (ns honey.sql.helpers
   "Helper functions for the built-in clauses in honey.sql.
@@ -58,7 +58,7 @@
     bulk-collect-info [& args]
 
   (as they are for all helper functions)."
-  (:refer-clojure :exclude [distinct filter for group-by into partition-by set update])
+  (:refer-clojure :exclude [assert distinct filter for group-by into partition-by set update])
   (:require [clojure.core :as c]
             [honey.sql :as h]))
 
@@ -451,6 +451,14 @@
   which to perform a set except all."
   [& clauses]
   (generic :except-all (cons {} clauses)))
+
+(defn assert
+  "Accepts an expression (predicate).
+
+  Produces: ASSERT expression"
+  {:arglists '([expr])}
+  [& args]
+  (generic-1 :assert args))
 
 (defn select
   "Accepts any number of column names, or column/alias
