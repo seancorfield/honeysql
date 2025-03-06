@@ -47,8 +47,7 @@
   "Generate and run doc tests.
 
   Optionally specify :aliases vector:
-  [:1.9] -- test against Clojure 1.9 (the default)
-  [:1.10] -- test against Clojure 1.10.3
+  [:1.10] -- test against Clojure 1.10.3 (the default)
   [:1.11] -- test against Clojure 1.11.0
   [:1.12] -- test against Clojure 1.12.0
   [:cljs] -- test against ClojureScript"
@@ -99,7 +98,7 @@
 (defn ci
   "Run the CI pipeline of tests (and build the JAR).
 
-  Default Clojure version is 1.9.0 (:1.9) so :elide
+  Default Clojure version is 1.10.3 (:1.10) so :elide
   tests for #409 on that version."
   [opts]
   (let [aliases [:cljs :elide :1.10 :1.11 :1.12]

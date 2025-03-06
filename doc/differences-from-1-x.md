@@ -9,7 +9,7 @@ The DSL itself -- the data structures that both versions convert to SQL and para
 If you are using Clojure 1.11, you can invoke `format` with a mixture of named arguments and a trailing hash
 map of additional options, if you wish.
 
-HoneySQL 1.x supported Clojure 1.7 and later. HoneySQL 2.x requires Clojure 1.9 or later.
+HoneySQL 1.x supported Clojure 1.7 and later. HoneySQL 2.7.x requires Clojure 1.10.3 or later. Earlier versions of HoneySQL 2.x support Clojure 1.9.0.
 
 ## Group, Artifact, and Namespaces
 
@@ -90,7 +90,7 @@ The new namespaces are:
 * `honey.sql` -- the primary API (just `format` now),
 * `honey.sql.helpers` -- helper functions to build the DSL.
 
-Supported Clojure versions: 1.9 and later.
+Supported Clojure versions: 1.10.3 and later.
 
 ## API Changes
 

@@ -436,9 +436,7 @@
 (defn- format-simple-var
   ([x]
    (let [c (if (keyword? x)
-             #?(:bb  (str (symbol x))
-                :clj (str (.sym ^clojure.lang.Keyword x)) ;; Omits leading colon
-                :default (subs (str x) 1))
+             (str (symbol x))
              (str x))]
      (format-simple-var x c {})))
   ([x c opts]
@@ -455,9 +453,7 @@
    ;; for multiple / in the %fun.call case so that
    ;; qualified column names can be used:
    (let [c (if (keyword? x)
-             #?(:bb  (str (symbol x))
-                :clj (str (.sym ^clojure.lang.Keyword x)) ;; Omits leading colon
-                :default (subs (str x) 1))
+             (str (symbol x))
              (str x))]
      (cond (str/starts-with? c "%")
            (let [[f & args] (split-by-separator (subs c 1) ".")]
@@ -1737,10 +1733,7 @@
   (if (keyword? k)
     (if-let [n (namespace k)]
       (symbol n (name k))
-      ;; In CLJ runtime, reuse symbol that's already present in the keyword.
-      #?(:bb (symbol (name k))
-         :clj (.sym ^clojure.lang.Keyword k)
-         :default (symbol (name k))))
+      (symbol (name k)))
     k))
 
 (defn format-dsl
