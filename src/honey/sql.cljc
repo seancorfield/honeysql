@@ -1929,29 +1929,36 @@
 
 (defn- get-in-navigation
   "[:get-in expr key-or-index1 key-or-index2 ...]"
-  [_ [expr & kix]]
+  [wrap [expr & kix]]
   (let [[sql & params] (format-expr expr)
         [sqls params']
         (reduce-sql (map #(cond (number? %)
                                 [(str "[" % "]")]
+                                (string? %)
+                                [(str "[" (sqlize-value %) "]")]
                                 (ident? %)
                                 [(str "." (format-entity %))]
                                 :else
                                 (let [[sql' & params'] (format-expr %)]
                                   (cons (str "[" sql' "]") params')))
                          kix))]
-    (into* [(str "(" sql ")" (join "" sqls))] params params')))
+    (into* [(str (if wrap (str "(" sql ")") sql)
+                 (join "" sqls))]
+           params
+           params')))
 
-(defn ignore-respect-nulls [k [x]]
+(defn- ignore-respect-nulls [k [x]]
   (let [[sql & params] (format-expr x)]
     (into [(str sql " " (sql-kw k))] params)))
 
-(defn dot-navigation [sep [expr col & subcols]]
+(defn- dot-navigation [sep [expr col & subcols]]
   (let [[sql & params] (format-expr expr)]
-    (into [(str sql sep (format-entity col)
+    (into [(str sql sep (format-simple-expr col "dot navigation")
                 (when (seq subcols)
-                  (str "." (join "." (map format-entity subcols)))))]
+                  (str "." (join "." (map #(format-simple-expr % "dot navigation")
+                                          subcols)))))]
           params)))
+
 (def ^:private special-syntax
   (atom
    {;; these "functions" are mostly used in column
@@ -1999,6 +2006,7 @@
         (let [[sqls params] (format-expr-list arr)
               type-str (when type (str "::" (sql-kw type) "[]"))]
           (into [(str "ARRAY[" (join ", " sqls) "]" type-str)] params))))
+    :at (fn [_ data] (get-in-navigation false data))
     :at-time-zone
     (fn [_ [expr tz]]
       (let [[sql & params] (format-expr expr {:nested true})
@@ -2031,7 +2039,7 @@
             [sql-e & params-e] (format-expr escape-chars)]
         (into* [(str sql-p " " (sql-kw :escape) " " sql-e)] params-p params-e)))
     :filter expr-clause-pairs
-    :get-in #'get-in-navigation
+    :get-in (fn [_ data] (get-in-navigation true data))
     :ignore-nulls ignore-respect-nulls
     :inline
     (fn [_ xs]

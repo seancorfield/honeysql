@@ -88,6 +88,29 @@ In the subquery case, produces `ARRAY(subquery)`:
 ;;=> ["SELECT ARRAY(SELECT * FROM table) AS arr"]
 ```
 
+## at
+
+If addition to dot navigation (for JSON) -- see the `.` and `.:.` syntax below --
+HoneySQL also supports bracket notation for JSON navigation.
+
+The first argument to `:at` is treated as an expression that identifies
+the column, and subsequent arguments are treated as field names or array
+indices to navigate into that document.
+
+```clojure
+user=> (sql/format {:select [[[:at :col :field1 :field2]]]})
+["SELECT col.field1.field2"]
+user=> (sql/format {:select [[[:at :table.col 0 :field]]]})
+["SELECT table.col[0].field"]
+```
+
+If you want an array index to be a parameter, use `:lift`:
+
+```clojure
+user=> (sql/format {:select [[[:at :col [:lift 0] :field]]]})
+["SELECT col[?].field" 0]
+```
+
 ## at time zone
 
 Accepts two arguments: an expression (assumed to be a date/time of some sort)
@@ -234,6 +257,9 @@ Can be used with `:nest` for field selection from composites:
 (sql/format {:select [ [[:. [:nest :v] :*]] [[:. [:nest [:myfunc :x]] :y]] ]})
 ;;=> ["SELECT (v).*, (MYFUNC(x)).y"]
 ```
+
+See also [`get-in`](xtdb.md#object-navigation-expressions)
+and [`at`](#at) for additional path navigation functions.
 
 ## entity
 

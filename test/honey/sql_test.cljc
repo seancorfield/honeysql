@@ -1,4 +1,4 @@
-;; copyright (c) 2021-2024 sean corfield, all rights reserved
+;; copyright (c) 2021-2025 sean corfield, all rights reserved
 
 (ns honey.sql-test
   (:refer-clojure :exclude [format])
@@ -1235,6 +1235,43 @@ ORDER BY id = ? DESC
                                  ((get-in w x))
                                  ((get-in (y z) *)))}
                        {:dialect :mysql})))))
+
+(deftest issue-570-snowflake-dot-selection
+  (testing "basic colon selection"
+    (is (= ["SELECT a:b, c:d, a:d.x, a:d.x.y"]
+           (let [t :a c :d]
+             (sut/format {:select [[[:.:. t :b]] [[:.:. :c c]]
+                                   [[:.:. t c :x]] [[:.:. t c :x :y]]]}))))
+    (is (= ["SELECT [a]:[b], [c]:[d], [a]:[d].[x]"]
+           (let [t :a c :d]
+             (sut/format {:select [[[:.:. t :b]] [[:.:. :c c]] [[:.:. t c :x]]]}
+                         {:dialect :sqlserver})))))
+  (testing "basic field selection from composite"
+    (is (= ["SELECT (v):*, (w):x, (Y(z)):*"]
+           (sut/format '{select (((.:. (nest v) *))
+                                 ((.:. (nest w) x))
+                                 ((.:. (nest (y z)) *)))})))
+    (is (= ["SELECT (`v`):*, (`w`):`x`, (Y(`z`)):*"]
+           (sut/format '{select (((.:. (nest v) *))
+                                 ((.:. (nest w) x))
+                                 ((.:. (nest (y z)) *)))}
+                       {:dialect :mysql}))))
+  (testing "bracket selection"
+    (is (= ["SELECT a['b'], c['b'], a['d'].x, a:e[0].name"]
+           (sut/format {:select [[[:at :a [:inline "b"]]]
+                                 [[:at :c "b"]]
+                                 [[:at :a [:inline "d"] :x]]
+                                 [[:.:. :a [:at :e [:inline 0]] :name]]]})))
+    (is (= ["SELECT a[?].name" 0]
+           (sut/format '{select (((at a (lift 0) name)))})))
+    ;; sanity check, compare with get-in:
+    (is (= ["SELECT (a)[?].name" 0]
+           (sut/format '{select (((get-in a (lift 0) name)))})))
+    (is (= ["SELECT (a)['b'], (c)['b'], (a)['d'].x, a:(e)[0].name"]
+           (sut/format {:select [[[:get-in :a [:inline "b"]]]
+                                 [[:get-in :c "b"]]
+                                 [[:get-in :a [:inline "d"] :x]]
+                                 [[:.:. :a [:get-in :e [:inline 0]] :name]]]})))))
 
 (deftest issue-476-raw
   (testing "single argument :raw"
