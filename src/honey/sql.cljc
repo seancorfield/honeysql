@@ -1734,7 +1734,9 @@
   [k]
   (if (keyword? k)
     #?(:clj (.sym ^clojure.lang.Keyword k)
-       :default (subs (str k) 1))
+       :default (if-let [n (namespace k)]
+                  (symbol n (name k))
+                  (symbol (name k))))
     k))
 
 (defn format-dsl
