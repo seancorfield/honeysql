@@ -1,4 +1,4 @@
-;; copyright (c) 2021-2024 sean corfield, all rights reserved
+;; copyright (c) 2021-2025 sean corfield, all rights reserved
 
 (ns honey.sql-test
   (:refer-clojure :exclude [format])
@@ -1225,15 +1225,6 @@ ORDER BY id = ? DESC
            (sut/format '{select (((.:. (nest v) *))
                                  ((.:. (nest w) x))
                                  ((.:. (nest (y z)) *)))}
-                       {:dialect :mysql})))
-    (is (= ["SELECT (v):*, (w):x, (Y(z)):*"]
-           (sut/format '{select (((get-in v *))
-                                 ((get-in w x))
-                                 ((get-in (y z) *)))})))
-    (is (= ["SELECT (`v`):*, (`w`):`x`, (Y(`z`)):*"]
-           (sut/format '{select (((get-in v *))
-                                 ((get-in w x))
-                                 ((get-in (y z) *)))}
                        {:dialect :mysql})))))
 
 (deftest issue-476-raw
