@@ -1178,9 +1178,10 @@ ORDER BY id = ? DESC
 
 (deftest issue-474-dot-selection
   (testing "basic dot selection"
-    (is (= ["SELECT a.b, c.d, a.d.x"]
+    (is (= ["SELECT a.b, c.d, a.d.x, a.d.x.y"]
            (let [t :a c :d]
-             (sut/format {:select [[[:. t :b]] [[:. :c c]] [[:. t c :x]]]}))))
+             (sut/format {:select [[[:. t :b]] [[:. :c c]]
+                                   [[:. t c :x]] [[:. t c :x :y]]]}))))
     (is (= ["SELECT [a].[b], [c].[d], [a].[d].[x]"]
            (let [t :a c :d]
              (sut/format {:select [[[:. t :b]] [[:. :c c]] [[:. t c :x]]]}
@@ -1194,6 +1195,45 @@ ORDER BY id = ? DESC
            (sut/format '{select (((. (nest v) *))
                                  ((. (nest w) x))
                                  ((. (nest (y z)) *)))}
+                       {:dialect :mysql})))
+    (is (= ["SELECT (v).*, (w).x, (Y(z)).*"]
+           (sut/format '{select (((get-in v *))
+                                 ((get-in w x))
+                                 ((get-in (y z) *)))})))
+    (is (= ["SELECT (`v`).*, (`w`).`x`, (Y(`z`)).*"]
+           (sut/format '{select (((get-in v *))
+                                 ((get-in w x))
+                                 ((get-in (y z) *)))}
+                       {:dialect :mysql})))))
+
+(deftest issue-570-snowflake-dot-selection
+  (testing "basic colon selection"
+    (is (= ["SELECT a:b, c:d, a:d.x, a:d.x.y"]
+           (let [t :a c :d]
+             (sut/format {:select [[[:.:. t :b]] [[:.:. :c c]]
+                                   [[:.:. t c :x]] [[:.:. t c :x :y]]]}))))
+    (is (= ["SELECT [a]:[b], [c]:[d], [a]:[d].[x]"]
+           (let [t :a c :d]
+             (sut/format {:select [[[:.:. t :b]] [[:.:. :c c]] [[:.:. t c :x]]]}
+                         {:dialect :sqlserver})))))
+  (testing "basic field selection from composite"
+    (is (= ["SELECT (v):*, (w):x, (Y(z)):*"]
+           (sut/format '{select (((.:. (nest v) *))
+                                 ((.:. (nest w) x))
+                                 ((.:. (nest (y z)) *)))})))
+    (is (= ["SELECT (`v`):*, (`w`):`x`, (Y(`z`)):*"]
+           (sut/format '{select (((.:. (nest v) *))
+                                 ((.:. (nest w) x))
+                                 ((.:. (nest (y z)) *)))}
+                       {:dialect :mysql})))
+    (is (= ["SELECT (v):*, (w):x, (Y(z)):*"]
+           (sut/format '{select (((get-in v *))
+                                 ((get-in w x))
+                                 ((get-in (y z) *)))})))
+    (is (= ["SELECT (`v`):*, (`w`):`x`, (Y(`z`)):*"]
+           (sut/format '{select (((get-in v *))
+                                 ((get-in w x))
+                                 ((get-in (y z) *)))}
                        {:dialect :mysql})))))
 
 (deftest issue-476-raw
@@ -1451,4 +1491,9 @@ ORDER BY id = ? DESC
     :select          [:*]
     :from            [:a-b.b-c.c-d]}
    (sut/format {:dialect :nrql}))
+  (sut/format {:select :a:b.c}) ; quotes a:b
+  (sut/format [:. :a :b :c]) ; a.b.c
+  (sut/format [:. :a :b :c :d]) ; drops d  ; a.b.c
+  (sut/format [:.:. :a :b :c]) ; .(a, b, c)
+  (sut/format '(.:. a b c)) ; .(a, b, c)
   )

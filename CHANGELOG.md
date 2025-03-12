@@ -1,5 +1,8 @@
 # Changes
 
+* 2.7.next in progress
+  * Address #570 by adding `:.:.` as special syntax for Snowflake's JSON path syntax.
+
 * 2.6.1281 -- 2025-03-06
   * Address [#568](https://github.com/seancorfield/honeysql/issues/568) by adding `honey.sql/semicolon` to merge multiple SQL+params vectors into one (with semicolons separating the SQL statements).
   * Address [#567](https://github.com/seancorfield/honeysql/issues/567) by adding support for `ASSERT` clause.
