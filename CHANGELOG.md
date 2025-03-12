@@ -1,6 +1,7 @@
 # Changes
 
 * 2.7.next in progress
+  * Address #570 by adding `:.:.` as special syntax for Snowflake's JSON path syntax.
   * Drop support for Clojure 1.9 [#561](https://github.com/seancorfield/honeysql/issues/561).
 
 * 2.6.1281 -- 2025-03-06

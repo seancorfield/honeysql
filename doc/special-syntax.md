@@ -211,13 +211,21 @@ Accepts a single expression and prefixes it with `DISTINCT `:
 ;;=> ["SELECT COUNT(DISTINCT status) AS n FROM table"]
 ```
 
-## dot .
+## dot . .:.
 
-Accepts an expression and a field (or column) selection:
+Accepts an expression and one or more fields (or columns). Plain dot produces
+plain dotted selection:
 
 ```clojure
 (sql/format {:select [ [[:. :t :c]] [[:. :s :t :c]] ]})
 ;;=> ["SELECT t.c, s.t.c"]
+```
+
+Dot colon dot produces Snowflake-style dotted selection:
+
+```clojure
+(sql/format {:select [ [[:.:. :t :c]] [[:.:. :s :t :c]] ]})
+;;=> ["SELECT t:c, s:t.c"]
 ```
 
 Can be used with `:nest` for field selection from composites:

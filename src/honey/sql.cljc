@@ -1946,6 +1946,12 @@
   (let [[sql & params] (format-expr x)]
     (into [(str sql " " (sql-kw k))] params)))
 
+(defn dot-navigation [sep [expr col & subcols]]
+  (let [[sql & params] (format-expr expr)]
+    (into [(str sql sep (format-entity col)
+                (when (seq subcols)
+                  (str "." (join "." (map format-entity subcols)))))]
+          params)))
 (def ^:private special-syntax
   (atom
    {;; these "functions" are mostly used in column
@@ -1966,12 +1972,9 @@
     :references  #'function-1
     :unique      #'function-1-opt
     ;; dynamic dotted name creation:
-    :.           (fn [_ [expr col subcol]]
-                   (let [[sql & params] (format-expr expr)]
-                     (into [(str sql "." (format-entity col)
-                                 (when subcol
-                                   (str "." (format-entity subcol))))]
-                           params)))
+    :.           (fn [_ data] (dot-navigation "." data))
+    ;; snowflake variant #570:
+    :.:.         (fn [_ data] (dot-navigation ":" data))
     ;; used in DDL to force rendering as a SQL entity instead
     ;; of a SQL keyword:
     :entity      (fn [_ [e]] [(format-entity e)])
