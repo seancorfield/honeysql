@@ -14,7 +14,8 @@ This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINO
 
 > Note: every commit to the **develop** branch runs CI (GitHub Actions) and successful runs push a MAJOR.MINOR.9999-SNAPSHOT build to Clojars so the very latest version of HoneySQL is always available either via that [snapshot on Clojars](https://clojars.org/com.github.seancorfield/honeysql) or via a git dependency on the latest SHA.
 
-HoneySQL 2.x requires Clojure 1.9 or later.
+HoneySQL 2.7.y requires Clojure 1.10.3 or later.
+Earlier versions of HoneySQL support Clojure 1.9.0.
 It also supports recent versions of ClojureScript and Babashka.
 
 Compared to the [legacy 1.x version](#1.x), HoneySQL 2.x provides a streamlined codebase and a simpler method for extending the DSL. It also supports SQL dialects out-of-the-box and will be extended to support vendor-specific language features over time (unlike 1.x).

@@ -1,6 +1,6 @@
 {:mvn/repos {"sonatype" {:url "https://oss.sonatype.org/content/repositories/snapshots/"}}
  :paths ["src"]
- :deps {org.clojure/clojure {:mvn/version "1.9.0"}}
+ :deps {org.clojure/clojure {:mvn/version "1.10.3"}}
  :aliases
  {;; for help: clojure -A:deps -T:build help/doc
   :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.6"}
@@ -8,7 +8,6 @@
           :ns-default build}
 
   ;; versions to test against:
-  :1.9 {:override-deps {org.clojure/clojure {:mvn/version "1.9.0"}}}
   :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.3"}}}
   :1.11 {:override-deps {org.clojure/clojure {:mvn/version "1.11.4"}}}
   :1.12 {:override-deps {org.clojure/clojure {:mvn/version "1.12.0"}}}

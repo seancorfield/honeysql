@@ -436,8 +436,8 @@
 (defn- format-simple-var
   ([x]
    (let [c (if (keyword? x)
-             #?(:bb  (str (symbol x))
-                :clj (str (.sym ^clojure.lang.Keyword x)) ;; Omits leading colon
+             #?(:bb (subs (str x) 1)
+                :clj (str (.sym ^clojure.lang.Keyword x))
                 :default (subs (str x) 1))
              (str x))]
      (format-simple-var x c {})))
@@ -455,8 +455,8 @@
    ;; for multiple / in the %fun.call case so that
    ;; qualified column names can be used:
    (let [c (if (keyword? x)
-             #?(:bb  (str (symbol x))
-                :clj (str (.sym ^clojure.lang.Keyword x)) ;; Omits leading colon
+             #?(:bb (subs (str x) 1)
+                :clj (str (.sym ^clojure.lang.Keyword x))
                 :default (subs (str x) 1))
              (str x))]
      (cond (str/starts-with? c "%")
@@ -1735,12 +1735,13 @@
   qualifier, if any."
   [k]
   (if (keyword? k)
-    (if-let [n (namespace k)]
-      (symbol n (name k))
-      ;; In CLJ runtime, reuse symbol that's already present in the keyword.
-      #?(:bb (symbol (name k))
-         :clj (.sym ^clojure.lang.Keyword k)
-         :default (symbol (name k))))
+    #?(:bb (if-let [n (namespace k)]
+             (symbol n (name k))
+             (symbol (name k)))
+       :clj (.sym ^clojure.lang.Keyword k)
+       :default (if-let [n (namespace k)]
+                  (symbol n (name k))
+                  (symbol (name k))))
     k))
 
 (defn format-dsl
@@ -1965,6 +1966,7 @@
                   (str "." (join "." (map #(format-simple-expr % "dot navigation")
                                           subcols)))))]
           params)))
+
 (def ^:private special-syntax
   (atom
    {;; these "functions" are mostly used in column
