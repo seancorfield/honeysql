@@ -1225,36 +1225,6 @@ ORDER BY id = ? DESC
            (sut/format '{select (((.:. (nest v) *))
                                  ((.:. (nest w) x))
                                  ((.:. (nest (y z)) *)))}
-                       {:dialect :mysql})))
-    (is (= ["SELECT (v):*, (w):x, (Y(z)):*"]
-           (sut/format '{select (((get-in v *))
-                                 ((get-in w x))
-                                 ((get-in (y z) *)))})))
-    (is (= ["SELECT (`v`):*, (`w`):`x`, (Y(`z`)):*"]
-           (sut/format '{select (((get-in v *))
-                                 ((get-in w x))
-                                 ((get-in (y z) *)))}
-                       {:dialect :mysql})))))
-
-(deftest issue-570-snowflake-dot-selection
-  (testing "basic colon selection"
-    (is (= ["SELECT a:b, c:d, a:d.x, a:d.x.y"]
-           (let [t :a c :d]
-             (sut/format {:select [[[:.:. t :b]] [[:.:. :c c]]
-                                   [[:.:. t c :x]] [[:.:. t c :x :y]]]}))))
-    (is (= ["SELECT [a]:[b], [c]:[d], [a]:[d].[x]"]
-           (let [t :a c :d]
-             (sut/format {:select [[[:.:. t :b]] [[:.:. :c c]] [[:.:. t c :x]]]}
-                         {:dialect :sqlserver})))))
-  (testing "basic field selection from composite"
-    (is (= ["SELECT (v):*, (w):x, (Y(z)):*"]
-           (sut/format '{select (((.:. (nest v) *))
-                                 ((.:. (nest w) x))
-                                 ((.:. (nest (y z)) *)))})))
-    (is (= ["SELECT (`v`):*, (`w`):`x`, (Y(`z`)):*"]
-           (sut/format '{select (((.:. (nest v) *))
-                                 ((.:. (nest w) x))
-                                 ((.:. (nest (y z)) *)))}
                        {:dialect :mysql}))))
   (testing "bracket selection"
     (is (= ["SELECT a['b'], c['b'], a['d'].x, a:e[0].name"]
