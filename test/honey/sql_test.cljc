@@ -1225,7 +1225,23 @@ ORDER BY id = ? DESC
            (sut/format '{select (((.:. (nest v) *))
                                  ((.:. (nest w) x))
                                  ((.:. (nest (y z)) *)))}
-                       {:dialect :mysql})))))
+                       {:dialect :mysql}))))
+  (testing "bracket selection"
+    (is (= ["SELECT a['b'], c['b'], a['d'].x, a:e[0].name"]
+           (sut/format {:select [[[:at :a [:inline "b"]]]
+                                 [[:at :c "b"]]
+                                 [[:at :a [:inline "d"] :x]]
+                                 [[:.:. :a [:at :e [:inline 0]] :name]]]})))
+    (is (= ["SELECT a[?].name" 0]
+           (sut/format '{select (((at a (lift 0) name)))})))
+    ;; sanity check, compare with get-in:
+    (is (= ["SELECT (a)[?].name" 0]
+           (sut/format '{select (((get-in a (lift 0) name)))})))
+    (is (= ["SELECT (a)['b'], (c)['b'], (a)['d'].x, a:(e)[0].name"]
+           (sut/format {:select [[[:get-in :a [:inline "b"]]]
+                                 [[:get-in :c "b"]]
+                                 [[:get-in :a [:inline "d"] :x]]
+                                 [[:.:. :a [:get-in :e [:inline 0]] :name]]]})))))
 
 (deftest issue-476-raw
   (testing "single argument :raw"
