@@ -1070,6 +1070,9 @@ The `:where` clause can have a single SQL expression, or
 a sequence of SQL expressions prefixed by either `:and`
 or `:or`. See examples of `:where` in various clauses above.
 
+If `:where` is given an empty sequence, the `WHERE` clause will
+be omitted from the generated SQL.
+
 Sometimes it is convenient to construct a `WHERE` clause that
 tests several columns for equality, and you might have a Clojure
 hash map containing those values. `honey.sql/map=` exists to
@@ -1210,11 +1213,14 @@ user=> (sql/format {:select [[[:over
 
 ## order-by
 
-`:order-by` accepts a sequence of one or more ordering
+`:order-by` accepts a sequence of zero or more ordering
 expressions. Each ordering expression is either a simple
 SQL entity or a pair of a SQL expression and a direction
 (which can be `:asc`, `:desc`, `:nulls-first`, `:desc-null-last`,
 etc -- or the symbol equivalent).
+
+If `:order-by` is given an empty sequence, the `ORDER BY` clause will
+be omitted from the generated SQL.
 
 If you want to order by an expression, you should wrap it
 as a pair with a direction:

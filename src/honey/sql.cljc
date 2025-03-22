@@ -1119,11 +1119,13 @@
         dirs (map #(when (sequential? %) (second %)) xs)
         [sqls params]
         (format-expr-list (map #(if (sequential? %) (first %) %) xs))]
-    (into [(str (sql-kw k) " "
-                (join ", " (map (fn [sql dir]
-                                  (str sql " " (sql-kw (or dir :asc))))
-                                sqls
-                                dirs)))] params)))
+    (if (seq sqls)
+      (into [(str (sql-kw k) " "
+                  (join ", " (map (fn [sql dir]
+                                    (str sql " " (sql-kw (or dir :asc))))
+                                  sqls
+                                  dirs)))] params)
+      [])))
 
 (defn- format-lock-strength [k xs]
   (let [[strength tables nowait] (ensure-sequential xs)]
@@ -1771,7 +1773,7 @@
        (if (seq leftover)
          (throw (ex-info (str "These SQL clauses are unknown or have nil values: "
                               (join ", " (keys leftover))
-                              "(perhaps you need [:lift {"
+                              " (perhaps you need [:lift {"
                               (first (keys leftover))
                               " ...}] here?)")
                          leftover))

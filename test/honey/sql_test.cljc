@@ -1486,6 +1486,24 @@ ORDER BY id = ? DESC
                            (h/select :*)
                            (h/from :table)))))))
 
+(deftest issue-571
+  (testing "an empty where clause is omitted"
+    (is (= ["SELECT * FROM foo"]
+           (sut/format {:select :* :from :foo :where []})))
+    #?(:clj
+       (is (thrown? clojure.lang.ExceptionInfo
+                    (sut/format {:select :* :from :foo :where nil}))))
+    (is (= ["SELECT * FROM foo WHERE 1 = 1"]
+           (sut/format {:select :* :from :foo :where [:= 1 1]} {:inline true}))))
+  (testing "an empty order by clause is omitted"
+    (is (= ["SELECT * FROM foo"]
+           (sut/format {:select :* :from :foo :order-by []})))
+    #?(:clj
+       (is (thrown? clojure.lang.ExceptionInfo
+                    (sut/format {:select :* :from :foo :order-by nil}))))
+    (is (= ["SELECT * FROM foo ORDER BY bar ASC"]
+           (sut/format {:select :* :from :foo :order-by [:bar]})))))
+
 (comment
   ;; partial (incorrect!) workaround for #407:
   (sut/format {:select :f.* :from [[:foo [:f :for :system-time]]] :where [:= :f.id 1]})
