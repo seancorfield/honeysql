@@ -3,7 +3,7 @@
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}}
  :aliases
  {;; for help: clojure -A:deps -T:build help/doc
-  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.6"}
+  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.7"}
                  slipset/deps-deploy {:mvn/version "0.2.2"}}
           :ns-default build}
 
@@ -30,7 +30,7 @@
          :main-opts ["-m" "cljs-test-runner.main"]}
 
   :gen-doc-tests {:replace-paths ["build"]
-                  :extra-deps {babashka/fs {:mvn/version "0.5.22"}
+                  :extra-deps {babashka/fs {:mvn/version "0.5.24"}
                                com.github.lread/test-doc-blocks {:mvn/version "1.1.20"}}
                   :main-opts ["-m" "honey.gen-doc-tests"]}
 

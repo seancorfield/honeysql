@@ -2,6 +2,7 @@
 
 * 2.7.next in progress
   * Fix [#571](https://github.com/seancorfield/honeysql/issues/571) by allowing `:order-by` to take an empty sequence of columns (and be omitted).
+  * Update dev/build deps.
 
 * 2.7.1295 -- 2025-03-12
   * Address #570 by adding `:.:.` as special syntax for Snowflake's JSON path syntax, and `:at` as special syntax for general `[`..`]` path syntax.
