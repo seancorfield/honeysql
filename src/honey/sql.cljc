@@ -370,6 +370,20 @@
       (keyword (name s)))
     s))
 
+(defn- kw->sym
+  "Given a keyword, produce a symbol, retaining the namespace
+  qualifier, if any."
+  [k]
+  (if (keyword? k)
+    #?(:bb (if-let [n (namespace k)]
+             (symbol n (name k))
+             (symbol (name k)))
+       :clj (.sym ^clojure.lang.Keyword k)
+       :default (if-let [n (namespace k)]
+                  (symbol n (name k))
+                  (symbol (name k))))
+    k))
+
 (defn- inline-map [x & [open close]]
   (str (or open "{")
        (join ", " (map (fn [[k v]]
@@ -1418,10 +1432,12 @@
 (defn- format-create-index [k clauses]
   (let [[index-spec [table & exprs]] clauses
         [pre entity ine & more] (destructure-ddl-item index-spec (str (sql-kw k) " options"))
-        [using & exprs] (if (contains? #{:using-gin 'using-gin}
-                                       (first exprs))
-                          exprs
-                          (cons nil exprs))
+        [using & exprs]
+        (let [item (first exprs)]
+          (if (and (ident? item)
+                   (str/starts-with? (str (kw->sym item)) "using-"))
+            exprs
+            (cons nil exprs)))
         [sqls params] (format-expr-list exprs)]
     (into [(join " " (remove empty?)
                  (-> ["CREATE" pre "INDEX" ine entity
@@ -1731,20 +1747,6 @@
 (assert (= (set @base-clause-order)
            (set @current-clause-order)
            (set (keys @clause-format))))
-
-(defn- kw->sym
-  "Given a keyword, produce a symbol, retaining the namespace
-  qualifier, if any."
-  [k]
-  (if (keyword? k)
-    #?(:bb (if-let [n (namespace k)]
-             (symbol n (name k))
-             (symbol (name k)))
-       :clj (.sym ^clojure.lang.Keyword k)
-       :default (if-let [n (namespace k)]
-                  (symbol n (name k))
-                  (symbol (name k))))
-    k))
 
 (defn format-dsl
   "Given a hash map representing a SQL statement and a hash map
