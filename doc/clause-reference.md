@@ -830,13 +830,23 @@ is a "hard" delete as opposed to a temporal delete.
 ## truncate
 
 `:truncate` accepts a simple SQL entity (table name)
-or a table name followed by various options:
+or a table name followed by various options, or a
+sequence that starts with a sequence of one or more table names,
+optionally followed by various options:
 
 ```clojure
 user=> (sql/format '{truncate transport})
 ["TRUNCATE TABLE transport"]
+user=> (sql/format '{truncate (transport)})
+["TRUNCATE TABLE transport"]
 user=> (sql/format '{truncate (transport restart identity)})
 ["TRUNCATE TABLE transport RESTART IDENTITY"]
+user=> (sql/format '{truncate ((transport))})
+["TRUNCATE TABLE transport"]
+user=> (sql/format '{truncate ((transport other))})
+["TRUNCATE TABLE transport, other"]
+user=> (sql/format '{truncate ((transport other) restart identity)})
+["TRUNCATE TABLE transport, other RESTART IDENTITY"]
 ```
 
 ## columns

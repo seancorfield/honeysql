@@ -459,8 +459,8 @@
    (if (str/starts-with? c "'")
      (do
        (reset! *formatted-column* true)
-       [(subs c 1)])
-     [(format-entity x opts)])))
+       (subs c 1))
+     (format-entity x opts))))
 
 (defn- format-var
   ([x] (format-var x {}))
@@ -487,7 +487,7 @@
                    :else
                    ["?" (->param k)]))
            :else
-           (format-simple-var x c opts)))))
+           [(format-simple-var x c opts)]))))
 
 (defn- format-entity-alias [x]
   (cond (sequential? x)
@@ -1388,20 +1388,17 @@
                 [(butlast coll) (last coll) nil]))]
     (into [(join " " (map sql-kw) prequel)
            (when table
-             (let [[v & more] (format-simple-var table)]
-               (when (seq more)
-                 (throw (ex-info (str "DDL syntax error at: "
-                                      (pr-str table)
-                                      " - expected table name")
-                                 {:unexpected more})))
-               v))
+             (format-simple-var table))
            (when ine (sql-kw ine))]
           (when opts
             (format-ddl-options opts context)))))
 
 (defn- format-truncate [_ xs]
   (let [[table & options] (ensure-sequential xs)
-        [pre table ine options] (destructure-ddl-item [table options] "truncate")]
+        table (if (or (ident? table) (string? table))
+                (format-simple-var table)
+                (join ", " (map format-simple-var table)))
+        [pre _ ine options] (destructure-ddl-item [nil options] "truncate")]
     (when (seq pre) (throw (ex-info "TRUNCATE syntax error" {:unexpected pre})))
     (when (seq ine) (throw (ex-info "TRUNCATE syntax error" {:unexpected ine})))
     [(join " " (cond-> ["TRUNCATE TABLE" table]
@@ -1414,6 +1411,11 @@
   (destructure-ddl-item [:id [:int :unsigned :auto-increment]] "test")
   (destructure-ddl-item [[[:foreign-key :bar]] :quux [[:wibble :wobble]]] "test")
   (format-truncate :truncate [:foo])
+  (format-truncate :truncate ["foo, bar"])
+  (format-truncate :truncate "foo, bar")
+  (format-truncate :truncate [[:foo :bar]])
+  (format-truncate :truncate :foo)
+  (format {:truncate [[:foo] :x]})
   )
 
 (defn- format-create [q k item as]

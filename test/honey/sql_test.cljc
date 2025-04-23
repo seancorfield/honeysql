@@ -614,6 +614,12 @@
              (format {:dialect :mysql}))))
   (is (= ["TRUNCATE TABLE `foo` CONTINUE IDENTITY"]
          (-> {:truncate [:foo :continue :identity]}
+             (format {:dialect :mysql}))))
+  (is (= ["TRUNCATE TABLE `t1`, `t2`"]
+         (-> {:truncate [[:t1 :t2]]}
+             (format {:dialect :mysql}))))
+  (is (= ["TRUNCATE TABLE `t1`, `t2` CONTINUE IDENTITY"]
+         (-> {:truncate [[:t1 :t2] :continue :identity]}
              (format {:dialect :mysql})))))
 
 (deftest inlined-values-are-stringified-correctly

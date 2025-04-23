@@ -1,6 +1,7 @@
 # Changes
 
 * 2.7.next in progress
+  * Address [#440](https://github.com/seancorfield/honeysql/issues/440) by supporting multiple tables in `:truncate`.
   * Support `USING HASH` as well as `USING GIN`.
   * Fix [#571](https://github.com/seancorfield/honeysql/issues/571) by allowing `:order-by` to take an empty sequence of columns (and be omitted).
   * Update dev/build deps.
