@@ -1165,8 +1165,8 @@
             ;; use the keys from the first map if they match so that
             ;; users can rely on the key ordering if they want to,
             ;; e.g., see test that uses array-map for the first row
-            cols-n (into #{} (mapcat keys) (filter map? xs))
-            cols   (if (= (set cols-1) cols-n) cols-1 cols-n)]
+            cols-n (into #{} (comp (filter map?) (mapcat keys)) xs)
+            cols   (if (= (into #{} cols-1) cols-n) cols-1 cols-n)]
         [cols (when-not skip-cols-sql
                 (str "("
                      (join ", " (map #(format-entity % {:drop-ns true})) cols)
@@ -1177,14 +1177,15 @@
         row-ctr  (and (sequential? xs)
                       (ident? (first xs))
                       (contains? #{:row 'row} (first xs)))
-        xs       (if row-ctr (rest xs) xs)]
+        xs       (if (sequential? xs) (vec xs) xs)
+        xs       (if row-ctr (subvec xs 1) xs)]
     (cond (and (ident? xs) (contains? #{:default 'default} xs))
           [(str (sql-kw xs) " " (sql-kw k))]
           (empty? xs)
           [(str (sql-kw k) " ()")]
           (sequential? first-xs)
           ;; [[1 2 3] [4 5 6]]
-          (let [n-1 (map count (filter sequential? xs))
+          (let [n-1 (into [] (comp (filter sequential?) (map count)) xs)
                 ;; issue #291: ensure all value sequences are the same length
                 xs' (if (apply = n-1)
                       xs
