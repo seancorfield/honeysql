@@ -134,30 +134,32 @@
 (def ^:private default-numbered (atom false))
 
 (def ^:private ^:dynamic *dialect* nil)
-;; nil would be a better default but that makes testing individual
-;; functions harder than necessary:
-(def ^:private ^:dynamic *clause-order* default-clause-order)
-(def ^:private ^:dynamic *quoted* @default-quoted)
-(def ^:private ^:dynamic *quoted-always* @default-quoted-always)
-(def ^:private ^:dynamic *quoted-snake* @default-quoted-snake)
-(def ^:private ^:dynamic *inline* @default-inline)
-(def ^:private ^:dynamic *params* nil)
-(def ^:private ^:dynamic *values-default-columns* nil)
-;; there is no way, currently, to enable suspicious characters
-;; in entities; if someone complains about this check, an option
-;; can be added to format to turn this on:
-(def ^:private ^:dynamic *allow-suspicious-entities* false)
-;; the following metadata is ignored in formatted by default:
-;; :file, :line, :column, :end-line, and :end-column
-;; this dynamic var can be used to add more metadata to ignore:
-(def ^:private ^:dynamic *ignored-metadata* [])
-;; "linting" mode (:none, :basic, :strict):
-(def ^:private ^:dynamic *checking* @default-checking)
-;; the current DSL hash map being formatted (for clause-body / contains-clause?):
-(def ^:private ^:dynamic *dsl* nil)
-;; caching data to detect expressions that cannot be cached:
-(def ^:private ^:dynamic *caching* nil)
-(def ^:private ^:dynamic *numbered* nil)
+(def ^:private ^:dynamic *options*
+  {;; nil would be a better default but that makes testing individual
+   ;; functions harder than necessary:
+   :clause-order default-clause-order
+   :quoted @default-quoted
+   :quoted-always @default-quoted-always
+   :quoted-snake @default-quoted-snake
+   :inline @default-inline
+   :params nil
+   :values-default-columns nil
+   ;; there is no way, currently, to enable suspicious characters
+   ;; in entities; if someone complains about this check, an option
+   ;; can be added to format to turn this on:
+   :allow-suspicious-entities false
+   ;; the following metadata is ignored in formatted by default:
+   ;; :file, :line, :column, :end-line, and :end-column
+   ;; this dynamic var can be used to add more metadata to ignore:
+   :ignored-metadata []
+   ;; "linting" mode (:none, :basic, :strict):
+   :checking @default-checking
+   ;; the current DSL hash map being formatted (for clause-body / contains-clause?):
+   :dsl nil
+   ;; caching data to detect expressions that cannot be cached:
+   :caching nil
+   :numbered nil})
+
 ;; #533 mostly undocumented dynvar to prevent ? -> ?? escaping:
 (def ^:no-doc ^:dynamic *escape-?* true)
 
@@ -165,7 +167,7 @@
 (def ^:private suspicious ";")
 (defn- suspicious? [s] (str/includes? s suspicious))
 (defn- suspicious-entity-check [entity]
-    (when-not *allow-suspicious-entities*
+    (when-not (:allow-suspicious-entities *options*)
       (when (suspicious? entity)
         (throw (ex-info (str "suspicious character found in entity: " entity)
                         {:disallowed suspicious})))))
@@ -176,11 +178,12 @@
   "If the current DSL expression being formatted contains the specified clause
   (as a keyword or symbol), returns that clause's value."
   [clause]
-  (or (get *dsl* clause)
-      (get *dsl*
-           (if (keyword? clause)
-             (symbol (name clause))
-             (keyword (name clause))))))
+  (let [dsl (:dsl *options*)]
+    (or (get dsl clause)
+        (get dsl
+             (if (keyword? clause)
+               (symbol (name clause))
+               (keyword (name clause)))))))
 
 (defn contains-clause?
   "Returns true if the current DSL expression being formatted
@@ -283,37 +286,38 @@
   Handles quoting, splitting at / or ., replacing - with _ etc."
   ([e] (format-entity e {}))
   ([e {:keys [aliased drop-ns]}]
-   (let [e           (if (and aliased (keyword? e) (str/starts-with? (name e) "'"))
-                      ;; #497 quoted alias support (should behave like string)
+   (let [dialect     *dialect*
+         {:keys [quoted quoted-snake quoted-always]} *options*
+         e           (if (and aliased (keyword? e) (str/starts-with? (name e) "'"))
+                       ;; #497 quoted alias support (should behave like string)
                        (subs (name e) 1)
                        e)
-         col-fn      (or (:col-fn *dialect*)
-                         (if (or *quoted* (string? e))
-                           (if *quoted-snake* name-_ name)
+         col-fn      (or (:col-fn dialect)
+                         (if (or quoted (string? e))
+                           (if quoted-snake name-_ name)
                            name-_))
          col-e       (col-fn e)
-         dialect-q   (:quote *dialect* identity)
-         quote-fn    (cond (or *quoted* (string? e))
+         dialect-q   (:quote dialect identity)
+         quote-fn    (cond (or quoted (string? e))
                            dialect-q
                           ;; #422: if default quoting and "unusual"
                           ;; characters in entity, then quote it:
-                           (nil? *quoted*)
+                           (nil? quoted)
                            (fn opt-quote [part]
-                             (cond (and *quoted-always*
-                                        (re-find *quoted-always* part))
+                             (cond (some-> quoted-always (re-find part))
                                    (dialect-q part)
                                    (re-find alphanumeric part)
                                    part
                                    :else
                                    (dialect-q part)))
-                           *quoted-always*
+                           quoted-always
                            (fn always-quote [part]
-                             (if (re-find *quoted-always* part)
+                             (if (re-find quoted-always part)
                                (dialect-q part)
                                part))
                            :else
                            identity)
-         parts-fn    (or (:parts-fn *dialect*)
+         parts-fn    (or (:parts-fn dialect)
                          #(if-let [n (when-not (or drop-ns (string? e))
                                        (namespace-_ e))]
                             [n %]
@@ -329,10 +333,10 @@
   (for [v [:foo-bar "foo-bar" ; symbol is the same as keyword
            :f-o.b-r :f-o/b-r]
         a [true false] d [true false] q [true false]]
-    (binding [*dialect* (:mysql @dialects) *quoted* q]
+    (binding [*dialect* (:mysql @dialects) *options* (assoc *options* :quoted q)]
       (if q
         [v a d (format-entity v {:aliased a :drop-ns d})
-         (binding [*quoted-snake* true]
+         (binding [*options* (assoc *options* :quoted-snake true)]
            (format-entity v {:aliased a :drop-ns d}))]
         [v a d (format-entity v {:aliased a :drop-ns d})])))
   )
@@ -356,7 +360,8 @@
       (if (str/starts-with? n "'")
         (let [ident   (subs n 1)
               ident-l (str/lower-case ident)]
-          (binding [*quoted* (when-not (contains? #{"array"} ident-l) *quoted*)]
+          (binding [*options* (cond-> *options*
+                                (= ident-l "array") (assoc :quoted nil))]
             (format-entity (keyword ident))))
         (-> n (dehyphen) (upper-case))))))
 
@@ -419,10 +424,11 @@
 (defn- sqlize-value [x] (p/sqlize x))
 
 (defn- param-value [k]
-  (if (contains? *params* k)
-    (get *params* k)
-    (throw (ex-info (str "missing parameter value for " k)
-                    {:params (keys *params*)}))))
+  (let [{:keys [params]} *options*]
+    (if (contains? params k)
+      (get params k)
+      (throw (ex-info (str "missing parameter value for " k)
+                      {:params (keys params)})))))
 
 (defn- ->param [k]
   (with-meta (constantly k)
@@ -430,18 +436,18 @@
      (fn [fk _] (param-value (fk)))}))
 
 (defn ->numbered [v]
-  (let [n (count (swap! *numbered* conj v))]
+  (let [{:keys [numbered]} *options*
+        n (count (swap! numbered conj v))]
     [(str "$" n) (with-meta (constantly (dec n))
                    {::wrapper
-                    (fn [fk _] (get @*numbered* (fk)))})]))
+                    (fn [fk _] (get @numbered (fk)))})]))
 
 (defn ->numbered-param [k]
-  (let [n (count (swap! *numbered* conj k))]
+  (let [{:keys [numbered]} *options*
+        n (count (swap! numbered conj k))]
     [(str "$" n) (with-meta (constantly (dec n))
                    {::wrapper
-                    (fn [fk _] (param-value (get @*numbered* (fk))))})]))
-
-(def ^:private ^:dynamic *formatted-column* (atom false))
+                    (fn [fk _] (param-value (get @numbered (fk))))})]))
 
 (defn- format-fn-name
   [x]
@@ -457,9 +463,7 @@
      (format-simple-var x c {})))
   ([x c opts]
    (if (str/starts-with? c "'")
-     (do
-       (reset! *formatted-column* true)
-       (subs c 1))
+     (subs c 1)
      (format-entity x opts))))
 
 (defn- format-var
@@ -468,7 +472,8 @@
    ;; rather than name/namespace, we want to allow
    ;; for multiple / in the %fun.call case so that
    ;; qualified column names can be used:
-   (let [c (if (keyword? x)
+   (let [{:keys [inline numbered]} *options*
+         c (if (keyword? x)
              #?(:bb (subs (str x) 1)
                 :clj (str (.sym ^clojure.lang.Keyword x))
                 :default (subs (str x) 1))
@@ -480,9 +485,9 @@
                    ")")])
            (str/starts-with? c "?")
            (let [k (keyword (subs c 1))]
-             (cond *inline*
+             (cond inline
                    [(sqlize-value (param-value k))]
-                   *numbered*
+                   numbered
                    (->numbered-param k)
                    :else
                    ["?" (->param k)]))
@@ -633,14 +638,14 @@
                                     (into [; remove the somewhat "standard" metadata:
                                            :line :column :file
                                            :end-line :end-column]
-                                          *ignored-metadata*)))]
+                                          (:ignored-metadata *options*))))]
        (when (seq items)
          (join (str sep " ") (map sql-kw) items))))))
 
 (comment
   (format-meta ^{:foo true :bar :baz :original {:line 1} :top 10} [])
 
-  (binding [*ignored-metadata* [:bar]]
+  (binding [*options* {:ignored-metadata [:bar]}]
     (format-meta ^{:foo true :bar :baz} []))
 
   (format-meta [])
@@ -682,7 +687,7 @@
                   (str (if as
                          (if (or *-qualifier
                                  (and (contains? *dialect* :as)
-                                   (not (:as *dialect*))))
+                                      (not (:as *dialect*))))
                            " "
                            " AS ")
                          " ")
@@ -819,7 +824,7 @@
                       ["(" ")"])]
      (if (sequential? xs)
        (let [[sqls params] (reduce-sql (map #(format-selectable-dsl % {:as as})) xs)]
-         (when-not (= :none *checking*)
+         (when-not (= :none (:checking *options*))
            (when (empty? xs)
              (throw (ex-info (str prefix " empty column list is illegal")
                              {:clause (into [prefix] xs)}))))
@@ -1173,7 +1178,8 @@
                      ")"))]))))
 
 (defn- format-values [k xs]
-  (let [first-xs (when (sequential? xs) (first (drop-while ident? xs)))
+  (let [{:keys [values-default-columns]} *options*
+        first-xs (when (sequential? xs) (first (drop-while ident? xs)))
         row-ctr  (and (sequential? xs)
                       (ident? (first xs))
                       (contains? #{:row 'row} (first xs)))
@@ -1226,9 +1232,8 @@
                                               (get x %
                                                    ;; issue #366: use NULL or DEFAULT
                                                    ;; for missing column values:
-                                                   (if (contains? *values-default-columns* %)
-                                                     [:default]
-                                                     nil))))
+                                                   (when (contains? values-default-columns %)
+                                                     [:default]))))
                                        cols)]
                        [(conj sql
                               (if (sequential? sqls')
@@ -1313,7 +1318,7 @@
           [(str (sql-kw k) " " e " = EXCLUDED." e)])))
 
 (defn- format-simple-clause [c context]
-  (binding [*inline* true]
+  (binding [*options* (assoc *options* :inline true)]
     (let [[sql & params] (format-dsl c)]
       (when (seq params)
         (throw (ex-info (str "parameters are not accepted in " context)
@@ -1321,7 +1326,7 @@
       sql)))
 
 (defn- format-simple-expr [e context]
-  (binding [*inline* true]
+  (binding [*options* (assoc *options* :inline true)]
     (let [[sql & params] (format-expr e)]
       (when (seq params)
         (throw (ex-info (str "parameters are not accepted in " context)
@@ -1571,7 +1576,7 @@
           (into [(str (sql-kw k) " " sql " "
                       (join " " (map sql-kw) units))]
                 params))
-        (binding [*inline* true]
+        (binding [*options* (assoc *options* :inline true)]
           (let [[sql & params] (format-expr n)]
             (into [(str (sql-kw k) " " sql)] params)))))
     [(str (sql-kw k) " " (sql-kw args))]))
@@ -1614,10 +1619,11 @@
   a non-empty where clause if at least basic checking is enabled."
   [formatter]
   (fn [k xs]
-    (when-not (= :none *checking*)
-      (when-not (seq (:where *dsl*))
-        (throw (ex-info (str (sql-kw k) " without a non-empty WHERE clause is dangerous")
-                        {:clause k :where (:where *dsl*)}))))
+    (let [{:keys [checking dsl]} *options*]
+      (when-not (= :none checking)
+        (when (empty? (:where dsl))
+          (throw (ex-info (str (sql-kw k) " without a non-empty WHERE clause is dangerous")
+                          {:clause k :where (:where dsl)})))))
     (formatter k xs)))
 
 (def ^:private base-clause-order
@@ -1760,7 +1766,7 @@
   extend the DSL supported by HoneySQL."
   ([statement-map] (format-dsl statement-map {}))
   ([statement-map {:keys [aliased nested pretty]}]
-   (binding [*dsl* statement-map]
+   (binding [*options* (assoc *options* :dsl statement-map)]
      (let [[sqls params leftover]
            (reduce (fn [[sql params leftover] k]
                      (if-some [xs (if-some [xs (k leftover)]
@@ -1774,7 +1780,7 @@
                           (dissoc leftover k (kw->sym k))])
                        [sql params leftover]))
                    [[] [] statement-map]
-                   *clause-order*)]
+                   (:clause-order *options*))]
        (if (seq leftover)
          (throw (ex-info (str "These SQL clauses are unknown or have nil values: "
                               (join ", " (keys leftover))
@@ -1822,32 +1828,33 @@
     x))
 
 (defn- format-in [in [x y]]
-  (let [[sql-x & params-x] (format-expr x {:nested true})
+  (let [{:keys [caching checking numbered]} *options*
+        [sql-x & params-x] (format-expr x {:nested true})
         [sql-y & params-y] (format-expr y {:nested true})
         [v1 :as values]    (map #(unwrap % {}) params-y)]
     ;; #396: prevent caching IN () when named parameter is used:
     (when (and (meta (first params-y))
                (::wrapper (meta (first params-y)))
-               *caching*)
+               caching)
       (throw (ex-info "SQL that includes IN () expressions cannot be cached" {})))
-    (when-not (= :none *checking*)
+    (when-not (= :none checking)
       (when (or (and (sequential? y)  (empty? y))
                 (and (sequential? v1) (empty? v1)))
         (throw (ex-info "IN () empty collection is illegal"
                         {:clause [in x y]})))
-      (when (and (= :strict *checking*)
+      (when (and (= :strict checking)
                  (or (and (sequential? y)  (some nil? y))
                      (and (sequential? v1) (some nil? v1))))
         (throw (ex-info "IN (NULL) does not match"
                         {:clause [in x y]}))))
-    (cond (and (not *numbered*)
+    (cond (and (not numbered)
                (= "?" sql-y)
                (= 1 (count params-y))
                (coll? v1))
           (let [sql (str "(" (join ", " (repeat (count v1) "?")) ")")]
             (into* [(str sql-x " " (sql-kw in) " " sql)] params-x v1))
-          (and *numbered*
-               (= (str "$" (count @*numbered*)) sql-y)
+          (and numbered
+               (= (str "$" (count @numbered)) sql-y)
                (= 1 (count params-y))
                (coll? v1))
           (let [vs  (for [v v1] (->numbered v))
@@ -1856,7 +1863,7 @@
                    params-x [nil] (map second vs)))
           :else
           (into* [(str sql-x " " (sql-kw in) " " sql-y)]
-                 params-x (if *numbered* values params-y)))))
+                 params-x (if numbered values params-y)))))
 
 (defn- function-0 [k xs]
   [(str (sql-kw k)
@@ -2026,7 +2033,7 @@
     (fn [_ [expr tz]]
       (let [[sql & params] (format-expr expr {:nested true})
             [tz-sql & _]
-            (binding [*inline* true]
+            (binding [*options* (assoc *options* :inline true)]
               (format-expr (if (ident? tz) (name tz) tz)))]
         (into [(str sql " AT TIME ZONE " tz-sql)] params)))
     :between     #'between-fn
@@ -2058,7 +2065,7 @@
     :ignore-nulls ignore-respect-nulls
     :inline
     (fn [_ xs]
-      (binding [*inline* true]
+      (binding [*options* (assoc *options* :inline true)]
         [(join " " (mapcat #(format-expr % {:record true})) xs)]))
     :interval format-interval
     :join
@@ -2075,12 +2082,12 @@
           (into [(str "LATERAL " sql)] params))))
     :lift
     (fn [_ [x]]
-      (cond *inline*
+      (cond (:inline *options*)
             ;; this is pretty much always going to be wrong,
             ;; but it could produce a valid result so we just
             ;; assume that the user knows what they are doing:
             [(sqlize-value x)]
-            *numbered*
+            (:numbered *options*)
             (->numbered x)
             :else
             ["?" (with-meta (constantly x)
@@ -2117,9 +2124,9 @@
     :param
     (fn [_ [k]]
       (let [k (sym->kw k)]
-        (cond *inline*
+        (cond (:inline *options*)
               [(sqlize-value (param-value k))]
-              *numbered*
+              (:numbered *options*)
               (->numbered-param k)
               :else
               ["?" (->param k)])))
@@ -2232,9 +2239,9 @@
          ["NULL"]
 
          :else
-         (cond *inline*
+         (cond (:inline *options*)
                [(sqlize-value expr)]
-               *numbered*
+               (:numbered *options*)
                (->numbered expr)
                :else
                ["?" expr]))))
@@ -2284,50 +2291,37 @@
          dialect   (if dialect?
                      (get @dialects (check-dialect (:dialect opts)))
                      @default-dialect)
-         numbered  (if (contains? opts :numbered)
-                     (:numbered opts)
-                     @default-numbered)
-         formatter (if (map? data) #'format-dsl #'format-expr)]
-     (binding [*dialect* dialect
-               *caching* cache
-               *checking* (if (contains? opts :checking)
-                            (:checking opts)
-                            @default-checking)
-               *clause-order* (if dialect?
-                                (if-let [f (:clause-order-fn dialect)]
-                                  (f @base-clause-order)
+         numbered? (:numbered opts @default-numbered)
+         formatter (if (map? data) #'format-dsl #'format-expr)
+         options {:caching cache
+                  :checking (:checking opts @default-checking)
+                  :clause-order (if dialect?
+                                  (if-let [f (:clause-order-fn dialect)]
+                                    (f @base-clause-order)
+                                    @current-clause-order)
                                   @current-clause-order)
-                                @current-clause-order)
-               *ignored-metadata* (if (contains? opts :ignored-metadata)
-                                    (:ignored-metadata opts)
-                                    [])
-               *inline*  (cond (contains? opts :inline)
-                               (:inline opts)
-                               (= :nrql (:dialect dialect))
-                               true
-                               :else
-                               @default-inline)
-               *numbered* (when numbered
-                            (atom []))
-               *quoted*  (cond (contains? opts :quoted)
-                               (:quoted opts)
-                               (= :nrql (:dialect dialect))
-                               nil
-                               dialect?
-                               true
-                               :else
-                               @default-quoted)
-               *quoted-always* (if (contains? opts :quoted-always)
-                                 (:quoted-always opts)
-                                 @default-quoted-always)
-               *quoted-snake* (if (contains? opts :quoted-snake)
-                                (:quoted-snake opts)
-                                @default-quoted-snake)
-               *params* (reduce-kv (fn [m k v]
-                                     (assoc m (sym->kw k) v))
-                                   {}
-                                   (:params opts))
-               *values-default-columns* (:values-default-columns opts)]
+                  :ignored-metadata (:ignored-metadata opts [])
+                  :inline (:inline opts (if (= :nrql (:dialect dialect))
+                                          true
+                                          @default-inline))
+                  :numbered (when numbered? (atom []))
+                  :quoted (cond (contains? opts :quoted)
+                                (:quoted opts)
+                                (= :nrql (:dialect dialect))
+                                nil
+                                dialect?
+                                true
+                                :else
+                                @default-quoted)
+                  :quoted-always (:quoted-always opts @default-quoted-always)
+                  :quoted-snake (:quoted-snake opts @default-quoted-snake)
+                  :params (reduce-kv (fn [m k v]
+                                       (assoc m (sym->kw k) v))
+                                     {}
+                                     (:params opts))
+                  :values-default-columns (:values-default-columns opts)}]
+     (binding [*dialect* dialect
+               *options* options]
        (if cache
          (->> (through-opts opts cache data (fn [_] (formatter data (dissoc opts :cache))))
               (mapv #(unwrap % opts)))
