@@ -1768,7 +1768,7 @@
   ([statement-map {:keys [aliased nested pretty]}]
    (binding [*options* (assoc *options* :dsl statement-map)]
      (let [[sqls params leftover]
-           (reduce (fn [[sql params leftover] k]
+           (reduce (fn [[sql params leftover :as result] k]
                      (if-some [xs (if-some [xs (k leftover)]
                                     xs
                                     (let [s (kw->sym k)]
@@ -1778,7 +1778,7 @@
                          [(conj sql sql')
                           (if params' (into params params') params)
                           (dissoc leftover k (kw->sym k))])
-                       [sql params leftover]))
+                       result))
                    [[] [] statement-map]
                    (:clause-order *options*))]
        (if (seq leftover)
