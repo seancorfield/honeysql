@@ -1,7 +1,4 @@
-*.class
-*.jar
-*.swp
-*~
+.calva/mcp-server/port
 .calva/output-window/
 .calva/repl.calva-repl
 .classpath
@@ -23,6 +20,10 @@
 .settings
 .socket-repl-port
 .sw*
+*.class
+*.jar
+*.swp
+*~
 /checkouts
 /classes
 /cljs-test-runner-out
