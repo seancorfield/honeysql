@@ -162,6 +162,8 @@
 
 ;; #533 mostly undocumented dynvar to prevent ? -> ?? escaping:
 (def ^:no-doc ^:dynamic *escape-?* true)
+;; #574 mostly undocumented dynvar to prevent nesting infix operator args:
+(def ^:no-doc ^:dynamic *nest-infix* true)
 
 ;; suspicious entity names:
 (def ^:private suspicious ";")
@@ -2173,7 +2175,7 @@
                    :else ; args is empty and not a special case
                    [])
         [sqls params]
-        (reduce-sql (map #(format-expr % {:nested true})) args)]
+        (reduce-sql (map #(format-expr % {:nested *nest-infix*})) args)]
     (when-not (pos? (count sqls))
       (throw (ex-info (str "no operands found for " op')
                       {:expr expr})))
@@ -2598,6 +2600,12 @@
                             [:= :bar [:param :quux]]]}
                    {:params {:foo 42 :quux 13}
                     :pretty true}))
+  (binding [*nest-infix* false]
+    (println (format {:select [:*] :from [:table]
+                      :where [:and [:in :id [1 [:param :foo]]]
+                              [:= :bar [:param :quux]]]}
+                     {:params {:foo 42 :quux 13}
+                      :pretty true})))
   ;; while working on the docs
   (require '[honey.sql :as sql])
   (sql/format-expr [:array (range 5)])
