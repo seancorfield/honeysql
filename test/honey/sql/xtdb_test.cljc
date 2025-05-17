@@ -1,10 +1,12 @@
 ;; copyright (c) 2020-2025 sean corfield, all rights reserved
 
 (ns honey.sql.xtdb-test
-  (:require [clojure.test :refer [deftest is testing]]
-            [honey.sql :as sql]
-            [honey.sql.helpers :as h
-             :refer [select exclude rename from]]))
+  (:require
+   [clojure.string :as str]
+   [clojure.test :refer [deftest is testing]]
+   [honey.sql :as sql]
+   [honey.sql.helpers :as h
+             :refer [exclude from rename select]]))
 
 (deftest select-tests
   (testing "select, exclude, rename"
@@ -153,4 +155,12 @@
            (sql/format [:xtql '(-> (from :my-table [x]) (where (<= x 100)))]))))
   (testing "inline xtql"
     (is (= ["FROM (XTQL $$ (-> (from :my-table [x]) (where (<= x 100))) $$) AS my_table"]
-           (sql/format {:from [[[:xtql '(-> (from :my-table [x]) (where (<= x 100)))] :my_table]]})))))
+           (sql/format {:from [[[:xtql '(-> (from :my-table [x]) (where (<= x 100)))] :my_table]]}))))
+  (testing "inline xtql with named parameters"
+    (is (= ["FROM (XTQL ($$ (fn [v] (-> (from :my-table [x]) (where (<= x v)))) $$, ?)) AS my_table" 42]
+           (sql/format {:from [[[:xtql '(fn [v] (-> (from :my-table [x]) (where (<= x v)))) 42] :my_table]]}))))
+  (testing "inline xtql with unnamed parameters"
+    (let [[sql & params] (sql/format {:from [[[:xtql '#(-> (from :my-table [x]) (where (and (<= %1 x) (<= x %2)))) 13 42] :my_table]]})]
+      (is (= [13 42] params))
+      (is (str/starts-with? sql "FROM (XTQL ($$ (fn* ["))
+      (is (str/ends-with?   sql "))))) $$, ?, ?)) AS my_table")))))

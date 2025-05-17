@@ -1,6 +1,7 @@
 # Changes
 
 * 2.7.next in progress
+  * Address [#575](https://github.com/seancorfield/honeysql/issues/575) by adding support for parameters in inline XTQL queries.
   * Address [#574](https://github.com/seancorfield/honeysql/issues/574) by adding `honey.sql/*nest-infix*` which can be bound to `false` to prevent infix operators (such as `:and`) from nesting their arguments, i.e, wrapping them in `(` .. `)`. If precedence matters in your expressions, this will produce incorrect SQL. It is intended for specific, limited query dialects (such as Google Ads Queries).
   * More performance optimizations via PR [#573](https://github.com/seancorfield/honeysql/pull/573) [@alexander-yakushev](https://github.com/alexander-yakushev).
   * Address [#572](https://github.com/seancorfield/honeysql/issues/572) by adding `[:xtql ...]` special syntax for inline XTQL queries (for XTDB).

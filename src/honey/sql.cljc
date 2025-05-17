@@ -2142,10 +2142,21 @@
     :respect-nulls ignore-respect-nulls
     :within-group expr-clause-pairs
     :xtql
-    (fn [_ [x]]
-      [(if (:dsl *options*)
-         (str "(XTQL $$ " (pr-str x) " $$)")
-         (str "XTQL $$ " (pr-str x) " $$"))])}))
+    (fn [_ [x & args]]
+      (let [arg-count (when (and (sequential? x)
+                                 (contains? #{'fn 'fn*} (first x))
+                                 (sequential? (second x)))
+                        (count (second x)))
+            base-xtql (str "$$ " (pr-str x) " $$")
+            arg-tail  (when arg-count
+                        (join "" (repeat arg-count ", ?")))
+            xtql      (str "XTQL "
+                           (if arg-tail
+                             (str "(" base-xtql arg-tail ")")
+                             base-xtql))]
+        (into* [(if (:dsl *options*)
+                  (str "(" xtql ")")
+                  xtql)] args)))}))
 
 (defn- format-equality-expr [op' op expr nested]
   (let [[_ a b & y] expr

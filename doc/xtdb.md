@@ -230,3 +230,14 @@ user=> (sql/format [:xtql '(-> (from :my-table [x]) (where (<= x 100)))])
 user=> (sql/format {:from [[[:xtql '(-> (from :my-table [x]) (where (<= x 100)))] :my_table]]})
 ["FROM (XTQL $$ (-> (from :my-table [x]) (where (<= x 100))) $$) AS my_table"]
 ```
+
+Per [XTDB PR #4443](https://github.com/xtdb/xtdb/pull/4443), parameters can be
+provided to `:xtql` after the XTQL form, which must either use `(fn [..] ..)`
+or the `#(..)` shorthand syntax to parameterize the query:
+
+```clojure
+user=> (sql/format {:from [[[:xtql '(fn [v] (-> (from :my-table [x]) (where (<= x v)))) 42] :my_table]]})
+["FROM (XTQL ($$ (fn [v] (-> (from :my-table [x]) (where (<= x v)))) $$, ?)) AS my_table" 42]
+```
+
+The shorthand form would be `[:xtql '#(-> (from :my-table [x]) (where (<= x %)) 42]`.
