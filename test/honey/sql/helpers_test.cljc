@@ -982,7 +982,13 @@
     (is (= {:where [:and [:or [:= :b 2] [:= :c 3]] [:= :a 1]]}
            (where [:or [:= :b 2] [:= :c 3]] [:= :a 1])
            (-> (where :or [:= :b 2] [:= :c 3]) ; explicit or
-               (where := :a 1)))))) ; then implicit and
+               (where := :a 1))))) ; then implicit and
+  (testing "Where with a single column"
+    (is (= {:where :x}
+           (-> {} (where :x))
+           (where :x)))
+    (is (= {:where [:and :a :b]}
+           (-> {} (where :a) (where :b))))))
 
 (deftest issue-324
   (testing "insert-into accepts statement"
@@ -997,6 +1003,8 @@
   (testing "where false should not be ignored"
     (is (= {:where false}
            (where false)))
+    (is (= {:select [:x] :where false}
+           (-> (select :x) (where false))))
     (is (= ["SELECT * FROM table WHERE FALSE"]
            (sql/format {:select [:*] :from [:table] :where false})))))
 

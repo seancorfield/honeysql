@@ -99,6 +99,8 @@
               [conjunction]
               (rest e)))))
 
+(defn- ident-or-seq? [x] (or (ident? x) (seq x)))
+
 (defn- conjunction-merge
   "Merge for where/having. We ignore nil expressions.
   By default, we combine with AND unless the new expression
@@ -110,13 +112,14 @@
         [conjunction args]
         (cond (conjunction? (first args))
               [(first args) (rest args)]
-              (ident? (first args))
+              (and (ident? (first args))
+                   (< 1 (count args)))
               [:and [args]]
               :else
               [:and args])]
     (if (seq args)
       (-> [conjunction]
-          (cond-> (seq current) (conj current))
+          (cond-> (ident-or-seq? current) (conj current))
           (c/into args)
           (simplify-logic))
       current)))
