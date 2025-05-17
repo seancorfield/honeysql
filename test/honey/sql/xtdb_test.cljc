@@ -146,3 +146,11 @@
            (-> {}
                (h/assert [:not-exists {:select 1 :from :users :where [:= :email "james @example.com"]}])
                (sql/format {:inline true}))))))
+
+(deftest inline-xtql
+  (testing "top-level xtql"
+    (is (= ["XTQL $$ (-> (from :my-table [x]) (where (<= x 100))) $$"]
+           (sql/format [:xtql '(-> (from :my-table [x]) (where (<= x 100)))]))))
+  (testing "inline xtql"
+    (is (= ["FROM (XTQL $$ (-> (from :my-table [x]) (where (<= x 100))) $$) AS my_table"]
+           (sql/format {:from [[[:xtql '(-> (from :my-table [x]) (where (<= x 100)))] :my_table]]})))))

@@ -218,3 +218,15 @@ user=> (sql/format '{assert (not-exists {select 1 from users where (= email "jam
                    :inline true)
 ["ASSERT NOT EXISTS (SELECT 1 FROM users WHERE email = 'james @example.com')"]
 ```
+
+## Inline XTQL
+
+As of 2.7.next, HoneySQL supports inline XTQL queries via the `:xtql` special
+syntax. It can be used both as the whole query and embedded inside SQL:
+
+```clojure
+user=> (sql/format [:xtql '(-> (from :my-table [x]) (where (<= x 100)))])
+["XTQL $$ (-> (from :my-table [x]) (where (<= x 100))) $$"]
+user=> (sql/format {:from [[[:xtql '(-> (from :my-table [x]) (where (<= x 100)))] :my_table]]})
+["FROM (XTQL $$ (-> (from :my-table [x]) (where (<= x 100))) $$) AS my_table"]
+```

@@ -3,6 +3,7 @@
 * 2.7.next in progress
   * Address [#574](https://github.com/seancorfield/honeysql/issues/574) by adding `honey.sql/*nest-infix*` which can be bound to `false` to prevent infix operators (such as `:and`) from nesting their arguments, i.e, wrapping them in `(` .. `)`. If precedence matters in your expressions, this will produce incorrect SQL. It is intended for specific, limited query dialects (such as Google Ads Queries).
   * More performance optimizations via PR [#573](https://github.com/seancorfield/honeysql/pull/573) [@alexander-yakushev](https://github.com/alexander-yakushev).
+  * Address [#572](https://github.com/seancorfield/honeysql/issues/572) by adding `[:xtql ...]` special syntax for inline XTQL queries (for XTDB).
   * Fix [#571](https://github.com/seancorfield/honeysql/issues/571) by allowing `:order-by` to take an empty sequence of columns (and be omitted).
   * Address [#440](https://github.com/seancorfield/honeysql/issues/440) by supporting multiple tables in `:truncate`.
   * Support `USING HASH` as well as `USING GIN`.
