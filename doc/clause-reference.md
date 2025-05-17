@@ -149,7 +149,7 @@ user=> (sql/format {:create-index [:my-idx [:fruit :using-gin :appearance]]})
 ["CREATE INDEX my_idx ON fruit USING GIN (appearance)"]
 ```
 
-As of 2.7.next, `USING HASH` index creation is also possible using the keyword
+As of 2.7.1310, `USING HASH` index creation is also possible using the keyword
 `:using-hash` after the table name (or the symbol `using-hash`):
 
 ```clojure
