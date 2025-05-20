@@ -48,7 +48,7 @@
 
   Optionally specify :aliases vector:
   [:1.10] -- test against Clojure 1.10.3 (the default)
-  [:1.11] -- test against Clojure 1.11.0
+  [:1.11] -- test against Clojure 1.11.4
   [:1.12] -- test against Clojure 1.12.0
   [:cljs] -- test against ClojureScript"
   [{:keys [aliases] :as opts}]
