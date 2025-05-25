@@ -344,6 +344,9 @@ DO UPDATE SET counter = table.counter + ? WHERE table.counter > ?
 " "id" 1 1 1]
 ```
 
+For more examples, see the
+[Clause Reference for on-conflict, on-constraint, do-nothing, do-update-set](clause-reference.md#on-conflict-on-constraint-do-nothing-do-update-set).
+
 ## INSERT INTO AS
 
 HoneySQL supports aliases directly in `:insert-into` so no special
