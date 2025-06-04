@@ -2,7 +2,7 @@
 
 * 2.7.next in progress
   * Fix [#576](https://github.com/seancorfield/honeysql/issues/576) by fixing single argument `where` logic.
-  * Update `test-doc-blocks` (and use Clojure 1.12.0 during test generation).
+  * Update `test-doc-blocks` (and use Clojure 1.12.1 during test generation).
 
 * 2.7.1310 -- 2025-05-17
   * Address [#575](https://github.com/seancorfield/honeysql/issues/575) by adding support for parameters in inline XTQL queries.
