@@ -950,7 +950,8 @@ that identify the indices to hint for the query:
 ```clojure
 user=> (sql/format {:select [:col]
                     :from [^{:use-index [:ix-name]} [:table]]
-                    :where [:= "steve" :name]})
+                    :where [:= :name "steve"]})
+["SELECT col FROM table USE INDEX (ix_name) WHERE name = ?" "steve"]
 ```
 
 Since you cannot put metadata on a keyword, the table name must be written as
