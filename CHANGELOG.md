@@ -1,6 +1,7 @@
 # Changes
 
 * 2.7.next in progress
+  * Add support for MySQL `USE INDEX` on `FROM` via metadata.
   * Fix [#576](https://github.com/seancorfield/honeysql/issues/576) by fixing single argument `where` logic.
   * Update `test-doc-blocks` (and use Clojure 1.12.1 during test generation).
 

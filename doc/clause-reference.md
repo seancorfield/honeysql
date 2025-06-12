@@ -656,6 +656,14 @@ the symbols `percent` and/or `with-ties`).
 user=> (sql/format {:select-top [[10 :percent :with-ties] :foo :baz] :from :bar :order-by [:quux]})
 ["SELECT TOP(?) PERCENT WITH TIES foo, baz FROM bar ORDER BY quux ASC" 10]
 ```
+
+Simple `TOP <n>` qualifiers can be provided via metadata instead:
+
+```clojure
+user=> (sql/format {:select ^{:top 10} [:id :name] :from :table})
+["SELECT TOP 10 id, name FROM table"]
+```
+
 ## into
 
 Used for selecting rows into a new table, optional in another database:
@@ -934,6 +942,15 @@ user=> (sql/format {:select [:col]
                     :from [^:nolock [:table :t]]
                     :where [:= :id 9]})
 ["SELECT col FROM table AS t WITH (NOLOCK) WHERE id = ?" 9]
+```
+
+As of 2.7.next, you can specify `^:use-index` metadata with a vector of symbols
+that identify the indices to hint for the query:
+
+```clojure
+user=> (sql/format {:select [:col]
+                    :from [^{:use-index [:ix-name]} [:table]]
+                    :where [:= "steve" :name]})
 ```
 
 Since you cannot put metadata on a keyword, the table name must be written as

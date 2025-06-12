@@ -623,7 +623,7 @@
    (when-let [data (meta x)]
      (let [items (reduce-kv (fn [acc k v]
                               (cond (number? v)
-                                    (conj acc (str v))
+                                    (conj acc k (str v))
                                     (true? v)
                                     (conj acc k)
                                     (ident? v)
@@ -659,7 +659,11 @@
   [x as]
   (if (bigquery-*-except-replace? x)
     (format-bigquery-*-except-replace x)
-    (let [hints (format-meta x ",")
+    (let [use-index (:use-index (meta x))
+          _ (tap> [x (meta x) use-index])
+          hints (if use-index
+                  (join ", " (map format-simple-var use-index))
+                  (format-meta x ","))
           [selectable alias temporal] (split-alias-temporal x)
           _ (when (= ::too-many! temporal)
               (throw (ex-info "illegal syntax in select expression"
@@ -695,7 +699,9 @@
                          " ")
                        sql'))
                 (when hints
-                  (str " WITH (" hints ")")))]
+                  (str " "
+                       (if use-index "USE INDEX" "WITH")
+                       " (" hints ")")))]
           (into* params params' params'')))))
 
 (defn- format-selectable-dsl
