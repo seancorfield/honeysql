@@ -41,4 +41,13 @@
     (is (= ["SELECT a -> b -> c AS x"]
            (sql/format {:select [[[:-> :a :b :c] :x]]})))
     (is (= ["SELECT a || b || c AS x"]
-           (sql/format {:select [[[:|| :a :b :c] :x]]})))))
+           (sql/format {:select [[[:|| :a :b :c] :x]]}))))
+  (testing "named parameter operator"
+    (is (= ["SELECT MAKE_INTERVAL(secs => ?)" 10]
+           (sql/format {:select [[[:make_interval [:=> :secs 10]]]]})))
+    (is (= ["SELECT MAKE_INTERVAL(secs => ?, mins => ?)" 10 5]
+           (sql/format {:select [[[:make_interval [:=> :secs 10] [:=> :mins 5]]]]})))
+    (is (= ["SELECT MAKE_INTERVAL(secs => ?)" 42]
+           (sql/format {:select [[[:make_interval [sut/=> :secs 42]]]]})))
+    (is (= ["SELECT DATE_TRUNC(field => ?, source => ?)" "month" "2023-06-15"]
+           (sql/format {:select [[[:date_trunc [:=> :field "month"] [:=> :source "2023-06-15"]]]]})))))
