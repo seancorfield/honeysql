@@ -80,6 +80,23 @@ user=> (sql/format {:select [[[regex :straw [:inline "needle"]] :match]] :from :
 ["SELECT straw ~ 'needle' AS match FROM haystack"]
 ```
 
+## Named Parameter Operator
+
+PostgreSQL supports named parameters in function calls using the `=>` operator. The `honey.sql.pg-ops` namespace provides the `=>` operator for this purpose:
+
+```clojure
+user=> (require '[honey.sql.pg-ops :refer [=>]])
+nil
+user=> (sql/format {:select [[[:make_interval [:=> :secs 10]]]]})
+["SELECT MAKE_INTERVAL(secs => ?)" 10]
+user=> (sql/format {:select [[[:make_interval [:=> :secs 10] [:=> :mins 5]]]]})
+["SELECT MAKE_INTERVAL(secs => ?, mins => ?)" 10 5]
+user=> (sql/format {:select [[[:date_trunc [:=> :field "month"] [:=> :source "2023-06-15"]]]]})
+["SELECT DATE_TRUNC(field => ?, source => ?)" "month" "2023-06-15"]
+```
+
+This is particularly useful for PostgreSQL functions that accept multiple parameters where you want to specify them by name for clarity, or when you want to pass only some of the optional parameters.
+
 ## JSON/JSONB
 
 If you are using JSON with PostgreSQL, you will probably try to pass Clojure
