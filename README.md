@@ -679,7 +679,7 @@ is the custom function and the second is the column alias.
 
 If a keyword begins with `'`, the function name is formatted as a SQL
 entity rather than being converted to uppercase and having hyphens `-`
-converted to spaces). That means that hyphens `-` will become underscores `_`
+converted to spaces. That means that hyphens `-` will become underscores `_`
 unless you have quoting enabled:
 
 ```clojure
