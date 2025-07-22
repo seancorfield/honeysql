@@ -21,7 +21,10 @@
   `regex` and `iregex` are provided as aliases for the
   regex operators `tilde` and `tilde*` respectively.
   `!regex` and `!iregex` are provided as aliases for the
-  regex operators `!tilde` and `!tilde*` respectively."
+  regex operators `!tilde` and `!tilde*` respectively.
+
+  `=>` is the PostgreSQL named parameter operator
+  used in function calls like `make_interval(secs => 10)`."
   (:refer-clojure :exclude [-> ->> -])
   (:require [honey.sql :as sql]))
 
@@ -73,6 +76,8 @@
 (def !regex  !tilde)
 (def !iregex !tilde*)
 
+(def =>           "The => operator for PostgreSQL named parameters in function calls." :=>)
+
 (sql/register-op! :->)
 (sql/register-op! :->>)
 (sql/register-op! :#>)
@@ -93,3 +98,5 @@
 (sql/register-op! tilde*)
 (sql/register-op! !tilde)
 (sql/register-op! !tilde*)
+
+(sql/register-op! =>)
