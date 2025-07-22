@@ -155,9 +155,9 @@ Each commit should be self-contained and leave the codebase in a working state.
 All public functions should have docstrings:
 
 ```clojure
-(def => 
+(def =>
   "The => operator for PostgreSQL named parameters in function calls.
-  
+
   Used in function calls like: [:make_interval [:=> :secs 10]]
   Generates SQL: MAKE_INTERVAL(secs => ?)"
   :=>)
