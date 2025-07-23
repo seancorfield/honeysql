@@ -16,10 +16,11 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '11'
-      - name: Setup Clojure
+      - name: Setup Clojure and Babashka
         uses: DeLaGuardo/setup-clojure@master
         with:
           cli: '1.12.1.1550'
+          bb: latest
       - name: Cache All The Things
         uses: actions/cache@v4
         with:
@@ -28,11 +29,11 @@ jobs:
             ~/.gitlibs
             ~/.clojure
             ~/.cpcache
-          key: ${{ runner.os }}-${{ hashFiles('**/deps.edn') }}
+          key: ${{ runner.os }}-${{ hashFiles('**/deps.edn', '**/bb.edn') }}
       - name: Run Tests
-        run: clojure -T:build ci :snapshot false
+        run: bb ci
       - name: Deploy Release
-        run: clojure -T:build deploy :snapshot false
+        run: bb deploy
         env:
           CLOJARS_PASSWORD: ${{secrets.DEPLOY_TOKEN}}
           CLOJARS_USERNAME: ${{secrets.DEPLOY_USERNAME}}

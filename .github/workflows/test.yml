@@ -14,10 +14,11 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
-      - name: Clojure CLI
+      - name: Setup Clojure and Babashka
         uses: DeLaGuardo/setup-clojure@master
         with:
           cli: '1.12.1.1550'
+          bb: latest
       - name: Cache All The Things
         uses: actions/cache@v4
         with:
@@ -26,8 +27,8 @@ jobs:
             ~/.gitlibs
             ~/.clojure
             ~/.cpcache
-          key: ${{ runner.os }}-${{ hashFiles('**/deps.edn') }}
+          key: ${{ runner.os }}-${{ hashFiles('**/deps.edn', '**/bb.edn') }}
       - name: Run Tests
-        run: clojure -T:build ci
+        run: bb ci
       - name: Check cljdoc.edn
         run: curl -fsSL https://raw.githubusercontent.com/cljdoc/cljdoc/master/script/verify-cljdoc-edn | bash -s doc/cljdoc.edn

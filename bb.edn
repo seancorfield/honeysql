@@ -1,8 +1,59 @@
 {:paths ["src"]
+ :deps {org.clojure/clojure {:mvn/version "1.10.3"}}
  :tasks
- {test
-  {:extra-paths ["test"]
-   :extra-deps  {io.github.cognitect-labs/test-runner
-                 {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
-   :task (exec 'cognitect.test-runner.api/test)
-   :exec-args {:patterns ["^(?!honey.cache).*-test$"]}}}}
+ {;; Test tasks
+  test
+  {:task (clojure "-M:test:runner")}
+
+  test:1.11
+  {:task (clojure "-M:test:runner:1.11")}
+
+  test:1.12
+  {:task (clojure "-M:test:runner:1.12")}
+
+  test:cljs
+  {:task (clojure "-M:test:runner:cljs")}
+
+  ;; Documentation and linting tasks  
+  gen-doc-tests
+  {:doc "Generate tests from documentation code blocks"
+   :task (clojure "-M:gen-doc-tests")}
+
+    run-doc-tests {:doc "Run documentation tests"
+                 :requires ([babashka.fs :as fs])
+                 :task (do
+                         (when-not (fs/exists? "target/test-doc-blocks/test")
+                           (run 'gen-doc-tests))
+                         (clojure "-M:test:runner:test-doc:test-doc-clj"))}
+
+  run-doc-tests:cljs
+  {:depends [gen-doc-tests]
+   :task (clojure "-M:test:runner:test-doc:cljs:test-doc-cljs")}
+
+  eastwood
+  {:doc "Run Eastwood linter"
+   :task (clojure "-M:eastwood")}
+
+  ;; Combined CI tasks
+  ci
+  {:depends [eastwood]
+   :task (do
+           ;; Run documentation tests for different environments
+           (run 'run-doc-tests)
+           (run 'run-doc-tests:cljs) 
+           ;; Run unit tests for different Clojure versions
+           (run 'test:1.11)
+           (run 'test:1.12) 
+           (run 'test:cljs)
+           ;; Build JAR
+           (run 'jar))}
+
+  ;; Build tasks (delegated to build.clj)
+  jar
+  {:task (clojure "-T:build jar")}
+
+  deploy
+  {:task (clojure "-T:build deploy")}}
+
+  deploy:snapshot
+  {:task (clojure "-T:build deploy :snapshot true")}}
