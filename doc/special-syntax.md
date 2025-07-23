@@ -137,6 +137,28 @@ an upper bound:
 ;;=> ["id NOT BETWEEN ? AND ?" 1 100]
 ```
 
+## call
+
+In most cases, a function call in SQL can be represented as a sequence of the
+function name followed by its arguments. That works when the function is a
+symbol or keyword -- a simple name. If the function needs to "computed", for
+example a dynamic schema-qualified function name, then you need an expression to
+represent that function call, e.g., `[:. :schema :func]`, then the implicit
+sequence-as-function-call is not sufficient and you need to the `:call`
+special syntax to tell HoneySQL to format the "function" as an expression:
+
+```clojure
+(sql/format {:select [[[:call [:. :schema :func] :arg1 2 :arg3]]]}) ; computed
+;;=> ["SELECT schema.func(arg1, ?, arg3)" 2]
+(sql/format {:select [[[:call :schema.func :arg1 2 :arg3]]]}) ; plain keyword
+;;=> ["SELECT SCHEMA.FUNC(arg1, ?, arg3)" 2]
+(sql/format {:select [[[:schema.func :arg1 2 :arg3]]]}) ; simple call syntax
+;;=> ["SELECT SCHEMA.FUNC(arg1, ?, arg3)" 2]
+```
+
+The case difference should not matter in most cases, and defaults to upper case
+for the simple function name to match usage of built-in SQL functions.
+
 ## case
 
 A SQL CASE expression. Expects an even number of arguments:

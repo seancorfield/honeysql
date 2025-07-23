@@ -1989,6 +1989,26 @@
                                           subcols)))))]
           params)))
 
+(defn- format-fn-call-expr [f expr]
+  (let [args          (rest expr)
+        [f-sql & f-params]
+        (if (sequential? f)
+          (format-expr f)
+          [(sql-kw f)])
+        [sqls params] (format-interspersed-expr-list args)]
+    (into* [(str f-sql
+                 (if (and (= 1 (count args))
+                          (map? (first args))
+                          (= 1 (count sqls)))
+                   (str " " (first sqls))
+                   (str "(" (join ", " sqls) ")")))]
+           f-params
+           params)))
+
+(comment
+  (let [expr [[:. :schema :func] :arg1 2 :arg3]]
+    (format-fn-call-expr (first expr) expr)))
+
 (def ^:private special-syntax
   (atom
    {;; these "functions" are mostly used in column
@@ -2046,6 +2066,7 @@
         (into [(str sql " AT TIME ZONE " tz-sql)] params)))
     :between     #'between-fn
     :not-between #'between-fn
+    :call      (fn [_ [f :as expr]] (format-fn-call-expr f expr))
     :case      #'case-clauses
     :case-expr #'case-clauses
     :cast
@@ -2207,17 +2228,6 @@
              (as-> s (str (sql-kw op) " " s))
              nested
              (as-> s (str "(" s ")")))]
-          params)))
-
-(defn- format-fn-call-expr [op expr]
-  (let [args          (rest expr)
-        [sqls params] (format-interspersed-expr-list args)]
-    (into [(str (sql-kw op)
-                (if (and (= 1 (count args))
-                         (map? (first args))
-                         (= 1 (count sqls)))
-                  (str " " (first sqls))
-                  (str "(" (join ", " sqls) ")")))]
           params)))
 
 (defn format-expr
@@ -2573,10 +2583,13 @@
 ;; aids to migration from HoneySQL 1.x -- these are deliberately undocumented
 ;; so as not to encourage their use for folks starting fresh with 2.x!
 
-(defn ^:no-doc call [f & args] (apply vector f args))
+(defn ^:no-doc call [f & args] (apply vector :call f args))
 
 (comment
   (format {:truncate :foo})
+  (format {:select [[(call [:. :schema :func] :arg1 2 :arg3)]]})
+  (format {:select [[[:call [:. :schema :func] :arg1 2 :arg3]]]})
+  (format {:select [[[[:. :schema :func] :arg1 2 :arg3]]]})
   (format [:and])
   (format [:and] {:dialect :sqlserver})
   (format {:select :* :from :table :where (map= {})})

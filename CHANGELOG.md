@@ -1,7 +1,8 @@
 # Changes
 
 * 2.7.next in progress
-  * Add PostgreSQL `=>` named parameter operator via [#582](https://github.com/seancorfield/honeysql/issues/582).
+  * Address [#582](https://github.com/seancorfield/honeysql/issues/582) by adding PostgreSQL `=>` named parameter operator via `:=>`.
+  * Address [#579](https://github.com/seancorfield/honeysql/issues/579) by adding `:call` special syntax to force a function call based on an expression.
   * Add support for MySQL `USE INDEX` on `FROM` via metadata.
   * Fix [#576](https://github.com/seancorfield/honeysql/issues/576) by fixing single argument `where` logic.
   * Update `test-doc-blocks` (and use Clojure 1.12.1 during test generation).
