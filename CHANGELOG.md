@@ -1,6 +1,6 @@
 # Changes
 
-* 2.7.next in progress
+* 2.7.1325 -- 2025-07-23
   * Address [#582](https://github.com/seancorfield/honeysql/issues/582) by adding PostgreSQL `=>` named parameter operator via `:=>`.
   * Address [#579](https://github.com/seancorfield/honeysql/issues/579) by adding `:call` special syntax to force a function call based on an expression.
   * Add support for MySQL `USE INDEX` on `FROM` via metadata.

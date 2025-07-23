@@ -944,7 +944,7 @@ user=> (sql/format {:select [:col]
 ["SELECT col FROM table AS t WITH (NOLOCK) WHERE id = ?" 9]
 ```
 
-As of 2.7.next, you can specify `^:use-index` metadata with a vector of symbols
+As of 2.7.1325, you can specify `^:use-index` metadata with a vector of symbols
 that identify the indices to hint for the query:
 
 ```clojure
