@@ -157,7 +157,18 @@ special syntax to tell HoneySQL to format the "function" as an expression:
 ```
 
 The case difference should not matter in most cases, and defaults to upper case
-for the simple function name to match usage of built-in SQL functions.
+for the simple function name to match usage of built-in SQL functions. Also
+due to that behavior, if you need quoting, you must use `:call` and the computed
+function name syntax:
+
+```clojure
+(sql/format {:select [[[:call [:. :schema :func] :arg1 2 :arg3]]]} {:quoted true})
+;;=> ["SELECT \"schema\".\"func\"(\"arg1\", ?, \"arg3\")" 2]
+(sql/format {:select [[[:call :schema.func :arg1 2 :arg3]]]} {:quoted true})
+;;=> ["SELECT SCHEMA.FUNC(\"arg1\", ?, \"arg3\")" 2]
+(sql/format {:select [[[:schema.func :arg1 2 :arg3]]]} {:quoted true})
+;;=> ["SELECT SCHEMA.FUNC(\"arg1\", ?, \"arg3\")" 2]
+```
 
 ## case
 
