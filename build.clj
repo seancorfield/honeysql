@@ -11,9 +11,7 @@
 
   clojure -A:deps -T:build help/doc"
   (:refer-clojure :exclude [test])
-  (:require [clojure.string :as str]
-            [clojure.tools.build.api :as b]
-            [clojure.tools.deps :as t]
+  (:require [clojure.tools.build.api :as b]
             [deps-deploy.deps-deploy :as dd]))
 
 (def lib 'com.github.seancorfield/honeysql)
