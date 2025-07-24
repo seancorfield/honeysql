@@ -1,5 +1,8 @@
 # Changes
 
+* 2.7.next in progress
+  * Assume `bb` for testing/building; add `bb.edn`; switch GitHub Actions to use `bb`.
+
 * 2.7.1325 -- 2025-07-23
   * Address [#582](https://github.com/seancorfield/honeysql/issues/582) by adding PostgreSQL `=>` named parameter operator via `:=>`.
   * Address [#579](https://github.com/seancorfield/honeysql/issues/579) by adding `:call` special syntax to force a function call based on an expression.
