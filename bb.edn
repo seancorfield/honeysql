@@ -4,7 +4,7 @@
  {:requires [[clojure.string :as str]]
 
   -gen-doc-tests {:doc "Generate tests from documentation code blocks"
-                  :task (clojure "-M:gen-doc-tests")}
+                  :task (shell "clojure -M:gen-doc-tests")}
 
   doc-test {:doc "Run documentation tests"
             :depends [-gen-doc-tests]
@@ -16,18 +16,19 @@
                                ["1.10"])]
               (doseq [v (if all? ["elide" "1.11" "1.12" "cljs"] versions)]
                 (println "\nDoc-testing Clojure" v)
-                (clojure (str "-M:test:test-doc"
-                              (str ":" v)
-                              (if cljs?
-                                ":cljs:test-doc-cljs"
-                                ":test-doc-clj")))))}
+                (shell (str "clojure -M:test:test-doc"
+                            (str ":" v)
+                            (if cljs?
+                              ":cljs:test-doc-cljs"
+                              ":test-doc-clj")))))}
 
   doc-test:all {:doc "Run all documentation tests"
                 :task (binding [*command-line-args* (conj *command-line-args* "all")]
                         (run 'doc-test))}
 
   eastwood {:doc "Run Eastwood linter"
-            :task (clojure "-M:eastwood")}
+            :task (shell "clojure -M:eastwood")}
+
   test {:doc "Run the test suite."
         :task
         (let [cljs?    (some #{"cljs"} *command-line-args*)
@@ -37,10 +38,10 @@
                            ["1.10"])]
           (doseq [v (if all? ["elide" "1.11" "1.12" "cljs"] versions)]
             (println "\nTesting Clojure" v)
-            (clojure (str "-M"
-                          (str ":" v)
-                          ":test:"
-                          (if cljs? "cljs" "runner")))))}
+            (shell (str "clojure -M"
+                        (str ":" v)
+                        ":test:"
+                        (if cljs? "cljs" "runner")))))}
 
   test:bb {:extra-paths ["test"]
            :extra-deps  {io.github.cognitect-labs/test-runner
