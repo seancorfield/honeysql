@@ -54,7 +54,7 @@
                     (run 'test))}
 
   ci {:doc "Run the CI pipeline of tests and build the JAR."
-      :depends [eastwood doc-test:all test:all]
+      :depends [test:bb eastwood doc-test:all test:all]
       :task (let [snapshot? (some #{"snapshot"} *command-line-args*)
                   opts (if snapshot?
                          [:snapshot true]
