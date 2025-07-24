@@ -14,10 +14,11 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '11'
-      - name: Setup Clojure
+      - name: Setup Clojure and Babashka
         uses: DeLaGuardo/setup-clojure@master
         with:
           cli: '1.12.1.1550'
+          bb: latest
       - name: Cache All The Things
         uses: actions/cache@v4
         with:
@@ -26,11 +27,10 @@ jobs:
             ~/.gitlibs
             ~/.clojure
             ~/.cpcache
-          key: ${{ runner.os }}-${{ hashFiles('**/deps.edn') }}
-      - name: Run Tests
-        run: clojure -T:build ci :snapshot true
-      - name: Deploy Snapshot
-        run: clojure -T:build deploy :snapshot true
+            ~/.deps.clj
+          key: ${{ runner.os }}-${{ hashFiles('**/deps.edn', '**/bb.edn') }}
+      - name: Run Tests, Build Snapshot JAR, and Deploy
+        run: bb ci:deploy snapshot
         env:
           CLOJARS_PASSWORD: ${{secrets.DEPLOY_TOKEN}}
           CLOJARS_USERNAME: ${{secrets.DEPLOY_USERNAME}}
@@ -46,10 +46,11 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
-      - name: Clojure CLI
+      - name: Setup Clojure and Babashka
         uses: DeLaGuardo/setup-clojure@master
         with:
           cli: '1.12.1.1550'
+          bb: latest
       - name: Cache All The Things
         uses: actions/cache@v4
         with:
@@ -58,8 +59,9 @@ jobs:
             ~/.gitlibs
             ~/.clojure
             ~/.cpcache
-          key: ${{ runner.os }}-${{ hashFiles('**/deps.edn') }}
+            ~/.deps.clj
+          key: ${{ runner.os }}-${{ hashFiles('**/deps.edn', '**/bb.edn') }}
       - name: Run Tests
-        run: clojure -T:build ci
+        run: bb ci
       - name: Check cljdoc.edn
         run: curl -fsSL https://raw.githubusercontent.com/cljdoc/cljdoc/master/script/verify-cljdoc-edn | bash -s doc/cljdoc.edn
