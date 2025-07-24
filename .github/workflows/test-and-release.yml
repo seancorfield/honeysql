@@ -30,10 +30,8 @@ jobs:
             ~/.clojure
             ~/.cpcache
           key: ${{ runner.os }}-${{ hashFiles('**/deps.edn', '**/bb.edn') }}
-      - name: Run Tests
-        run: bb ci
-      - name: Deploy Release
-        run: bb deploy
+      - name: Run Tests, Build JAR, and Deploy
+        run: bb ci:deploy
         env:
           CLOJARS_PASSWORD: ${{secrets.DEPLOY_TOKEN}}
           CLOJARS_USERNAME: ${{secrets.DEPLOY_USERNAME}}

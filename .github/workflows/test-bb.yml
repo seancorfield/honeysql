@@ -30,4 +30,4 @@ jobs:
             ~/.cpcache
           key: ${{ runner.os }}-${{ hashFiles('**/deps.edn', '**/bb.edn') }}
       - name: Run Tests
-        run: bb test
+        run: bb test:bb
