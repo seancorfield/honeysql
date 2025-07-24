@@ -29,6 +29,7 @@ jobs:
             ~/.gitlibs
             ~/.clojure
             ~/.cpcache
+            ~/.deps.clj
           key: ${{ runner.os }}-${{ hashFiles('**/deps.edn', '**/bb.edn') }}
       - name: Run Tests, Build JAR, and Deploy
         run: bb ci:deploy
