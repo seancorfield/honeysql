@@ -1629,7 +1629,7 @@
   (fn [k xs]
     (let [{:keys [checking dsl]} *options*]
       (when-not (= :none checking)
-        (when (empty? (:where dsl))
+        (when (and (empty? (:where dsl)) (empty? ('where dsl)))
           (throw (ex-info (str (sql-kw k) " without a non-empty WHERE clause is dangerous")
                           {:clause k :where (:where dsl)})))))
     (formatter k xs)))

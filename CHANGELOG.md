@@ -1,6 +1,7 @@
 # Changes
 
 * 2.7.next in progress
+  * Fix [#585](https://github.com/seancorfield/honeysql/issues/585) by checking for the symbol `where` (as well as the keyword `:where`).
   * Assume `bb` for testing/building; add `bb.edn`; switch GitHub Actions to use `bb`.
 
 * 2.7.1325 -- 2025-07-23

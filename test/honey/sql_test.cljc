@@ -930,6 +930,12 @@ ORDER BY id = ? DESC
                                   {:checking :basic})))
     (is (thrown-with-msg? ExceptionInfo #"empty collection"
                           (format {:where [:in :x :?y]}
+                                  {:params {:y []} :checking :basic})))
+    (is (thrown-with-msg? ExceptionInfo #"empty collection"
+                          (format '{where (in x [])}
+                                  {:checking :basic})))
+    (is (thrown-with-msg? ExceptionInfo #"empty collection"
+                          (format '{where (in x ?y)}
                                   {:params {:y []} :checking :basic}))))
   (testing "IN NULL is ignored by default and basic"
     (is (= ["WHERE x IN (NULL)"]
@@ -955,6 +961,12 @@ ORDER BY id = ? DESC
                                   {:checking :strict})))
     (is (thrown-with-msg? ExceptionInfo #"does not match"
                           (format {:where [:in :x :?y]}
+                                  {:params {:y [nil]} :checking :strict})))
+    (is (thrown-with-msg? ExceptionInfo #"does not match"
+                          (format '{where (in x [nil])}
+                                  {:checking :strict})))
+    (is (thrown-with-msg? ExceptionInfo #"does not match"
+                          (format '{where (in x ?y)}
                                   {:params {:y [nil]} :checking :strict}))))
   (testing "empty WHERE clauses ignored with none"
     (is (= ["DELETE FROM foo"]
@@ -963,13 +975,45 @@ ORDER BY id = ? DESC
            (format {:delete :foo})))
     (is (= ["UPDATE foo SET x = ?" 1]
            (format {:update :foo :set {:x 1}}))))
+  (testing "non-empty WHERE clauses valid in basic mode"
+    (is (= ["DELETE FROM foo WHERE x = ?" 1]
+           (format {:delete-from :foo :where [:= :x 1]} {:checking :basic})))
+    (is (= ["DELETE foo WHERE x = ?" 1]
+           (format {:delete :foo :where [:= :x 1]} {:checking :basic})))
+    (is (= ["UPDATE foo SET x = ? WHERE x = ?" 1 1]
+           (format {:update :foo :set {:x 1} :where [:= :x 1]} {:checking :basic})))
+    (is (= ["DELETE FROM foo WHERE x = ?" 1]
+           (format '{delete-from foo where (= x 1)} {:checking :basic})))
+    (is (= ["DELETE foo WHERE x = ?" 1]
+           (format '{delete foo where (= x 1)} {:checking :basic})))
+    (is (= ["UPDATE foo SET x = ? WHERE x = ?" 1 1]
+           (format '{update foo set {x 1} where (= x 1)} {:checking :basic}))))
+  (testing "non-empty WHERE clauses valid in strict mode"
+    (is (= ["DELETE FROM foo WHERE x = ?" 1]
+           (format {:delete-from :foo :where [:= :x 1]} {:checking :strict})))
+    (is (= ["DELETE foo WHERE x = ?" 1]
+           (format {:delete :foo :where [:= :x 1]} {:checking :strict})))
+    (is (= ["UPDATE foo SET x = ? WHERE x = ?" 1 1]
+           (format {:update :foo :set {:x 1} :where [:= :x 1]} {:checking :strict})))
+    (is (= ["DELETE FROM foo WHERE x = ?" 1]
+           (format '{delete-from foo where (= x 1)} {:checking :strict})))
+    (is (= ["DELETE foo WHERE x = ?" 1]
+           (format '{delete foo where (= x 1)} {:checking :strict})))
+    (is (= ["UPDATE foo SET x = ? WHERE x = ?" 1 1]
+           (format '{update foo set {x 1} where (= x 1)} {:checking :strict}))))
   (testing "empty WHERE clauses flagged in basic mode"
     (is (thrown-with-msg? ExceptionInfo #"without a non-empty"
                           (format {:delete-from :foo} {:checking :basic})))
     (is (thrown-with-msg? ExceptionInfo #"without a non-empty"
                           (format {:delete :foo} {:checking :basic})))
     (is (thrown-with-msg? ExceptionInfo #"without a non-empty"
-                          (format {:update :foo :set {:x 1}} {:checking :basic})))))
+                          (format {:update :foo :set {:x 1}} {:checking :basic})))
+    (is (thrown-with-msg? ExceptionInfo #"without a non-empty"
+                          (format '{delete-from foo} {:checking :basic})))
+    (is (thrown-with-msg? ExceptionInfo #"without a non-empty"
+                          (format '{delete foo} {:checking :basic})))
+    (is (thrown-with-msg? ExceptionInfo #"without a non-empty"
+                          (format '{update foo set {x 1}} {:checking :basic})))))
 
 (deftest quoting-:%-syntax
   (testing "quoting of expressions in functions shouldn't depend on syntax"
