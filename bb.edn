@@ -6,16 +6,20 @@
   -gen-doc-tests {:doc "Generate tests from documentation code blocks"
                   :task (shell "clojure -M:gen-doc-tests")}
 
+  -parse-args {:task
+               (let [cljs?    (some #{"cljs"} *command-line-args*)
+                     all?     (some #{"all"} *command-line-args*)
+                     versions (or (seq (filter (fn [v] (str/starts-with? v "1."))
+                                               *command-line-args*))
+                                  ["1.10"])]
+                 [cljs? (if all? ["elide" "1.11" "1.12" "cljs"] versions)])}
+
   doc-test {:doc "Run documentation tests"
             :depends [-gen-doc-tests]
             :task
-            (let [cljs?    (some #{"cljs"} *command-line-args*)
-                  all?     (some #{"all"} *command-line-args*)
-                  versions (or (seq (filter (fn [v] (str/starts-with? v "1."))
-                                            *command-line-args*))
-                               ["1.10"])]
-              (doseq [v (if all? ["elide" "1.11" "1.12" "cljs"] versions)]
-                (println "\nDoc-testing Clojure" v)
+            (let [[cljs? versions] (run '-parse-args)]
+              (doseq [v versions]
+                (println "\nDoc-Testing Clojure" v)
                 (shell (str "clojure -M:test:test-doc"
                             (str ":" v)
                             (if cljs?
@@ -31,12 +35,8 @@
 
   test {:doc "Run the test suite."
         :task
-        (let [cljs?    (some #{"cljs"} *command-line-args*)
-              all?     (some #{"all"} *command-line-args*)
-              versions (or (seq (filter (fn [v] (str/starts-with? v "1."))
-                                        *command-line-args*))
-                           ["1.10"])]
-          (doseq [v (if all? ["elide" "1.11" "1.12" "cljs"] versions)]
+        (let [[cljs? versions] (run '-parse-args)]
+          (doseq [v versions]
             (println "\nTesting Clojure" v)
             (shell (str "clojure -M"
                         (str ":" v)
@@ -53,20 +53,16 @@
             :task (binding [*command-line-args* (conj *command-line-args* "all")]
                     (run 'test))}
 
+  -snapshot {:doc "Return snapshot options, if requested."
+             :task (->> (if (some #{"snapshot"} *command-line-args*)
+                          [:snapshot true]
+                          [])
+                        (map str))}
+
   ci {:doc "Run the CI pipeline of tests and build the JAR."
       :depends [test:bb eastwood doc-test:all test:all]
-      :task (let [snapshot? (some #{"snapshot"} *command-line-args*)
-                  opts (if snapshot?
-                         [:snapshot true]
-                         [])]
-              (apply shell "clojure -T:build jar"
-                     (map str opts)))}
+      :task (apply shell "clojure -T:build jar" (run '-snapshot))}
 
   ci:deploy {:doc "Deploy the JAR we just built to Clojars."
              :depends [ci]
-             :task (let [snapshot? (some #{"snapshot"} *command-line-args*)
-                         opts (if snapshot?
-                                [:snapshot true]
-                                [])]
-                     (apply shell "clojure -T:build deploy"
-                            (map str opts)))}}}
+             :task (apply shell "clojure -T:build deploy" (run '-snapshot))}}}
