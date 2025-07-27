@@ -1147,9 +1147,11 @@
         [sqls params]
         (format-expr-list (map #(if (sequential? %) (first %) %) xs))]
     (if (seq sqls)
-      (into [(str (sql-kw k) " "
+      (into [(str (when k (str (sql-kw k) " "))
                   (join ", " (map (fn [sql dir]
-                                    (str sql " " (sql-kw (or dir :asc))))
+                                    (if (or k dir)
+                                      (str sql " " (sql-kw (or dir :asc)))
+                                      sql))
                                   sqls
                                   dirs)))] params)
       [])))
@@ -1454,12 +1456,12 @@
                    (str/starts-with? (str (kw->sym item)) "using-"))
             exprs
             (cons nil exprs)))
-        [sqls params] (format-expr-list exprs)]
+        [sql & params] (format-order-by nil exprs)]
     (into [(join " " (remove empty?)
                  (-> ["CREATE" pre "INDEX" ine entity
                       "ON" (format-entity table)
                       (when using (sql-kw using))
-                      (str "(" (join ", " sqls) ")")]
+                      (str "(" sql ")")]
                      (into more)))]
           params)))
 

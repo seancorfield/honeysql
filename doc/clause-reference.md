@@ -157,6 +157,9 @@ user=> (sql/format {:create-index [:my-idx [:fruit :using-hash :appearance]]})
 ["CREATE INDEX my_idx ON fruit USING HASH (appearance)"]
 ```
 
+As of 2.7.next, the column names may be specified with a direction, like the
+`ORDER BY` clause: `:col1`, `[:col2 :asc]`, `[:col3 :desc]`.
+
 ### rename-table
 
 Used with `:alter-table`,

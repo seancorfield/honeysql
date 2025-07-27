@@ -1054,7 +1054,14 @@
     (is (= ["CREATE INDEX my_column_idx ON my_table USING HASH (my_column)"]
            (sql/format {:create-index [:my-column-idx [:my-table :using-hash :my-column]]})))
     (is (= ["CREATE INDEX my_column_idx ON my_table USING HASH (my_column)"]
-           (sql/format (create-index :my-column-idx [:my-table :using-hash :my-column]))))))
+           (sql/format (create-index :my-column-idx [:my-table :using-hash :my-column])))))
+  (testing "issue 586, support asc/desc"
+    (is (= ["CREATE INDEX index_name ON table_name (column, other_column)"]
+           (sql/format {:create-index [:index-name [:table-name :column :other-column]]})))
+    (is (= ["CREATE INDEX index_name ON table_name (column, other_column ASC)"]
+           (sql/format {:create-index [:index-name [:table-name :column [:other-column :asc]]]})))
+    (is (= ["CREATE INDEX index_name ON table_name (column, other_column DESC)"]
+           (sql/format {:create-index [:index-name [:table-name :column [:other-column :desc]]]})))))
 
 (deftest join-with-alias
   (is (= ["SELECT * FROM foo LEFT JOIN (populatons AS pm INNER JOIN customers AS pc ON (pm.id = pc.id) AND (pm.other_id = pc.other_id)) ON foo.fk_id = pm.id"]
