@@ -660,7 +660,6 @@
   (if (bigquery-*-except-replace? x)
     (format-bigquery-*-except-replace x)
     (let [use-index (:use-index (meta x))
-          _ (tap> [x (meta x) use-index])
           hints (if use-index
                   (join ", " (map format-simple-var use-index))
                   (format-meta x ","))
