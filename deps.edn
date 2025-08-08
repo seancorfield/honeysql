@@ -3,7 +3,7 @@
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}}
  :aliases
  {;; for help: clojure -A:deps -T:build help/doc
-  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.9"}
+  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.10"}
                  slipset/deps-deploy {:mvn/version "0.2.2"}}
           :ns-default build}
 
@@ -20,7 +20,7 @@
   {:extra-paths ["test"]
    :extra-deps  {io.github.cognitect-labs/test-runner
                  {:git/tag "v0.5.1" :git/sha "dfb30dd"}
-                 org.clojure/core.cache {:mvn/version "RELEASE"}}
+                 org.clojure/core.cache {:mvn/version "1.1.234"}}
    :exec-fn     cognitect.test-runner.api/test}
   :runner
   {:main-opts   ["-m" "cognitect.test-runner"]}
@@ -30,7 +30,7 @@
          :main-opts ["-m" "cljs-test-runner.main"]}
 
   :gen-doc-tests {:replace-paths ["build"]
-                  :extra-deps {babashka/fs {:mvn/version "0.5.25"}
+                  :extra-deps {babashka/fs {:mvn/version "0.5.26"}
                                com.github.lread/test-doc-blocks {:mvn/version "1.2.21"}}
                   :override-deps {org.clojure/clojure {:mvn/version "1.12.1"}}
                   :main-opts ["-m" "honey.gen-doc-tests"]}
