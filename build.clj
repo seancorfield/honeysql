@@ -9,7 +9,7 @@
 
   For more information, run:
 
-  clojure -A:deps -T:build help/doc"
+  clojure -T:deps:build help/doc"
   (:refer-clojure :exclude [test])
   (:require [clojure.tools.build.api :as b]
             [deps-deploy.deps-deploy :as dd]))

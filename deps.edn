@@ -2,7 +2,7 @@
  :paths ["src"]
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}}
  :aliases
- {;; for help: clojure -A:deps -T:build help/doc
+ {;; for help: clojure -T:deps:build help/doc
   :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.10"}
                  slipset/deps-deploy {:mvn/version "0.2.2"}}
           :ns-default build}
