@@ -231,6 +231,8 @@ or:
 
 > Note: In HoneySQL 2.4.947 and earlier, the type name was incorrectly affected by the quoting feature, and a hyphen in a type name was incorrectly changed to underscore. This was corrected in 2.4.962.
 
+You can also use this instead of the double colon `::` syntax.  E.g. instead of `a::citext` write `CAST(a AS CITEXT)` as `[:cast :a :citext]`.
+
 ## composite
 
 Accepts any number of expressions and produces a composite
