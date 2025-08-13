@@ -201,6 +201,8 @@ that produces a SQL type:
 ;;=> ["CAST(a AS INT)"]
 ```
 
+> Note: HoneySQL does not support the `::` SQL syntax for casts, `a::int`, so you must use this `CAST` syntax instead.
+
 Quoting does not affect the type in a `CAST`, only the expression:
 
 ```clojure

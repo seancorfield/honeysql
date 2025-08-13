@@ -1,5 +1,8 @@
 # Changes
 
+* 2.7.next in progress
+  * Note that HoneySQL does not support the double-colon `::` syntax for casts: you must use the `CAST` syntax instead, i.e., `[:cast :a :int]` to produce `CAST(a AS INT)` instead of `a::INT`.
+
 * 2.7.1340 -- 2025-08-01
   * Remove stray `tap>` call via PR [#587](https://github.com/seancorfield/honeysql/pull/587) by [Julien Vincent](https://github.com/julienvincent).
   * Fix [#586](https://github.com/seancorfield/honeysql/issues/586) by reusing some of the `format-order-by` logic in `format-create-index` to provide column ordering.
