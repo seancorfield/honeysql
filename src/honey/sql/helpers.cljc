@@ -876,6 +876,29 @@
   [& exprs]
   (generic :having exprs))
 
+(defn qualify
+  "Like `where`, accepts one or more SQL expressions
+  (conditions) and combines them with AND (by default):
+
+  (qualify [:> :count 0] [:<> :name nil])
+  or:
+  (qualify :and [:> :count 0] [:<> :name nil])
+
+  Produces: QUALIFY (count > ?) AND (name IS NOT NULL)
+  Parameters: 0
+
+  (qualify :> :count 0)
+
+  Produces: QUALIFY count > ?
+  Parameters: 0
+
+  (qualify :or [:> :count 0] [:= :name \"\"])
+
+  Produces: QUALIFY (count > ?) OR (name = ?)
+  Parameters: 0 \"\""
+  [& exprs]
+  (generic :qualify exprs))
+
 (defn window
   "Accepts a window name followed by a partition by clause."
   [& args]

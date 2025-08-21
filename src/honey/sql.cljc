@@ -68,7 +68,7 @@
    :join-by
    :join :left-join :right-join :inner-join :outer-join :full-join
    :cross-join
-   :where :group-by :having
+   :where :group-by :having :qualify
    ;; NRQL extension:
    :facet
    :window :partition-by
@@ -1730,6 +1730,7 @@
          :window          #'format-window
          :partition-by    #'format-selects
          :order-by        #'format-order-by
+         :qualify         #'format-on-expr
          :limit           #'format-on-expr
          :offset          (fn [_ x]
                             (if (or (contains-clause? :fetch) (sql-server?))

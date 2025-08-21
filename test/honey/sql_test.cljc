@@ -1554,6 +1554,18 @@ ORDER BY id = ? DESC
     (is (= ["SELECT * FROM foo ORDER BY bar ASC"]
            (sut/format {:select :* :from :foo :order-by [:bar]})))))
 
+(deftest issue-589
+  (testing "qualify"
+    (is (= ["SELECT * FROM data_with_change_hash QUALIFY (_row_hash <> LAG(_row_hash) OVER (PARTITION BY a, b ORDER BY _ingest_timestamp ASC)) OR (LAG(_row_hash) OVER (PARTITION BY a, b ORDER BY _ingest_timestamp ASC) IS NULL)"]
+           (let [lag-over [:over [[:lag :-row-hash]
+                                  {:partition-by [:a :b]
+                                   :order-by [[:-ingest-timestamp :asc]]}]]]
+             (sut/format {:select :*
+                          :from :data-with-change-hash
+                          :qualify [:or
+                                    [:<> :-row-hash lag-over]
+                                    [:is lag-over nil]]}))))))
+
 (comment
   ;; partial (incorrect!) workaround for #407:
   (sut/format {:select :f.* :from [[:foo [:f :for :system-time]]] :where [:= :f.id 1]})

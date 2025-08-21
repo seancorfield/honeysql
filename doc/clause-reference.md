@@ -1143,6 +1143,13 @@ HoneySQL to treat `:some.thing` as an alias instead of a table/column name.
 The `:having` clause works identically to `:where` above
 but is rendered into the SQL later in precedence order.
 
+## qualify
+
+The `:qualify` clause works identically to `:where` and `:having` above
+but is rendered into the SQL later in precedence order. Although this is not
+part of ANSI SQL, several databases support this so it is considered core
+SQL for HoneySQL's DSL.
+
 ## window, partition-by (and over)
 
 `:window` accept alternating pairs of SQL entity (the window name)

@@ -1,6 +1,7 @@
 # Changes
 
 * 2.7.next in progress
+  * Address [#589](https://github.com/seancorfield/honeysql/issues/589) by adding support for the `QUALIFY` clause (non-ANSI, but supported by several databases).
   * Note that HoneySQL does not support the double-colon `::` syntax for casts: you must use the `CAST` syntax instead, i.e., `[:cast :a :int]` to produce `CAST(a AS INT)` instead of `a::INT`.
 
 * 2.7.1340 -- 2025-08-01
