@@ -1,1 +1,0 @@
-{:linters {:clojure-lsp/cyclic-dependencies {:level :off}}}
