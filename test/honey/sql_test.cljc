@@ -559,6 +559,15 @@
          :where  [:= :bar.b 42]}
         (format {:dialect :mysql})))))
 
+(deftest issue-590-set-array
+  (is (= ["UPDATE foo SET x[2] = ?" 42]
+         (format {:update :foo
+                  :set    {[:at :foo/x 2] 42}})))
+  (is (= ["UPDATE `foo` SET `foo`.`x`[2] = ?" 42]
+         (format {:update :foo
+                  :set    {[:at :foo/x 2] 42}}
+                 {:dialect :mysql}))))
+
 (deftest format-arity-test
   (testing "format can be called with no options"
     (is (= ["DELETE FROM foo WHERE foo.id = ?" 42]

@@ -1,5 +1,8 @@
 # Changes
 
+* 2.7.next in progress
+  * Fix [#590](https://github.com/seancorfield/honeysql/issues/590) by allowing simple expressions on the LHS of `SET =` clauses, such as array element assignment.
+
 * 2.7.1350 -- 2025-09-07
   * Address [#589](https://github.com/seancorfield/honeysql/issues/589) by adding support for the `QUALIFY` clause (non-ANSI, but supported by several databases).
   * Note that HoneySQL does not support the double-colon `::` syntax for casts: you must use the `CAST` syntax instead, i.e., `[:cast :a :int]` to produce `CAST(a AS INT)` instead of `a::INT`.

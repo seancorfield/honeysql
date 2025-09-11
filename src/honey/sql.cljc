@@ -281,6 +281,8 @@
      alphanumeric (or underscore)."
   #"^(?:[0-9_]+|[A-Za-z_][A-Za-z0-9_]*)$")
 
+(def ^:private ^:dynamic *drop-ns* false)
+
 (defn format-entity
   "Given a simple SQL entity (a keyword or symbol -- or string),
   return the equivalent SQL fragment (as a string -- no parameters).
@@ -289,6 +291,7 @@
   ([e] (format-entity e {}))
   ([e {:keys [aliased drop-ns]}]
    (let [dialect     *dialect*
+         drop-ns     (or drop-ns *drop-ns*)
          {:keys [quoted quoted-snake quoted-always]} *options*
          e           (if (and aliased (keyword? e) (str/starts-with? (name e) "'"))
                        ;; #497 quoted alias support (should behave like string)
@@ -1267,15 +1270,32 @@
   (into #{} (mapcat keys) [{:a 1 :b 2} {:b 3 :c 4}])
   ,)
 
+(defn- format-simple-expr [e context]
+  (binding [*options* (assoc *options* :inline true)]
+    (let [[sql & params] (format-expr e)]
+      (when (seq params)
+        (throw (ex-info (str "parameters are not accepted in " context)
+                        {:expr e :params params})))
+      sql)))
+
 (defn- format-set-exprs [k xs]
   (let [[sqls params]
         (reduce-kv (fn [[sql params] v e]
-                     (let [[sql' & params'] (format-expr e)]
-                       [(conj sql (str (format-entity v {:drop-ns (not (mysql?))}) " = " sql'))
+                     (let [[sql' & params'] (format-expr e)
+                           v' (binding [*drop-ns* (not (mysql?))]
+                                (format-simple-expr v "SET expression"))]
+                       [(conj sql (str v' " = " sql'))
                         (if params' (into params params') params)]))
                    [[] []]
                    xs)]
     (into [(str (sql-kw k) " " (join ", " sqls))] params)))
+
+(comment
+  (format-set-exprs :set {:a 1 :b [:+ 2 3]})
+  (format-simple-expr [:at :foo/bar 3] "SET expression")
+  (binding [*drop-ns* true]
+    (format-set-exprs :set {:foo/bar 1 :baz 2}))
+  )
 
 (defn- format-on-conflict [k x]
   (if (sequential? x)
@@ -1332,14 +1352,6 @@
       (when (seq params)
         (throw (ex-info (str "parameters are not accepted in " context)
                         {:clause c :params params})))
-      sql)))
-
-(defn- format-simple-expr [e context]
-  (binding [*options* (assoc *options* :inline true)]
-    (let [[sql & params] (format-expr e)]
-      (when (seq params)
-        (throw (ex-info (str "parameters are not accepted in " context)
-                        {:expr e :params params})))
       sql)))
 
 (defn- format-alter-table [k x]
