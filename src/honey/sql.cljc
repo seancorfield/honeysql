@@ -1282,8 +1282,11 @@
   (let [[sqls params]
         (reduce-kv (fn [[sql params] v e]
                      (let [[sql' & params'] (format-expr e)
-                           v' (binding [*drop-ns* (not (mysql?))]
-                                (format-simple-expr v "SET expression"))]
+                           v'
+                           (if (string? v)
+                             (format-entity v {:drop-ns (not (mysql?))})
+                             (binding [*drop-ns* (not (mysql?))]
+                               (format-simple-expr v "SET expression")))]
                        [(conj sql (str v' " = " sql'))
                         (if params' (into params params') params)]))
                    [[] []]
