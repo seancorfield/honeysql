@@ -3,6 +3,7 @@
 * 2.7.next in progress
   * Fix [#590](https://github.com/seancorfield/honeysql/issues/590) by allowing simple expressions on the LHS of `SET =` clauses, such as array element assignment.
   * Update dev/test deps (Clojure 1.12.3, CLI 1.12.3.1577).
+  * Add matrix testing against JDK 25; drop JDK 8.
 
 * 2.7.1350 -- 2025-09-07
   * Address [#589](https://github.com/seancorfield/honeysql/issues/589) by adding support for the `QUALIFY` clause (non-ANSI, but supported by several databases).

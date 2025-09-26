@@ -3,4 +3,5 @@
   {taoensso.encore/defalias    taoensso.encore-hooks/defalias
    taoensso.encore/defaliases  taoensso.encore-hooks/defaliases
    taoensso.encore/defn-cached taoensso.encore-hooks/defn-cached
-   taoensso.encore/defonce     taoensso.encore-hooks/defonce}}}
+   taoensso.encore/defonce     taoensso.encore-hooks/defonce
+   taoensso.encore/def*        taoensso.encore-hooks/def*}}}
