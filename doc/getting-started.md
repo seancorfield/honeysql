@@ -47,6 +47,8 @@ values identified in the SQL expressions:
 
 (sql/format {:select [:*], :from [:table], :where [:= :id 1]})
 ;;=> ["SELECT * FROM table WHERE id = ?" 1]
+(sql/format {:select [:*], :from [:table], :where [:= :status nil]})
+;;=> ["SELECT * FROM table WHERE status IS NULL"]
 ```
 
 By default, any values found in the data structure, that are not keywords

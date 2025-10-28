@@ -1,6 +1,7 @@
 # Changes
 
 * 2.7.next in progress
+  * Address [#593](https://github.com/seancorfield/honeysql/issues/593) by documenting how `nil` is handled in (in)equality comparisons.
   * Fix [#590](https://github.com/seancorfield/honeysql/issues/590) by allowing simple expressions on the LHS of `SET =` clauses, such as array element assignment.
   * Update dev/test deps (Clojure 1.12.3, CLI 1.12.3.1577).
   * Add matrix testing against JDK 25; drop JDK 8.

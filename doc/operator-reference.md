@@ -81,6 +81,12 @@ two arguments.
 
 `not=` and `!=` are accepted as aliases for `<>`.
 
+If either of the arguments evaluates to `nil`, the resulting
+SQL condition will use `IS NULL` or `IS NOT NULL` as appropriate.
+This behavior in HoneySQL may be surprising but dates back to at
+least 2013, and was originally intended to help avoid accidentally
+false conditions when a value (parameter) might be `nil`.
+
 ## < > <= >=
 
 Comparison operators. These expect exactly
@@ -109,6 +115,8 @@ Predicates for `NULL` and Boolean values:
  ...}
 ;;=> ["...WHERE col IS NOT FALSE..."]
 ```
+
+> Note: `is` and `is-not` with a `nil` argument are equivalent to using `=` and `<>` respectively, due to the mapping in `=` and `<>`..
 
 ## xor, + - * / % | & ^
 
