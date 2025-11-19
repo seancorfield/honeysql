@@ -1280,6 +1280,14 @@ user=> (sql/format '{select (*) from table
                      ;; explicit direction provided:
                      order-by ((status asc), ((year created-date) asc))})
 ["SELECT * FROM table ORDER BY status ASC, YEAR(created_date) ASC"]
+user=> (sql/format {:select [:*] :from :table
+                    ;; explicit direction provided:
+                    :order-by [[:status :asc] [[:year :created-date] :asc]]})
+["SELECT * FROM table ORDER BY status ASC, YEAR(created_date) ASC"]
+user=> (sql/format {:select [:*] :from :table
+                    ;; order by single function:
+                    :order-by [[[:random]]]})
+["SELECT * FROM table ORDER BY RANDOM() ASC"]
 ```
 
 The default direction is ascending and if you provide a wrapped
