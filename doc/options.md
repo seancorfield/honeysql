@@ -181,3 +181,52 @@ situations where `NULL` is not an appropriate default for a missing
 column value.
 
 Added in 2.1.818.
+
+## `:transform-null-equals`
+
+The `:transform-null-equals` option controls whether equality expressions
+with `nil` values are automatically transformed to SQL `IS NULL` / `IS NOT NULL`
+or preserved as literal `= NULL` / `<> NULL`.
+
+This option mirrors PostgreSQL's [`transform_null_equals` configuration option](https://www.postgresql.org/docs/current/runtime-config-compatible.html#GUC-TRANSFORM-NULL-EQUALS).
+
+**Default:** `true` (transform enabled, maintains backward compatibility)
+
+**When `true` (default):**
+```clojure
+(sql/format {:where [:= :id nil]})
+;=> ["WHERE id IS NULL"]
+
+(sql/format {:where [:<> :name nil]})
+;=> ["WHERE name IS NOT NULL"]
+```
+
+**When `false` (transform disabled):**
+```clojure
+(sql/format {:where [:= :id nil]} {:transform-null-equals false})
+;=> ["WHERE id = NULL"]
+
+(sql/format {:where [:<> :name nil]} {:transform-null-equals false})
+;=> ["WHERE name <> NULL"]
+```
+
+**Edge case - both operands nil:**
+```clojure
+(sql/format-expr [:= nil nil] {:transform-null-equals false})
+;=> ["NULL = NULL"]
+```
+
+**Setting globally:**
+```clojure
+(sql/set-options! {:transform-null-equals false})
+;; Now all subsequent format calls will use = NULL instead of IS NULL
+(sql/set-options! {:transform-null-equals true})
+;; Restore default so format calls will use IS NULL again
+```
+
+**Note:** This option only affects exact `:=` and `:<>` operations with `nil` values.
+Other operators like `:is`, `:is-not`, and non-nil comparisons are unaffected.
+
+The SQL standard specifies that `expr = NULL` should always return `UNKNOWN` (effectively `FALSE`),
+while `expr IS NULL` returns `TRUE` when `expr` is null. When `:transform-null-equals` is `false`,
+HoneySQL preserves the standard SQL semantics where `= NULL` comparisons may not behave as expected.

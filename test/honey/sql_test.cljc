@@ -79,6 +79,67 @@
   (is (= ["WHERE (abc + ?) IS NULL" "abc"]
          (sut/format {:where [:= [:+ :abc "abc"] nil]}))))
 
+(deftest transform-null-equals-option
+  (testing "default behavior (transform enabled)"
+    ;; Basic null equality transformations
+    (is (= ["id IS NULL"]
+           (sut/format-expr [:= :id nil])))
+    (is (= ["id IS NOT NULL"]
+           (sut/format-expr [:<> :id nil])))
+    ;; Both operands nil
+    (is (= ["NULL IS NULL"]
+           (sut/format-expr [:= nil nil])))
+    (is (= ["NULL IS NOT NULL"]
+           (sut/format-expr [:<> nil nil])))
+    ;; In WHERE clauses
+    (is (= ["WHERE id IS NULL"]
+           (sut/format {:where [:= :id nil]}))))
+
+  (testing "transform disabled"
+    ;; In WHERE clauses (using format with options)
+    (is (= ["WHERE id = NULL"]
+           (sut/format {:where [:= :id nil]} {:transform-null-equals false})))
+    (is (= ["WHERE id <> NULL"]
+           (sut/format {:where [:<> :id nil]} {:transform-null-equals false})))
+    ;; Both operands nil
+    (is (= ["WHERE NULL = NULL"]
+           (sut/format {:where [:= nil nil]} {:transform-null-equals false})))
+    (is (= ["WHERE NULL <> NULL"]
+           (sut/format {:where [:<> nil nil]} {:transform-null-equals false})))
+    ;; With parameters (note: AND wraps expressions in parens)
+    (is (= ["WHERE (id = NULL) AND (name = ?)" "John"]
+           (sut/format {:where [:and [:= :id nil] [:= :name "John"]]}
+                       {:transform-null-equals false}))))
+
+  (testing "global option setting"
+    (try
+      ;; Test setting global option to false
+      (sut/set-options! {:transform-null-equals false})
+      (is (= ["WHERE id = NULL"]
+             (sut/format {:where [:= :id nil]})))
+      ;; Override global with local option
+      (is (= ["WHERE id IS NULL"]
+             (sut/format {:where [:= :id nil]} {:transform-null-equals true})))
+      (finally
+        ;; Reset to default
+        (sut/set-options! {:transform-null-equals true}))))
+
+  (testing "non-null values unaffected"
+    ;; Regular equality operations should work the same regardless of option
+    (is (= ["WHERE id = ?" 42]
+           (sut/format {:where [:= :id 42]} {:transform-null-equals false})))
+    (is (= ["WHERE id = ?" 42]
+           (sut/format {:where [:= :id 42]} {:transform-null-equals true})))
+    (is (= ["WHERE id <> ?" "test"]
+           (sut/format {:where [:<> :id "test"]} {:transform-null-equals false}))))
+
+  (testing "other null operators unaffected"
+    ;; IS and IS NOT should work the same regardless of the transform option
+    (is (= ["WHERE id IS NULL"]
+           (sut/format {:where [:is :id nil]} {:transform-null-equals false})))
+    (is (= ["WHERE id IS NOT NULL"]
+           (sut/format {:where [:is-not :id nil]} {:transform-null-equals false})))))
+
 (deftest where-test
   (is (= ["WHERE id = ?" 1]
          (#'sut/format-on-expr :where [:= :id 1]))))

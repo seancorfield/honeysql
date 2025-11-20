@@ -132,6 +132,7 @@
 (def ^:private default-inline (atom nil))
 (def ^:private default-checking (atom :none))
 (def ^:private default-numbered (atom false))
+(def ^:private default-transform-null-equals (atom true))
 
 (def ^:private ^:dynamic *dialect* nil)
 (def ^:private ^:dynamic *options*
@@ -154,6 +155,8 @@
    :ignored-metadata []
    ;; "linting" mode (:none, :basic, :strict):
    :checking @default-checking
+   ;; controls whether [:= expr nil] becomes "expr IS NULL" or "expr = NULL":
+   :transform-null-equals @default-transform-null-equals
    ;; the current DSL hash map being formatted (for clause-body / contains-clause?):
    :dsl nil
    ;; caching data to detect expressions that cannot be cached:
@@ -2210,8 +2213,9 @@
                                            " is supported")
                                       {:expr expr})))
         [s1 & p1]   (format-expr a {:nested true})
-        [s2 & p2]   (format-expr b {:nested true})]
-    (-> (if (or (nil? a) (nil? b))
+        [s2 & p2]   (format-expr b {:nested true})
+        transform?  (:transform-null-equals *options*)]
+    (-> (if (and transform? (or (nil? a) (nil? b)))
           (str (if (nil? a)
                  (if (nil? b) "NULL" s2)
                  s1)
@@ -2366,6 +2370,7 @@
                                 @default-quoted)
                   :quoted-always (:quoted-always opts @default-quoted-always)
                   :quoted-snake (:quoted-snake opts @default-quoted-snake)
+                  :transform-null-equals (:transform-null-equals opts @default-transform-null-equals)
                   :params (reduce-kv (fn [m k v]
                                        (assoc m (sym->kw k) v))
                                      {}
@@ -2417,9 +2422,13 @@
   * :quoted
   * :quoted-always
   * :quoted-snake
+  * :transform-null-equals
   Note that calling `set-dialect!` can override the default for `:quoted`."
   [opts]
-  (let [unknowns (dissoc opts :checking :inline :numbered :quoted :quoted-snake)]
+  (let [unknowns (dissoc opts
+                         :checking :inline :numbered
+                         :quoted :quoted-always :quoted-snake
+                         :transform-null-equals)]
     (when (seq unknowns)
       (throw (ex-info (str (join ", " (keys unknowns))
                            " are not options that can be set globally.")
@@ -2435,7 +2444,9 @@
     (when (contains? opts :quoted-always)
       (reset! default-quoted-always (:quoted-always opts)))
     (when (contains? opts :quoted-snake)
-      (reset! default-quoted-snake (:quoted-snake opts)))))
+      (reset! default-quoted-snake (:quoted-snake opts)))
+    (when (contains? opts :transform-null-equals)
+      (reset! default-transform-null-equals (:transform-null-equals opts)))))
 
 (defn clause-order
   "Return the current order that known clauses will be applied when
