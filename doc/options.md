@@ -194,32 +194,34 @@ This option mirrors PostgreSQL's [`transform_null_equals` configuration option](
 
 **When `true` (default):**
 ```clojure
-(format {:where [:= :id nil]})
+(sql/format {:where [:= :id nil]})
 ;=> ["WHERE id IS NULL"]
 
-(format {:where [:<> :name nil]})
+(sql/format {:where [:<> :name nil]})
 ;=> ["WHERE name IS NOT NULL"]
 ```
 
 **When `false` (transform disabled):**
 ```clojure
-(format {:where [:= :id nil]} {:transform-null-equals false})
+(sql/format {:where [:= :id nil]} {:transform-null-equals false})
 ;=> ["WHERE id = NULL"]
 
-(format {:where [:<> :name nil]} {:transform-null-equals false})
+(sql/format {:where [:<> :name nil]} {:transform-null-equals false})
 ;=> ["WHERE name <> NULL"]
 ```
 
 **Edge case - both operands nil:**
 ```clojure
-(format-expr [:= nil nil] {:transform-null-equals false})
+(sql/format-expr [:= nil nil] {:transform-null-equals false})
 ;=> ["NULL = NULL"]
 ```
 
 **Setting globally:**
 ```clojure
-(set-options! {:transform-null-equals false})
+(sql/set-options! {:transform-null-equals false})
 ;; Now all subsequent format calls will use = NULL instead of IS NULL
+(sql/set-options! {:transform-null-equals true})
+;; Restore default so format calls will use IS NULL again
 ```
 
 **Note:** This option only affects exact `:=` and `:<>` operations with `nil` values.
