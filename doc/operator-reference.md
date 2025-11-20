@@ -82,10 +82,23 @@ two arguments.
 `not=` and `!=` are accepted as aliases for `<>`.
 
 If either of the arguments evaluates to `nil`, the resulting
-SQL condition will use `IS NULL` or `IS NOT NULL` as appropriate.
-This behavior in HoneySQL may be surprising but dates back to at
+SQL condition will use `IS NULL` or `IS NOT NULL` as appropriate
+**by default**. This behavior can be controlled by the
+`:transform-null-equals` option (see [options](options.md#transform-null-equals)).
+
+```clojure
+{:where [:= :id nil]}
+;;=> ["WHERE id IS NULL"]  -- default behavior
+
+{:where [:= :id nil]} {:transform-null-equals false}
+;;=> ["WHERE id = NULL"]   -- with transform disabled
+```
+
+This transformation in HoneySQL may be surprising but dates back to at
 least 2013, and was originally intended to help avoid accidentally
-false conditions when a value (parameter) might be `nil`.
+false conditions when a value (parameter) might be `nil`. As of 2.7.next, the
+`:transform-null-equals` option allows you to disable this transformation
+for SQL standard compliance.
 
 ## < > <= >=
 
