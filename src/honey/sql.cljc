@@ -2422,6 +2422,7 @@
   * :quoted
   * :quoted-always
   * :quoted-snake
+  * :transform-null-equals
   Note that calling `set-dialect!` can override the default for `:quoted`."
   [opts]
   (let [unknowns (dissoc opts

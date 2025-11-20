@@ -87,10 +87,10 @@ SQL condition will use `IS NULL` or `IS NOT NULL` as appropriate
 `:transform-null-equals` option (see [options](options.md#transform-null-equals)).
 
 ```clojure
-{:where [:= :id nil]}
+(format {:where [:= :id nil]})
 ;;=> ["WHERE id IS NULL"]  -- default behavior
 
-{:where [:= :id nil]} {:transform-null-equals false}
+(format {:where [:= :id nil]} {:transform-null-equals false})
 ;;=> ["WHERE id = NULL"]   -- with transform disabled
 ```
 

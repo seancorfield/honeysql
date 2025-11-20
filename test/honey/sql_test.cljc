@@ -112,15 +112,17 @@
                        {:transform-null-equals false}))))
 
   (testing "global option setting"
-    ;; Test setting global option to false
-    (sut/set-options! {:transform-null-equals false})
-    (is (= ["WHERE id = NULL"]
-           (sut/format {:where [:= :id nil]})))
-    ;; Override global with local option
-    (is (= ["WHERE id IS NULL"]
-           (sut/format {:where [:= :id nil]} {:transform-null-equals true})))
-    ;; Reset to default
-    (sut/set-options! {:transform-null-equals true}))
+    (try
+      ;; Test setting global option to false
+      (sut/set-options! {:transform-null-equals false})
+      (is (= ["WHERE id = NULL"]
+             (sut/format {:where [:= :id nil]})))
+      ;; Override global with local option
+      (is (= ["WHERE id IS NULL"]
+             (sut/format {:where [:= :id nil]} {:transform-null-equals true})))
+      (finally
+        ;; Reset to default
+        (sut/set-options! {:transform-null-equals true}))))
 
   (testing "non-null values unaffected"
     ;; Regular equality operations should work the same regardless of option
