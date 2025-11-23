@@ -30,7 +30,7 @@
          :main-opts ["-m" "cljs-test-runner.main"]}
 
   :gen-doc-tests {:replace-paths ["build"]
-                  :extra-deps {babashka/fs {:mvn/version "0.5.27"}
+                  :extra-deps {babashka/fs {:mvn/version "0.5.28"}
                                com.github.lread/test-doc-blocks {:mvn/version "1.2.21"}}
                   :override-deps {org.clojure/clojure {:mvn/version "1.12.3"}}
                   :main-opts ["-m" "honey.gen-doc-tests"]}
