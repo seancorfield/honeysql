@@ -96,7 +96,7 @@ SQL condition will use `IS NULL` or `IS NOT NULL` as appropriate
 
 This transformation in HoneySQL may be surprising but dates back to at
 least 2013, and was originally intended to help avoid accidentally
-false conditions when a value (parameter) might be `nil`. As of 2.7.next, the
+false conditions when a value (parameter) might be `nil`. As of 2.7.1364, the
 `:transform-null-equals` option allows you to disable this transformation
 for SQL standard compliance.
 
