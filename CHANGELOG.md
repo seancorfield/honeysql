@@ -1,5 +1,8 @@
 # Changes
 
+* 2.7.next in progress
+  * Update dev/test deps.
+
 * 2.7.1364 -- 2025-11-27
   * Address [#593](https://github.com/seancorfield/honeysql/issues/593) by adding `:transform-null-equals` option to control whether `[:= expr nil]` transforms to `IS NULL` or preserves `= NULL`. Defaults to `true` (current behavior) for backward compatibility. When set to `false`, follows SQL standard semantics. Mirrors PostgreSQL's `transform_null_equals` configuration option.
   * Fix [#590](https://github.com/seancorfield/honeysql/issues/590) by allowing simple expressions on the LHS of `SET =` clauses, such as array element assignment.
