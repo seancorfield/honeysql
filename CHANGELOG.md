@@ -1,6 +1,7 @@
 # Changes
 
 * 2.7.next in progress
+  * Address [#596](https://github.com/seancorfield/honeysql/issues/596) by removing `#'` Var references from all production code. This meant making a couple of private functions public, but marking them `^:no-doc` to indicate they are not part of the public API.
   * Update dev/test deps.
 
 * 2.7.1364 -- 2025-11-27

@@ -373,7 +373,7 @@
             (format-entity (keyword ident))))
         (-> n (dehyphen) (upper-case))))))
 
-(defn- sym->kw
+(defn ^:no-doc sym->kw
   "Given a symbol, produce a keyword, retaining the namespace
   qualifier, if any."
   [s]
@@ -383,7 +383,7 @@
       (keyword (name s)))
     s))
 
-(defn- kw->sym
+(defn ^:no-doc kw->sym
   "Given a keyword, produce a symbol, retaining the namespace
   qualifier, if any."
   [k]
@@ -597,7 +597,7 @@
    as we walk the <period> sequence."
   [[for-part the-time & more]]
   (let [control {:sql-kw [(fn [x] [(sql-kw x)]) :expr]
-                 :expr   [#'format-expr :sql-kw]}]
+                 :expr   [format-expr :sql-kw]}]
     (loop [sqls   [(sql-kw for-part)
                    (format-fn-name the-time)]
            params []
@@ -1024,7 +1024,7 @@
                     [table])
                   [sql & params] (format-dsl statement)
                   [t-sql & t-params] (format-entity-alias table)
-                  [c-sqls c-params] (reduce-sql (map #'format-entity-alias) cols)]
+                  [c-sqls c-params] (reduce-sql (map format-entity-alias) cols)]
               (-> [(str (sql-kw k) " " t-sql
                         " "
                         (cond (seq cols)
@@ -1039,7 +1039,7 @@
             (sequential? (second table))
             (let [[table cols] table
                   [t-sql & t-params] (format-entity-alias table)
-                  [c-sqls c-params] (reduce-sql (map #'format-entity-alias) cols)]
+                  [c-sqls c-params] (reduce-sql (map format-entity-alias) cols)]
               (-> [(str (sql-kw k) " " t-sql
                         " ("
                         (join ", " c-sqls)
@@ -1080,7 +1080,7 @@
               (if (and (sequential? e)
                        (contains? #{:using 'using} (first e)))
                 (let [[u-sqls u-params]
-                      (reduce-sql (map #'format-entity-alias) (rest e))]
+                      (reduce-sql (map format-entity-alias) (rest e))]
                   [(conj sqls
                          "USING"
                          (str "("
@@ -1171,7 +1171,7 @@
                     (str " " (sql-kw tables))
                     (sequential? tables)
                     (str " OF "
-                         (join ", " (map #'format-entity) tables))
+                         (join ", " (map format-entity) tables))
                     :else
                     (str " OF " (format-entity tables)))
               (when nowait
@@ -1500,7 +1500,7 @@
           coll
           (cons nil coll))]
     (into [(when if-exists (sql-kw :if-exists))
-           (join ", " (map #'format-entity) tables)]
+           (join ", " (map format-entity) tables)]
           (format-ddl-options opts context))))
 
 (defn- format-drop-items
@@ -1533,7 +1533,7 @@
 
 (defn- format-table-columns [_ xs]
   [(str "("
-        (join ", " (map #'format-single-column) xs)
+        (join ", " (map format-single-column) xs)
         ")")])
 
 (defn- format-add-single-item [k spec]
@@ -1668,88 +1668,88 @@
 (def ^:private clause-format
   "The (default) behavior for each known clause. Can also have items added
   and removed."
-  (atom {:alter-table     #'format-alter-table
-         :add-column      #'format-add-item
-         :drop-column     #'format-drop-columns
+  (atom {:alter-table     format-alter-table
+         :add-column      format-add-item
+         :drop-column     format-drop-columns
          :alter-column    (fn [k spec]
                             (format-add-item
                              (if (mysql?) :modify-column k)
                              spec))
-         :modify-column   #'format-add-item
-         :rename-column   #'format-rename-item
+         :modify-column   format-add-item
+         :rename-column   format-rename-item
          ;; so :add-index works with both [:index] and [:unique]
          :add-index       (fn [_ x] (format-on-expr :add x))
-         :drop-index      #'format-selector
+         :drop-index      format-selector
          :rename-table    (fn [_ x] (format-selector :rename-to x))
          :create-table    (fn [_ x] (format-create :create :table x nil))
          :create-table-as (fn [_ x] (format-create :create :table x :as))
          :create-extension (fn [_ x] (format-create :create :extension x nil))
-         :with-columns    #'format-table-columns
+         :with-columns    format-table-columns
          :create-view     (fn [_ x] (format-create :create :view x :as))
          ;; postgresql lacks if not exists:
          :create-or-replace-view (fn [_ x] (format-create :create :or-replace-view x :as))
          :create-materialized-view (fn [_ x] (format-create :create :materialized-view x :as))
-         :drop-table      #'format-drop-items
-         :drop-extension  #'format-drop-items
-         :drop-view       #'format-drop-items
-         :drop-materialized-view #'format-drop-items
+         :drop-table      format-drop-items
+         :drop-extension  format-drop-items
+         :drop-view       format-drop-items
+         :drop-materialized-view format-drop-items
          :refresh-materialized-view (fn [_ x] (format-create :refresh :materialized-view x nil))
-         :create-index    #'format-create-index
-         :setting         #'format-setting
+         :create-index    format-create-index
+         :setting         format-setting
          :raw             (fn [_ x] (raw-render x))
          :nest            (fn [_ x]
                             (let [[sql & params] (format-dsl x {:nested true})]
                               (into [sql] params)))
-         :with            #'format-with
-         :with-recursive  #'format-with
-         :intersect       #'format-on-set-op
-         :union           #'format-on-set-op
-         :union-all       #'format-on-set-op
-         :except          #'format-on-set-op
-         :except-all      #'format-on-set-op
-         :table           #'format-selector
+         :with            format-with
+         :with-recursive  format-with
+         :intersect       format-on-set-op
+         :union           format-on-set-op
+         :union-all       format-on-set-op
+         :except          format-on-set-op
+         :except-all      format-on-set-op
+         :table           format-selector
          :assert          (fn [k xs]
                             (let [[sql & params] (format-expr xs)]
                               (into [(str (sql-kw k) " " sql)] params)))
-         :select          #'format-selects
-         :select-distinct #'format-selects
-         :select-distinct-on #'format-selects-on
-         :select-top      #'format-select-top
-         :select-distinct-top #'format-select-top
-         :exclude         #'format-selects
-         :rename          #'format-selects
+         :select          format-selects
+         :select-distinct format-selects
+         :select-distinct-on format-selects-on
+         :select-top      format-select-top
+         :select-distinct-top format-select-top
+         :exclude         format-selects
+         :rename          format-selects
          :distinct        (fn [k xs] (format-selects k   [[xs]]))
          :expr            (fn [_ xs] (format-selects nil [[xs]]))
-         :into            #'format-select-into
-         :bulk-collect-into #'format-select-into
-         :insert-into     #'format-insert
-         :patch-into      #'format-insert
-         :replace-into    #'format-insert
-         :update          (check-where #'format-selector)
-         :delete          (check-where #'format-selects)
-         :delete-from     (check-where #'format-selector)
-         :erase-from      (check-where #'format-selector)
-         :truncate        #'format-truncate
-         :columns         #'format-columns
-         :set             #'format-set-exprs
-         :from            #'format-selects
-         :using           #'format-selects
-         :join-by         #'format-join-by
-         :join            #'format-join
-         :left-join       #'format-join
-         :right-join      #'format-join
-         :inner-join      #'format-join
-         :outer-join      #'format-join
-         :full-join       #'format-join
-         :cross-join      #'format-selects
-         :where           #'format-on-expr
-         :group-by        #'format-group-by
-         :having          #'format-on-expr
-         :window          #'format-window
-         :partition-by    #'format-selects
-         :order-by        #'format-order-by
-         :qualify         #'format-on-expr
-         :limit           #'format-on-expr
+         :into            format-select-into
+         :bulk-collect-into format-select-into
+         :insert-into     format-insert
+         :patch-into      format-insert
+         :replace-into    format-insert
+         :update          (check-where format-selector)
+         :delete          (check-where format-selects)
+         :delete-from     (check-where format-selector)
+         :erase-from      (check-where format-selector)
+         :truncate        format-truncate
+         :columns         format-columns
+         :set             format-set-exprs
+         :from            format-selects
+         :using           format-selects
+         :join-by         format-join-by
+         :join            format-join
+         :left-join       format-join
+         :right-join      format-join
+         :inner-join      format-join
+         :outer-join      format-join
+         :full-join       format-join
+         :cross-join      format-selects
+         :where           format-on-expr
+         :group-by        format-group-by
+         :having          format-on-expr
+         :window          format-window
+         :partition-by    format-selects
+         :order-by        format-order-by
+         :qualify         format-on-expr
+         :limit           format-on-expr
          :offset          (fn [_ x]
                             (if (or (contains-clause? :fetch) (sql-server?))
                               (let [[sql & params] (format-on-expr :offset x)
@@ -1762,24 +1762,24 @@
                                   rows  (if (and (number? x) (== 1 x)) :row-only :rows-only)
                                   [sql & params] (format-on-expr which x)]
                               (into [(str sql " " (sql-kw rows))] params)))
-         :for             #'format-lock-strength
-         :lock            #'format-lock-strength
-         :values          #'format-values
-         :records         #'format-records
-         :on-conflict     #'format-on-conflict
-         :on-constraint   #'format-selector
+         :for             format-lock-strength
+         :lock            format-lock-strength
+         :values          format-values
+         :records         format-records
+         :on-conflict     format-on-conflict
+         :on-constraint   format-selector
          :do-nothing      (fn [k _] (vector (sql-kw k)))
-         :do-update-set   #'format-do-update-set
+         :do-update-set   format-do-update-set
          ;; MySQL-specific but might as well be always enabled:
-         :on-duplicate-key-update #'format-do-update-set
-         :returning       #'format-selects
-         :with-data       #'format-with-data
+         :on-duplicate-key-update format-do-update-set
+         :returning       format-selects
+         :with-data       format-with-data
          ;; NRQL extensions:
-         :facet           #'format-selects
-         :since           #'format-interval
-         :until           #'format-interval
-         :compare-with    #'format-interval
-         :timeseries      #'format-interval}))
+         :facet           format-selects
+         :since           format-interval
+         :until           format-interval
+         :compare-with    format-interval
+         :timeseries      format-interval}))
 
 (assert (= (set @base-clause-order)
            (set @current-clause-order)
@@ -2041,13 +2041,13 @@
     ;;     call using the first entity as the function
     ;; function-1-opt - like function-1 except if the first
     ;;     argument is nil, it is omitted
-    :constraint  #'function-1
-    :default     #'function-1
-    :foreign-key #'function-0
-    :index       #'function-1-opt
-    :primary-key #'function-0
-    :references  #'function-1
-    :unique      #'function-1-opt
+    :constraint  function-1
+    :default     function-1
+    :foreign-key function-0
+    :index       function-1-opt
+    :primary-key function-0
+    :references  function-1
+    :unique      function-1-opt
     ;; dynamic dotted name creation:
     :.           (fn [_ data] (dot-navigation "." data))
     ;; snowflake variant #570:
@@ -2084,11 +2084,11 @@
             (binding [*options* (assoc *options* :inline true)]
               (format-expr (if (ident? tz) (name tz) tz)))]
         (into [(str sql " AT TIME ZONE " tz-sql)] params)))
-    :between     #'between-fn
-    :not-between #'between-fn
+    :between     between-fn
+    :not-between between-fn
     :call      (fn [_ [f :as expr]] (format-fn-call-expr f expr))
-    :case      #'case-clauses
-    :case-expr #'case-clauses
+    :case      case-clauses
+    :case-expr case-clauses
     :cast
     (fn [_ [x type]]
       (let [[sql & params]   (format-expr x)
@@ -2149,8 +2149,8 @@
     (fn [_ [x]]
       (let [[sql & params] (format-expr x {:nested true})]
         (into [(str "NOT " sql)] params)))
-    :object #'object-record-literal
-    :record #'object-record-literal
+    :object object-record-literal
+    :record object-record-literal
     :order-by
     (fn [k [e & qs]]
       (let [[sql-e & params-e] (format-expr e)
@@ -2347,7 +2347,7 @@
                      (get @dialects (check-dialect (:dialect opts)))
                      @default-dialect)
          numbered? (:numbered opts @default-numbered)
-         formatter (if (map? data) #'format-dsl #'format-expr)
+         formatter (if (map? data) format-dsl format-expr)
          options {:caching cache
                   :checking (:checking opts @default-checking)
                   :clause-order (if dialect?

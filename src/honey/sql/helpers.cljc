@@ -77,7 +77,7 @@
 (defn- conjunction?
   [e]
   (and (ident? e)
-       (contains? #{:and :or} (#'h/sym->kw e))))
+       (contains? #{:and :or} (h/sym->kw e))))
 
 (defn- simplify-logic
   "For Boolean expressions, simplify the logic to make
@@ -89,11 +89,11 @@
   [e]
   (if (= 1 (count (rest e)))
     (fnext e)
-    (let [conjunction (#'h/sym->kw (first e))]
+    (let [conjunction (h/sym->kw (first e))]
       (reduce (fn [acc e]
                 (if (and (sequential? e)
                          (conjunction? (first e))
-                         (= conjunction (#'h/sym->kw (first e))))
+                         (= conjunction (h/sym->kw (first e))))
                   (c/into acc (rest e))
                   (conj acc e)))
               [conjunction]
@@ -135,13 +135,13 @@
 
 (def ^:private special-merges
   "Identify the conjunction merge clauses."
-  {:select-distinct-on #'select-distinct-on-merge
-   :where              #'conjunction-merge
-   :having             #'conjunction-merge})
+  {:select-distinct-on select-distinct-on-merge
+   :where              conjunction-merge
+   :having             conjunction-merge})
 
 (defn- helper-merge [data k args]
-  (let [k'  (#'h/sym->kw k)
-        k   (#'h/kw->sym k)
+  (let [k'  (h/sym->kw k)
+        k   (h/kw->sym k)
         d   (get data k)
         d'  (get data k')
         mf  (special-merges k')
