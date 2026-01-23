@@ -20,7 +20,7 @@ jobs:
           cli: '1.12.4.1582'
           bb: latest
       - name: Cache All The Things
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.m2/repository
@@ -52,7 +52,7 @@ jobs:
           cli: '1.12.4.1582'
           bb: latest
       - name: Cache All The Things
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.m2/repository
