@@ -25,7 +25,7 @@
    [:url "https://github.com/seancorfield/honeysql"]
    [:licenses
     [:license
-     [:name "Eclipse Public License"]
+     [:name "Eclipse Public License 2.0"]
      [:url "https://www.eclipse.org/legal/epl-2.0"]]]
    [:developers
     [:developer
