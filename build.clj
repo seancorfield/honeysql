@@ -26,7 +26,7 @@
    [:licenses
     [:license
      [:name "Eclipse Public License"]
-     [:url "http://www.eclipse.org/legal/epl-v10.html"]]]
+     [:url "https://www.eclipse.org/legal/epl-2.0"]]]
    [:developers
     [:developer
      [:name "Sean Corfield"]]

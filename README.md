@@ -1055,4 +1055,4 @@ HoneySQL 1.x will continue to get critical security fixes but otherwise should b
 
 Copyright (c) 2020-2024 Sean Corfield. HoneySQL 1.x was copyright (c) 2012-2020 Justin Kramer and Sean Corfield.
 
-Distributed under the Eclipse Public License, the same as Clojure.
+Distributed under the [Eclipse Public License 2.0](https://www.eclipse.org/legal/epl-2.0)
