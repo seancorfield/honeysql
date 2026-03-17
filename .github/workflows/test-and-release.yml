@@ -19,7 +19,7 @@ jobs:
       - name: Setup Clojure and Babashka
         uses: DeLaGuardo/setup-clojure@master
         with:
-          cli: '1.12.4.1607'
+          cli: '1.12.4.1618'
           bb: latest
       - name: Cache All The Things
         uses: actions/cache@v5
