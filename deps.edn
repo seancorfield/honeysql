@@ -4,13 +4,13 @@
  :aliases
  {;; for help: clojure -T:deps:build help/doc
   :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.13"}
-                 slipset/deps-deploy {:mvn/version "0.2.2"}}
+                 slipset/deps-deploy {:mvn/version "0.2.4"}}
           :ns-default build}
 
   ;; versions to test against:
   :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.3"}}}
   :1.11 {:override-deps {org.clojure/clojure {:mvn/version "1.11.4"}}}
-  :1.12 {:override-deps {org.clojure/clojure {:mvn/version "1.12.4"}}}
+  :1.12 {:override-deps {org.clojure/clojure {:mvn/version "1.12.5"}}}
 
   :elide ; to test #409 (assertion on helper docstrings)
   {:jvm-opts ["-Dclojure.compiler.elide-meta=[:doc]"]}
@@ -30,9 +30,9 @@
          :main-opts ["-m" "cljs-test-runner.main"]}
 
   :gen-doc-tests {:replace-paths ["build"]
-                  :extra-deps {babashka/fs {:mvn/version "0.5.32"}
+                  :extra-deps {babashka/fs {:mvn/version "0.5.33"}
                                com.github.lread/test-doc-blocks {:mvn/version "1.2.21"}}
-                  :override-deps {org.clojure/clojure {:mvn/version "1.12.4"}}
+                  :override-deps {org.clojure/clojure {:mvn/version "1.12.5"}}
                   :main-opts ["-m" "honey.gen-doc-tests"]}
 
   :test-doc {:replace-paths ["src" "target/test-doc-blocks/test"]}
