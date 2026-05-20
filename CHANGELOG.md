@@ -1,6 +1,7 @@
 # Changes
 
 * 2.7.next in progress
+  * Note that PostgreSQL also supports `CASE` via PR [#598](https://github.com/seancorfield/honeysql/pull/598) from [@holyjak](https://github.com/holyjak).
   * Upgrade from EPL-1.0 to EPL-2.0 for broader compatibility. Explicitly allow for relicensing of HoneySQL code under Apache-2.0.
   * Update dev/test deps.
 
