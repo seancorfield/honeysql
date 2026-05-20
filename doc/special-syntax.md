@@ -182,7 +182,7 @@ may be `:else` (or `'else`) to produce `ELSE`, otherwise
 ;; => ["CASE WHEN a < ? THEN ? WHEN a > ? THEN ? ELSE ? END" 10 "small" 100 "big" "medium"]
 ```
 
-Google BigQuery supports a variant of `CASE` that takes an expression and then the `WHEN`
+Google BigQuery and PostgreSQL support a variant of `CASE` that takes an expression and then the `WHEN`
 clauses contain expressions to match against, rather than conditions. HoneySQL supports
 this using `:case-expr`:
 
