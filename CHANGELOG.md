@@ -1,7 +1,7 @@
 # Changes
 
 * 2.7.next in progress
-  * Add support for window frames via the `:frame` clause (and `frame` helper) inside `:over` expressions and `:window` definitions, e.g. `{:frame [:rows :between :unbounded-preceding :current-row]}` produces `ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`. Supports `:rows`/`:range`/`:groups` modes, single or `:between` bounds (`:unbounded-preceding`, `:current-row`, `:unbounded-following`, or `[n :preceding]`/`[n :following]` offset pairs), and frame exclusions.
+  * Add support for window frames via the `:frame` clause (and `frame` helper) inside `:over` expressions and `:window` definitions, e.g. `{:frame [:rows :between :unbounded-preceding :current-row]}` produces `ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`. Supports `:rows`/`:range`/`:groups` modes, single or `:between` bounds (`:unbounded-preceding`, `:current-row`, `:unbounded-following`, or `[n :preceding]`/`[n :following]` offset pairs), and frame exclusions, via PR [#599](https://github.com/seancorfield/honeysql/pull/599) from [@yenda](https://github.com/yenda) and Claude Code.
   * Note that PostgreSQL also supports `CASE` via PR [#598](https://github.com/seancorfield/honeysql/pull/598) from [@holyjak](https://github.com/holyjak).
   * Upgrade from EPL-1.0 to EPL-2.0 for broader compatibility. Explicitly allow for relicensing of HoneySQL code under Apache-2.0.
   * Update dev/test deps.
@@ -11,7 +11,7 @@
   * Update dev/test deps.
 
 * 2.7.1364 -- 2025-11-27
-  * Address [#593](https://github.com/seancorfield/honeysql/issues/593) by adding `:transform-null-equals` option to control whether `[:= expr nil]` transforms to `IS NULL` or preserves `= NULL`. Defaults to `true` (current behavior) for backward compatibility. When set to `false`, follows SQL standard semantics. Mirrors PostgreSQL's `transform_null_equals` configuration option.
+  * Address [#593](https://github.com/seancorfield/honeysql/issues/593) by adding `:transform-null-equals` option to control whether `[:= expr nil]` transforms to `IS NULL` or preserves `= NULL`. Defaults to `true` (current behavior) for backward compatibility. When set to `false`, follows SQL standard semantics. Mirrors PostgreSQL's `transform_null_equals` configuration option (by me and Copilot).
   * Fix [#590](https://github.com/seancorfield/honeysql/issues/590) by allowing simple expressions on the LHS of `SET =` clauses, such as array element assignment.
   * Update dev/test deps (Clojure 1.12.3, CLI 1.12.3.1577).
   * Add matrix testing against JDK 25; drop JDK 8.
