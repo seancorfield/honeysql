@@ -1,6 +1,7 @@
 # Changes
 
 * 2.7.next in progress
+  * Add support for window frames via the `:frame` clause (and `frame` helper) inside `:over` expressions and `:window` definitions, e.g. `{:frame [:rows :between :unbounded-preceding :current-row]}` produces `ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`. Supports `:rows`/`:range`/`:groups` modes, single or `:between` bounds (`:unbounded-preceding`, `:current-row`, `:unbounded-following`, or `[n :preceding]`/`[n :following]` offset pairs), and frame exclusions.
   * Note that PostgreSQL also supports `CASE` via PR [#598](https://github.com/seancorfield/honeysql/pull/598) from [@holyjak](https://github.com/holyjak).
   * Upgrade from EPL-1.0 to EPL-2.0 for broader compatibility. Explicitly allow for relicensing of HoneySQL code under Apache-2.0.
   * Update dev/test deps.
