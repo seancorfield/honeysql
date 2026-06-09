@@ -928,6 +928,32 @@
   [& args]
   (generic :order-by args))
 
+(defn frame
+  "Accepts a window frame specification, as part of an `:over`
+  expression or a `WINDOW` definition. The arguments are, in order:
+
+  * a frame mode: `:rows`, `:range` or `:groups`,
+  * either a single frame start bound, or `:between` followed by a
+    start bound and an end bound,
+  * an optional frame exclusion: `:exclude-current-row`,
+    `:exclude-group`, `:exclude-ties` or `:exclude-no-others`.
+
+  A bound is either one of the keywords `:unbounded-preceding`,
+  `:current-row` or `:unbounded-following`, or a pair of an offset
+  expression and a direction, `[n :preceding]` or `[n :following]`
+  (the offset may be a parameter or any SQL expression).
+
+  (frame :rows :between :unbounded-preceding :current-row)
+  (frame :range :between [5 :preceding] [10 :following])
+  (frame :groups :current-row :exclude-ties)
+
+  Produces:
+  ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+  RANGE BETWEEN ? PRECEDING AND ? FOLLOWING
+  GROUPS CURRENT ROW EXCLUDE TIES"
+  [& args]
+  (generic :frame args))
+
 (defn limit
   "Specific to some databases (notabley MySQL),
   accepts a single SQL expression:
