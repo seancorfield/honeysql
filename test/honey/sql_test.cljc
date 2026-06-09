@@ -1636,6 +1636,75 @@ ORDER BY id = ? DESC
                                     [:<> :-row-hash lag-over]
                                     [:is lag-over nil]]}))))))
 
+(deftest window-frame-tests
+  (let [over (fn [spec opts]
+               (sut/format {:select [[[:over [[:sum :x] spec :w]]]] :from :t} opts))]
+    (testing "single start bound"
+      (is (= ["SELECT SUM(x) OVER (ROWS UNBOUNDED PRECEDING) AS w FROM t"]
+             (over {:frame [:rows :unbounded-preceding]} {}))))
+    (testing "BETWEEN with two special bounds"
+      (is (= ["SELECT SUM(x) OVER (ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS w FROM t"]
+             (over {:frame [:rows :between :unbounded-preceding :current-row]} {}))))
+    (testing "offset bounds are parameterized left-to-right"
+      (is (= ["SELECT SUM(x) OVER (RANGE BETWEEN ? PRECEDING AND ? FOLLOWING) AS w FROM t" 5 10]
+             (over {:frame [:range :between [5 :preceding] [10 :following]]} {}))))
+    (testing "offset bound honors :inline"
+      (is (= ["SELECT SUM(x) OVER (ROWS 3 PRECEDING) AS w FROM t"]
+             (over {:frame [:rows [3 :preceding]]} {:inline true})))
+      (is (= ["SELECT SUM(x) OVER (ROWS 3 PRECEDING) AS w FROM t"]
+             (over {:frame [:rows [[:inline 3] :preceding]]} {}))))
+    (testing "offset bound may be a named parameter"
+      (is (= ["SELECT SUM(x) OVER (ROWS BETWEEN ? PRECEDING AND CURRENT ROW) AS w FROM t" 7]
+             (over {:frame [:rows :between [[:param :lo] :preceding] :current-row]} {:params {:lo 7}}))))
+    (testing "all three modes"
+      (is (= ["SELECT SUM(x) OVER (ROWS CURRENT ROW) AS w FROM t"]
+             (over {:frame [:rows :current-row]} {})))
+      (is (= ["SELECT SUM(x) OVER (RANGE CURRENT ROW) AS w FROM t"]
+             (over {:frame [:range :current-row]} {})))
+      (is (= ["SELECT SUM(x) OVER (GROUPS CURRENT ROW) AS w FROM t"]
+             (over {:frame [:groups :current-row]} {}))))
+    (testing "all four exclusions"
+      (is (= ["SELECT SUM(x) OVER (ROWS CURRENT ROW EXCLUDE CURRENT ROW) AS w FROM t"]
+             (over {:frame [:rows :current-row :exclude-current-row]} {})))
+      (is (= ["SELECT SUM(x) OVER (ROWS CURRENT ROW EXCLUDE GROUP) AS w FROM t"]
+             (over {:frame [:rows :current-row :exclude-group]} {})))
+      (is (= ["SELECT SUM(x) OVER (ROWS CURRENT ROW EXCLUDE TIES) AS w FROM t"]
+             (over {:frame [:rows :current-row :exclude-ties]} {})))
+      (is (= ["SELECT SUM(x) OVER (ROWS CURRENT ROW EXCLUDE NO OTHERS) AS w FROM t"]
+             (over {:frame [:rows :current-row :exclude-no-others]} {}))))
+    (testing "single offset bound + exclusion (the ambiguity case)"
+      (is (= ["SELECT SUM(x) OVER (ROWS ? PRECEDING EXCLUDE NO OTHERS) AS w FROM t" 3]
+             (over {:frame [:rows [3 :preceding] :exclude-no-others]} {}))))
+    (testing "BETWEEN with exclusion"
+      (is (= ["SELECT SUM(x) OVER (GROUPS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING EXCLUDE TIES) AS w FROM t"]
+             (over {:frame [:groups :between :current-row :unbounded-following :exclude-ties]} {}))))
+    (testing "frame renders after PARTITION BY and ORDER BY inside :over"
+      (is (= ["SELECT SUM(x) OVER (PARTITION BY dept ORDER BY ts ASC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS running FROM t"]
+             (sut/format {:select [[[:over [[:sum :x]
+                                            {:partition-by [:dept] :order-by [:ts]
+                                             :frame [:rows :between :unbounded-preceding :current-row]}
+                                            :running]]]]
+                          :from :t}))))
+    (testing "frame inside a named WINDOW definition"
+      (is (= ["SELECT * FROM t WINDOW w AS (PARTITION BY a ORDER BY b ASC RANGE UNBOUNDED PRECEDING)"]
+             (sut/format {:select :* :from :t
+                          :window [:w {:partition-by [:a] :order-by [:b]
+                                       :frame [:range :unbounded-preceding]}]}))))
+    (testing "symbol forms are accepted"
+      (is (= ["SELECT SUM(x) OVER (ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS w FROM t"]
+             (over {:frame '[rows between unbounded-preceding current-row]} {})))
+      (is (= ["SELECT SUM(x) OVER (RANGE BETWEEN ? PRECEDING AND ? FOLLOWING EXCLUDE TIES) AS w FROM t" 5 10]
+             (over {:frame ['range 'between [5 'preceding] [10 'following] 'exclude-ties]} {}))))
+    (testing "malformed frames throw"
+      (is (thrown-with-msg? ExceptionInfo #"expects 1 bound"
+                            (over {:frame [:rows]} {})))
+      (is (thrown-with-msg? ExceptionInfo #"mode must be one of"
+                            (over {:frame [:foo :current-row]} {})))
+      (is (thrown-with-msg? ExceptionInfo #"expects 2 bounds"
+                            (over {:frame [:rows :between :current-row]} {})))
+      (is (thrown-with-msg? ExceptionInfo #"invalid window frame exclusion"
+                            (over {:frame [:rows :current-row :exclude-foo]} {}))))))
+
 (comment
   ;; partial (incorrect!) workaround for #407:
   (sut/format {:select :f.* :from [[:foo [:f :for :system-time]]] :where [:= :f.id 1]})
