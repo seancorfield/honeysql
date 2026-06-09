@@ -72,7 +72,8 @@
    ;; NRQL extension:
    :facet
    :window :partition-by
-   :order-by :limit :offset :fetch :for :lock :values :records
+   :order-by :frame
+   :limit :offset :fetch :for :lock :values :records
    :on-conflict :on-constraint :do-nothing :do-update-set :on-duplicate-key-update
    :returning
    :with-data
@@ -1161,6 +1162,63 @@
                                   dirs)))] params)
       [])))
 
+(def ^:private frame-modes
+  "The three SQL window frame modes."
+  #{:rows :range :groups})
+
+(def ^:private frame-exclusions
+  "The four SQL window frame exclusion options."
+  #{:exclude-current-row :exclude-group :exclude-ties :exclude-no-others})
+
+(defn- format-frame-bound
+  "Format a single window frame bound. A bound is either a keyword such as
+  :unbounded-preceding, :current-row or :unbounded-following (rendered
+  literally via sql-kw) or a pair [offset :preceding] / [offset :following]
+  where the offset is formatted as a SQL expression so it supports
+  parameters, :inline and arbitrary expressions, mirroring order-by's
+  [expr dir] pairs."
+  [b]
+  (if (sequential? b)
+    (let [[offset dir]   b
+          [sql & params] (format-expr offset)]
+      (into [(str sql " " (sql-kw dir))] params))
+    [(sql-kw b)]))
+
+(defn- format-frame [_ xs]
+  (let [xs             (ensure-sequential xs)
+        [mode & more]  xs
+        mode           (sym->kw mode)
+        between?       (= :between (sym->kw (first more)))
+        more           (if between? (rest more) more)
+        n              (if between? 2 1)
+        bounds         (take n more)
+        [excl & extra] (drop n more)
+        excl           (when excl (sym->kw excl))]
+    (when-not (contains? frame-modes mode)
+      (throw (ex-info (str "window frame mode must be one of :rows, :range or :groups, got: " mode)
+                      {:frame xs})))
+    (when-not (= n (count bounds))
+      (throw (ex-info (str "window frame " (sql-kw mode)
+                           (when between? " BETWEEN")
+                           " expects " n " bound" (when (< 1 n) "s"))
+                      {:frame xs})))
+    (when (and excl (not (contains? frame-exclusions excl)))
+      (throw (ex-info (str "invalid window frame exclusion: " excl)
+                      {:frame xs})))
+    (when (seq extra)
+      (throw (ex-info "malformed window frame: unexpected trailing elements"
+                      {:frame xs :trailing extra})))
+    (let [results    (map format-frame-bound bounds)
+          bound-sqls (map first results)
+          params     (mapcat rest results)
+          body       (str (sql-kw mode) " "
+                          (if between?
+                            (str "BETWEEN " (first bound-sqls)
+                                 " AND " (second bound-sqls))
+                            (first bound-sqls))
+                          (when excl (str " " (sql-kw excl))))]
+      (into [body] params))))
+
 (defn- format-lock-strength [k xs]
   (let [[strength tables nowait] (ensure-sequential xs)]
     [(str (sql-kw k) " " (sql-kw strength)
@@ -1748,6 +1806,7 @@
          :window          format-window
          :partition-by    format-selects
          :order-by        format-order-by
+         :frame           format-frame
          :qualify         format-on-expr
          :limit           format-on-expr
          :offset          (fn [_ x]

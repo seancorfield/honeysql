@@ -20,7 +20,8 @@ The examples herein assume:
 (refer-clojure :exclude '[partition-by])
 (require '[honey.sql :as sql]
          '[honey.sql.helpers :as h :refer [select from join-by left-join join
-                                           where order-by over partition-by window]])
+                                           where order-by over partition-by window
+                                           frame]])
 ```
 
 Every DDL and SQL clause has a corresponding helper function
@@ -1242,6 +1243,69 @@ user=> (sql/format (-> (select :id
                                      [[:max :salary] nil :MaxSalary]))
                        (from :employee)))
 ["SELECT id, AVG(salary) OVER () AS Average, MAX(salary) OVER () AS MaxSalary FROM employee"]
+```
+
+## frame
+
+`:frame` adds a window frame (the `ROWS` / `RANGE` / `GROUPS` portion of a
+window specification) inside an `:over` expression or a named `:window`
+definition. It is given as a vector, in SQL token order:
+
+* a frame mode -- `:rows`, `:range` or `:groups`,
+* either a single frame start bound, or `:between` followed by a start
+  bound and an end bound,
+* an optional frame exclusion -- `:exclude-current-row`, `:exclude-group`,
+  `:exclude-ties` or `:exclude-no-others`.
+
+A bound is either one of the keywords `:unbounded-preceding`,
+`:current-row` or `:unbounded-following`, or a pair of an offset and a
+direction, `[n :preceding]` or `[n :following]`. The offset is formatted as
+a regular SQL expression, so it may be a literal (parameterized, or inlined
+with the `:inline` option), a named parameter, or any expression.
+
+`:frame` always appears after `:partition-by` and `:order-by` within the
+window specification.
+
+```clojure
+user=> (sql/format {:select [:id
+                             [[:over
+                               [[:sum :salary]
+                                {:partition-by [:department]
+                                 :order-by [:salary]
+                                 :frame [:rows :between :unbounded-preceding :current-row]}
+                                :running-total]]]]
+                    :from [:employee]})
+["SELECT id, SUM(salary) OVER (PARTITION BY department ORDER BY salary ASC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS running_total FROM employee"]
+;; easier to write with helpers (and easier to read!):
+user=> (sql/format (-> (select :id
+                               (over [[:sum :salary]
+                                      (-> (partition-by :department)
+                                          (order-by :salary)
+                                          (frame :rows :between :unbounded-preceding :current-row))
+                                      :running-total]))
+                       (from :employee)))
+["SELECT id, SUM(salary) OVER (PARTITION BY department ORDER BY salary ASC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS running_total FROM employee"]
+;; offset bounds are formatted as expressions (here, parameters):
+user=> (sql/format {:select [[[:over
+                               [[:avg :salary]
+                                {:order-by [:salary]
+                                 :frame [:range :between [100 :preceding] [100 :following]]}
+                                :moving-avg]]]]
+                    :from [:employee]})
+["SELECT AVG(salary) OVER (ORDER BY salary ASC RANGE BETWEEN ? PRECEDING AND ? FOLLOWING) AS moving_avg FROM employee" 100 100]
+;; a single start bound, with a frame exclusion:
+user=> (sql/format {:select [[[:over
+                               [[:sum :salary]
+                                {:order-by [:salary]
+                                 :frame [:groups :current-row :exclude-ties]}
+                                :grp]]]]
+                    :from [:employee]})
+["SELECT SUM(salary) OVER (ORDER BY salary ASC GROUPS CURRENT ROW EXCLUDE TIES) AS grp FROM employee"]
+;; a frame may also be given in a named WINDOW definition:
+user=> (sql/format {:select [:id [[:over [[:sum :salary] {:partition-by [:department]} :dept-total]]]]
+                    :from [:employee]
+                    :window [:w {:order-by [:salary] :frame [:rows :unbounded-preceding]}]})
+["SELECT id, SUM(salary) OVER (PARTITION BY department) AS dept_total FROM employee WINDOW w AS (ORDER BY salary ASC ROWS UNBOUNDED PRECEDING)"]
 ```
 
 ## distinct, expr

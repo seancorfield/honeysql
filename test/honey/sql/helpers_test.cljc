@@ -12,7 +12,7 @@
                      create-index
                      bulk-collect-into
                      cross-join do-update-set drop-column drop-table
-                     filter from full-join
+                     filter frame from full-join
                      group-by having insert-into replace-into
                      join-by join left-join limit offset on-conflict
                      on-duplicate-key-update
@@ -589,6 +589,35 @@
                " AVG(salary) OVER () AS Average,"
                " MAX(salary) OVER () AS MaxSalary"
                " FROM employee")])))
+
+(deftest window-frame-helper-tests
+  (testing "frame helper builds the :frame clause vector"
+    (is (= {:partition-by [:dept] :order-by [:ts] :frame [:rows :unbounded-preceding]}
+           (-> (partition-by :dept) (order-by :ts) (frame :rows :unbounded-preceding)))))
+  (testing "frame helper threads inside over"
+    (is (= (-> (select [[:over [[:sum :x]
+                                (-> (partition-by :dept)
+                                    (order-by :ts)
+                                    (frame :rows :between :unbounded-preceding :current-row))
+                                :running]]])
+               (from :t)
+               sql/format)
+           [(str "SELECT SUM(x) OVER ("
+                 "PARTITION BY dept ORDER BY ts ASC"
+                 " ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS running"
+                 " FROM t")])))
+  (testing "frame helper with offset bounds and exclusion"
+    (is (= (-> (select [[:over [[:sum :x]
+                                (-> (order-by :ts)
+                                    (frame :range :between [5 :preceding] [10 :following] :exclude-ties))
+                                :running]]])
+               (from :t)
+               sql/format)
+           [(str "SELECT SUM(x) OVER ("
+                 "ORDER BY ts ASC"
+                 " RANGE BETWEEN ? PRECEDING AND ? FOLLOWING EXCLUDE TIES) AS running"
+                 " FROM t")
+            5 10]))))
 
 (deftest issue-293-basic-ddl
   (is (= (sql/format {:create-view :metro :select [:*] :from [:cities] :where [:= :metroflag "y"]})
