@@ -1705,6 +1705,29 @@ ORDER BY id = ? DESC
       (is (thrown-with-msg? ExceptionInfo #"invalid window frame exclusion"
                             (over {:frame [:rows :current-row :exclude-foo]} {}))))))
 
+(deftest cve-tests
+  ;; verify some reported patterns are no longer possible
+  ;; credit to Younghun Ko for reporting these vulnerabilities:
+  (testing "order-by cve"
+    (is (thrown-with-msg? ExceptionInfo #"suspicious"
+                          (sut/format {:select :* :from :t
+                                       :order-by [[:id (keyword "asc; drop table users --")]]})))
+    (is (thrown-with-msg? ExceptionInfo #"suspicious"
+                          (sut/format {:select :* :from :t
+                                       :order-by [[:id (keyword "asc; drop table users --")]]}
+                                      {:quoted true})))
+    (is (thrown-with-msg? ExceptionInfo #"suspicious"
+                          (sut/format {:select :* :from :t
+                                       :order-by [[:id (keyword "desc, (select password from admins limit 1)")]]}))))
+  (testing "for / lock cve"
+    (is (thrown-with-msg? ExceptionInfo #"suspicious"
+                          (sut/format {:select :* :from :t
+                                       :for [(keyword "update; drop table x --")]})))
+    (is (thrown-with-msg? ExceptionInfo #"suspicious"
+                          (sut/format {:select :* :from :t
+                                       :for [(keyword "update; drop table x --")]}))))
+  )
+
 (comment
   ;; partial (incorrect!) workaround for #407:
   (sut/format {:select :f.* :from [[:foo [:f :for :system-time]]] :where [:= :f.id 1]})

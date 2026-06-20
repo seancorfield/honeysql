@@ -10,14 +10,14 @@ For the Clojure CLI, add the following dependency to your `deps.edn` file:
 
 <!-- :test-doc-blocks/skip -->
 ```clojure
-    com.github.seancorfield/honeysql {:mvn/version "2.7.1388"}
+    com.github.seancorfield/honeysql {:mvn/version "2.7.1389"}
 ```
 
 For Leiningen, add the following dependency to your `project.clj` file:
 
 <!-- :test-doc-blocks/skip -->
 ```clojure
-    [com.github.seancorfield/honeysql "2.7.1388"]
+    [com.github.seancorfield/honeysql "2.7.1389"]
 ```
 
 HoneySQL produces SQL statements but does not execute them.

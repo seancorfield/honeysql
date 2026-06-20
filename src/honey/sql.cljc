@@ -170,13 +170,18 @@
 (def ^:no-doc ^:dynamic *nest-infix* true)
 
 ;; suspicious entity names:
-(def ^:private suspicious ";")
-(defn- suspicious? [s] (str/includes? s suspicious))
+(def ^:private suspicious ";,()\r\n\t")
+(defn- suspicious? [s] (some #(str/includes? s (str %)) suspicious))
 (defn- suspicious-entity-check [entity]
     (when-not (:allow-suspicious-entities *options*)
       (when (suspicious? entity)
         (throw (ex-info (str "suspicious character found in entity: " entity)
                         {:disallowed suspicious})))))
+
+(comment
+  (some #(str/includes? "foo,bar" (str %)) suspicious)
+  (suspicious? "foo,bar")
+  )
 
 ;; clause helpers
 
@@ -365,14 +370,17 @@
   (when k
     (let [n (cond-> (name k)
               *escape-?*
-              (str/replace "?" "??"))]
-      (if (str/starts-with? n "'")
-        (let [ident   (subs n 1)
-              ident-l (str/lower-case ident)]
-          (binding [*options* (cond-> *options*
-                                (= ident-l "array") (assoc :quoted nil))]
-            (format-entity (keyword ident))))
-        (-> n (dehyphen) (upper-case))))))
+              (str/replace "?" "??"))
+          sql
+          (if (str/starts-with? n "'")
+            (let [ident   (subs n 1)
+                  ident-l (str/lower-case ident)]
+              (binding [*options* (cond-> *options*
+                                    (= ident-l "array") (assoc :quoted nil))]
+                (format-entity (keyword ident))))
+            (-> n (dehyphen) (upper-case)))]
+      (suspicious-entity-check sql)
+      sql)))
 
 (defn ^:no-doc sym->kw
   "Given a symbol, produce a keyword, retaining the namespace

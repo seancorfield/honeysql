@@ -1,5 +1,8 @@
 # Changes
 
+* 2.7.1389 -- 2026-06-20
+  * Expand suspicious character check and apply it to `sql-kw` to prevent SQL injection via `keyword` conversion of user input. Reported by Younghun Ko.
+
 * 2.7.1388 -- 2026-06-09
   * Add support for window frames via the `:frame` clause (and `frame` helper) inside `:over` expressions and `:window` definitions, e.g. `{:frame [:rows :between :unbounded-preceding :current-row]}` produces `ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`. Supports `:rows`/`:range`/`:groups` modes, single or `:between` bounds (`:unbounded-preceding`, `:current-row`, `:unbounded-following`, or `[n :preceding]`/`[n :following]` offset pairs), and frame exclusions, via PR [#599](https://github.com/seancorfield/honeysql/pull/599) from [@yenda](https://github.com/yenda) and Claude Code.
   * Note that PostgreSQL also supports `CASE` via PR [#598](https://github.com/seancorfield/honeysql/pull/598) from [@holyjak](https://github.com/holyjak).
