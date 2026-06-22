@@ -1,4 +1,4 @@
-;; copyright (c) 2020-2025 sean corfield, all rights reserved
+;; copyright (c) 2020-2026 sean corfield, all rights reserved
 
 (ns honey.sql
   "Primary API for HoneySQL 2.x.
@@ -170,7 +170,7 @@
 (def ^:no-doc ^:dynamic *nest-infix* true)
 
 ;; suspicious entity names:
-(def ^:private suspicious ";,()\r\n\t")
+(def ^:private suspicious ";,")
 (defn- suspicious? [s] (some #(str/includes? s (str %)) suspicious))
 (defn- suspicious-entity-check [entity]
     (when-not (:allow-suspicious-entities *options*)
@@ -415,11 +415,14 @@
              x)
        (or close "}")))
 
+(defn- inline-str [s]
+  (str \' (str/replace s #"(?<!\\)'" "''") \'))
+
 (extend-protocol p/InlineValue
   nil
   (sqlize [_] "NULL")
   #?(:cljs string :default String)
-  (sqlize [x] (str \' (str/replace x "'" "''") \'))
+  (sqlize [x] (inline-str x))
   #?(:cljs Keyword :default clojure.lang.Keyword)
   (sqlize [x] (sql-kw x))
   #?(:cljs Symbol :default clojure.lang.Symbol)
@@ -434,9 +437,7 @@
             ;; issue 385: quoted UUIDs for PostgreSQL/ANSI
             (sqlize [x] (str \' x \'))])
   #?(:cljs default :default Object)
-  (sqlize [x] (if (string? x)
-                (str \' (str/replace x "'" "''") \')
-                (str x))))
+  (sqlize [x] (if (string? x) (inline-str x) (str x))))
 
 (defn- sqlize-value [x] (p/sqlize x))
 
@@ -468,7 +469,9 @@
 
 (defn- format-fn-name
   [x]
-  (upper-case (str/replace (name x) "-" "_")))
+  (let [s (name x)]
+    (suspicious-entity-check s)
+    (upper-case (str/replace s "-" "_"))))
 
 (defn- format-simple-var
   ([x]
@@ -480,7 +483,9 @@
      (format-simple-var x c {})))
   ([x c opts]
    (if (str/starts-with? c "'")
-     (subs c 1)
+     (let [unquoted (subs c 1)]
+       (suspicious-entity-check unquoted)
+       unquoted)
      (format-entity x opts))))
 
 (defn- format-var

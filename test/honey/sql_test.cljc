@@ -1707,8 +1707,14 @@ ORDER BY id = ? DESC
 
 (deftest cve-tests
   ;; verify some reported patterns are no longer possible
-  ;; credit to Younghun Ko for reporting these vulnerabilities:
+  ;; credit to Younghun Ko @koyokr for reporting these vulnerabilities:
   (testing "order-by cve"
+    (is (thrown-with-msg? ExceptionInfo #"suspicious"
+                          (sut/format {:select :* :from :users
+                                       :order-by [(keyword "id;drop table users--")]})))
+    (is (thrown-with-msg? ExceptionInfo #"suspicious"
+                          (sut/format {:select :* :from :users
+                                       :order-by [(keyword "'id;drop table users--")]})))
     (is (thrown-with-msg? ExceptionInfo #"suspicious"
                           (sut/format {:select :* :from :t
                                        :order-by [[:id (keyword "asc; drop table users --")]]})))
@@ -1719,6 +1725,13 @@ ORDER BY id = ? DESC
     (is (thrown-with-msg? ExceptionInfo #"suspicious"
                           (sut/format {:select :* :from :t
                                        :order-by [[:id (keyword "desc, (select password from admins limit 1)")]]}))))
+  (testing "general entity cve"
+    (is (thrown-with-msg? ExceptionInfo #"suspicious"
+                          (sut/format {:select [(keyword "'id, (select password from users limit 1) AS x")]
+                                       :from :users})))
+    (is (thrown-with-msg? ExceptionInfo #"suspicious"
+                          (sut/format {:select [:a :b]
+                                       :from [(keyword "'users WHERE 1=1 UNION SELECT password,1 FROM users--")]}))))
   (testing "for / lock cve"
     (is (thrown-with-msg? ExceptionInfo #"suspicious"
                           (sut/format {:select :* :from :t
@@ -1726,6 +1739,29 @@ ORDER BY id = ? DESC
     (is (thrown-with-msg? ExceptionInfo #"suspicious"
                           (sut/format {:select :* :from :t
                                        :for [(keyword "update; drop table x --")]}))))
+  (testing "fn name cve"
+    (is (thrown-with-msg? ExceptionInfo #"suspicious"
+                          (sut/format {:select [(keyword "%rand,(select password from admins limit 1)")]
+                                       :from :t})))
+    (is (thrown-with-msg? ExceptionInfo #"suspicious"
+                          (sut/format {:select [(keyword "%count(*),(select password from admins limit 1)")]
+                                       :from :t})))
+    (is (thrown-with-msg? ExceptionInfo #"suspicious"
+                          (sut/format {:select [(keyword "%count.*,(select password from admins limit 1)")]
+                                       :from :t}))))
+  (testing "inline quote cve"
+    (is (= ["SELECT * FROM t WHERE a = '\\' OR 1=1#'"]
+           (sut/format {:select :* :from :t
+                        :where [:= :a [:inline "\\' OR 1=1#"]]})))
+    (is (= ["SELECT * FROM t WHERE a = 'b OR \\' OR 1=1#'"]
+           (sut/format {:select :* :from :t
+                        :where [:= :a [:inline "b OR \\' OR 1=1#"]]})))
+    (is (= ["SELECT * FROM t WHERE a = 'b OR \\' = \\' OR 1=1#'"]
+           (sut/format {:select :* :from :t
+                        :where [:= :a [:inline "b OR \\' = \\' OR 1=1#"]]})))
+    (is (= ["SELECT * FROM t WHERE a = 'b\\''"]
+           (sut/format {:select :* :from :t
+                        :where [:= :a [:inline "b\\'"]]}))))
   )
 
 (comment
