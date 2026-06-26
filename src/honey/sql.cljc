@@ -170,8 +170,13 @@
 (def ^:no-doc ^:dynamic *nest-infix* true)
 
 ;; suspicious entity names:
-(def ^:private suspicious ";,")
-(defn- suspicious? [s] (some #(str/includes? s (str %)) suspicious))
+(def ^:private suspicious (vec ";,"))
+(defn- suspicious? [s]
+  ;; Optimization for JVM runtime - feel free to throw away if the suspicious?
+  ;; check becomes more complicated in the future.
+  (some (fn [ch] #?(:clj (> (.indexOf ^String s (int ch)) -1)
+                    :default (str/includes? s (str ch))))
+        suspicious))
 (defn- suspicious-entity-check [entity]
     (when-not (:allow-suspicious-entities *options*)
       (when (suspicious? entity)
