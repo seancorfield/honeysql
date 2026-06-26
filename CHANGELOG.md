@@ -1,7 +1,8 @@
 # Changes
 
-* 2.7.1390 -- 2026-06-22
-  * Expand suspicious character check and apply it to `sql-kw`, `format-fn-name`, and quoted form in `format-simple-var` to prevent several SQL injection via `keyword` / `symbol` conversion of user input. Reported by [Younghun Ko](https://github.com/koyokr).
+* 2.7.1392 -- 2026-06-26
+  * Address [Security Advisory](https://github.com/seancorfield/honeysql/security/advisories/GHSA-fcfq-xqgp-8v97) _CVE ID requested_
+  * Expand suspicious character check and apply it to `sql-kw`, `format-fn-name`, and quoted form in `format-simple-var` to prevent several SQL injection vectors via `keyword` / `symbol` conversion of user input. Reported by [Younghun Ko](https://github.com/koyokr).
   * Fix escaped quote handling in `:inline` for strings to prevent SQL injection via inlining user input. Reported by [Younghun Ko](https://github.com/koyokr).
 
 * 2.7.1388 -- 2026-06-09
