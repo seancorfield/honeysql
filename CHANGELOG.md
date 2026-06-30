@@ -1,7 +1,7 @@
 # Changes
 
 * 2.7.next in progress
-  * Improve performance of suspicious character check via PR [#600](https://github.com/seancorfield/honeysql/pull/600) from [@alexander-yakushev](https://github.com/alexander-yakushev).
+  * Improve performance of suspicious character check via PR [#600](https://github.com/seancorfield/honeysql/pull/600) from [@alexander-yakushev](https://github.com/alexander-yakushev) and PR [#601](https://github.com/seancorfield/honeysql/pull/601) from [@bsless](https://github.com/bsless).
 
 * 2.7.1392 -- 2026-06-26
   * Address [Security Advisory](https://github.com/seancorfield/honeysql/security/advisories/GHSA-fcfq-xqgp-8v97) _CVE ID requested_
