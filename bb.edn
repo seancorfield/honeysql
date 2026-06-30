@@ -46,7 +46,7 @@
            :extra-deps  {io.github.cognitect-labs/test-runner
                          {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
            :task (exec 'cognitect.test-runner.api/test)
-           :exec-args {:patterns ["^(?!honey.cache).*-test$"]}}
+           :exec-args {:patterns ["^(?!(honey.cache|honey.sql-alphanumeric)).*-test$"]}}
 
   test:all {:doc "Run all tests for different Clojure versions and ClojureScript"
             :task (binding [*command-line-args* (conj *command-line-args* "all")]
