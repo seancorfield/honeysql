@@ -107,3 +107,8 @@
        (reduce conj! to' from4)
        (persistent! to'))
      to)))
+
+(defn or-fn
+  [f1 f2]
+  (fn [x]
+    (or (f1 x) (f2 x))))

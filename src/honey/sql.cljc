@@ -31,7 +31,7 @@
   (:require [clojure.string :as str]
             #?(:clj [clojure.template])
             [honey.sql.protocols :as p]
-            [honey.sql.util :refer [str join split-by-separator into*]]))
+            [honey.sql.util :refer [str join split-by-separator into* or-fn]]))
 
 #?(:clj (set! *warn-on-reflection* true))
 
@@ -171,12 +171,25 @@
 
 ;; suspicious entity names:
 (def ^:private suspicious (vec ";,"))
-(defn- suspicious? [s]
-  ;; Optimization for JVM runtime - feel free to throw away if the suspicious?
-  ;; check becomes more complicated in the future.
-  (some (fn [ch] #?(:clj (> (.indexOf ^String s (int ch)) -1)
-                    :default (str/includes? s (str ch))))
-        suspicious))
+
+#?(:clj
+   (def suspicious?
+     ;; Optimization for JVM runtime - feel free to throw away if the suspicious?
+     ;; check becomes more complicated in the future.
+     ;; Suitable only for multiple char membership test
+     (transduce
+      (map
+       (fn [ch]
+         (let [ch (int ch)]
+           (fn [s]
+             (> (.indexOf ^String s ch) -1)))))
+      (completing or-fn)
+      (fn [_] false)
+      suspicious))
+   :default
+   (defn- suspicious? [s]
+     (some (fn [ch] (str/includes? s (str ch))) suspicious)))
+
 (defn- suspicious-entity-check [entity]
     (when-not (:allow-suspicious-entities *options*)
       (when (suspicious? entity)
