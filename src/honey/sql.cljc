@@ -310,6 +310,79 @@
 
 (def ^:private ^:dynamic *drop-ns* false)
 
+#?(:clj
+   (defn alphanumeric?
+     "Translation of the prior alphanumeric regex to state machine.
+  Basic regex for entities that do not need quoting.
+   Either:
+   * the whole entity is numeric (with optional underscores), or
+   * the first character is alphabetic (or underscore) and the rest is
+     alphanumeric (or underscore).
+  `^(?:[0-9_]+|[A-Za-z_][A-Za-z0-9_]*)$`"
+     [^String s]
+     (let [leading-underscore 1
+           numeric 2
+           identifier 3
+           dead 4
+           n (long (.length s))]
+       (loop [i (unchecked-long 0)
+              state (unchecked-long 0)]
+         (if (or (= state dead) (>= i n))
+           (or (= state leading-underscore) (= state numeric) (= state identifier))
+           (let [c (.charAt s (unchecked-int i))
+                 c (unchecked-long (unchecked-int c))
+                 ni (unchecked-inc i)]
+             (case state
+               0
+               (cond
+                 (or (and (>= c 65) (<= c 90))
+                     (and (>= c 97) (<= c 122)))
+                 (recur ni identifier)
+
+                 (and (>= c 48) (<= c 57))
+                 (recur ni numeric)
+
+                 (= c 95)
+                 (recur ni leading-underscore)
+
+                 :else
+                 (recur ni dead))
+
+               1
+               (cond
+                 (or (and (>= c 65) (<= c 90))
+                     (and (>= c 97) (<= c 122)))
+                 (recur ni identifier)
+
+                 (and (>= c 48) (<= c 57))
+                 (recur ni identifier)   ;; not numeric
+
+                 (= c 95)
+                 (recur ni leading-underscore)
+
+                 :else
+                 (recur ni dead))
+
+               2
+               (if (or (and (>= c 48) (<= c 57))
+                       (= c 95))
+                 (recur ni numeric)
+                 (recur ni dead))
+
+               3
+               (if (or (and (>= c 65) (<= c 90))
+                       (and (>= c 97) (<= c 122))
+                       (and (>= c 48) (<= c 57))
+                       (= c 95))
+                 (recur ni identifier)
+                 (recur ni dead))
+
+               (recur ni dead)))))))
+   :default
+   (defn alphanumeric?
+     [s]
+     (boolean (re-find alphanumeric s))))
+
 (defn format-entity
   "Given a simple SQL entity (a keyword or symbol -- or string),
   return the equivalent SQL fragment (as a string -- no parameters).
@@ -338,7 +411,7 @@
                            (fn opt-quote [part]
                              (cond (some-> quoted-always (re-find part))
                                    (dialect-q part)
-                                   (re-find alphanumeric part)
+                                   (alphanumeric? part)
                                    part
                                    :else
                                    (dialect-q part)))
