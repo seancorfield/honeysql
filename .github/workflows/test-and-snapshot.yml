@@ -9,7 +9,7 @@ jobs:
   build-and-snapshot:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
@@ -20,7 +20,7 @@ jobs:
           cli: '1.12.5.1654'
           bb: latest
       - name: Cache All The Things
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             ~/.m2/repository
@@ -41,7 +41,7 @@ jobs:
       matrix:
         java: [ '17', '21', '25' ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
@@ -52,7 +52,7 @@ jobs:
           cli: '1.12.5.1654'
           bb: latest
       - name: Cache All The Things
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             ~/.m2/repository
