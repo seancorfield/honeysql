@@ -11,7 +11,9 @@
                      versions (or (seq (filter (fn [v] (str/starts-with? v "1."))
                                                *command-line-args*))
                                   ["1.10"])]
-                 [cljs? (if all? ["elide" "1.11" "1.12" "1.13" "cljs"] versions)])}
+                 (if all?
+                   [true ["elide" "1.11" "1.12" "1.13"]]
+                   [cljs? versions]))}
 
   doc-test {:doc "Run documentation tests"
             :depends [-gen-doc-tests]
