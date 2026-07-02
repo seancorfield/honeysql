@@ -18,12 +18,18 @@
             :task
             (let [[cljs? versions] (run '-parse-args)]
               (doseq [v versions]
-                (println "\nDoc-Testing Clojure" v)
-                (shell (str "clojure -M:test:test-doc"
-                            (str ":" v)
-                            (if cljs?
-                              ":cljs:test-doc-cljs"
-                              ":test-doc-clj")))))}
+                (let [cljs? (or cljs? (= v "cljs"))]
+                  (println "\nDoc-Testing Clojure"
+                           (cond (= v "cljs") "ClojureScript"
+                                 cljs?
+                                 (str v "/ClojureScript")
+                                 :else
+                                 v))
+                  (shell (str "clojure -M:test:test-doc"
+                              (str ":" v)
+                              (if cljs?
+                                ":cljs:test-doc-cljs"
+                                ":test-doc-clj"))))))}
 
   doc-test:all {:doc "Run all documentation tests"
                 :task (binding [*command-line-args* (conj *command-line-args* "all")]
@@ -36,11 +42,17 @@
         :task
         (let [[cljs? versions] (run '-parse-args)]
           (doseq [v versions]
-            (println "\nTesting Clojure" v)
-            (shell (str "clojure -M"
-                        (str ":" v)
-                        ":test:"
-                        (if cljs? "cljs" "runner")))))}
+            (let [cljs? (or cljs? (= v "cljs"))]
+              (println "\nTesting Clojure"
+                       (cond (= v "cljs") "ClojureScript"
+                             cljs?
+                             (str v "/ClojureScript")
+                             :else
+                             v))
+              (shell (str "clojure -M"
+                          (str ":" v)
+                          ":test:"
+                          (if cljs? "cljs" "runner"))))))}
 
   test:bb {:extra-paths ["test"]
            :extra-deps  {io.github.cognitect-labs/test-runner
