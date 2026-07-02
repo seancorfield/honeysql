@@ -2,6 +2,8 @@
 
 * 2.7.next in progress
   * Improve performance of alphanumeric check via PR [#602](https://github.com/seancorfield/honeysql/pull/602) from [@bsless](https://github.com/bsless).
+  * Start testing against Clojure 1.13.0-alpha1.
+  * Update dev/test deps.
 
 * 2.7.1399 -- 2026-06-30
   * Improve performance of suspicious character check via PR [#600](https://github.com/seancorfield/honeysql/pull/600) from [@alexander-yakushev](https://github.com/alexander-yakushev) and PR [#601](https://github.com/seancorfield/honeysql/pull/601) from [@bsless](https://github.com/bsless).

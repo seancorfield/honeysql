@@ -647,7 +647,8 @@
                (format :dialect :mysql :pretty true)))))
   (let [version #?(:cljs *clojurescript-version*
                    :default (clojure-version))]
-    (when (or (str/starts-with? version "1.12")
+    (when (or (str/starts-with? version "1.13")
+              (str/starts-with? version "1.12")
               (str/starts-with? version "1.11"))
       (testing "format can be called with mixed arguments"
         (is (= ["\nDELETE FROM `foo`\nWHERE `foo`.`id` = ?\n" 42]
