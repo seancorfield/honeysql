@@ -191,10 +191,10 @@
      (some (fn [ch] (str/includes? s (str ch))) suspicious)))
 
 (defn- suspicious-entity-check [entity]
+  (when (suspicious? entity)
     (when-not (:allow-suspicious-entities *options*)
-      (when (suspicious? entity)
-        (throw (ex-info (str "suspicious character found in entity: " entity)
-                        {:disallowed suspicious})))))
+      (throw (ex-info (str "suspicious character found in entity: " entity)
+                      {:disallowed suspicious})))))
 
 (comment
   (some #(str/includes? "foo,bar" (str %)) suspicious)
