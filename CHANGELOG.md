@@ -10,7 +10,7 @@
   * Improve performance of suspicious character check via PR [#600](https://github.com/seancorfield/honeysql/pull/600) from [@alexander-yakushev](https://github.com/alexander-yakushev) and PR [#601](https://github.com/seancorfield/honeysql/pull/601) from [@bsless](https://github.com/bsless).
 
 * 2.7.1392 -- 2026-06-26
-  * Address [Security Advisory](https://github.com/seancorfield/honeysql/security/advisories/GHSA-fcfq-xqgp-8v97) _CVE ID requested_
+  * Address [Security Advisory](https://github.com/seancorfield/honeysql/security/advisories/GHSA-fcfq-xqgp-8v97) **CVE-2026-61620**.
   * Expand suspicious character check and apply it to `sql-kw`, `format-fn-name`, and quoted form in `format-simple-var` to prevent several SQL injection vectors via `keyword` / `symbol` conversion of user input. Reported by [Younghun Ko](https://github.com/koyokr).
   * Fix escaped quote handling in `:inline` for strings to prevent SQL injection via inlining user input. Reported by [Younghun Ko](https://github.com/koyokr).
 
