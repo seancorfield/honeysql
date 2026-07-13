@@ -29,11 +29,11 @@
         it uppercase and replaces - with space). "
   (:refer-clojure :exclude [format str])
   (:require [clojure.string :as str]
-            #?(:clj [clojure.template])
+;            #?@(:lg () :clj [[clojure.template]])
             [honey.sql.protocols :as p]
             [honey.sql.util :refer [str join split-by-separator into* or-fn]]))
 
-#?(:clj (set! *warn-on-reflection* true))
+;#?(:lg () :clj (set! *warn-on-reflection* true))
 
 ;; default formatting for known clauses
 

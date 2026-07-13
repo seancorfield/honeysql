@@ -3,8 +3,8 @@
   (:refer-clojure :exclude [str])
   (:require clojure.string))
 
-#?(:clj (set! *warn-on-reflection* true))
-
+#?(:lg () :clj (set! *warn-on-reflection* true))
+#_ ; this fails due to the type hints I think??
 (defn str
   "More efficient implementation of `clojure.core/str` because it has more
   non-variadic arities. Optimization is Clojure-only, on other platforms it
@@ -54,7 +54,7 @@
              (run! #(.append sb (str %)) more)
              (.toString sb))
       :default (apply clojure.core/str a b c d e more))))
-
+#_ ; this fails due to ->StringBuilder not being resolvable:
 (defn join
   "More efficient implementation of `clojure.string/join`. May accept a transducer
   `xform` to perform operations on each element before combining them together
@@ -107,7 +107,7 @@
        (reduce conj! to' from4)
        (persistent! to'))
      to)))
-
+#_ ; this complains about ->-> being unresolvable??
 (defn or-fn
   [f1 f2]
   (fn [x]
