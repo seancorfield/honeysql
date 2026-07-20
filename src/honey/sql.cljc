@@ -31,7 +31,8 @@
   (:require [clojure.string :as str]
             #?(:clj [clojure.template])
             [honey.sql.protocols :as p]
-            [honey.sql.util :refer [str join split-by-separator into* or-fn]]))
+            [honey.sql.util :refer [str join split-by-separator into*
+                                    #?@(:clj [or-fn])]]))
 
 #?(:clj (set! *warn-on-reflection* true))
 
@@ -300,14 +301,6 @@
   ;;   WHERE `mulog/data.account` = 'foo-account-id' LIMIT 2000 SINCE 2 DAYS AGO"]
   )
 
-(def ^:private alphanumeric
-  "Basic regex for entities that do not need quoting.
-   Either:
-   * the whole entity is numeric (with optional underscores), or
-   * the first character is alphabetic (or underscore) and the rest is
-     alphanumeric (or underscore)."
-  #"^(?:[0-9_]+|[A-Za-z_][A-Za-z0-9_]*)$")
-
 (def ^:private ^:dynamic *drop-ns* false)
 
 #?(:clj
@@ -379,9 +372,10 @@
 
                (recur ni dead)))))))
    :default
-   (defn alphanumeric?
-     [s]
-     (boolean (re-find alphanumeric s))))
+   (let [alpha #"^(?:[0-9_]+|[A-Za-z_][A-Za-z0-9_]*)$"]
+     (defn alphanumeric?
+       [s]
+       (boolean (re-find alpha s)))))
 
 (defn format-entity
   "Given a simple SQL entity (a keyword or symbol -- or string),

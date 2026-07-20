@@ -4,6 +4,7 @@
   * Improve performance of suspicious character check via PR [#603](https://github.com/seancorfield/honeysql/pull/603) from [@alexander-yakushev](https://github.com/alexander-yakushev).
   * Improve performance of alphanumeric check via PR [#602](https://github.com/seancorfield/honeysql/pull/602) from [@bsless](https://github.com/bsless).
   * Start testing against Clojure 1.13.0-alpha4.
+  * Fix a bunch of lint warnings.
   * Update dev/test deps.
 
 * 2.7.1399 -- 2026-06-30

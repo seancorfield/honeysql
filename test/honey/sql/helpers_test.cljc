@@ -1,7 +1,7 @@
-;; copyright (c) 2020-2024 sean corfield, all rights reserved
+;; copyright (c) 2020-2026 sean corfield, all rights reserved
 
 (ns honey.sql.helpers-test
-  (:refer-clojure :exclude [filter for group-by partition-by set update])
+  (:refer-clojure :exclude [filter group-by partition-by])
   #_{:clj-kondo/ignore [:unused-namespace]}
   (:require [clojure.core :as c]
             [clojure.test :refer [deftest is testing]]

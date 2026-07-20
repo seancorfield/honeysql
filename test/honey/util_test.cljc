@@ -1,5 +1,4 @@
 (ns honey.util-test
-  (:refer-clojure :exclude [str])
   (:require [clojure.test :refer [deftest is are]]
             [honey.sql.util :as sut]))
 
