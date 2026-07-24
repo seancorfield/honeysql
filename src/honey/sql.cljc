@@ -29,7 +29,7 @@
         it uppercase and replaces - with space). "
   (:refer-clojure :exclude [format str])
   (:require [clojure.string :as str]
-            #?(:clj [clojure.template])
+            #?(:lg () :clj [clojure.template])
             [honey.sql.protocols :as p]
             [honey.sql.util :refer [str join split-by-separator into*
                                     #?@(:clj [or-fn])]]))
@@ -501,7 +501,7 @@
        (or close "}")))
 
 (defn- inline-str [s]
-  (str \' (str/replace s #"(?<!\\)'" "''") \'))
+  (str \' (str/replace s #?(:lg "'" :default #"(?<!\\)'") "''") \'))
 
 (extend-protocol p/InlineValue
   nil
@@ -2541,7 +2541,8 @@
          (mapv #(unwrap % opts) (formatter data opts))))))
   ([data k v & {:as opts}] (format data (assoc opts k v))))
 
-#?(:clj
+#?(:lg ()
+   :clj
    (defmacro formatv
      "Treats the specified vector of symbols as variables to be substituted
       in the symbolic SQL expression.
