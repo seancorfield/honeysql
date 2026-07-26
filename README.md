@@ -1059,6 +1059,7 @@ known to load and run with some caveats:
 
 You'll need an `lgx.edn` file for this:
 
+<!-- :test-doc-blocks/skip -->
 ```clojure
 > cat lgx.edn
 {}
@@ -1079,6 +1080,7 @@ You'll need a dependency on `jolt-lang/time` and at least Jolt 0.5.1:
 
 In `deps.edn`, under `:aliases` (or you could add this as a top-level dependency):
 
+<!-- :test-doc-blocks/skip -->
 ```clojure
   :jolt
   {:extra-deps {io.github.jolt-lang/time
@@ -1088,6 +1090,7 @@ In `deps.edn`, under `:aliases` (or you could add this as a top-level dependency
 
 and then:
 
+<!-- :test-doc-blocks/skip -->
 ```clojure
 > rlwrap jolt -A:jolt
 ;; jolt v0.5.1 repl — :repl/quit or ^D to exit
@@ -1095,7 +1098,8 @@ user=> (require 'honey.sql)
 nil
 user=> (honey.sql/format '{select * from table where (= id 42)})
 ["SELECT * FROM table WHERE id = ?" 42]
-user=>```
+user=>
+```
 
 <a name="1.x"/>
 
