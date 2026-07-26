@@ -1,6 +1,6 @@
 # Changes
 
-* 2.7.next in progress
+* 2.7.1425 -- 2026-07-26
   * Basic [`let-go`](https://github.com/nooga/let-go) support!
   * Basic [`Jolt`](https://github.com/jolt-lang/jolt) support!
   * Improve performance of suspicious character check via PR [#603](https://github.com/seancorfield/honeysql/pull/603) from [@alexander-yakushev](https://github.com/alexander-yakushev).
