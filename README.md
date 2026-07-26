@@ -16,7 +16,7 @@ This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINO
 
 HoneySQL 2.7.y requires Clojure 1.10.3 or later.
 Earlier versions of HoneySQL support Clojure 1.9.0.
-It also supports recent versions of ClojureScript and Babashka.
+It also supports recent versions of ClojureScript, Babashka, Jolt, and `let-go` (see below).
 
 Compared to the [legacy 1.x version](#1.x), HoneySQL 2.x provides a streamlined codebase and a simpler method for extending the DSL. It also supports SQL dialects out-of-the-box and will be extended to support vendor-specific language features over time (unlike 1.x).
 
@@ -1044,7 +1044,61 @@ You can also register SQL clauses, specifying the keyword, the formatting functi
 
 If you find yourself registering an operator, a function (syntax), or a new clause, consider submitting a [pull request to HoneySQL](https://github.com/seancorfield/honeysql/pulls) so others can use it, too. If it is dialect-specific, let me know in the pull request.
 
+## Other Dialects
+
+HoneySQL fully supports Clojure, ClojureScript, and Babashka (and is tested
+against all three in CI).
+
+HoneySQL has basic support for Jolt and `let-go`. The `honey.sql` namespace is
+known to load and run with some caveats:
+
+* `let-go` - the `clojure.template` ns is not provided so `honey.sql/formatv` is omitted.
+* Jolt - you need to include a dependency on `jolt-lang/time` for `Locale` usage in `honey.sql`.
+
+### `let-go`
+
+You'll need an `lgx.edn` file for this:
+
+```clojure
+> cat lgx.edn
+{}
+
+> lg
+  λ   let-go 1.12.1 (c29b311)
+ GO   Ctrl-C to quit
+user=> (require 'honey.sql)
+nil
+user=> (honey.sql/format '{select * from table where (= id 42)})
+["SELECT * FROM table WHERE id = ?" 42]
+user=>
+```
+
+### Jolt
+
+You'll need a dependency on `jolt-lang/time` and at least Jolt 0.5.1:
+
+In `deps.edn`, under `:aliases` (or you could add this as a top-level dependency):
+
+```clojure
+  :jolt
+  {:extra-deps {io.github.jolt-lang/time
+                {:git/url "https://github.com/jolt-lang/time.git"
+                 :git/sha "26ae332cbe4b6515ae2386c50ed0ae34cafa483a"}}}
+```
+
+and then:
+
+```clojure
+> rlwrap jolt -A:jolt
+;; jolt v0.5.1 repl — :repl/quit or ^D to exit
+user=> (require 'honey.sql)
+nil
+user=> (honey.sql/format '{select * from table where (= id 42)})
+["SELECT * FROM table WHERE id = ?" 42]
+user=>```
+
 <a name="1.x"/>
+
 ## HoneySQL 1.x (legacy)
 
 [![Clojars](https://img.shields.io/badge/clojars-honeysql_1.0.461-lightblue.svg?logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAABjFBMVEUAAAAdCh0qDikdChwAAAAnDSY0EjM2FjUnDiYnDSYnDSYpDigyEDEEAQRGNUb///////8mDSYAAAAAAAAAAAAFAgUqEyoAAAAAAAAAAAAFAgUAAABXU1c2FjVMx+dQx+f///////9Nx+b////4/f6y4vRPt+RQtOT///9Qt+P///8oDSey4vRQr9/////3/P5hzelNx+dNx+dNx+f///8AAAAuDy0zETIAAAAoDScAAAAAAAARBREAAAAvDy40ETMwEC9gSF+Ne42ilKKuoK6Rg5B5ZXlaP1o4Gzf///9nTWZ4YncyEDF/bn/8/Pz9/P339/c1FTUlDCRRM1AbCRtlS2QyEDEuDy1gRWAxEDAzETIwEC/g4OAvDy40EjOaiZorDiq9sbzNyM3UzdQyEDE0ETMzETKflZ/UzdQ5Fzmu4fNYyuhNx+dPt+RLu9xQyOhBbo81GTuW2vCo4PJNx+c4MFE5N1lHiLFEhKQyEDGDboMzETI5Fjh5bXje2d57aHrIw8jc2NyWhJUrDioxe9o4AAAAPnRSTlMAkf+IAQj9+e7n6e31RtqAD/QAAAED+A0ZEQ8DwvkLBsmcR4aG8+cdAD6C8/MC94eP+qoTrgH+/wj1HA8eEvpXOCUAAAABYktHRA8YugDZAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3wcHFjou4Z/shwAAAUpJREFUOMul0/VTwzAUB/AAwyW4y3B3h8EDNuTh7u6UDHcd8I+TbHSjWdrjju/1h77kc+3Lu5aQvyakF/r6B5wu1+DQMEBomLRtG0EpozYDCEccA4iIjIqOiY0bB5iYxHgZ4FQCpYneKmmal0aQPMOXZnUAvJhLkbpInf8NFtKCTrGImK6DJcTlDGl/BXGV6oCsrSNIYAM3aQDwl2xJYBtBB5lZAuyYgWzY3YMcNcjN2wc4EGMEFTg8+hlyfgEenygAj71Q9FBExH0wKC4p1bRTJlJWXqEAVNM05ovbXfkPAHBmAUQPAGaAsXMBLiwA8z3h0gRcsWsObuAWLJu8Awb3ZoB5T8EvS/CgBo9Y5Z8TPwXBJwlUI9Ia/yRrEZ8lID71Olrf0MiamkkL4kurDEjba+C/e2sninR0wrsH8eMTvrqIWbodjh7jyjdtCY3Aniz4jwAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxNS0wNy0wN1QyMjo1ODo0NiswMjowMCgWtSoAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTUtMDctMDdUMjI6NTg6NDYrMDI6MDBZSw2WAAAAAElFTkSuQmCC)](https://clojars.org/honeysql/honeysql) [![cljdoc badge](https://cljdoc.org/badge/honeysql/honeysql?1.0.461)](https://cljdoc.org/d/honeysql/honeysql/CURRENT)
