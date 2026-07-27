@@ -2,6 +2,7 @@
 
 * 2.7.next in progress
   * Update `jolt-lang/time` dependency.
+  * Update dev/test deps.
 
 * 2.7.1425 -- 2026-07-26
   * Basic [`let-go`](https://github.com/nooga/let-go) support!

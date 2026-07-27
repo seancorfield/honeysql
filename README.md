@@ -1085,7 +1085,7 @@ In `deps.edn`, under `:aliases` (or you could add this as a top-level dependency
   :jolt
   {:extra-deps {io.github.jolt-lang/time
                 {:git/url "https://github.com/jolt-lang/time.git"
-                 :git/sha "4bd08de1d8cb94aa19a4091e4e2523eca4a9a4c9"}}}
+                 :git/sha "ca6d783c1c8f910b95fc6ef833156badb4d74013"}}}
 ```
 
 and then:

@@ -34,10 +34,10 @@
   :jolt
   {:extra-deps {io.github.jolt-lang/time
                 {:git/url "https://github.com/jolt-lang/time.git"
-                 :git/sha "4bd08de1d8cb94aa19a4091e4e2523eca4a9a4c9"}}}
+                 :git/sha "ca6d783c1c8f910b95fc6ef833156badb4d74013"}}}
 
   :gen-doc-tests {:replace-paths ["build"]
-                  :extra-deps {babashka/fs {:mvn/version "0.5.33"}
+                  :extra-deps {babashka/fs {:mvn/version "0.5.34"}
                                com.github.lread/test-doc-blocks {:mvn/version "1.2.21"}}
                   :override-deps {org.clojure/clojure {:mvn/version "1.12.5"}}
                   :main-opts ["-m" "honey.gen-doc-tests"]}
