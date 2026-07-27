@@ -15,7 +15,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - name: Setup Clojure and Babashka
-        uses: DeLaGuardo/setup-clojure@master
+        uses: DeLaGuardo/setup-clojure@4c7a6f613e5089821bb3bb2a33a3ee115578580d
         with:
           cli: '1.12.5.1661'
           bb: latest
@@ -47,7 +47,7 @@ jobs:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
       - name: Setup Clojure and Babashka
-        uses: DeLaGuardo/setup-clojure@master
+        uses: DeLaGuardo/setup-clojure@4c7a6f613e5089821bb3bb2a33a3ee115578580d
         with:
           cli: '1.12.5.1661'
           bb: latest
