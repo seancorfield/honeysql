@@ -135,6 +135,7 @@
 (def ^:private default-checking (atom :none))
 (def ^:private default-numbered (atom false))
 (def ^:private default-transform-null-equals (atom true))
+(def ^:private default-standard-conforming-strings (atom true))
 
 (def ^:private ^:dynamic *dialect* nil)
 (def ^:private ^:dynamic *options*
@@ -159,6 +160,8 @@
    :checking @default-checking
    ;; controls whether [:= expr nil] becomes "expr IS NULL" or "expr = NULL":
    :transform-null-equals @default-transform-null-equals
+   ;; controls how \' in strings is handled for PostgreSQL:
+   :standard-conforming-strings @default-standard-conforming-strings
    ;; the current DSL hash map being formatted (for clause-body / contains-clause?):
    :dsl nil
    ;; caching data to detect expressions that cannot be cached:
@@ -501,7 +504,7 @@
        (or close "}")))
 
 (defn- inline-str [s]
-  (if (mysql?) ; per #607: only apply special handling for MySQL dialect
+  (if (or (mysql?) (not (:standard-conforming-strings *options*))) ; per #607: only apply special handling for MySQL dialect
     (str \' (str/replace s #?(:lg "'" :default #"(?<!\\)'") "''") \')
     (str \' (str/replace s "'" "''") \')))
 
@@ -2529,6 +2532,7 @@
                                 @default-quoted)
                   :quoted-always (:quoted-always opts @default-quoted-always)
                   :quoted-snake (:quoted-snake opts @default-quoted-snake)
+                  :standard-conforming-strings (:standard-conforming-strings opts @default-standard-conforming-strings)
                   :transform-null-equals (:transform-null-equals opts @default-transform-null-equals)
                   :params (reduce-kv (fn [m k v]
                                        (assoc m (sym->kw k) v))
@@ -2582,12 +2586,14 @@
   * :quoted
   * :quoted-always
   * :quoted-snake
+  * :standard-conforming-strings
   * :transform-null-equals
   Note that calling `set-dialect!` can override the default for `:quoted`."
   [opts]
   (let [unknowns (dissoc opts
                          :checking :inline :numbered
                          :quoted :quoted-always :quoted-snake
+                         :standard-conforming-strings
                          :transform-null-equals)]
     (when (seq unknowns)
       (throw (ex-info (str (join ", " (keys unknowns))
@@ -2606,7 +2612,9 @@
     (when (contains? opts :quoted-snake)
       (reset! default-quoted-snake (:quoted-snake opts)))
     (when (contains? opts :transform-null-equals)
-      (reset! default-transform-null-equals (:transform-null-equals opts)))))
+      (reset! default-transform-null-equals (:transform-null-equals opts)))
+    (when (contains? opts :standard-conforming-strings)
+      (reset! default-standard-conforming-strings (:standard-conforming-strings opts)))))
 
 (defn clause-order
   "Return the current order that known clauses will be applied when

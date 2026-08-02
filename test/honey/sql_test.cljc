@@ -1779,7 +1779,24 @@ ORDER BY id = ? DESC
                         :where [:= :a [:inline "b OR \\' = \\' OR 1=1#"]]})))
     (is (= ["SELECT * FROM t WHERE a = 'b\\'''"]
            (sut/format {:select :* :from :t
-                        :where [:= :a [:inline "b\\'"]]})))))
+                        :where [:= :a [:inline "b\\'"]]}))))
+  (testing "inline quote cve -- non-conforming postgresql"
+    (is (= ["SELECT * FROM t WHERE a = '\\' OR 1=1#'"]
+           (sut/format {:select :* :from :t
+                        :where [:= :a [:inline "\\' OR 1=1#"]]}
+                       {:standard-conforming-strings false})))
+    (is (= ["SELECT * FROM t WHERE a = 'b OR \\' OR 1=1#'"]
+           (sut/format {:select :* :from :t
+                        :where [:= :a [:inline "b OR \\' OR 1=1#"]]}
+                       {:standard-conforming-strings false})))
+    (is (= ["SELECT * FROM t WHERE a = 'b OR \\' = \\' OR 1=1#'"]
+           (sut/format {:select :* :from :t
+                        :where [:= :a [:inline "b OR \\' = \\' OR 1=1#"]]}
+                       {:standard-conforming-strings false})))
+    (is (= ["SELECT * FROM t WHERE a = 'b\\''"]
+           (sut/format {:select :* :from :t
+                        :where [:= :a [:inline "b\\'"]]}
+                       {:standard-conforming-strings false})))))
 
 (comment
   ;; partial (incorrect!) workaround for #407:

@@ -190,6 +190,8 @@ or preserved as literal `= NULL` / `<> NULL`.
 
 This option mirrors PostgreSQL's [`transform_null_equals` configuration option](https://www.postgresql.org/docs/current/runtime-config-compatible.html#GUC-TRANSFORM-NULL-EQUALS).
 
+Added in 2.7.1364.
+
 **Default:** `true` (transform enabled, maintains backward compatibility)
 
 **When `true` (default):**
@@ -230,3 +232,18 @@ Other operators like `:is`, `:is-not`, and non-nil comparisons are unaffected.
 The SQL standard specifies that `expr = NULL` should always return `UNKNOWN` (effectively `FALSE`),
 while `expr IS NULL` returns `TRUE` when `expr` is null. When `:transform-null-equals` is `false`,
 HoneySQL preserves the standard SQL semantics where `= NULL` comparisons may not behave as expected.
+
+## `:standard-conforming-strings`
+
+The `:standard-conforming-strings` option controls whether backslashes in
+string literals are treated as escape characters or as literal backslashes.
+
+This option mirrors PostgreSQL's [`standard_conforming_strings` configuration option](https://www.postgresql.org/docs/current/runtime-config-compatible.html#GUC-STANDARD-CONFORMING-STRINGS).
+
+Added in 2.7.next.
+
+**Default:** `true` (standard conforming on, assumes PG 9.1+ behavior, from 2011 onward)
+
+If you are targeting an early version of PostgreSQL or you are running with
+`standard_conforming_strings` set to `off`, you can set this option to `false` 
+to generate SQL that uses backslash escapes in string literals (like MySQL does).
