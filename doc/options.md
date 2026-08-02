@@ -240,7 +240,7 @@ string literals are treated as escape characters or as literal backslashes.
 
 This option mirrors PostgreSQL's [`standard_conforming_strings` configuration option](https://www.postgresql.org/docs/current/runtime-config-compatible.html#GUC-STANDARD-CONFORMING-STRINGS).
 
-Added in 2.7.next.
+Added in 2.7.1437.
 
 **Default:** `true` (standard conforming on, assumes PG 9.1+ behavior, from 2011 onward)
 

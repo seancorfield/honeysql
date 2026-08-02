@@ -1,6 +1,6 @@
 # Changes
 
-* 2.7.next in progress
+* 2.7.1437 -- 2026-08-02
   * Address [#607](https://github.com/seancorfield/honeysql/issues/607) by only applying special `\'` handling when the dialect is MySQL or `:standard-conforming-strings` is `false` (the default is `true`).
   * Update `jolt-lang/time` dependency.
   * Update dev/test deps.
