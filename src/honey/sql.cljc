@@ -501,7 +501,9 @@
        (or close "}")))
 
 (defn- inline-str [s]
-  (str \' (str/replace s #?(:lg "'" :default #"(?<!\\)'") "''") \'))
+  (if (mysql?) ; per #607: only apply special handling for MySQL dialect
+    (str \' (str/replace s #?(:lg "'" :default #"(?<!\\)'") "''") \')
+    (str \' (str/replace s "'" "''") \')))
 
 (extend-protocol p/InlineValue
   nil
@@ -1579,7 +1581,7 @@
            (when table
              (format-simple-var table))
            (when ine (sql-kw ine))]
-          (when opts
+          (when (seq opts)
             (format-ddl-options opts context)))))
 
 (defn- format-truncate [_ xs]

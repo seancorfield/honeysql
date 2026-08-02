@@ -1750,20 +1750,36 @@ ORDER BY id = ? DESC
     (is (thrown-with-msg? ExceptionInfo #"suspicious"
                           (sut/format {:select [(keyword "%count.*,(select password from admins limit 1)")]
                                        :from :t}))))
-  (testing "inline quote cve"
+  (testing "inline quote cve -- mysql only"
     (is (= ["SELECT * FROM t WHERE a = '\\' OR 1=1#'"]
            (sut/format {:select :* :from :t
-                        :where [:= :a [:inline "\\' OR 1=1#"]]})))
+                        :where [:= :a [:inline "\\' OR 1=1#"]]}
+                       {:dialect :mysql :quoted false})))
     (is (= ["SELECT * FROM t WHERE a = 'b OR \\' OR 1=1#'"]
            (sut/format {:select :* :from :t
-                        :where [:= :a [:inline "b OR \\' OR 1=1#"]]})))
+                        :where [:= :a [:inline "b OR \\' OR 1=1#"]]}
+                       {:dialect :mysql :quoted false})))
     (is (= ["SELECT * FROM t WHERE a = 'b OR \\' = \\' OR 1=1#'"]
            (sut/format {:select :* :from :t
-                        :where [:= :a [:inline "b OR \\' = \\' OR 1=1#"]]})))
+                        :where [:= :a [:inline "b OR \\' = \\' OR 1=1#"]]}
+                       {:dialect :mysql :quoted false})))
     (is (= ["SELECT * FROM t WHERE a = 'b\\''"]
            (sut/format {:select :* :from :t
-                        :where [:= :a [:inline "b\\'"]]}))))
-  )
+                        :where [:= :a [:inline "b\\'"]]}
+                       {:dialect :mysql :quoted false}))))
+  (testing "inline quote cve -- not mysql"
+    (is (= ["SELECT * FROM t WHERE a = '\\'' OR 1=1#'"]
+           (sut/format {:select :* :from :t
+                        :where [:= :a [:inline "\\' OR 1=1#"]]})))
+    (is (= ["SELECT * FROM t WHERE a = 'b OR \\'' OR 1=1#'"]
+           (sut/format {:select :* :from :t
+                        :where [:= :a [:inline "b OR \\' OR 1=1#"]]})))
+    (is (= ["SELECT * FROM t WHERE a = 'b OR \\'' = \\'' OR 1=1#'"]
+           (sut/format {:select :* :from :t
+                        :where [:= :a [:inline "b OR \\' = \\' OR 1=1#"]]})))
+    (is (= ["SELECT * FROM t WHERE a = 'b\\'''"]
+           (sut/format {:select :* :from :t
+                        :where [:= :a [:inline "b\\'"]]})))))
 
 (comment
   ;; partial (incorrect!) workaround for #407:
