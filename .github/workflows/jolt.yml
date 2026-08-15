@@ -1,0 +1,26 @@
+name: Jolt (Develop)
+
+on:
+  push:
+    branches:
+      - "develop"
+
+jobs:
+  test-with-jolt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Cache All The Things
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            ~/.clojure
+            ~/.cpcache
+            ~/.deps.clj
+          key: ${{ runner.os }}-${{ hashFiles('**/deps.edn', '**/bb.edn') }}
+      - name: Install latest Jolt
+        run: source <(curl -sL clojure.cc/get) jolt && jolt --version
+      - name: Run Tests with Jolt
+        run: jolt -M:jolt:test:runner

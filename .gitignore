@@ -9,6 +9,7 @@
 .hg/
 .hgignore
 .java-version
+.jolt/cpcache
 .lein-*
 .lsp/.cache
 .lsp/sqlite.db

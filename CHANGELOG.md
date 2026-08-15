@@ -1,6 +1,7 @@
 # Changes
 
 * 2.7.next in progress
+  * Add Jolt to CI (tests against latest Jolt release).
   * Update dev/test deps.
 
 * 2.7.1437 -- 2026-08-02
