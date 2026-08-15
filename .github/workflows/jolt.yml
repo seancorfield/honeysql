@@ -19,6 +19,6 @@ jobs:
             ~/.clojure
             ~/.cpcache
             ~/.deps.clj
-          key: ${{ runner.os }}-${{ hashFiles('**/deps.edn', '**/bb.edn') }}
+          key: ${{ runner.os }}-jolt-${{ hashFiles('**/deps.edn', '**/bb.edn') }}
       - name: Install latest Jolt and Run Tests
         run: source <(curl -sL clojure.cc/get) jolt && jolt --version && jolt -M:jolt:test:runner
