@@ -1051,7 +1051,8 @@ If you find yourself registering an operator, a function (syntax), or a new clau
 HoneySQL fully supports Clojure, ClojureScript, and Babashka (and is tested
 against all three in CI).
 
-HoneySQL has basic support for Jolt and `let-go`. The `honey.sql` namespace is
+HoneySQL has full support for Jolt (the whole test suite passes).
+HoneySQL has basic support for `let-go`: The `honey.sql` namespace is
 known to load and run with some caveats:
 
 * `let-go` - the `clojure.template` ns is not provided so `honey.sql/formatv` is omitted.
@@ -1078,7 +1079,7 @@ user=>
 
 ### Jolt
 
-You'll need a dependency on `jolt-lang/time` and at least Jolt 0.5.1:
+You'll need an additional dependency on `jolt-lang/time` and at least Jolt 0.7.11:
 
 In `deps.edn`, under `:aliases` (or you could add this as a top-level dependency):
 
@@ -1087,21 +1088,28 @@ In `deps.edn`, under `:aliases` (or you could add this as a top-level dependency
   :jolt
   {:extra-deps {io.github.jolt-lang/time
                 {:git/url "https://github.com/jolt-lang/time.git"
-                 :git/sha "ca6d783c1c8f910b95fc6ef833156badb4d74013"}}}
+                 :git/sha "bc85090dae95d103ba04f4ea9687945cf46fb19e"}}}
 ```
 
-and then:
+You can use the ClojureStar website to install the latest version of Jolt:
+
+```bash
+source <(curl -sL clojure.cc/get) jolt && jolt --version
+```
+
+Assuming your `deps.edn` file has a dependency on HoneySQL (in `:deps`):
 
 <!-- :test-doc-blocks/skip -->
 ```clojure
 > rlwrap jolt -A:jolt
-;; jolt v0.5.1 repl — :repl/quit or ^D to exit
+;; jolt v0.7.11 repl — :repl/quit or ^D to exit
 user=> (require 'honey.sql)
 nil
 user=> (honey.sql/format '{select * from table where (= id 42)})
 ["SELECT * FROM table WHERE id = ?" 42]
 user=>
 ```
+> Note: `rlwrap` is optional but recommended so that you have command history and line editing in the Jolt REPL.
 
 <a name="1.x"/>
 
