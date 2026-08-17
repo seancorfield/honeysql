@@ -1,1 +1,1 @@
-{}
+{:exclude-files "cljs-test-runner-out/.*$"}

@@ -32,7 +32,7 @@
             #?(:lg () :clj [clojure.template])
             [honey.sql.protocols :as p]
             [honey.sql.util :refer [str join split-by-separator into*
-                                    #?@(:clj [or-fn])]]))
+                                    #?@(:lg () :clj [or-fn])]]))
 
 #?(:clj (set! *warn-on-reflection* true))
 
@@ -176,7 +176,10 @@
 ;; suspicious entity names:
 (def ^:private suspicious (vec ";,"))
 
-#?(:clj
+#?(:lg
+   (defn- suspicious? [s]
+     (some (fn [ch] (str/includes? s (str ch))) suspicious))
+   :clj
    (def suspicious?
      ;; Optimization for JVM runtime - feel free to throw away if the suspicious?
      ;; check becomes more complicated in the future.
@@ -243,7 +246,12 @@
 ;; way we'd expect.
 ;;
 ;; Use this instead of `str/upper-case` as it will always use Locale/US.
-#?(:clj
+#?(:lg
+   (defn upper-case
+     "In ClojureScript, just an alias for cljs.string/upper-case."
+     [s]
+     (str/upper-case s))
+   :clj
    (defn upper-case
      "Upper-case a string in Locale/US to avoid locale-specific capitalization."
      [^String s]

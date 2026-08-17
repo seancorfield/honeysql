@@ -21,14 +21,16 @@
                (.concat (.toString a) (.toString b))))
       :default (clojure.core/str a b)))
   (^String [a b c]
-   #?(:clj (let [sb (StringBuilder.)]
+   #?(:lg (clojure.core/str a b c)
+      :clj (let [sb (StringBuilder.)]
              (.append sb (str a))
              (.append sb (str b))
              (.append sb (str c))
              (.toString sb))
       :default (clojure.core/str a b c)))
   (^String [a b c d]
-   #?(:clj (let [sb (StringBuilder.)]
+   #?(:lg (clojure.core/str a b c d)
+      :clj (let [sb (StringBuilder.)]
              (.append sb (str a))
              (.append sb (str b))
              (.append sb (str c))
@@ -36,7 +38,8 @@
              (.toString sb))
       :default (clojure.core/str a b c d)))
   (^String [a b c d e]
-   #?(:clj (let [sb (StringBuilder.)]
+   #?(:lg (clojure.core/str a b c d e)
+      :clj (let [sb (StringBuilder.)]
              (.append sb (str a))
              (.append sb (str b))
              (.append sb (str c))
@@ -45,7 +48,8 @@
              (.toString sb))
       :default (clojure.core/str a b c d e)))
   (^String [a b c d e & more]
-   #?(:clj (let [sb (StringBuilder.)]
+   #?(:lg (apply clojure.core/str a b c d e more)
+      :clj (let [sb (StringBuilder.)]
              (.append sb (str a))
              (.append sb (str b))
              (.append sb (str c))
@@ -62,7 +66,9 @@
   platforms."
   ([separator coll] (join separator identity coll))
   ([separator xform coll]
-   #?(:clj
+   #?(:lg
+      (clojure.string/join separator (transduce xform conj [] coll))
+      :clj
       (let [sb (StringBuilder.)
             sep (str separator)]
         (transduce xform
