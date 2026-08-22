@@ -844,13 +844,16 @@
 (defn- reduce-sql
   ([xs] (reduce-sql identity xs))
   ([xform xs]
-   (transduce xform
-              (fn
-                ([res] res)
-                ([[sql params] [sql' & params']]
-                 [(conj sql sql') (if params' (into params params') params)]))
-              [[] []]
-              xs)))
+   (let [sqlv (volatile! [])
+         paramsv (volatile! [])]
+     (transduce xform
+                (fn
+                  ([_] [@sqlv @paramsv])
+                  ([_ v]
+                   (vswap! sqlv conj (nth v 0 nil))
+                   (when (> (count v) 1)
+                     (vswap! paramsv into* (next v)))))
+                nil xs))))
 
 ;; primary clauses
 
