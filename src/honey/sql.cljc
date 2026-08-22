@@ -138,6 +138,7 @@
 (def ^:private default-standard-conforming-strings (atom true))
 
 (def ^:private ^:dynamic *dialect* nil)
+(def ^:private ^:dynamic *inline* @default-inline)
 (def ^:private ^:dynamic *options*
   {;; nil would be a better default but that makes testing individual
    ;; functions harder than necessary:
@@ -145,7 +146,6 @@
    :quoted @default-quoted
    :quoted-always @default-quoted-always
    :quoted-snake @default-quoted-snake
-   :inline @default-inline
    :params nil
    :values-default-columns nil
    ;; there is no way, currently, to enable suspicious characters
@@ -196,6 +196,18 @@
    :default
    (defn- suspicious? [s]
      (some (fn [ch] (str/includes? s (str ch))) suspicious)))
+
+(def ^:private inline-true-map {#'*inline* true})
+
+#?(:clj
+   (defmacro ^:private ^:no-doc with-inline
+     "Bind `*inline*` dynvar to true in a slightly more efficient way.
+  `bindings` is accepted to achieve syntactical parity with `binding` macro."
+     [bindings & body]
+     (assert (= bindings '[*inline* true]))
+     `(do (push-thread-bindings inline-true-map)
+          (try ~@body
+               (finally (pop-thread-bindings))))))
 
 (defn- suspicious-entity-check [entity]
   (when (suspicious? entity)
@@ -592,7 +604,7 @@
    ;; rather than name/namespace, we want to allow
    ;; for multiple / in the %fun.call case so that
    ;; qualified column names can be used:
-   (let [{:keys [inline numbered]} *options*
+   (let [{:keys [numbered]} *options*
          c (if (keyword? x)
              #?(:bb (subs (str x) 1)
                 :clj (str (.sym ^clojure.lang.Keyword x))
@@ -605,7 +617,7 @@
                    ")")])
            (str/starts-with? c "?")
            (let [k (keyword (subs c 1))]
-             (cond inline
+             (cond *inline*
                    [(sqlize-value (param-value k))]
                    numbered
                    (->numbered-param k)
@@ -1447,7 +1459,7 @@
   ,)
 
 (defn- format-simple-expr [e context]
-  (binding [*options* (assoc *options* :inline true)]
+  (#?(:clj with-inline :default binding) [*inline* true]
     (let [[sql & params] (format-expr e)]
       (when (seq params)
         (throw (ex-info (str "parameters are not accepted in " context)
@@ -1526,7 +1538,7 @@
           [(str (sql-kw k) " " e " = EXCLUDED." e)])))
 
 (defn- format-simple-clause [c context]
-  (binding [*options* (assoc *options* :inline true)]
+  (#?(:clj with-inline :default binding) [*inline* true]
     (let [[sql & params] (format-dsl c)]
       (when (seq params)
         (throw (ex-info (str "parameters are not accepted in " context)
@@ -1776,7 +1788,7 @@
           (into* [(str (sql-kw k) " " sql " "
                        (join " " (map sql-kw) units))]
                  params))
-        (binding [*options* (assoc *options* :inline true)]
+        (#?(:clj with-inline :default binding) [*inline* true]
           (let [[sql & params] (format-expr n)]
             (into* [(str (sql-kw k) " " sql)] params)))))
     [(str (sql-kw k) " " (sql-kw args))]))
@@ -2256,7 +2268,7 @@
     (fn [_ [expr tz]]
       (let [[sql & params] (format-expr expr {:nested true})
             [tz-sql & _]
-            (binding [*options* (assoc *options* :inline true)]
+            (#?(:clj with-inline :default binding) [*inline* true]
               (format-expr (if (ident? tz) (name tz) tz)))]
         (into* [(str sql " AT TIME ZONE " tz-sql)] params)))
     :between     between-fn
@@ -2289,7 +2301,7 @@
     :ignore-nulls ignore-respect-nulls
     :inline
     (fn [_ xs]
-      (binding [*options* (assoc *options* :inline true)]
+      (#?(:clj with-inline :default binding) [*inline* true]
         [(join " " (mapcat #(format-expr % {:record true})) xs)]))
     :interval format-interval
     :join
@@ -2306,7 +2318,7 @@
           (into* [(str "LATERAL " sql)] params))))
     :lift
     (fn [_ [x]]
-      (cond (:inline *options*)
+      (cond *inline*
             ;; this is pretty much always going to be wrong,
             ;; but it could produce a valid result so we just
             ;; assume that the user knows what they are doing:
@@ -2348,7 +2360,7 @@
     :param
     (fn [_ [k]]
       (let [k (sym->kw k)]
-        (cond (:inline *options*)
+        (cond *inline*
               [(sqlize-value (param-value k))]
               (:numbered *options*)
               (->numbered-param k)
@@ -2469,7 +2481,7 @@
          ["NULL"]
 
          :else
-         (cond (:inline *options*)
+         (cond *inline*
                [(sqlize-value expr)]
                (:numbered *options*)
                (->numbered expr)
@@ -2523,6 +2535,9 @@
                      @default-dialect)
          numbered? (:numbered opts @default-numbered)
          formatter (if (map? data) format-dsl format-expr)
+         inline (boolean (:inline opts (if (= :nrql (:dialect dialect))
+                                         true
+                                         @default-inline)))
          options {:caching cache
                   :checking (:checking opts @default-checking)
                   :clause-order (if dialect?
@@ -2531,9 +2546,6 @@
                                     @current-clause-order)
                                   @current-clause-order)
                   :ignored-metadata (:ignored-metadata opts [])
-                  :inline (:inline opts (if (= :nrql (:dialect dialect))
-                                          true
-                                          @default-inline))
                   :numbered (when numbered? (atom []))
                   :quoted (cond (contains? opts :quoted)
                                 (:quoted opts)
@@ -2553,6 +2565,7 @@
                                      (:params opts))
                   :values-default-columns (:values-default-columns opts)}]
      (binding [*dialect* dialect
+               *inline* inline
                *options* options]
        (if cache
          (->> (through-opts opts cache data (fn [_] (formatter data (dissoc opts :cache))))
