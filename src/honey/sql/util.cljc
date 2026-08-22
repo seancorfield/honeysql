@@ -105,14 +105,24 @@
   ([to from1 from2] (into* to from1 from2 nil nil))
   ([to from1 from2 from3] (into* to from1 from2 from3 nil))
   ([to from1 from2 from3 from4]
-   (if (or from1 from2 from3 from4)
-     (as-> (transient to) to'
-       (reduce conj! to' from1)
-       (reduce conj! to' from2)
-       (reduce conj! to' from3)
-       (reduce conj! to' from4)
-       (persistent! to'))
-     to)))
+   (if (and (nil? from1) (nil? from2) (nil? from3) (nil? from4))
+     to
+     (let [n (+ (count from1) (count from2) (count from3) (count from4))]
+       ;; n=5 is an arbitrary cutoff based on benchmarking data. For numbers
+       ;; smaller than 5, conjing directly is faster than going through
+       ;; transient-persistent route.
+       (if (> n 5)
+         (as-> (transient to) to'
+           (reduce conj! to' from1)
+           (reduce conj! to' from2)
+           (reduce conj! to' from3)
+           (reduce conj! to' from4)
+           (persistent! to'))
+         (as-> to to'
+           (reduce conj to' from1)
+           (reduce conj to' from2)
+           (reduce conj to' from3)
+           (reduce conj to' from4)))))))
 
 (defn or-fn
   [f1 f2]
