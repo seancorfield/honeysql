@@ -197,7 +197,7 @@
    (defn- suspicious? [s]
      (some (fn [ch] (str/includes? s (str ch))) suspicious)))
 
-(def ^:private inline-true-map {#'*inline* true})
+#?(:clj (def ^:private inline-true-map {#'*inline* true}))
 
 #?(:clj
    (defmacro ^:private ^:no-doc with-inline

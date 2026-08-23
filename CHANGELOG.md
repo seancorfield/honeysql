@@ -1,7 +1,7 @@
 # Changes
 
 * 2.7.next in progress
-  * Performance improvements via PRs [#610](https://github.com/seancorfield/honeysql/pull/610) and [#611](https://github.com/seancorfield/honeysql/pull/611) from [@alexander-yakushev](https://github.com/alexander-yakushev).
+  * Performance improvements via PRs [#609](https://github.com/seancorfield/honeysql/pull/609), [#610](https://github.com/seancorfield/honeysql/pull/610), and [#611](https://github.com/seancorfield/honeysql/pull/611) from [@alexander-yakushev](https://github.com/alexander-yakushev).
   * Add Jolt to CI (tests against latest Jolt release).
   * Update dev/test deps.
 
