@@ -1,6 +1,7 @@
 # Changes
 
 * 2.7.next in progress
+  * Address [#613](https://github.com/seancorfield/honeysql/issues/613) by reading values from hash map rows in the order of the explicit column list (`:insert-into` or `:columns`) when one is given, instead of the hash map's key order; convert tests that relied on literal hash map key order to use `array-map`; document the key-ordering caveat for `:values` and `:set`.
   * Performance improvements via PRs [#609](https://github.com/seancorfield/honeysql/pull/609), [#610](https://github.com/seancorfield/honeysql/pull/610), and [#611](https://github.com/seancorfield/honeysql/pull/611) from [@alexander-yakushev](https://github.com/alexander-yakushev).
   * Add Jolt to CI (tests against latest Jolt release).
   * Update dev/test deps.

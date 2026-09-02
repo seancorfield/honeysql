@@ -335,6 +335,54 @@
     (is (or (= res ["INSERT INTO foo (id, bar) VALUES (?, ?), (?, NULL)" 1 "quux" 2])
             (= res ["INSERT INTO foo (bar, id) VALUES (?, ?), (NULL, ?)" "quux" 1 2])))))
 
+(deftest issue-613-explicit-columns-with-map-rows
+  ;; when an explicit column list is given, values from map rows must be
+  ;; read in that column order, not in the row map's key order:
+  (testing ":columns clause"
+    (is (= ["INSERT INTO t (did, dname) VALUES (?, ?)" 5 "Gizmo"]
+           (sut/format {:insert-into :t :columns [:did :dname]
+                        :values [(array-map :dname "Gizmo" :did 5)]})))
+    (is (= ["INSERT INTO t (did, dname) VALUES (?, ?)" 5 "Gizmo"]
+           (sut/format {:insert-into :t :columns [:did :dname]
+                        :values [(hash-map :dname "Gizmo" :did 5)]}))))
+  (testing "columns in :insert-into"
+    (is (= ["INSERT INTO t (did, dname) VALUES (?, ?)" 5 "Gizmo"]
+           (sut/format {:insert-into [:t [:did :dname]]
+                        :values [(array-map :dname "Gizmo" :did 5)]})))
+    (is (= ["INSERT INTO t AS x (did, dname) VALUES (?, ?)" 5 "Gizmo"]
+           (sut/format {:insert-into [[:t :x] [:did :dname]]
+                        :values [(array-map :dname "Gizmo" :did 5)]}))))
+  (testing ":insert-into columns take precedence over :columns"
+    (is (= ["INSERT INTO t (did, dname) VALUES (?, ?)" 5 "Gizmo"]
+           (sut/format {:insert-into [:t [:did :dname]] :columns [:dname :did]
+                        :values [(array-map :dname "Gizmo" :did 5)]}))))
+  (testing "rows with differing key order"
+    (is (= ["INSERT INTO t (did, dname) VALUES (?, ?), (?, ?)" 5 "Gizmo" 7 "Redline"]
+           (sut/format {:insert-into :t :columns [:did :dname]
+                        :values [(array-map :dname "Gizmo" :did 5)
+                                 (array-map :did 7 :dname "Redline")]}))))
+  (testing "missing keys still get NULL or DEFAULT"
+    (is (= ["INSERT INTO t (did, dname) VALUES (?, NULL)" 5]
+           (sut/format {:insert-into :t :columns [:did :dname]
+                        :values [{:did 5}]})))
+    (is (= ["INSERT INTO t (did, dname) VALUES (?, DEFAULT)" 5]
+           (sut/format {:insert-into :t :columns [:did :dname]
+                        :values [{:did 5}]}
+                       {:values-default-columns #{:dname}}))))
+  (testing "column names are matched to row keys by name when qualified"
+    (is (= ["INSERT INTO t (did, dname) VALUES (?, ?)" 5 "Gizmo"]
+           (sut/format {:insert-into :t :columns [:did :dname]
+                        :values [(array-map :t/dname "Gizmo" :t/did 5)]}))))
+  (testing "symbol DSL"
+    (is (= ["INSERT INTO t (did, dname) VALUES (?, ?)" 5 "Gizmo"]
+           (sut/format '{insert-into [t [did dname]]
+                         values [{dname "Gizmo" did 5}]}))))
+  (testing "replace-into"
+    (is (= ["REPLACE INTO `t` (`did`, `dname`) VALUES (?, ?)" 5 "Gizmo"]
+           (sut/format {:replace-into :t :columns [:did :dname]
+                        :values [(array-map :dname "Gizmo" :did 5)]}
+                       {:dialect :mysql})))))
+
 (deftest insert-into-functions
   ;; needs [[:raw ..]] because it's the columns case:
   (is (= (sut/format {:insert-into [[[:raw "My-Table Name"]] {:select [:bar] :from [:baz]}]})
@@ -921,8 +969,8 @@ ORDER BY id = ? DESC
         enabled [true, "); SELECT case when (SELECT current_setting('is_superuser'))='off' then pg_sleep(0.2) end; -- "]]
     (is (= ["INSERT INTO table (name, enabled) VALUES (?, (TRUE, ?))" name (second enabled)]
            (sut/format {:insert-into :table
-                        :values [{:name name
-                                  :enabled enabled}]})))))
+                        :values [(array-map :name name
+                                            :enabled enabled)]})))))
 
 (deftest issue-425-default-values-test
   (testing "default values"
@@ -941,12 +989,12 @@ ORDER BY id = ? DESC
   (testing "map values with default row, no columns"
     (is (= ["INSERT INTO table (a, b, c) VALUES (1, 2, 3), DEFAULT, (4, 5, 6)"]
            (sut/format {:insert-into :table
-                        :values [{:a 1 :b 2 :c 3} :default {:a 4 :b 5 :c 6}]}
+                        :values [(array-map :a 1 :b 2 :c 3) :default (array-map :a 4 :b 5 :c 6)]}
                        {:inline true}))))
   (testing "map values with default column, no columns"
     (is (= ["INSERT INTO table (a, b, c) VALUES (1, DEFAULT, 3), DEFAULT"]
            (sut/format {:insert-into :table
-                        :values [{:a 1 :b [:default] :c 3} :default]}
+                        :values [(array-map :a 1 :b [:default] :c 3) :default]}
                        {:inline true}))))
   (testing "empty values"
     (is (= ["INSERT INTO table (a, b, c) VALUES ()"]
@@ -1426,7 +1474,7 @@ ORDER BY id = ? DESC
                       :values [[1 2]]})))
   (is (= ["INSERT INTO table (a, b) OVERRIDING SYSTEM VALUE VALUES (?, ?)" 1 2]
          (sut/format {:insert-into [{:overriding-value :system} :table]
-                      :values [{:a 1 :b 2}]}))))
+                      :values [(array-map :a 1 :b 2)]}))))
 
 (deftest issue-497-alias
 

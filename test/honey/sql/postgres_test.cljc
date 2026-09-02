@@ -35,8 +35,8 @@
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?), (?, ?) ON CONFLICT (did) DO UPDATE SET dname = EXCLUDED.dname RETURNING *" 5 "Gizmo Transglobal" 6 "Associated Computing, Inc"]
            ;; preferred in honeysql:
            (-> (insert-into :distributors)
-               (values [{:did 5 :dname "Gizmo Transglobal"}
-                        {:did 6 :dname "Associated Computing, Inc"}])
+               (values [(array-map :did 5 :dname "Gizmo Transglobal")
+                        (array-map :did 6 :dname "Associated Computing, Inc")])
                (on-conflict :did)
                (do-update-set :dname)
                (returning :*)
@@ -44,8 +44,8 @@
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?), (?, ?) ON CONFLICT (did) DO UPDATE SET dname = EXCLUDED.dname RETURNING *" 5 "Gizmo Transglobal" 6 "Associated Computing, Inc"]
            ;; identical to nilenso version:
            (-> (insert-into :distributors)
-               (values [{:did 5 :dname "Gizmo Transglobal"}
-                        {:did 6 :dname "Associated Computing, Inc"}])
+               (values [(array-map :did 5 :dname "Gizmo Transglobal")
+                        (array-map :did 6 :dname "Associated Computing, Inc")])
                (upsert (-> (on-conflict :did)
                            (do-update-set :dname)))
                (returning :*)
@@ -53,70 +53,70 @@
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT (did) DO NOTHING" 7 "Redline GmbH"]
            ;; preferred in honeysql:
            (-> (insert-into :distributors)
-               (values [{:did 7 :dname "Redline GmbH"}])
+               (values [(array-map :did 7 :dname "Redline GmbH")])
                (on-conflict :did)
                do-nothing
                sql/format)))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT (did) DO NOTHING" 7 "Redline GmbH"]
            ;; identical to nilenso version:
            (-> (insert-into :distributors)
-               (values [{:did 7 :dname "Redline GmbH"}])
+               (values [(array-map :did 7 :dname "Redline GmbH")])
                (upsert (-> (on-conflict :did)
                            do-nothing))
                sql/format)))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT ON CONSTRAINT distributors_pkey DO NOTHING" 9 "Antwerp Design"]
            ;; preferred in honeysql:
            (-> (insert-into :distributors)
-               (values [{:did 9 :dname "Antwerp Design"}])
+               (values [(array-map :did 9 :dname "Antwerp Design")])
                (on-conflict (on-constraint :distributors_pkey))
                do-nothing
                sql/format)))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT (did) ON CONSTRAINT distributors_pkey DO NOTHING" 9 "Antwerp Design"]
            ;; with both name and clause:
            (-> (insert-into :distributors)
-               (values [{:did 9 :dname "Antwerp Design"}])
+               (values [(array-map :did 9 :dname "Antwerp Design")])
                (on-conflict :did (on-constraint :distributors_pkey))
                do-nothing
                sql/format)))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT (did, dname) ON CONSTRAINT distributors_pkey DO NOTHING" 9 "Antwerp Design"]
            ;; with multiple names and a clause:
            (-> (insert-into :distributors)
-               (values [{:did 9 :dname "Antwerp Design"}])
+               (values [(array-map :did 9 :dname "Antwerp Design")])
                (on-conflict :did :dname (on-constraint :distributors_pkey))
                do-nothing
                sql/format)))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT ON CONSTRAINT distributors_pkey DO NOTHING" 9 "Antwerp Design"]
            ;; almost identical to nilenso version:
            (-> (insert-into :distributors)
-               (values [{:did 9 :dname "Antwerp Design"}])
+               (values [(array-map :did 9 :dname "Antwerp Design")])
                ;; in nilenso, this was (on-conflict-constraint :distributors_pkey)
                (upsert (-> (on-conflict (on-constraint :distributors_pkey))
                            do-nothing))
                sql/format)))
     (is (= ["INSERT INTO foo (id, data) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET into = ((STATE(?), MODIFIED(NOW()))) WHERE state = ?" 1 42 "enabled" "disabled"]
            (sql/format (-> (insert-into :foo)
-                           (values [{:id 1 :data 42}])
+                           (values [(array-map :id 1 :data 42)])
                            (upsert (-> (on-conflict :id)
                                        (do-update-set [:state "enabled"]
                                                       [:modified [:now]])
                                        (where [:= :state "disabled"])))))))
     (is (= ["INSERT INTO foo (id, data) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET state = ?, modified = NOW() WHERE state = ?" 1 42 "enabled" "disabled"]
            (sql/format (-> (insert-into :foo)
-                           (values [{:id 1 :data 42}])
+                           (values [(array-map :id 1 :data 42)])
                            (upsert (-> (on-conflict :id)
-                                       (do-update-set {:state "enabled"
-                                                       :modified [:now]})
+                                       (do-update-set (array-map :state "enabled"
+                                                                 :modified [:now]))
                                        (where [:= :state "disabled"])))))))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?), (?, ?) ON CONFLICT (did) DO UPDATE SET dname = EXCLUDED.dname" 10 "Pinp Design" 11 "Foo Bar Works"]
            (sql/format {:insert-into :distributors
-                        :values [{:did 10 :dname "Pinp Design"}
-                                 {:did 11 :dname "Foo Bar Works"}]
+                        :values [(array-map :did 10 :dname "Pinp Design")
+                                 (array-map :did 11 :dname "Foo Bar Works")]
                         ;; in nilenso, these two were a submap under :upsert
                         :on-conflict :did
                         :do-update-set :dname})))
     (is (= ["INSERT INTO distributors (did, dname) VALUES (?, ?) ON CONFLICT (did) DO UPDATE SET dname = EXCLUDED.dname || ? || d.dname || ?" 23 "Foo Distributors" " (formerly " ")"]
            (-> (insert-into :distributors)
-               (values [{:did 23 :dname "Foo Distributors"}])
+               (values [(array-map :did 23 :dname "Foo Distributors")])
                (on-conflict :did)
                ;; nilenso:
                #_(do-update-set! [:dname "EXCLUDED.dname || ' (formerly ' || d.dname || ')'"])
@@ -143,7 +143,7 @@
   (is (= ["INSERT INTO user (phone, name) VALUES (?, ?) ON CONFLICT (phone) WHERE phone IS NOT NULL DO UPDATE SET phone = EXCLUDED.phone, name = EXCLUDED.name WHERE user.active = FALSE" "5555555" "John"]
          (sql/format
           {:insert-into :user
-           :values      [{:phone "5555555" :name "John"}]
+           :values      [(array-map :phone "5555555" :name "John")]
            :on-conflict   [:phone
                            {:where [:<> :phone nil]}]
            :do-update-set {:fields [:phone :name]
@@ -151,7 +151,7 @@
          ;; nilenso version
          #_(sql/format
             {:insert-into :user
-             :values      [{:phone "5555555" :name "John"}]
+             :values      [(array-map :phone "5555555" :name "John")]
              ;; nested under :upsert
              :upsert      {:on-conflict   [:phone]
                            ;; but :where is at the same level as :on-conflict
@@ -323,8 +323,8 @@
            (-> (insert-into :distributors :d)
                ;; nilensor required insert-into-as:
                #_(insert-into-as :distributors :d)
-               (values [{:did 5 :dname "Gizmo Transglobal"}
-                        {:did 6 :dname "Associated Computing, Inc"}])
+               (values [(array-map :did 5 :dname "Gizmo Transglobal")
+                        (array-map :did 6 :dname "Associated Computing, Inc")])
                (on-conflict :did)
                ;; honeysql supports names and a where clause:
                (do-update-set :dname (where [:<> :d.zipcode "21201"]))

@@ -1377,6 +1377,33 @@
                      (join ", " (map #(format-entity % {:drop-ns true})) cols)
                      ")"))]))))
 
+;; issue #613: explicit column order must win over map key order
+(defn- explicit-columns
+  "Return the explicit column list for the statement being formatted, if any:
+   the columns in `:insert-into [table [cols]]` (etc) take precedence over
+   a `:columns` clause. Returns nil when no explicit columns were given."
+  []
+  (let [table (or (clause-body :insert-into)
+                  (clause-body :patch-into)
+                  (clause-body :replace-into))
+        table (if (and (sequential? table) (map? (first table)))
+                (rest table)
+                table)
+        cols  (when (and (sequential? table) (sequential? (second table)))
+                (second table))]
+    (or (seq cols) (seq (clause-body :columns)))))
+
+(defn- row-key
+  "Given a row (hash map) and an explicit column, return the key in the row
+   that supplies that column's value: an exact match if present, otherwise
+   a key with the same name (so `:t/did` in the row satisfies `:did`)."
+  [row col]
+  (if (or (contains? row col) (not (ident? col)))
+    col
+    (let [n (name col)]
+      (or (some (fn [k] (when (and (ident? k) (= n (name k))) k)) (keys row))
+          col))))
+
 (defn- format-values [k xs]
   (let [{:keys [values-default-columns]} *options*
         first-xs (when (sequential? xs) (first (drop-while ident? xs)))
@@ -1418,23 +1445,32 @@
 
           (map? first-xs)
           ;; [{:a 1 :b 2 :c 3}]
-          (let [[cols cols-sql]
-                (columns-from-values xs (or (contains-clause? :insert-into)
-                                            (contains-clause? :patch-into)
-                                            (contains-clause? :replace-into)
-                                            (contains-clause? :columns)))
+          (let [explicit (explicit-columns)
+                [cols cols-sql]
+                (if explicit
+                  ;; issue #613: an explicit column list (in :insert-into or
+                  ;; :columns) determines the order values are read from rows
+                  ;; and is rendered by that clause, not here:
+                  [explicit nil]
+                  (columns-from-values xs (or (contains-clause? :insert-into)
+                                              (contains-clause? :patch-into)
+                                              (contains-clause? :replace-into)
+                                              (contains-clause? :columns))))
                 [sqls params]
                 (reduce
                  (fn [[sql params] x]
                    (if (map? x)
                      (let [[sqls' params']
-                           (reduce-sql (map #(format-expr
-                                              (get x %
-                                                   ;; issue #366: use NULL or DEFAULT
-                                                   ;; for missing column values:
-                                                   (when (contains? values-default-columns %)
-                                                     [:default]))))
-                                       cols)]
+                           (reduce-sql (map (fn [col]
+                                              (let [rk (if explicit (row-key x col) col)]
+                                                (format-expr
+                                                 (get x rk
+                                                      ;; issue #366: use NULL or DEFAULT
+                                                      ;; for missing column values:
+                                                      (when (or (contains? values-default-columns col)
+                                                                (contains? values-default-columns rk))
+                                                        [:default])))))
+                                            cols))]
                        [(conj sql
                               (if (sequential? sqls')
                                 (str "(" (join ", " sqls') ")")

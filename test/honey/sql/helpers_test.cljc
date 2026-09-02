@@ -514,8 +514,8 @@
 (deftest issue-293-sql
   ;; these tests are based on the README at https://github.com/nilenso/honeysql-postgres
   (is (= (-> (insert-into :distributors)
-             (values [{:did 5 :dname "Gizmo Transglobal"}
-                      {:did 6 :dname "Associated Computing, Inc"}])
+             (values [(array-map :did 5 :dname "Gizmo Transglobal")
+                      (array-map :did 6 :dname "Associated Computing, Inc")])
              (-> (on-conflict :did)
                  (do-update-set :dname))
              (returning :*)
@@ -528,11 +528,11 @@
           5 "Gizmo Transglobal"
           6 "Associated Computing, Inc"]))
   (is (= (-> (insert-into :distributors)
-             (values [{:did 23 :dname "Foo Distributors"}])
+             (values [(array-map :did 23 :dname "Foo Distributors")])
              (on-conflict :did)
              ;; instead of do-update-set!
-             (do-update-set {:dname [:|| :EXCLUDED.dname " (formerly " :distributors.dname ")"]
-                             :downer :EXCLUDED.downer})
+             (do-update-set (array-map :dname [:|| :EXCLUDED.dname " (formerly " :distributors.dname ")"]
+                                       :downer :EXCLUDED.downer))
              sql/format)
          [(str "INSERT INTO distributors (did, dname)"
                " VALUES (?, ?)"

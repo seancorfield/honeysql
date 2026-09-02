@@ -870,7 +870,9 @@ example above with `:insert-into`.
 ## set (ANSI)
 
 `:set` accepts a hash map of SQL entities and the values
-that they should be assigned. This precedence -- between
+that they should be assigned. The assignments are generated in the
+iteration order of the hash map, which is only predictable for an
+unmodified `array-map` (see the note under `:values` above). This precedence -- between
 `:columns` and `:from` -- corresponds to ANSI SQL which
 is correct for most databases. The MySQL dialect that
 HoneySQL 2.x supports has a different precedence (below).
@@ -1471,6 +1473,13 @@ the `VALUES` clause itself.
 ```clojure
 user=> (sql/format {:values [{:col-a 1 :col-b 2}]})
 ["(col_a, col_b) VALUES (?, ?)" 1 2]
+```
+
+> Note: when no column list is given, the column order is the iteration order of the first hash map's keys. That is only predictable for an unmodified `array-map` (small literal maps happen to iterate in insertion order on Clojure and ClojureScript, but that is an implementation detail, and other Clojure dialects may differ). If you need a specific column order with hash map rows, specify the columns explicitly, either in `:insert-into` or via `:columns`, and the values will be read from each row in that order (as of 2.7.next; previously the explicit column names were used but the values still followed the hash map's key order, which could put values in the wrong columns).
+
+```clojure
+user=> (sql/format {:insert-into [:table [:col-a :col-b]] :values [{:col-b 2 :col-a 1}]})
+["INSERT INTO table (col_a, col_b) VALUES (?, ?)" 1 2]
 ```
 
 In addition, all of the rows are augmented to have
