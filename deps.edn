@@ -10,7 +10,7 @@
   ;; versions to test against:
   :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.3"}}}
   :1.11 {:override-deps {org.clojure/clojure {:mvn/version "1.11.4"}}}
-  :1.12 {:override-deps {org.clojure/clojure {:mvn/version "1.12.5"}}}
+  :1.12 {:override-deps {org.clojure/clojure {:mvn/version "1.12.6"}}}
   :1.13 {:override-deps {org.clojure/clojure {:mvn/version "1.13.0-alpha6"}}}
 
   :elide ; to test #409 (assertion on helper docstrings)
@@ -39,7 +39,7 @@
   :gen-doc-tests {:replace-paths ["build"]
                   :extra-deps {babashka/fs {:mvn/version "0.5.34"}
                                com.github.lread/test-doc-blocks {:mvn/version "1.2.21"}}
-                  :override-deps {org.clojure/clojure {:mvn/version "1.12.5"}}
+                  :override-deps {org.clojure/clojure {:mvn/version "1.12.6"}}
                   :main-opts ["-m" "honey.gen-doc-tests"]}
 
   :test-doc {:replace-paths ["src" "target/test-doc-blocks/test"]}
