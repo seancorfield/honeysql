@@ -15,9 +15,9 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
       - name: Setup Clojure and Babashka
-        uses: DeLaGuardo/setup-clojure@4c7a6f613e5089821bb3bb2a33a3ee115578580d
+        uses: DeLaGuardo/setup-clojure@6d46099eae24853c33c0482f2bb54edf4f1a4c74
         with:
-          cli: '1.12.5.1664'
+          cli: '1.12..1673'
           bb: latest
       - name: Cache All The Things
         uses: actions/cache@v6
@@ -47,9 +47,9 @@ jobs:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
       - name: Setup Clojure and Babashka
-        uses: DeLaGuardo/setup-clojure@4c7a6f613e5089821bb3bb2a33a3ee115578580d
+        uses: DeLaGuardo/setup-clojure@6d46099eae24853c33c0482f2bb54edf4f1a4c74
         with:
-          cli: '1.12.5.1664'
+          cli: '1.12..1673'
           bb: latest
       - name: Cache All The Things
         uses: actions/cache@v6
