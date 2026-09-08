@@ -1459,7 +1459,7 @@
   ,)
 
 (defn- format-simple-expr [e context]
-  (#?(:clj with-inline :default binding) [*inline* true]
+  (#?(:lg binding :clj with-inline :default binding) [*inline* true]
     (let [[sql & params] (format-expr e)]
       (when (seq params)
         (throw (ex-info (str "parameters are not accepted in " context)
@@ -1538,7 +1538,7 @@
           [(str (sql-kw k) " " e " = EXCLUDED." e)])))
 
 (defn- format-simple-clause [c context]
-  (#?(:clj with-inline :default binding) [*inline* true]
+  (#?(:lg binding :clj with-inline :default binding) [*inline* true]
     (let [[sql & params] (format-dsl c)]
       (when (seq params)
         (throw (ex-info (str "parameters are not accepted in " context)
@@ -1788,7 +1788,7 @@
           (into* [(str (sql-kw k) " " sql " "
                        (join " " (map sql-kw) units))]
                  params))
-        (#?(:clj with-inline :default binding) [*inline* true]
+        (#?(:lg binding :clj with-inline :default binding) [*inline* true]
           (let [[sql & params] (format-expr n)]
             (into* [(str (sql-kw k) " " sql)] params)))))
     [(str (sql-kw k) " " (sql-kw args))]))
@@ -2268,7 +2268,7 @@
     (fn [_ [expr tz]]
       (let [[sql & params] (format-expr expr {:nested true})
             [tz-sql & _]
-            (#?(:clj with-inline :default binding) [*inline* true]
+            (#?(:lg binding :clj with-inline :default binding) [*inline* true]
               (format-expr (if (ident? tz) (name tz) tz)))]
         (into* [(str sql " AT TIME ZONE " tz-sql)] params)))
     :between     between-fn
@@ -2301,7 +2301,7 @@
     :ignore-nulls ignore-respect-nulls
     :inline
     (fn [_ xs]
-      (#?(:clj with-inline :default binding) [*inline* true]
+      (#?(:lg binding :clj with-inline :default binding) [*inline* true]
         [(join " " (mapcat #(format-expr % {:record true})) xs)]))
     :interval format-interval
     :join
