@@ -525,7 +525,11 @@
 
 (defn- inline-str [s]
   (if (or (mysql?) (not (:standard-conforming-strings *options*))) ; per #607: only apply special handling for MySQL dialect
-    (str \' (str/replace s #?(:lg "'" :default #"(?<!\\)'") "''") \')
+    ;; :lg -- Go's re2 has no lookbehind, so match \' as a unit and leave it
+    ;; alone instead, which only lets bare quotes reach the replacement:
+    (str \' #?(:lg (str/replace s #"\\'|'" (fn [m] (if (= m "'") "''" m)))
+               :default (str/replace s #"(?<!\\)'" "''"))
+         \')
     (str \' (str/replace s "'" "''") \')))
 
 (extend-protocol p/InlineValue
