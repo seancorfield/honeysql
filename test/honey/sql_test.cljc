@@ -1409,7 +1409,8 @@ ORDER BY id = ? DESC
     (is (= ["INNER JOIN (tbl1 LEFT JOIN tbl2 USING (id))"]
            (sut/format {:join [[[:join :tbl1 {:left-join [:tbl2 [:using :id]]}]]]})))))
 
-#?(:clj
+#?(:lg ()
+   :clj
    (deftest issue-495-formatv
      (is (= ["SELECT * FROM foo WHERE x = ?" 13]
             (let [v 13 x 42]
