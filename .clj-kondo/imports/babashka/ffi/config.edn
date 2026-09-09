@@ -1,0 +1,1 @@
+{:hooks {:analyze-call {babashka.ffi/defcfn hooks.babashka.ffi/defcfn}}}
