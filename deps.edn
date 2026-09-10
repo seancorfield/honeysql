@@ -2,12 +2,7 @@
  :paths ["src"]
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}}
  :aliases
- {;; for help: clojure -T:deps:build help/doc
-  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.14"}
-                 slipset/deps-deploy {:mvn/version "0.2.5"}}
-          :ns-default build}
-
-  ;; versions to test against:
+ {;; versions to test against:
   :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.3"}}}
   :1.11 {:override-deps {org.clojure/clojure {:mvn/version "1.11.4"}}}
   :1.12 {:override-deps {org.clojure/clojure {:mvn/version "1.12.6"}}}

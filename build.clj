@@ -1,18 +1,7 @@
 (ns build
-  "HoneySQL's build script.
-
-  clojure -T:build jar
-  clojure -T:build deploy
-
-  Run tests:
-  bb test
-
-  For more information, run:
-
-  clojure -T:deps:build help/doc"
-  (:refer-clojure :exclude [test])
+  "HoneySQL's build script. Entirely driven by `bb`."
   (:require [clojure.tools.build.api :as b]
-            [deps-deploy.deps-deploy :as dd]))
+            [babashka.deps-deploy :as dd]))
 
 (def lib 'com.github.seancorfield/honeysql)
 (defn- the-version [patch] (format "2.7.%s" patch))
@@ -50,7 +39,9 @@
            :src-dirs  ["src"]
            :pom-data  (pom-template version))))
 
-(defn jar "Build the JAR." [opts]
+(defn jar "Build the JAR."
+  {:org.babashka/cli {:spec {:snapshot {:coerce :boolean}}}}
+  [opts]
   (let [opts (jar-opts opts)]
     (b/delete {:path "target"})
     (println "\nWriting pom.xml...")
@@ -61,7 +52,9 @@
     (b/jar opts))
   opts)
 
-(defn deploy "Deploy the JAR to Clojars." [opts]
+(defn deploy "Deploy the JAR to Clojars."
+  {:org.babashka/cli {:spec {:snapshot {:coerce :boolean}}}}
+  [opts]
   (let [{:keys [jar-file] :as opts} (jar-opts opts)]
     (dd/deploy {:installer :remote :artifact (b/resolve-path jar-file)
                 :pom-file (b/pom-path (select-keys opts [:lib :class-dir]))}))

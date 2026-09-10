@@ -1,4 +1,6 @@
-{:paths ["src"]
+{:paths ["."]
+ :deps {io.github.clojure/tools.build {:mvn/version "0.10.14"}
+        io.github.babashka/deps-deploy {:mvn/version "0.0.1"}}
  :tasks
  {:requires [[clojure.string :as str]]
 
@@ -54,9 +56,10 @@
                           ":test:"
                           (if cljs? "cljs" "runner"))))))}
 
-  test:bb {:extra-paths ["test"]
+  test:bb {:extra-paths ["src" "test"]
            :extra-deps  {io.github.cognitect-labs/test-runner
                          {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+           ;; :exec-fn cognitect.test-runner.api/test does not get :exec-args??
            :task (exec 'cognitect.test-runner.api/test)
            :exec-args {:patterns ["^(?!(honey.cache|honey.sql-alphanumeric)).*-test$"]}}
 
@@ -64,16 +67,10 @@
             :task (binding [*command-line-args* (conj *command-line-args* "all")]
                     (run 'test))}
 
-  -snapshot {:doc "Return snapshot options, if requested."
-             :task (->> (if (some #{"snapshot"} *command-line-args*)
-                          [:snapshot true]
-                          [])
-                        (map str))}
-
   ci {:doc "Run the CI pipeline of tests and build the JAR."
       :depends [test:bb eastwood doc-test:all test:all]
-      :task (apply shell "clojure -T:build jar" (run '-snapshot))}
+      :exec-fn build/jar}
 
   ci:deploy {:doc "Deploy the JAR we just built to Clojars."
              :depends [ci]
-             :task (apply shell "clojure -T:build deploy" (run '-snapshot))}}}
+             :exec-fn build/deploy}}}
