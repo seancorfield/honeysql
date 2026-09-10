@@ -1,69 +1,53 @@
 {:paths ["."]
- :deps {io.github.clojure/tools.build {:mvn/version "0.10.14"}
-        io.github.babashka/deps-deploy {:mvn/version "0.0.1"}}
- :tasks
- {:requires [[clojure.string :as str]]
+ :deps {io.github.babashka/deps-deploy {:mvn/version "0.0.1"}}
 
-  -gen-doc-tests {:doc "Generate tests from documentation code blocks"
+ :tasks
+ {:requires [build]
+
+  -gen-doc-tests {:doc "Generate tests from documentation code blocks."
                   :task (shell "clojure -M:gen-doc-tests")}
 
-  -parse-args {:task
-               (let [cljs?    (some #{"cljs"} *command-line-args*)
-                     all?     (some #{"all"} *command-line-args*)
-                     versions (or (seq (filter (fn [v] (str/starts-with? v "1."))
-                                               *command-line-args*))
-                                  ["1.10"])]
-                 [cljs? (if all? ["elide" "1.11" "1.12" "1.13" "cljs"] versions)])}
-
-  doc-test {:doc "Run documentation tests"
+  doc-test {:doc "Run documentation tests."
             :depends [-gen-doc-tests]
             :task
-            (let [[cljs? versions] (run '-parse-args)]
+            (let [[cljs? versions] (build/parse-args)]
               (doseq [v versions]
                 (let [cljs? (or cljs? (= v "cljs"))]
-                  (println "\nDoc-Testing Clojure"
-                           (cond (= v "cljs") "ClojureScript"
-                                 cljs?
-                                 (str v "/ClojureScript")
-                                 :else
-                                 v))
+                  (println (str "\nDoc-" (build/testing-str v cljs?)))
                   (shell (str "clojure -M:test:test-doc"
                               (str ":" v)
                               (if cljs?
                                 ":cljs:test-doc-cljs"
                                 ":test-doc-clj"))))))}
 
-  doc-test:all {:doc "Run all documentation tests"
+  doc-test:all {:doc "Run documentation tests for all Clojure versions and ClojureScript."
                 :task (binding [*command-line-args* (conj *command-line-args* "all")]
                         (run 'doc-test))}
 
-  eastwood {:doc "Run Eastwood linter"
+  eastwood {:doc "Run Eastwood linter."
             :task (shell "clojure -M:eastwood")}
 
   test {:doc "Run the test suite."
         :task
-        (let [[cljs? versions] (run '-parse-args)]
+        (let [[cljs? versions] (build/parse-args)]
           (doseq [v versions]
             (let [cljs? (or cljs? (= v "cljs"))]
-              (println "\nTesting Clojure"
-                       (cond (= v "cljs") "ClojureScript"
-                             cljs?
-                             (str v "/ClojureScript")
-                             :else
-                             v))
+              (println (str "\n" (build/testing-str v cljs?)))
               (shell (str "clojure -M"
                           (str ":" v)
                           ":test:"
                           (if cljs? "cljs" "runner"))))))}
 
-  test:bb {:extra-paths ["src" "test"]
+  test:bb {:doc "Run the test suite via Babashka."
+           :extra-paths ["src" "test"]
            :extra-deps  {io.github.cognitect-labs/test-runner
                          {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
-           ;; :exec-fn cognitect.test-runner.api/test does not get :exec-args??
+           ;; :exec-fn cognitect.test-runner.api/test does not get :exec-args
+           ;; https://github.com/babashka/babashka/issues/2103
            :task (exec 'cognitect.test-runner.api/test)
            :exec-args {:patterns ["^(?!(honey.cache|honey.sql-alphanumeric)).*-test$"]}}
 
-  test:all {:doc "Run all tests for different Clojure versions and ClojureScript"
+  test:all {:doc "Run the test suite for all Clojure versions and ClojureScript."
             :task (binding [*command-line-args* (conj *command-line-args* "all")]
                     (run 'test))}
 

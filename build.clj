@@ -1,6 +1,7 @@
 (ns build
   "HoneySQL's build script. Entirely driven by `bb`."
-  (:require [clojure.tools.build.api :as b]
+  (:require [clojure.string :as str]
+            [clojure.tools.build.api :as b]
             [babashka.deps-deploy :as dd]))
 
 (def lib 'com.github.seancorfield/honeysql)
@@ -59,3 +60,21 @@
     (dd/deploy {:installer :remote :artifact (b/resolve-path jar-file)
                 :pom-file (b/pom-path (select-keys opts [:lib :class-dir]))}))
   opts)
+
+(defn parse-args "Parse 'cljs', 'all', and '1.x' versions from the command line."
+  []
+  (let [cljs?    (some #{"cljs"} *command-line-args*)
+        all?     (some #{"all"} *command-line-args*)
+        versions (or (seq (filter (fn [v] (str/starts-with? v "1."))
+                                  *command-line-args*))
+                     ["1.10"])]
+    [cljs? (if all? ["elide" "1.11" "1.12" "1.13" "cljs"] versions)]))
+
+(defn testing-str "Return a string indicating the current testing context."
+  [v cljs?]
+  (str "Testing "
+       (cond (= v "cljs") "ClojureScript"
+             cljs?
+             (str "Clojure " v " and ClojureScript")
+             :else
+             (str "Clojure " v))))
