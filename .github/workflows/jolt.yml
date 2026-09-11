@@ -10,6 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - name: Install latest Jolt
+        id: setup-jolt
+        uses: jlt-commons/setup-jolt@v1
+        with:
+          version: 'latest'
       - name: Cache All The Things
         uses: actions/cache@v6
         with:
@@ -19,6 +24,6 @@ jobs:
             ~/.clojure
             ~/.cpcache
             ~/.deps.clj
-          key: ${{ runner.os }}-jolt-${{ hashFiles('**/deps.edn', '**/bb.edn') }}
-      - name: Install latest Jolt and Run Tests
-        run: source <(curl -sL clojure.cc/get) jolt && jolt --version && jolt -M:jolt:test:runner
+          key: ${{ runner.os }}-jolt-${{ steps.setup-jolt.outputs.version }}-${{ hashFiles('**/deps.edn', '**/bb.edn') }}
+      - name: Run Tests on Jolt
+        run: jolt --version && jolt -M:jolt:test:runner
