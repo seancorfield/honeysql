@@ -4,6 +4,7 @@
   * `let-go` compatibility fixes via PR [#615](https://github.com/seancorfield/honeysql/pull/615) from [@abogoyavlensky](https://github.com/abogoyavlensky).
   * Performance improvements via PRs [#609](https://github.com/seancorfield/honeysql/pull/609), [#610](https://github.com/seancorfield/honeysql/pull/610), and [#611](https://github.com/seancorfield/honeysql/pull/611) from [@alexander-yakushev](https://github.com/alexander-yakushev).
   * Add Jolt to CI (tests against latest Jolt release).
+  * Switch build to `bb`.
   * Update dev/test deps.
 
 * 2.7.1437 -- 2026-08-02
