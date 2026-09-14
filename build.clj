@@ -1,18 +1,8 @@
 (ns build
-  "HoneySQL's build script.
-
-  clojure -T:build jar
-  clojure -T:build deploy
-
-  Run tests:
-  bb test
-
-  For more information, run:
-
-  clojure -T:deps:build help/doc"
-  (:refer-clojure :exclude [test])
-  (:require [clojure.tools.build.api :as b]
-            [deps-deploy.deps-deploy :as dd]))
+  "HoneySQL's build script. Entirely driven by `bb`."
+  (:require [clojure.string :as str]
+            [clojure.tools.build.api :as b]
+            [babashka.deps-deploy :as dd]))
 
 (def lib 'com.github.seancorfield/honeysql)
 (defn- the-version [patch] (format "2.7.%s" patch))
@@ -50,7 +40,9 @@
            :src-dirs  ["src"]
            :pom-data  (pom-template version))))
 
-(defn jar "Build the JAR." [opts]
+(defn jar "Build the JAR."
+  {:org.babashka/cli {:spec {:snapshot {:coerce :boolean}}}}
+  [opts]
   (let [opts (jar-opts opts)]
     (b/delete {:path "target"})
     (println "\nWriting pom.xml...")
@@ -61,8 +53,28 @@
     (b/jar opts))
   opts)
 
-(defn deploy "Deploy the JAR to Clojars." [opts]
+(defn deploy "Deploy the JAR to Clojars."
+  {:org.babashka/cli {:spec {:snapshot {:coerce :boolean}}}}
+  [opts]
   (let [{:keys [jar-file] :as opts} (jar-opts opts)]
     (dd/deploy {:installer :remote :artifact (b/resolve-path jar-file)
                 :pom-file (b/pom-path (select-keys opts [:lib :class-dir]))}))
   opts)
+
+(defn parse-args "Parse 'cljs', 'all', and '1.x' versions from the command line."
+  []
+  (let [cljs?    (some #{"cljs"} *command-line-args*)
+        all?     (some #{"all"} *command-line-args*)
+        versions (or (seq (filter (fn [v] (str/starts-with? v "1."))
+                                  *command-line-args*))
+                     ["1.10"])]
+    [cljs? (if all? ["elide" "1.11" "1.12" "1.13" "cljs"] versions)]))
+
+(defn testing-str "Return a string indicating the current testing context."
+  [v cljs?]
+  (str "Testing "
+       (cond (= v "cljs") "ClojureScript"
+             cljs?
+             (str "Clojure " v " and ClojureScript")
+             :else
+             (str "Clojure " v))))

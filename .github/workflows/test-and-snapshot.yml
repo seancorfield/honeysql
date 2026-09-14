@@ -30,7 +30,7 @@ jobs:
             ~/.deps.clj
           key: ${{ runner.os }}-${{ hashFiles('**/deps.edn', '**/bb.edn') }}
       - name: Run Tests, Build Snapshot JAR, and Deploy
-        run: bb ci:deploy snapshot
+        run: bb ci:deploy --snapshot
         env:
           CLOJARS_PASSWORD: ${{secrets.DEPLOY_TOKEN}}
           CLOJARS_USERNAME: ${{secrets.DEPLOY_USERNAME}}
