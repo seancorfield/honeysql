@@ -23,8 +23,9 @@
   {:main-opts   ["-m" "cognitect.test-runner"]}
 
   ;; various "runners" for tests/CI:
-  :cljs {:extra-deps {olical/cljs-test-runner {:mvn/version "3.8.1"}}
-         :main-opts ["-m" "cljs-test-runner.main"]}
+  :cljs {:extra-deps {olical/cljs-test-runner {:mvn/version "3.8.1"}}}
+
+  :cljs-runner {:main-opts ["-m" "cljs-test-runner.main"]}
 
   :jolt
   {:extra-deps {io.github.jolt-lang/time

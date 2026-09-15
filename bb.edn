@@ -5,38 +5,22 @@
  {:requires [build]
 
   -gen-doc-tests {:doc "Generate tests from documentation code blocks."
-                  :task (shell "clojure -M:gen-doc-tests")}
+                  :exec-fn build/gen-doc-tests}
 
   doc-test {:doc "Run documentation tests."
             :depends [-gen-doc-tests]
-            :task
-            (let [[cljs? versions] (build/parse-args)]
-              (doseq [v versions]
-                (let [cljs? (or cljs? (= v "cljs"))]
-                  (println (str "\nDoc-" (build/testing-str v cljs?)))
-                  (shell (str "clojure -M:test:test-doc"
-                              (str ":" v)
-                              (if cljs?
-                                ":cljs:test-doc-cljs"
-                                ":test-doc-clj"))))))}
+            :exec-fn build/run-doc-tests}
 
   doc-test:all {:doc "Run documentation tests for all Clojure versions and ClojureScript."
-                :task (binding [*command-line-args* (conj *command-line-args* "all")]
-                        (run 'doc-test))}
+                :depends [-gen-doc-tests]
+                :exec-fn build/run-doc-tests
+                :exec-args {:all-versions true}}
 
   eastwood {:doc "Run Eastwood linter."
-            :task (shell "clojure -M:eastwood")}
+            :exec-fn build/eastwood}
 
   test {:doc "Run the test suite."
-        :task
-        (let [[cljs? versions] (build/parse-args)]
-          (doseq [v versions]
-            (let [cljs? (or cljs? (= v "cljs"))]
-              (println (str "\n" (build/testing-str v cljs?)))
-              (shell (str "clojure -M"
-                          (str ":" v)
-                          ":test:"
-                          (if cljs? "cljs" "runner"))))))}
+        :exec-fn build/run-tests}
 
   test:bb {:doc "Run the test suite via Babashka."
            :extra-paths ["src" "test"]
@@ -46,8 +30,8 @@
            :exec-args {:patterns ["^(?!(honey.cache|honey.sql-alphanumeric)).*-test$"]}}
 
   test:all {:doc "Run the test suite for all Clojure versions and ClojureScript."
-            :task (binding [*command-line-args* (conj *command-line-args* "all")]
-                    (run 'test))}
+            :exec-fn build/run-tests
+            :exec-args {:all-versions true}}
 
   ci {:doc "Run the CI pipeline of tests and build the JAR."
       :depends [test:bb eastwood doc-test:all test:all]

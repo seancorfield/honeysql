@@ -1,8 +1,8 @@
 (ns build
   "HoneySQL's build script. Entirely driven by `bb`."
-  (:require [clojure.string :as str]
-            [clojure.tools.build.api :as b]
-            [babashka.deps-deploy :as dd]))
+  (:require [babashka.deps-deploy :as dd]
+            [babashka.tasks :refer [shell]]
+            [clojure.tools.build.api :as b]))
 
 (def lib 'com.github.seancorfield/honeysql)
 (defn- the-version [patch] (format "2.7.%s" patch))
@@ -61,20 +61,40 @@
                 :pom-file (b/pom-path (select-keys opts [:lib :class-dir]))}))
   opts)
 
-(defn parse-args "Parse 'cljs', 'all', and '1.x' versions from the command line."
-  []
-  (let [cljs?    (some #{"cljs"} *command-line-args*)
-        all?     (some #{"all"} *command-line-args*)
-        versions (or (seq (filter (fn [v] (str/starts-with? v "1."))
-                                  *command-line-args*))
-                     ["1.10"])]
-    [cljs? (if all? ["elide" "1.11" "1.12" "1.13" "cljs"] versions)]))
+;; test-related utilities and tasks:
 
-(defn testing-str "Return a string indicating the current testing context."
-  [v cljs?]
-  (str "Testing "
-       (cond (= v "cljs") "ClojureScript"
-             cljs?
-             (str "Clojure " v " and ClojureScript")
-             :else
-             (str "Clojure " v))))
+(defn- get-versions [opts]
+  (if (:all-versions opts) ["elide" "1.11" "1.12" "1.13" "cljs"] ["1.10"]))
+
+(defn- testing-str [v]
+  (str "Testing " (if (= v "cljs") "ClojureScript" (str "Clojure " v))))
+
+(defn run-doc-tests "Run documentation tests for the specified Clojure versions."
+  {:org.babashka/cli {:spec {:all-versions {:coerce :boolean}}}}
+  [opts]
+  (let [versions (get-versions opts)]
+    (doseq [v versions]
+      (println (str "\nDoc-" (testing-str v)))
+      (shell (str "clojure -M:test:test-doc"
+                  ":" v
+                  (if (= "cljs" v)
+                    ":test-doc-cljs"
+                    ":test-doc-clj"))))))
+
+(defn run-tests "Run tests for the specified Clojure versions."
+  {:org.babashka/cli {:spec {:all-versions {:coerce :boolean}}}}
+  [opts]
+  (let [versions (get-versions opts)]
+    (doseq [v versions]
+      (println (str "\n" (testing-str v)))
+      (shell (str "clojure -M"
+                  ":" v
+                  ":test:"
+                  (if (= "cljs" v)
+                    "cljs-runner"
+                    "runner"))))))
+
+;; low-level tasks:
+
+(defn eastwood [_] (shell "clojure -M:eastwood"))
+(defn gen-doc-tests [_] (shell "clojure -M:gen-doc-tests"))
