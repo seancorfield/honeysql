@@ -3,7 +3,8 @@
 * 2.7.next in progress
   * `let-go` compatibility fixes via PR [#615](https://github.com/seancorfield/honeysql/pull/615) from [@abogoyavlensky](https://github.com/abogoyavlensky).
   * Performance improvements via PRs [#609](https://github.com/seancorfield/honeysql/pull/609), [#610](https://github.com/seancorfield/honeysql/pull/610), and [#611](https://github.com/seancorfield/honeysql/pull/611) from [@alexander-yakushev](https://github.com/alexander-yakushev).
-  * Add Jolt to CI (tests against latest Jolt release).
+  * Full support for [`let-go`](https://github.com/nooga/let-go); _no tests in CI yet!_ (requires let-go 1.13.0 or later).
+  * Full support for [`Jolt`](https://github.com/jolt-lang/jolt), with tests in CI (requires Jolt 0.8.0 or later).
   * Switch build to `bb`.
   * Update dev/test deps.
 
