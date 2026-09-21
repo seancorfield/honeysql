@@ -1,0 +1,14 @@
+name: Let-Go (Develop)
+
+on:
+  push:
+    branches:
+      - "develop"
+
+jobs:
+  test-with-let-go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install and Run Tests on let-go
+        run: source <(curl -sL in-1.cc) lg lgx LGX-VERSION=0.3.1 && lgx test --exclude honey.cache-test,honey.sql-alphanumeric-test
