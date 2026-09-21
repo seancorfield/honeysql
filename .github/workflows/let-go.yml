@@ -12,5 +12,5 @@ jobs:
       - uses: actions/checkout@v7
       - name: Install and Run Tests on let-go
         run: |
-          source <(curl -sL in-1.cc) lg lgx
+          source <(curl -s https://in-1.cc) lg lgx
           lgx test --exclude honey.cache-test,honey.sql-alphanumeric-test
