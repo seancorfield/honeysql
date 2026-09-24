@@ -1,5 +1,8 @@
 # Changes
 
+* 2.7.next in progress
+  * Fix [#618](https://github.com/seancorfield/honeysql/issues/618) by ensuring column specifications in `:insert-into`, `:patch-into`, `:replace-into`, and `:columns` clauses are respected when formatting `:values`. This was a bug that was present in 2.4.1066 (three years ago) and brings the actual behavior in line with the documentation.
+
 * 2.7.1479 -- 2026-09-20
   * `let-go` compatibility fixes via PR [#615](https://github.com/seancorfield/honeysql/pull/615) from [@abogoyavlensky](https://github.com/abogoyavlensky).
   * Performance improvements via PRs [#609](https://github.com/seancorfield/honeysql/pull/609), [#610](https://github.com/seancorfield/honeysql/pull/610), and [#611](https://github.com/seancorfield/honeysql/pull/611) from [@alexander-yakushev](https://github.com/alexander-yakushev).

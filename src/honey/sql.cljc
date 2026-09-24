@@ -1135,40 +1135,57 @@
 
 (declare columns-from-values)
 
+(defn- cols-from-insert-clause
+  "This logic is lifted from (and still duplicated in) the `format-insert`
+   formatter below. Some of the `cols` selection logic from `format-insert`
+   has already been deleted, but the overall shape remains in order to
+   extract options and `table` information from the form."
+  [k]
+  (when-let [table (clause-body k)]
+    (let [table ; skip any leading options map
+          (if (and (sequential? table) (map? (first table)))
+            (rest table)
+            table)
+          cols
+          (when (sequential? table)
+            (cond (map? (second table))
+                  (let [[table] table]
+                    (when (and (sequential? table) (sequential? (second table)))
+                      (second table)))
+                  (sequential? (second table))
+                  (second table)))]
+      (when (seq cols)
+        (cons cols (format-columns :force-columns cols))))))
+
 (defn- format-insert [k table]
-  (let [[cols' cols-sql' cols-params']
-        (if-let [columns (clause-body :columns)]
-          (cons columns (format-columns :force-columns columns))
-          (when-let [values (clause-body :values)]
-            (columns-from-values values false)))
+  (let [[cols cols-sql cols-params]
+        (columns-from-values k (clause-body :values))
         [opts table] (if (and (sequential? table) (map? (first table)))
                        ((juxt first rest) table)
                        [{} table])
-        overriding     (when-let [type (:overriding-value opts)]
-                         (str " OVERRIDING " (sql-kw type) " VALUE"))]
+        overriding   (when-let [type (:overriding-value opts)]
+                       (str " OVERRIDING " (sql-kw type) " VALUE"))]
     (if (sequential? table)
       (cond (map? (second table))
             (let [[table statement] table
-                  [table cols]
+                  table
                   (if (and (sequential? table) (sequential? (second table)))
-                    table
-                    [table])
+                    (first table)
+                    table)
                   [sql & params] (format-dsl statement)
                   [t-sql & t-params] (format-entity-alias table)
                   [c-sqls c-params] (reduce-sql (map format-entity-alias) cols)]
               (-> [(str (sql-kw k) " " t-sql
                         " "
-                        (cond (seq cols)
-                              (str "("
-                                   (join ", " c-sqls)
-                                   ") ")
-                              (seq cols')
-                              (str cols-sql' " "))
+                        (when (seq cols)
+                          (str "("
+                               (join ", " c-sqls)
+                               ") "))
                         overriding
                         sql)]
-                  (into* t-params c-params cols-params' params)))
+                  (into* t-params c-params cols-params params)))
             (sequential? (second table))
-            (let [[table cols] table
+            (let [table (first table)
                   [t-sql & t-params] (format-entity-alias table)
                   [c-sqls c-params] (reduce-sql (map format-entity-alias) cols)]
               (-> [(str (sql-kw k) " " t-sql
@@ -1180,16 +1197,16 @@
             :else
             (let [[sql & params] (format-entity-alias table)]
               (-> [(str (sql-kw k) " " sql
-                        (when (seq cols')
-                          (str " " cols-sql'))
+                        (when (seq cols)
+                          (str " " cols-sql))
                         overriding)]
-                  (into* cols-params' params))))
+                  (into* cols-params params))))
       (let [[sql & params] (format-entity-alias table)]
         (-> [(str (sql-kw k) " " sql
-                  (when (seq cols')
-                    (str " " cols-sql'))
+                  (when (seq cols)
+                    (str " " cols-sql))
                   overriding)]
-            (into* cols-params' params))))))
+            (into* cols-params params))))))
 
 (comment
   (format-insert :insert-into [[[:raw ":foo"]] {:select :bar}])
@@ -1366,20 +1383,36 @@
               (when nowait
                 (str " " (sql-kw nowait))))))]))
 
-(defn- columns-from-values [xs skip-cols-sql]
-  (let [first-xs (when (sequential? xs) (first (drop-while ident? xs)))]
-    (when (map? first-xs)
-      (let [cols-1 (keys (first xs))
-            ;; issue #291: check for all keys in all maps but still
-            ;; use the keys from the first map if they match so that
-            ;; users can rely on the key ordering if they want to,
-            ;; e.g., see test that uses array-map for the first row
-            cols-n (into #{} (comp (filter map?) (mapcat keys)) xs)
-            cols   (if (= (into #{} cols-1) cols-n) cols-1 cols-n)]
-        [cols (when-not skip-cols-sql
-                (str "("
-                     (join ", " (map #(format-entity % {:drop-ns true})) cols)
-                     ")"))]))))
+(defn- columns-from-columns []
+  (when-let [columns (clause-body :columns)]
+    (cons columns (format-columns :force-columns columns))))
+
+(defn- columns-from-values [k xs]
+  (let [cols-and-sql (or (columns-from-columns)
+                         (cols-from-insert-clause :insert-into)
+                         (cols-from-insert-clause :patch-into)
+                         (cols-from-insert-clause :replace-into))
+        first-xs (when (sequential? xs) (first (drop-while ident? xs)))
+        cols-and-sql'
+        (or cols-and-sql ; if no explicit cols, try to deduce from values:
+            (when (map? first-xs)
+              (let [cols-1 (keys (first xs))
+                    ;; issue #291: check for all keys in all maps but still
+                    ;; use the keys from the first map if they match so that
+                    ;; users can rely on the key ordering if they want to,
+                    ;; e.g., see test that uses array-map for the first row
+                    cols-n (into #{} (comp (filter map?) (mapcat keys)) xs)
+                    cols   (if (= (into #{} cols-1) cols-n) cols-1 cols-n)]
+                [cols (str "("
+                           (join ", " (map #(format-entity % {:drop-ns true})) cols)
+                           ")")])))]
+    (if (and (= :values k)
+             (or (contains-clause? :insert-into)
+                 (contains-clause? :patch-into)
+                 (contains-clause? :replace-into)))
+      ;; column sql already generated in one of those clauses:
+      (take 1 cols-and-sql')
+      cols-and-sql')))
 
 (defn- format-values [k xs]
   (let [{:keys [values-default-columns]} *options*
@@ -1423,10 +1456,7 @@
           (map? first-xs)
           ;; [{:a 1 :b 2 :c 3}]
           (let [[cols cols-sql]
-                (columns-from-values xs (or (contains-clause? :insert-into)
-                                            (contains-clause? :patch-into)
-                                            (contains-clause? :replace-into)
-                                            (contains-clause? :columns)))
+                (columns-from-values k xs)
                 [sqls params]
                 (reduce
                  (fn [[sql params] x]
