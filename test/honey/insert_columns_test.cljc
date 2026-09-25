@@ -45,4 +45,12 @@
                      col-vals)
                (sut/format {:insert-into :t
                             :columns col-keys
+                            :values [(zipmap col-keys col-vals)]})))
+        (is (= (into [(str "INSERT INTO t ("
+                           (str/join ", " col-names)
+                           ") VALUES ("
+                           (str/join ", " (repeat n-cols "?"))
+                           ")")]
+                     col-vals)
+               (sut/format {:insert-into [:t col-keys]
                             :values [(zipmap col-keys col-vals)]})))))))
