@@ -36,7 +36,9 @@
             col-nums  (shuffle (range n-cols))
             col-names (for [n col-nums] (str "col" n))
             col-keys  (for [n col-names] (keyword n))
-            col-vals  (shuffle col-nums)]
+            col-vals  (shuffle col-nums)
+            values    (zipmap col-keys col-vals)
+            the-keys  (keys values)]
         (is (= (into [(str "INSERT INTO t ("
                            (str/join ", " col-names)
                            ") VALUES ("
@@ -45,7 +47,7 @@
                      col-vals)
                (sut/format {:insert-into :t
                             :columns col-keys
-                            :values [(zipmap col-keys col-vals)]})))
+                            :values [values]})))
         (is (= (into [(str "INSERT INTO t ("
                            (str/join ", " col-names)
                            ") VALUES ("
@@ -53,4 +55,12 @@
                            ")")]
                      col-vals)
                (sut/format {:insert-into [:t col-keys]
-                            :values [(zipmap col-keys col-vals)]})))))))
+                            :values [values]})))
+        (is (= (into [(str "INSERT INTO t ("
+                           (str/join ", " (map name the-keys))
+                           ") VALUES ("
+                           (str/join ", " (repeat n-cols "?"))
+                           ")")]
+                     (vals values))
+               (sut/format {:insert-into :t
+                            :values [values]})))))))
