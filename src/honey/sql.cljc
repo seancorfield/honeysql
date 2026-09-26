@@ -27,7 +27,7 @@
         and optionally set a global `:quoted` option.
   * `sql-kw` -- turns a Clojure keyword (or symbol) into SQL code (makes
         it uppercase and replaces - with space). "
-  (:refer-clojure :exclude [format str])
+  (:refer-clojure :exclude [format str #?@(:lg [upper-case])])
   (:require [clojure.string :as str]
             #?(:lg () :clj [clojure.template])
             [honey.sql.protocols :as p]
@@ -258,6 +258,7 @@
 ;; way we'd expect.
 ;;
 ;; Use this instead of `str/upper-case` as it will always use Locale/US.
+;; let-go's clojure.core defines upper-case, hence the :lg exclusion in the ns form.
 #?(:lg
    (defn upper-case
      "In ClojureScript, just an alias for cljs.string/upper-case."
