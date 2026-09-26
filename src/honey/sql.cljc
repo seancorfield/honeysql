@@ -258,10 +258,11 @@
 ;; way we'd expect.
 ;;
 ;; Use this instead of `str/upper-case` as it will always use Locale/US.
-;; let-go's clojure.core defines upper-case, hence the :lg exclusion in the ns form.
 #?(:lg
    (defn upper-case
-     "In ClojureScript, just an alias for cljs.string/upper-case."
+     "In `let-go`, just an alias for cljs.string/upper-case.
+      For some reason, `let-go` defines `upper-case` in `clojure.core`, hence
+      the conditional exclusion in the `ns` form."
      [s]
      (str/upper-case s))
    :clj
