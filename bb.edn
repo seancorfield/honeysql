@@ -33,6 +33,13 @@
             :exec-fn build/run-tests
             :exec-args {:all-versions true}}
 
+  test:jolt {:doc "Run the test suite via Jolt."
+             :task (shell "jolt" "-M:jolt:test:runner")}
+
+  test:lg {:doc "Run the test suite via let-go."
+           :task (shell "lgx" "test"
+                        "--exclude" "honey.cache-test,honey.sql-alphanumeric-test")}
+
   ci {:doc "Run the CI pipeline of tests and build the JAR."
       :depends [test:bb eastwood doc-test:all test:all]
       :exec-fn build/jar}
