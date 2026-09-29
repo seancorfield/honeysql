@@ -3,6 +3,7 @@
 .calva/repl.calva-repl
 .classpath
 .clj-kondo/.cache
+.cljconf/org.clojure/clojure-cli.repl/history
 .cpcache
 .eastwood
 .factorypath
