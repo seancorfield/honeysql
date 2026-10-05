@@ -6,7 +6,7 @@
   :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.3"}}}
   :1.11 {:override-deps {org.clojure/clojure {:mvn/version "1.11.4"}}}
   :1.12 {:override-deps {org.clojure/clojure {:mvn/version "1.12.6"}}}
-  :1.13 {:override-deps {org.clojure/clojure {:mvn/version "1.13.0-alpha7"}}}
+  :1.13 {:override-deps {org.clojure/clojure {:mvn/version "1.13.0-alpha8"}}}
 
   :elide ; to test #409 (assertion on helper docstrings)
   {:jvm-opts ["-Dclojure.compiler.elide-meta=[:doc]"]}
@@ -30,11 +30,11 @@
   :jolt
   {:extra-deps {io.github.jolt-lang/time
                 {:git/url "https://github.com/jolt-lang/time.git"
-                 :git/sha "8030de28d6cda6096896c3e653babdbc8105499c"}}}
+                 :git/sha "b457b60af24ed48aed37e8d3fa833783dd94d516"}}}
 
   :gen-doc-tests {:replace-paths ["build"]
                   :extra-deps {babashka/fs {:mvn/version "0.5.34"}
-                               com.github.lread/test-doc-blocks {:mvn/version "1.2.21"}}
+                               com.github.lread/test-doc-blocks {:mvn/version "1.2.22"}}
                   :override-deps {org.clojure/clojure {:mvn/version "1.12.6"}}
                   :main-opts ["-m" "honey.gen-doc-tests"]}
 
