@@ -2,12 +2,14 @@
   "HoneySQL's build script. Entirely driven by `bb`."
   (:require [babashka.deps-deploy :as dd]
             [babashka.tasks :refer [shell]]
-            [clojure.tools.build.api :as b]))
+            [clojure.tools.build.api :as b]
+            [clojure.tools.deps.edn :as deps]))
 
 (def lib 'com.github.seancorfield/honeysql)
-(defn- the-version [patch] (format "2.7.%s" patch))
-(def version (the-version (b/git-count-revs nil)))
-(def snapshot (the-version "9999-SNAPSHOT"))
+(def version (-> (deps/project-deps) :aliases :neil :project :version))
+(def snapshot
+  (let [[_ m-m rel] (re-find #"(.*)\.(\d+)$" version)]
+    (str m-m "." (inc (parse-long rel)) "-SNAPSHOT")))
 (def class-dir "target/classes")
 
 (defn- pom-template [version]
