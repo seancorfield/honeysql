@@ -46,4 +46,5 @@
                               "-d" "target/test-doc-blocks/test"]}
 
   :eastwood {:extra-deps {jonase/eastwood {:mvn/version "1.4.3"}}
-             :main-opts ["-m" "eastwood.lint" "{:source-paths,[\"src\"]}"]}}}
+             :main-opts ["-m" "eastwood.lint" "{:source-paths,[\"src\"]}"]}
+  :neil {:project {:version "2.8.84"}}}}
