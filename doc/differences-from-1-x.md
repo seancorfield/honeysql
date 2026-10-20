@@ -63,7 +63,7 @@ Supported Clojure versions: 1.7 and later.
 In `deps.edn`:
 <!-- :test-doc-blocks/skip -->
 ```clojure
-com.github.seancorfield/honeysql {:mvn/version "2.7.1479"}
+com.github.seancorfield/honeysql {:mvn/version "2.8.85"}
 ```
 
 Required as:

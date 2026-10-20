@@ -1,6 +1,6 @@
 # Changes
 
-* 2.8.85 in progress
+* 2.8.85 -- 2026-10-20
   * Exclude `upper-case` from `clojure.core` under `let-go`, where core defines that name, so requiring `honey.sql` no longer warns, via PR [#619](https://github.com/seancorfield/honeysql/pull/619) from [@abogoyavlensky](https://github.com/abogoyavlensky).
   * Fix [#618](https://github.com/seancorfield/honeysql/issues/618) by ensuring column specifications in `:insert-into`, `:patch-into`, `:replace-into`, and `:columns` clauses are respected when formatting `:values`. This was a bug that was present in 2.4.1066 (three years ago) and brings the actual behavior in line with the documentation.
   * Change versioning scheme to MAJOR.MINOR.RELEASES.
