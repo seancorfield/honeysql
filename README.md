@@ -1088,7 +1088,7 @@ In `deps.edn`, under `:aliases` (or you could add this as a top-level dependency
   :jolt
   {:extra-deps {io.github.jolt-lang/time
                 {:git/url "https://github.com/jolt-lang/time.git"
-                 :git/sha "bc85090dae95d103ba04f4ea9687945cf46fb19e"}}}
+                 :git/sha "a28ab100111050356957eb42b7ec89a4065de754"}}}
 ```
 
 You can use the ClojureStar website to install the latest version of Jolt:
