@@ -5,7 +5,7 @@
  {;; versions to test against:
   :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.3"}}}
   :1.11 {:override-deps {org.clojure/clojure {:mvn/version "1.11.4"}}}
-  :1.12 {:override-deps {org.clojure/clojure {:mvn/version "1.12.6"}}}
+  :1.12 {:override-deps {org.clojure/clojure {:mvn/version "1.12.7"}}}
   :1.13 {:override-deps {org.clojure/clojure {:mvn/version "1.13.0-alpha11"}}}
 
   :elide ; to test #409 (assertion on helper docstrings)
@@ -30,12 +30,12 @@
   :jolt
   {:extra-deps {io.github.jolt-lang/time
                 {:git/url "https://github.com/jolt-lang/time.git"
-                 :git/sha "09ac7aa4a188c1993fde176f4a5ac5b66f2d8aaa"}}}
+                 :git/sha "8d51caef76fdee236a76f1b62d65e21a015269da"}}}
 
   :gen-doc-tests {:replace-paths ["build"]
                   :extra-deps {babashka/fs {:mvn/version "0.5.34"}
                                com.github.lread/test-doc-blocks {:mvn/version "1.2.22"}}
-                  :override-deps {org.clojure/clojure {:mvn/version "1.12.6"}}
+                  :override-deps {org.clojure/clojure {:mvn/version "1.12.7"}}
                   :main-opts ["-m" "honey.gen-doc-tests"]}
 
   :test-doc {:replace-paths ["src" "target/test-doc-blocks/test"]}
