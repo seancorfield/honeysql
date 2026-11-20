@@ -5,65 +5,62 @@
 
 #?(:clj (set! *warn-on-reflection* true))
 
-(defn str
-  "More efficient implementation of `clojure.core/str` because it has more
-  non-variadic arities. Optimization is Clojure-only, on other platforms it
-  reverts back to `clojure.core/str`."
-  (^String [] "")
-  (^String [^Object a]
-   #?(:bb (clojure.core/str a)
-      :clj (if (nil? a) "" (.toString a))
-      :default (clojure.core/str a)))
-  (^String [^Object a, ^Object b]
-   #?(:bb (clojure.core/str a b)
-      :clj (if (nil? a)
-             (str b)
-             (if (nil? b)
-               (.toString a)
-               (.concat (.toString a) (.toString b))))
-      :default (clojure.core/str a b)))
-  (^String [a b c]
-   #?(:bb (clojure.core/str a b c)
-      :lg (clojure.core/str a b c)
-      :clj (let [sb (StringBuilder.)]
-             (.append sb (str a))
-             (.append sb (str b))
-             (.append sb (str c))
-             (.toString sb))
-      :default (clojure.core/str a b c)))
-  (^String [a b c d]
-   #?(:bb (clojure.core/str a b c d)
-      :lg (clojure.core/str a b c d)
-      :clj (let [sb (StringBuilder.)]
-             (.append sb (str a))
-             (.append sb (str b))
-             (.append sb (str c))
-             (.append sb (str d))
-             (.toString sb))
-      :default (clojure.core/str a b c d)))
-  (^String [a b c d e]
-   #?(:bb (clojure.core/str a b c d e)
-      :lg (clojure.core/str a b c d e)
-      :clj (let [sb (StringBuilder.)]
-             (.append sb (str a))
-             (.append sb (str b))
-             (.append sb (str c))
-             (.append sb (str d))
-             (.append sb (str e))
-             (.toString sb))
-      :default (clojure.core/str a b c d e)))
-  (^String [a b c d e & more]
-   #?(:bb (apply clojure.core/str a b c d e more)
-      :lg (apply clojure.core/str a b c d e more)
-      :clj (let [sb (StringBuilder.)]
-             (.append sb (str a))
-             (.append sb (str b))
-             (.append sb (str c))
-             (.append sb (str d))
-             (.append sb (str e))
-             (run! #(.append sb (str %)) more)
-             (.toString sb))
-      :default (apply clojure.core/str a b c d e more))))
+#?(:bb
+   (def str clojure.core/str)
+   :default
+   (defn str
+     "More efficient implementation of `clojure.core/str` because it has more
+     non-variadic arities. Optimization is Clojure-only, on other platforms it
+     reverts back to `clojure.core/str`."
+     (^String [] "")
+     (^String [^Object a]
+      #?(:clj (if (nil? a) "" (.toString a))
+         :default (clojure.core/str a)))
+     (^String [^Object a, ^Object b]
+      #?(:clj (if (nil? a)
+                (str b)
+                (if (nil? b)
+                  (.toString a)
+                  (.concat (.toString a) (.toString b))))
+         :default (clojure.core/str a b)))
+     (^String [a b c]
+      #?(:lg (clojure.core/str a b c)
+         :clj (let [sb (StringBuilder.)]
+                (.append sb (str a))
+                (.append sb (str b))
+                (.append sb (str c))
+                (.toString sb))
+         :default (clojure.core/str a b c)))
+     (^String [a b c d]
+      #?(:lg (clojure.core/str a b c d)
+         :clj (let [sb (StringBuilder.)]
+                (.append sb (str a))
+                (.append sb (str b))
+                (.append sb (str c))
+                (.append sb (str d))
+                (.toString sb))
+         :default (clojure.core/str a b c d)))
+     (^String [a b c d e]
+      #?(:lg (clojure.core/str a b c d e)
+         :clj (let [sb (StringBuilder.)]
+                (.append sb (str a))
+                (.append sb (str b))
+                (.append sb (str c))
+                (.append sb (str d))
+                (.append sb (str e))
+                (.toString sb))
+         :default (clojure.core/str a b c d e)))
+     (^String [a b c d e & more]
+      #?(:lg (apply clojure.core/str a b c d e more)
+         :clj (let [sb (StringBuilder.)]
+                (.append sb (str a))
+                (.append sb (str b))
+                (.append sb (str c))
+                (.append sb (str d))
+                (.append sb (str e))
+                (run! #(.append sb (str %)) more)
+                (.toString sb))
+         :default (apply clojure.core/str a b c d e more)))))
 
 (defn join
   "More efficient implementation of `clojure.string/join`. May accept a transducer
