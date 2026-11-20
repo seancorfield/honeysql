@@ -2029,11 +2029,8 @@
                    (let [index (zipmap order (range))]
                      (vreset! clause-index-cache [order index])
                      index))]
-       (->> (keys statement-map)
-            (map sym->kw)
-            (filter index)
-            (distinct)
-            (sort-by index)))))
+       (sort-by index (into [] (comp (map sym->kw) (filter index) (distinct))
+                            (keys statement-map))))))
 
 (defn format-dsl
   "Given a hash map representing a SQL statement and a hash map
