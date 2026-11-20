@@ -2017,7 +2017,10 @@
 
 #?(:bb
    (defn- clause-keys
-     "Returns the clauses of statement-map in clause order."
+     "Returns the clauses of statement-map in clause order.
+     Iterates over the keys of statement-map, not over all known clauses.
+     In bb this makes format about twice as fast for a map with few clauses.
+     Caches the clause index of the last clause order in clause-index-cache."
      [statement-map]
      (let [order (:clause-order *options*)
            [cached-order cached-index] @clause-index-cache
