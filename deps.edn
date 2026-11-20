@@ -30,7 +30,7 @@
   :jolt
   {:extra-deps {io.github.jolt-lang/time
                 {:git/url "https://github.com/jolt-lang/time.git"
-                 :git/sha "8d51caef76fdee236a76f1b62d65e21a015269da"}}}
+                 :git/sha "6c12a58d08586ca60421099d2d3d0bcd473238ac"}}}
 
   :gen-doc-tests {:replace-paths ["build"]
                   :extra-deps {babashka/fs {:mvn/version "0.5.34"}
