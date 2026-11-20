@@ -328,7 +328,12 @@
 
 (def ^:private ^:dynamic *drop-ns* false)
 
-#?(:clj
+#?(:bb
+   (let [alpha #"^(?:[0-9_]+|[A-Za-z_][A-Za-z0-9_]*)$"]
+     (defn alphanumeric?
+       [s]
+       (boolean (re-find alpha s))))
+   :clj
    (defn alphanumeric?
      "Translation of the prior alphanumeric regex to state machine.
   Basic regex for entities that do not need quoting.
@@ -2007,6 +2012,26 @@
            (set @current-clause-order)
            (set (keys @clause-format))))
 
+#?(:bb
+   (def ^:private clause-index-cache (volatile! [nil {}])))
+
+#?(:bb
+   (defn- clause-keys
+     "Returns the clauses of statement-map in clause order."
+     [statement-map]
+     (let [order (:clause-order *options*)
+           [cached-order cached-index] @clause-index-cache
+           index (if (= order cached-order)
+                   cached-index
+                   (let [index (zipmap order (range))]
+                     (vreset! clause-index-cache [order index])
+                     index))]
+       (->> (keys statement-map)
+            (map sym->kw)
+            (filter index)
+            (distinct)
+            (sort-by index)))))
+
 (defn format-dsl
   "Given a hash map representing a SQL statement and a hash map
   of options, return a vector containing a string -- the formatted
@@ -2030,7 +2055,8 @@
                           (dissoc leftover k (kw->sym k))])
                        result))
                    [[] [] statement-map]
-                   (:clause-order *options*))]
+                   #?(:bb (clause-keys statement-map)
+                      :default (:clause-order *options*)))]
        (if (seq leftover)
          (throw (ex-info (str "These SQL clauses are unknown or have nil values: "
                               (join ", " (keys leftover))

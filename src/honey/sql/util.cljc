@@ -11,17 +11,20 @@
   reverts back to `clojure.core/str`."
   (^String [] "")
   (^String [^Object a]
-   #?(:clj (if (nil? a) "" (.toString a))
+   #?(:bb (clojure.core/str a)
+      :clj (if (nil? a) "" (.toString a))
       :default (clojure.core/str a)))
   (^String [^Object a, ^Object b]
-   #?(:clj (if (nil? a)
+   #?(:bb (clojure.core/str a b)
+      :clj (if (nil? a)
              (str b)
              (if (nil? b)
                (.toString a)
                (.concat (.toString a) (.toString b))))
       :default (clojure.core/str a b)))
   (^String [a b c]
-   #?(:lg (clojure.core/str a b c)
+   #?(:bb (clojure.core/str a b c)
+      :lg (clojure.core/str a b c)
       :clj (let [sb (StringBuilder.)]
              (.append sb (str a))
              (.append sb (str b))
@@ -29,7 +32,8 @@
              (.toString sb))
       :default (clojure.core/str a b c)))
   (^String [a b c d]
-   #?(:lg (clojure.core/str a b c d)
+   #?(:bb (clojure.core/str a b c d)
+      :lg (clojure.core/str a b c d)
       :clj (let [sb (StringBuilder.)]
              (.append sb (str a))
              (.append sb (str b))
@@ -38,7 +42,8 @@
              (.toString sb))
       :default (clojure.core/str a b c d)))
   (^String [a b c d e]
-   #?(:lg (clojure.core/str a b c d e)
+   #?(:bb (clojure.core/str a b c d e)
+      :lg (clojure.core/str a b c d e)
       :clj (let [sb (StringBuilder.)]
              (.append sb (str a))
              (.append sb (str b))
@@ -48,7 +53,8 @@
              (.toString sb))
       :default (clojure.core/str a b c d e)))
   (^String [a b c d e & more]
-   #?(:lg (apply clojure.core/str a b c d e more)
+   #?(:bb (apply clojure.core/str a b c d e more)
+      :lg (apply clojure.core/str a b c d e more)
       :clj (let [sb (StringBuilder.)]
              (.append sb (str a))
              (.append sb (str b))
@@ -64,9 +70,13 @@
   `xform` to perform operations on each element before combining them together
   into a string. Clojure-only, delegates to `clojure.string/join` on other
   platforms."
-  ([separator coll] (join separator identity coll))
+  ([separator coll]
+   #?(:bb (clojure.string/join separator coll)
+      :default (join separator identity coll)))
   ([separator xform coll]
-   #?(:lg
+   #?(:bb
+      (clojure.string/join separator (sequence xform coll))
+      :lg
       (clojure.string/join separator (transduce xform conj [] coll))
       :clj
       (let [sb (StringBuilder.)
@@ -101,9 +111,15 @@
 (defn into*
   "An extension of `clojure.core/into` that accepts multiple \"from\" arguments.
   Doesn't support `xform`."
-  ([to from1] (into* to from1 nil nil nil))
-  ([to from1 from2] (into* to from1 from2 nil nil))
-  ([to from1 from2 from3] (into* to from1 from2 from3 nil))
+  ([to from1]
+   #?(:bb (into to from1)
+      :default (into* to from1 nil nil nil)))
+  ([to from1 from2]
+   #?(:bb (-> to (into from1) (into from2))
+      :default (into* to from1 from2 nil nil)))
+  ([to from1 from2 from3]
+   #?(:bb (-> to (into from1) (into from2) (into from3))
+      :default (into* to from1 from2 from3 nil)))
   ([to from1 from2 from3 from4]
    (if (and (nil? from1) (nil? from2) (nil? from3) (nil? from4))
      to
