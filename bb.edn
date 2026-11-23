@@ -29,6 +29,7 @@
                          org.clojure/core.cache {:mvn/version "1.2.999"}
                          com.gfredericks/test.chuck {:mvn/version "0.2.15"}
                          instaparse/instaparse
+                         ^:antq/exclude
                          {:git/url "https://github.com/borkdude/instaparse"
                           :git/sha "08a3580c9deab63727bfe11b1475d90d6147a3fe"}}
            :exec-fn cognitect.test-runner.api/test}
