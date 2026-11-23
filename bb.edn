@@ -30,7 +30,7 @@
                          com.gfredericks/test.chuck {:mvn/version "0.2.15"}
                          instaparse/instaparse
                          {:git/url "https://github.com/borkdude/instaparse"
-                          :git/sha "da886e71a4afa80f8b83d1d67f058b2f02cdc0e3"}}
+                          :git/sha "08a3580c9deab63727bfe11b1475d90d6147a3fe"}}
            :exec-fn cognitect.test-runner.api/test}
 
   test:all {:doc "Run the test suite for all Clojure versions and ClojureScript."
